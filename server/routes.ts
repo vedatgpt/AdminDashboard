@@ -92,12 +92,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", requireAuth, (req, res) => {
-    const user = req.session.user;
+  app.get("/api/auth/me", (req, res) => {
+    const user = req.session?.user;
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    res.json({ user });
+    res.json(user);
   });
 
   // Protected admin routes

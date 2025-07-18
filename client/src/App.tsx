@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 function Router() {
   const { isAuthenticated, user, isLoading } = useAuth();
 
+  // Loading state should be very brief
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">

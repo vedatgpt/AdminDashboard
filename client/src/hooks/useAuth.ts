@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import type { User, LoginData, RegisterData } from "@shared/schema";
 
 export function useAuth() {
@@ -7,18 +7,19 @@ export function useAuth() {
 
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    gcTime: 5 * 60 * 1000,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (loginData: LoginData) => {
-      const response = await apiRequest("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(loginData),
-        headers: { "Content-Type": "application/json" },
-      });
-      return response;
+      const response = await apiRequest("POST", "/api/auth/login", loginData);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -27,12 +28,8 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (registerData: RegisterData) => {
-      const response = await apiRequest("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(registerData),
-        headers: { "Content-Type": "application/json" },
-      });
-      return response;
+      const response = await apiRequest("POST", "/api/auth/register", registerData);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -41,9 +38,7 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/auth/logout", {
-        method: "POST",
-      });
+      await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);

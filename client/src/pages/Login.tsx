@@ -47,6 +47,15 @@ export default function Login() {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Don't show login page if already authenticated
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-lg">Yönlendiriliyor...</div>
+      </div>
+    );
+  }
+
   const handleLogin = async (data: LoginData) => {
     try {
       await login(data);
