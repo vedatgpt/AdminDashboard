@@ -4,7 +4,7 @@ import { Menu, Bell, User } from "lucide-react";
 
 const pageConfigs = {
   "/users": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
-  "/ads": { title: "İlanlar", subtitle: "Yayınlanan ilanları yönetin" },
+  "/listings": { title: "İlanlar", subtitle: "Yayınlanan ilanları yönetin" },
   "/categories": { title: "Kategoriler", subtitle: "İlan kategorilerini yönetin" },
   "/locations": { title: "Lokasyonlar", subtitle: "Şehir ve ilçeleri yönetin" },
   "/": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
@@ -16,8 +16,8 @@ export default function Header() {
   const config = pageConfigs[location as keyof typeof pageConfigs] || pageConfigs["/"];
 
   return (
-    <div className="sticky top-0 z-40 lg:mx-auto lg:px-8">
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-white lg:px-0">
+    <div className="sticky top-0 z-40">
+      <div className="flex items-center justify-between h-16 px-4 lg:px-8 border-b border-gray-200 bg-white">
         <div className="flex items-center">
           <button
             onClick={toggle}

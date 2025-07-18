@@ -1,11 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { Users, Megaphone, Tags, MapPin, Settings, X } from "lucide-react";
+import { Users, Megaphone, Tags, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logoPath from "@assets/logo_1752808818099.png";
 
 const navigation = [
   { name: "Kullanıcılar", href: "/users", icon: Users },
-  { name: "İlanlar", href: "/ads", icon: Megaphone },
+  { name: "İlanlar", href: "/listings", icon: Megaphone },
   { name: "Kategoriler", href: "/categories", icon: Tags },
   { name: "Lokasyonlar", href: "/locations", icon: MapPin },
 ];
@@ -34,9 +35,11 @@ export default function Sidebar() {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Settings className="w-4 h-4 text-white" />
-            </div>
+            <img 
+              src={logoPath} 
+              alt="Logo" 
+              className="w-8 h-8 object-contain"
+            />
             <span className="ml-3 text-xl font-semibold text-gray-800">Admin Panel</span>
           </div>
           <button
