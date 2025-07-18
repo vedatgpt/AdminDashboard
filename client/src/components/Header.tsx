@@ -8,7 +8,7 @@ const pageConfigs = {
   "/admin/users": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
   "/admin/listings": { title: "İlanlar", subtitle: "Yayınlanan ilanları yönetin" },
   "/admin/categories": { title: "Kategoriler", subtitle: "İlan kategorilerini yönetin" },
-  "/admin/locations": { title: "Lokasyonlar", subtitle: "Şehir ve ilçeleri yönetin" },
+  "/admin/locations": { title: "Lokasyonlar", subtitle: "İl / İlçe ve Mahalle Yönetimi" },
   "/": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
 };
 
