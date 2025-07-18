@@ -5,22 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { loginSchema, type LoginData } from "@shared/schema";
+import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
 import logoPath from "@assets/logo_1752808818099.png";
 
-export default function Login() {
+export default function Register() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { login, loginError, loginLoading, user, isAuthenticated } = useAuth();
+  const { register, registerError, registerLoading, user, isAuthenticated } = useAuth();
 
-  const loginForm = useForm<LoginData>({
-    resolver: zodResolver(loginSchema),
+  const registerForm = useForm<RegisterData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
       password: "",
+      email: "",
+      role: "individual",
     },
   });
 
@@ -35,7 +37,7 @@ export default function Login() {
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Don't show login page if already authenticated
+  // Don't show register page if already authenticated
   if (isAuthenticated && user) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -44,17 +46,17 @@ export default function Login() {
     );
   }
 
-  const handleLogin = async (data: LoginData) => {
+  const handleRegister = async (data: RegisterData) => {
     try {
-      await login(data);
+      await register(data);
       toast({
         title: "Başarılı",
-        description: "Giriş yapıldı",
+        description: "Kayıt başarılı",
       });
     } catch (error: any) {
       toast({
         title: "Hata",
-        description: error.message || "Giriş başarısız",
+        description: error.message || "Kayıt başarısız",
         variant: "destructive",
       });
     }
@@ -72,23 +74,35 @@ export default function Login() {
             />
           </div>
           <CardTitle className="text-2xl font-bold text-center">
-            Giriş Yap
+            Kayıt Ol
           </CardTitle>
           <CardDescription className="text-center">
-            Hesabınıza giriş yapın
+            Yeni hesap oluşturun
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Kullanıcı Adı</Label>
               <Input
                 id="username"
-                {...loginForm.register("username")}
+                {...registerForm.register("username")}
                 placeholder="Kullanıcı adınızı giriniz"
               />
-              {loginForm.formState.errors.username && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.username.message}</p>
+              {registerForm.formState.errors.username && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.username.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-posta</Label>
+              <Input
+                id="email"
+                type="email"
+                {...registerForm.register("email")}
+                placeholder="E-posta adresinizi giriniz"
+              />
+              {registerForm.formState.errors.email && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -96,26 +110,40 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                {...loginForm.register("password")}
+                {...registerForm.register("password")}
                 placeholder="Şifrenizi giriniz"
               />
-              {loginForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
+              {registerForm.formState.errors.password && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Hesap Türü</Label>
+              <select 
+                id="role"
+                {...registerForm.register("role")}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="individual">Bireysel Kullanıcı</option>
+                <option value="corporate">Kurumsal Kullanıcı</option>
+              </select>
+              {registerForm.formState.errors.role && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
               )}
             </div>
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loginLoading}
+              disabled={registerLoading}
             >
-              {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
             </Button>
           </form>
           
           <div className="mt-6 text-center">
-            <Link href="/register">
+            <Link href="/login">
               <Button variant="ghost" className="text-sm">
-                Hesabınız yok mu? Kayıt olun
+                Hesabınız var mı? Giriş yapın
               </Button>
             </Link>
           </div>

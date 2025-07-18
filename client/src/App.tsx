@@ -9,6 +9,7 @@ import Ads from "@/pages/Ads";
 import Categories from "@/pages/Categories";
 import Locations from "@/pages/Locations";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       
       {isAuthenticated && user?.role === "admin" ? (
         <Layout>
