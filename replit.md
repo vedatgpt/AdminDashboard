@@ -7,6 +7,12 @@ This is a full-stack web application built with React, Express.js, and PostgreSQ
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Primary color: #EC7830 (orange)
+Background: White
+No shadow effects anywhere
+Font: Inter
+URL structure: All admin pages under /admin prefix (e.g., /admin/users)
+Logo: Custom logo in sidebar (attached_assets/logo_1752808818099.png)
 
 ## System Architecture
 

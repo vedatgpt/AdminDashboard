@@ -1,4 +1,4 @@
-import { Download, Plus, Users as UsersIcon } from "lucide-react";
+import { Plus, Users as UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
@@ -26,16 +26,10 @@ export default function Users() {
         title="Kullanıcı Listesi"
         subtitle="Toplam 0 kullanıcı"
         actions={
-          <>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Dışa Aktar
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Kullanıcı Ekle
-            </Button>
-          </>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Kullanıcı Ekle
+          </Button>
         }
       />
 

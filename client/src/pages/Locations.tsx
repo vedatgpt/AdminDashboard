@@ -1,4 +1,4 @@
-import { Map, Plus, MapPin } from "lucide-react";
+import { Plus, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
@@ -27,16 +27,10 @@ export default function Locations() {
         title="Lokasyon Listesi"
         subtitle="Toplam 0 lokasyon"
         actions={
-          <>
-            <Button variant="outline">
-              <Map className="w-4 h-4 mr-2" />
-              Haritada Göster
-            </Button>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Lokasyon Ekle
-            </Button>
-          </>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Lokasyon Ekle
+          </Button>
         }
       />
 

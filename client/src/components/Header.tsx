@@ -5,10 +5,10 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 const pageConfigs = {
-  "/users": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
-  "/listings": { title: "İlanlar", subtitle: "Yayınlanan ilanları yönetin" },
-  "/categories": { title: "Kategoriler", subtitle: "İlan kategorilerini yönetin" },
-  "/locations": { title: "Lokasyonlar", subtitle: "Şehir ve ilçeleri yönetin" },
+  "/admin/users": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
+  "/admin/listings": { title: "İlanlar", subtitle: "Yayınlanan ilanları yönetin" },
+  "/admin/categories": { title: "Kategoriler", subtitle: "İlan kategorilerini yönetin" },
+  "/admin/locations": { title: "Lokasyonlar", subtitle: "Şehir ve ilçeleri yönetin" },
   "/": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
 };
 

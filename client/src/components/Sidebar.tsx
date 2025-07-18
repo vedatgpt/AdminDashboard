@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import logoPath from "@assets/logo_1752808818099.png";
 
 const navigation = [
-  { name: "Kullanıcılar", href: "/users", icon: Users },
-  { name: "İlanlar", href: "/listings", icon: Megaphone },
-  { name: "Kategoriler", href: "/categories", icon: Tags },
-  { name: "Lokasyonlar", href: "/locations", icon: MapPin },
+  { name: "Kullanıcılar", href: "/admin/users", icon: Users },
+  { name: "İlanlar", href: "/admin/listings", icon: Megaphone },
+  { name: "Kategoriler", href: "/admin/categories", icon: Tags },
+  { name: "Lokasyonlar", href: "/admin/locations", icon: MapPin },
 ];
 
 export default function Sidebar() {
@@ -38,7 +38,7 @@ export default function Sidebar() {
             <img 
               src={logoPath} 
               alt="Logo" 
-              className="w-8 h-8 object-contain"
+              className="w-12 h-12 object-contain"
             />
           </div>
           <button
@@ -53,7 +53,7 @@ export default function Sidebar() {
           <ul className="space-y-2 px-3">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location === item.href || (location === "/" && item.href === "/users");
+              const isActive = location === item.href || (location === "/" && item.href === "/admin/users");
               
               return (
                 <li key={item.name}>
