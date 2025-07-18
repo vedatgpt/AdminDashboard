@@ -8,20 +8,44 @@ import Users from "@/pages/Users";
 import Ads from "@/pages/Ads";
 import Categories from "@/pages/Categories";
 import Locations from "@/pages/Locations";
+import Login from "@/pages/Login";
+import Landing from "@/pages/Landing";
 import NotFound from "@/pages/not-found";
+import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-lg">Yükleniyor...</div>
+      </div>
+    );
+  }
+
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Users} />
-        <Route path="/admin/users" component={Users} />
-        <Route path="/admin/listings" component={Ads} />
-        <Route path="/admin/categories" component={Categories} />
-        <Route path="/admin/locations" component={Locations} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <Switch>
+      <Route path="/login" component={Login} />
+      
+      {isAuthenticated && user?.role === "admin" ? (
+        <Layout>
+          <Switch>
+            <Route path="/" component={Users} />
+            <Route path="/admin/users" component={Users} />
+            <Route path="/admin/listings" component={Ads} />
+            <Route path="/admin/categories" component={Categories} />
+            <Route path="/admin/locations" component={Locations} />
+            <Route component={NotFound} />
+          </Switch>
+        </Layout>
+      ) : (
+        <Switch>
+          <Route path="/" component={Landing} />
+          <Route component={Landing} />
+        </Switch>
+      )}
+    </Switch>
   );
 }
 

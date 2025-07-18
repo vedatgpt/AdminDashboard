@@ -2,6 +2,21 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Extend the session types
+declare module "express-session" {
+  interface SessionData {
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+      isActive: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+  }
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

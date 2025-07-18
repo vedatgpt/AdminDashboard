@@ -25,7 +25,7 @@ export default function Sidebar() {
         )}
         onClick={close}
       />
-      
+
       {/* Sidebar */}
       <div
         className={cn(
@@ -38,7 +38,7 @@ export default function Sidebar() {
             <img 
               src={logoPath} 
               alt="Logo" 
-              className="w-12 h-12 object-contain"
+              className="w-32 h-32 object-contain"
             />
           </div>
           <button
@@ -48,13 +48,13 @@ export default function Sidebar() {
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <nav className="mt-8">
           <ul className="space-y-2 px-3">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href || (location === "/" && item.href === "/admin/users");
-              
+
               return (
                 <li key={item.name}>
                   <Link
