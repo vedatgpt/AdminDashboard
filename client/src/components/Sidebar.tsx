@@ -40,7 +40,6 @@ export default function Sidebar() {
               alt="Logo" 
               className="w-8 h-8 object-contain"
             />
-            <span className="ml-3 text-xl font-semibold text-gray-800">Admin Panel</span>
           </div>
           <button
             onClick={close}
@@ -51,12 +50,6 @@ export default function Sidebar() {
         </div>
         
         <nav className="mt-8">
-          <div className="px-6 mb-6">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              Yönetim
-            </h3>
-          </div>
-          
           <ul className="space-y-2 px-3">
             {navigation.map((item) => {
               const Icon = item.icon;

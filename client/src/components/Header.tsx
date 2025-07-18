@@ -1,6 +1,8 @@
 import { useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { Menu, Bell, User } from "lucide-react";
+import { Menu, Bell, User, Settings, LogOut } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 const pageConfigs = {
   "/users": { title: "Kullanıcılar", subtitle: "Sistem kullanıcılarını yönetin" },
@@ -13,7 +15,22 @@ const pageConfigs = {
 export default function Header() {
   const { toggle } = useSidebar();
   const [location] = useLocation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const config = pageConfigs[location as keyof typeof pageConfigs] || pageConfigs["/"];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="sticky top-0 z-40">
@@ -35,11 +52,31 @@ export default function Header() {
           <button className="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary">
             <Bell className="w-5 h-5" />
           </button>
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-            <span className="hidden sm:block text-sm font-medium text-gray-700">Admin</span>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-gray-700">Admin</span>
+            </button>
+            
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg z-50">
+                <div className="py-1">
+                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                    <Settings className="w-4 h-4 mr-3" />
+                    Ayarlar
+                  </button>
+                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Çıkış Yap
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
