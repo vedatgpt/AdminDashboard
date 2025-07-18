@@ -1,0 +1,111 @@
+import { ReactNode, useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface Column {
+  key: string;
+  label: string;
+  width?: string;
+}
+
+interface DataTableProps {
+  columns: Column[];
+  data?: any[];
+  searchPlaceholder?: string;
+  filterOptions?: { value: string; label: string }[];
+  emptyState?: ReactNode;
+  isLoading?: boolean;
+}
+
+export default function DataTable({
+  columns,
+  data = [],
+  searchPlaceholder = "Ara...",
+  filterOptions = [],
+  emptyState,
+  isLoading = false
+}: DataTableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative mb-4 sm:mb-0">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-4 h-4 text-gray-400" />
+            </div>
+            <Input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-full sm:w-64"
+            />
+          </div>
+          {filterOptions.length > 0 && (
+            <Select value={filterValue} onValueChange={setFilterValue}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filtrele" />
+              </SelectTrigger>
+              <SelectContent>
+                {filterOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <Checkbox />
+              </th>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ width: column.width }}
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length + 1} className="px-6 py-12 text-center">
+                  {emptyState}
+                </td>
+              </tr>
+            ) : (
+              data.map((item, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Checkbox />
+                  </td>
+                  {columns.map((column) => (
+                    <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item[column.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
