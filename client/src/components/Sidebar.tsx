@@ -67,7 +67,9 @@ export default function Sidebar() {
           <ul className="space-y-2 px-3 flex-1">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location === item.href || (location === "/" && item.href === "/admin/users");
+              const isActive = location === item.href || 
+                               (location === "/" && item.href === "/admin/users") ||
+                               (item.href === "/admin/categories" && location.startsWith("/admin/categories"));
 
               return (
                 <li key={item.name}>

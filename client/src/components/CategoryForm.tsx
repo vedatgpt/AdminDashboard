@@ -88,6 +88,7 @@ export default function CategoryForm({
       });
     }
     setErrors({});
+    setIconFile(null); // Clear file input state when form opens
   }, [category, parentCategory, isOpen]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

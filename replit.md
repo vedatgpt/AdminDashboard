@@ -301,12 +301,12 @@ Authentication features:
 
 ### Page-Based Category Management System with Icon Support (July 19, 2025)
 - Migrated from tree view to page-based navigation system with full-width design
-- URL-based navigation: /admin/categories/:parentId for hierarchical browsing
+- URL-based navigation: /admin/categories/:parentId for hierarchical browsing with proper sidebar highlighting
 - Categories display simplified with alt kategori sayısı next to category name (e.g., "Otomobil (3)")
 - Completely removed description fields and parent/sorting fields from all forms and modals
 - Added comprehensive category icon upload system (PNG format only, 2MB max)
 - Icons displayed to the left of category names, similar to sahibinden.com design
-- Category form supports icon upload, preview, and removal functionality
+- Category form supports icon upload, preview, and removal functionality with proper state management
 - Enhanced drag & drop reordering with improved visual feedback and performance
 - All categories clickable regardless of having children
 - Breadcrumb navigation positioned next to search box for better UX
@@ -316,3 +316,6 @@ Authentication features:
 - Static file serving for category icons via /uploads/category-icons/ endpoint
 - Turkish character slug generation maintained (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u)
 - Full CRUD operations with comprehensive error handling and user feedback
+- Fixed hierarchical slug management (same slug allowed in different parent categories)
+- Mobile-responsive button layout matching other admin pages
+- Proper form state management preventing icon persistence between form sessions

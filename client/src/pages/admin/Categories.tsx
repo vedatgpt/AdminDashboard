@@ -193,11 +193,11 @@ export default function Categories() {
         title="Kategori Yönetimi"
         subtitle={`${filteredCategories.length} kategori`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {currentParent && (
               <button 
                 onClick={handleBackClick}
-                className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 w-full sm:w-auto justify-center sm:justify-start"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Geri
@@ -206,7 +206,7 @@ export default function Categories() {
             <button 
               onClick={handleAddRootCategory}
               disabled={isAnyMutationLoading}
-              className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
             >
               <Plus className="w-4 h-4" />
               {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
