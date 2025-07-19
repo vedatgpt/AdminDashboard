@@ -136,6 +136,20 @@ Authentication features:
 - Added API endpoint for public user profiles (without sensitive data)
 - Integrated profile routing with main application navigation
 
+### Landing Page Enhancements
+- Dynamic authentication state display in navbar
+- Show "Giriş Yap" button for unauthenticated users
+- Show user/company name and "Çıkış Yap" button for authenticated users
+- Corporate users display company name, individual users show first/last name
+- SPA-compliant logout with smooth navigation
+
+### Admin Panel Structure
+- Reorganized admin pages into dedicated `/pages/admin` folder
+- Modular file structure for better maintainability
+- Updated import paths and routing configuration
+- All admin functionality grouped under admin namespace
+
 ### Current Test Accounts
 - Admin: email "admin@example.com" OR username "admin", password "admin123"
 - Sample user: username "velikara6028" (auto-generated from "Veli Kara")
+- Corporate test user: username "orhanyenen2548" (auto-generated)

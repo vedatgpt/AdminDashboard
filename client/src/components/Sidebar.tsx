@@ -22,7 +22,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/");
       toast({
         title: "Başarılı",
         description: "Başarıyla çıkış yapıldı",
