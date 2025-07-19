@@ -60,16 +60,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { identifier, password } = req.body;
+      const { identifier, password, emailOrUsername } = req.body;
+      const loginIdentifier = identifier || emailOrUsername;
       
       // Basic validation
-      if (!identifier || !password) {
+      if (!loginIdentifier || !password) {
         return res.status(400).json({ error: "E-posta/kullanıcı adı ve şifre gerekli" });
       }
 
       // First try regular user authentication
       try {
-        const loginData = { emailOrUsername: identifier, password };
+        const loginData = { emailOrUsername: loginIdentifier, password };
         const user = await storage.authenticateUser(loginData);
         
         if (user) {
@@ -86,16 +87,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json({ user: userWithoutPassword });
         }
       } catch (userAuthError) {
-        console.log("Regular user authentication failed for:", identifier);
+        console.log("Regular user authentication failed for:", loginIdentifier);
       }
 
       // If regular user authentication fails and identifier is email, try personnel
-      if (identifier && typeof identifier === 'string' && identifier.includes("@")) {
+      if (loginIdentifier && typeof loginIdentifier === 'string' && loginIdentifier.includes("@")) {
         try {
-          const personnelAuth = await storage.authenticateAuthorizedPersonnel(identifier, password);
+          const personnelAuth = await storage.authenticateAuthorizedPersonnel(loginIdentifier, password);
           
           if (personnelAuth) {
-            console.log("Personnel authentication successful for:", identifier);
+            console.log("Personnel authentication successful for:", loginIdentifier);
             // Store personnel info in session
             req.session.user = {
               id: personnelAuth.personnel.id,
@@ -118,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.json({ user: personnelData });
           }
         } catch (personnelAuthError) {
-          console.log("Personnel authentication failed for:", identifier);
+          console.log("Personnel authentication failed for:", loginIdentifier);
         }
       }
 
@@ -173,12 +174,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Get fresh user data from database instead of session
+      // If this is an authorized personnel session, return the session data directly
+      if (req.session?.userType === "personnel") {
+        const { password, ...userWithoutPassword } = sessionUser;
+        return res.json(userWithoutPassword);
+      }
+      
+      // For regular users, get fresh user data from database
       const freshUser = await storage.getUserById(sessionUser.id);
       if (freshUser) {
         // Update session with fresh data
         req.session.user = freshUser;
-        res.json(freshUser);
+        const { password, ...userWithoutPassword } = freshUser;
+        res.json(userWithoutPassword);
       } else {
         res.status(401).json({ error: "User not found" });
       }
