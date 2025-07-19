@@ -26,8 +26,8 @@ export default function Locations() {
         title="Lokasyon Listesi"
         subtitle="Toplam 0 lokasyon"
         actions={
-          <button className="flex items-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-            <Plus className="w-4 h-4 mr-2" />
+          <button className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:pointer-events-none">
+            <Plus className="w-4 h-4" />
             Lokasyon Ekle
           </button>
         }

@@ -293,10 +293,12 @@ export default function Profile() {
               {user.role === "corporate" && (
                 <div className="space-y-2">
                   <label htmlFor="companyName">Firma Adı</label>
-                  <Input
+                  <input
                     id="companyName"
-                    {...profileForm.register("companyName")}
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Firma adınız"
+                    {...profileForm.register("companyName")}
                   />
                   {profileForm.formState.errors.companyName && (
                     <p className="text-sm text-red-500">
@@ -309,10 +311,12 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="firstName">Ad</label>
-                  <Input
+                  <input
                     id="firstName"
-                    {...profileForm.register("firstName")}
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Adınız"
+                    {...profileForm.register("firstName")}
                   />
                   {profileForm.formState.errors.firstName && (
                     <p className="text-sm text-red-500">
@@ -323,10 +327,12 @@ export default function Profile() {
 
                 <div className="space-y-2">
                   <label htmlFor="lastName">Soyad</label>
-                  <Input
+                  <input
                     id="lastName"
-                    {...profileForm.register("lastName")}
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Soyadınız"
+                    {...profileForm.register("lastName")}
                   />
                   {profileForm.formState.errors.lastName && (
                     <p className="text-sm text-red-500">
@@ -341,10 +347,12 @@ export default function Profile() {
               {user.role === "corporate" && (
                 <div className="space-y-2">
                   <label htmlFor="username">Kullanıcı Adı</label>
-                  <Input
+                  <input
                     id="username"
-                    {...profileForm.register("username")}
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Kullanıcı adınız"
+                    {...profileForm.register("username")}
                   />
                   <p className="text-sm text-gray-500">
                     Kullanıcı adınız profil URL'nizde kullanılacaktır: /{profileForm.watch("username") || user.username}

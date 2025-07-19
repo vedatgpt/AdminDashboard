@@ -57,11 +57,11 @@ export default function Account() {
 
         <div className="flex flex-col gap-4">
           <Link href="/account/profile">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+            <div className="bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors">
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-primary" />
+                    <User className="w-5 h-5 text-[#EC7830]" />
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">Hesap Bilgilerim</h3>
                       <p className="text-gray-600 text-sm">Ad, soyad, e-posta ve diğer kişisel bilgilerinizi düzenleyin</p>
@@ -74,70 +74,70 @@ export default function Account() {
           </Link>
 
           <Link href="/account/contact">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
-              <div className="pb-3">
-                <h3 className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-primary" />
-                    İletişim Bilgilerim
+                    <Phone className="w-5 h-5 text-[#EC7830]" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">İletişim Bilgilerim</h3>
+                      <p className="text-gray-600 text-sm">Telefon numaralarınızı güncelleyin</p>
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </h3>
-                <p>
-                  Telefon numaralarınızı güncelleyin
-                </p>
+                </div>
               </div>
             </div>
           </Link>
 
           <Link href="/account/change-email">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
-              <div className="pb-3">
-                <h3 className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-primary" />
-                    E-posta Değişikliği
+                    <Mail className="w-5 h-5 text-[#EC7830]" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">E-posta Değişikliği</h3>
+                      <p className="text-gray-600 text-sm">E-posta adresinizi güncelleyin</p>
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </h3>
-                <p>
-                  E-posta adresinizi güncelleyin
-                </p>
+                </div>
               </div>
             </div>
           </Link>
 
           <Link href="/account/change-password">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
-              <div className="pb-3">
-                <h3 className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Key className="w-5 h-5 text-primary" />
-                    Şifre Değişikliği
+                    <Key className="w-5 h-5 text-[#EC7830]" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Şifre Değişikliği</h3>
+                      <p className="text-gray-600 text-sm">Hesap güvenliğiniz için şifrenizi güncelleyin</p>
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </h3>
-                <p>
-                  Hesap güvenliğiniz için şifrenizi güncelleyin
-                </p>
+                </div>
               </div>
             </div>
           </Link>
 
           {user.role === "corporate" && (
             <Link href="/account/authorized-personnel">
-              <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
-                <div className="pb-3">
-                  <h3 className="flex items-center justify-between">
+              <div className="bg-white rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors">
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-primary" />
-                      Yetkili Kişiler
+                      <Users className="w-5 h-5 text-[#EC7830]" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Yetkili Kişiler</h3>
+                        <p className="text-gray-600 text-sm">Şirketiniz adına işlem yapacak yetkili kişileri yönetin</p>
+                      </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
-                  </h3>
-                  <p>
-                    Şirketiniz adına işlem yapacak yetkili kişileri yönetin
-                  </p>
+                  </div>
                 </div>
               </div>
             </Link>
@@ -147,9 +147,9 @@ export default function Account() {
         <div className="mt-6">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-red-300 bg-white text-red-600 hover:bg-red-50 focus:outline-hidden focus:bg-red-50 disabled:opacity-50 disabled:pointer-events-none"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="w-4 h-4" />
             Çıkış Yap
           </button>
         </div>
