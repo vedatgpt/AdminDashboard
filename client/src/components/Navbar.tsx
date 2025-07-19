@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon, UserIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,9 +13,25 @@ const SearchIcon = ({ className = "w-6 h-6" }) => (
 );
 
 // UserDropdown component
-const UserDropdown = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: (open: boolean) => void }) => {
+const UserDropdown = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleMenuItemClick = (item: string) => {
     switch (item) {
@@ -35,12 +51,12 @@ const UserDropdown = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange:
         logout();
         break;
     }
-    onOpenChange(false);
+    setIsDropdownOpen(false);
   };
 
   const handleProfileClick = () => {
     navigate("/account/profile");
-    onOpenChange(false);
+    setIsDropdownOpen(false);
   };
 
   // Get proper display name based on user type
@@ -83,7 +99,7 @@ const UserDropdown = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange:
   if (!isAuthenticated) {
     return (
       <Link href="/login">
-        <button className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none">
+        <button className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none">
           Giriş Yap
         </button>
       </Link>
@@ -91,65 +107,67 @@ const UserDropdown = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange:
   }
 
   return (
-    <div className="hs-dropdown relative inline-flex">
+    <div className="relative inline-flex" ref={dropdownRef}>
       <button
-        id="hs-dropdown-default"
         type="button"
-        className="hs-dropdown-toggle py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
         aria-haspopup="menu"
-        aria-expanded="false"
-        aria-label="Dropdown"
+        aria-expanded={isDropdownOpen}
+        aria-label="User Menu"
       >
         <span>{getDisplayName()}</span>
-        <ChevronDownIcon className="hs-dropdown-open:rotate-180 size-4" />
+        <ChevronDownIcon className={`size-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
       </button>
 
-      <div className="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md rounded-lg mt-2 dark:bg-neutral-800 dark:border dark:border-neutral-700" role="menu" aria-orientation="vertical" aria-labelledby="hs-dropdown-default">
-        <div 
-          className="flex items-center gap-2 p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-          onClick={handleProfileClick}
-        >
-          <div className="w-10 h-10 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center">
-            <UserIcon className="w-6 h-6 text-gray-500" />
+      {isDropdownOpen && (
+        <div className="absolute right-0 top-full z-50 min-w-60 bg-white shadow-lg rounded-lg mt-2 border border-gray-200" role="menu" aria-orientation="vertical">
+          <div 
+            className="flex items-center gap-2 p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+            onClick={handleProfileClick}
+          >
+            <div className="w-10 h-10 rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center">
+              <UserIcon className="w-6 h-6 text-gray-500" />
+            </div>
+            <div className="font-medium text-gray-900">
+              {getDropdownDisplayName()}
+            </div>
           </div>
-          <div className="font-medium text-gray-900">
-            {getDropdownDisplayName()}
+          <div className="p-1 space-y-0.5">
+            <button
+              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 w-full text-left"
+              onClick={() => handleMenuItemClick("Profil")}
+            >
+              Profil
+            </button>
+            <button
+              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 w-full text-left"
+              onClick={() => handleMenuItemClick("Hesap Ayarları")}
+            >
+              Hesap Ayarları
+            </button>
+            <button
+              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 w-full text-left"
+              onClick={() => handleMenuItemClick("İletişim")}
+            >
+              İletişim
+            </button>
+            <button
+              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 w-full text-left"
+              onClick={() => handleMenuItemClick("Şifre Değiştir")}
+            >
+              Şifre Değiştir
+            </button>
+            <div className="border-t border-gray-200 my-1"></div>
+            <button
+              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:bg-red-50 w-full text-left"
+              onClick={() => handleMenuItemClick("Çıkış Yap")}
+            >
+              Çıkış Yap
+            </button>
           </div>
         </div>
-        <div className="p-1 space-y-0.5">
-          <button
-            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
-            onClick={() => handleMenuItemClick("Profil")}
-          >
-            Profil
-          </button>
-          <button
-            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
-            onClick={() => handleMenuItemClick("Hesap Ayarları")}
-          >
-            Hesap Ayarları
-          </button>
-          <button
-            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
-            onClick={() => handleMenuItemClick("İletişim")}
-          >
-            İletişim
-          </button>
-          <button
-            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
-            onClick={() => handleMenuItemClick("Şifre Değiştir")}
-          >
-            Şifre Değiştir
-          </button>
-          <div className="border-t border-gray-200 my-1"></div>
-          <button
-            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:bg-red-50 dark:text-red-500 dark:hover:bg-red-800/30 dark:focus:bg-red-800/30 w-full text-left"
-            onClick={() => handleMenuItemClick("Çıkış Yap")}
-          >
-            Çıkış Yap
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -159,19 +177,8 @@ interface ModernNavbarProps {
 }
 
 export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-
-  // Initialize Preline dropdown after component mounts
-  useEffect(() => {
-    const initDropdown = async () => {
-      if (typeof window !== 'undefined' && window.HSDropdown) {
-        window.HSDropdown.autoInit();
-      }
-    };
-    initDropdown();
-  }, []);
 
   const handleSearchSubmit = async () => {
     if (!searchTerm.trim() || searchTerm.length < 2) {
@@ -211,7 +218,6 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
                 alt="Logo"
                 src={logoPath}
                 loading="eager"
-                fetchPriority="high"
                 decoding="sync"
               />
             </Link>
@@ -226,7 +232,8 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
-                className="w-full pl-10 pr-10 h-9 rounded-lg bg-gray-100 border-0 focus:bg-gray-100 focus:outline-none focus:ring-0 focus:border-0 transition-all duration-200 text-sm lg:text-base py-3 px-4 block disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full pl-10 pr-10 h-9 rounded-lg bg-gray-100 border-none focus:bg-gray-100 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none transition-all duration-200 text-sm lg:text-base py-3 px-4 block disabled:opacity-50 disabled:pointer-events-none"
+                style={{ boxShadow: 'none !important', outline: 'none !important', border: 'none !important' }}
                 disabled={isSearching}
               />
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -243,10 +250,7 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
 
           {/* Right Side User */}
           <div className="flex items-center">
-            <UserDropdown 
-              isOpen={isDropdownOpen} 
-              onOpenChange={setIsDropdownOpen} 
-            />
+            <UserDropdown />
           </div>
         </div>
       </header>
