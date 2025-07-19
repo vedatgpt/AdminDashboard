@@ -1,30 +1,42 @@
-"use client"
-
 import * as React from "react"
-import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
-const TooltipProvider = TooltipPrimitive.Provider
+// Simple Tooltip Provider - just returns children
+const TooltipProvider = ({ children, ...props }: React.PropsWithChildren) => (
+  <div {...props}>{children}</div>
+)
 
-const Tooltip = TooltipPrimitive.Root
+// Simple Tooltip - just returns children for now
+const Tooltip = ({ children, ...props }: React.PropsWithChildren) => (
+  <div {...props}>{children}</div>
+)
 
-const TooltipTrigger = TooltipPrimitive.Trigger
+// Tooltip Trigger - the element that triggers the tooltip
+const TooltipTrigger = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ children, ...props }, ref) => (
+  <div ref={ref} {...props}>
+    {children}
+  </div>
+))
+TooltipTrigger.displayName = "TooltipTrigger"
 
+// Tooltip Content - the tooltip content (simplified version)
 const TooltipContent = React.forwardRef<
-  React.ElementRef<typeof TooltipPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
-  <TooltipPrimitive.Content
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
     ref={ref}
-    sideOffset={sideOffset}
     className={cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-tooltip-content-transform-origin]",
+      "z-50 overflow-hidden rounded-md border bg-gray-900 px-3 py-1.5 text-sm text-white shadow-md",
       className
     )}
     {...props}
   />
 ))
-TooltipContent.displayName = TooltipPrimitive.Content.displayName
+TooltipContent.displayName = "TooltipContent"
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
