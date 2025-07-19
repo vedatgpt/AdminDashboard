@@ -1,9 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -67,127 +63,166 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          
-          <CardTitle className="text-2xl font-bold text-center">
-            Kayıt Ol
-          </CardTitle>
-          
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Hesap Türü</Label>
+    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-white">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        <img 
+          src={logoPath} 
+          alt="Logo" 
+          className="mx-auto h-10 w-auto" 
+        />
+        <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
+          Yeni hesap oluşturun
+        </h2>
+      </div>
+
+      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+        <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-6">
+          <div>
+            <label htmlFor="role" className="block text-sm/6 font-medium text-gray-900">
+              Hesap Türü
+            </label>
+            <div className="mt-2">
               <select 
                 id="role"
                 {...registerForm.register("role")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
               >
                 <option value="individual">Bireysel</option>
                 <option value="corporate">Kurumsal</option>
               </select>
               {registerForm.formState.errors.role && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.role.message}</p>
               )}
             </div>
-            
-            {registerForm.watch("role") === "corporate" && (
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Firma Adı</Label>
-                <Input
+          </div>
+          
+          {registerForm.watch("role") === "corporate" && (
+            <div>
+              <label htmlFor="companyName" className="block text-sm/6 font-medium text-gray-900">
+                Firma Adı
+              </label>
+              <div className="mt-2">
+                <input
                   id="companyName"
+                  type="text"
                   {...registerForm.register("companyName")}
+                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
                   placeholder="Firma adınızı giriniz"
                 />
                 {registerForm.formState.errors.companyName && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.companyName.message}</p>
+                  <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.companyName.message}</p>
                 )}
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Ad</Label>
-              <Input
+            </div>
+          )}
+          
+          <div>
+            <label htmlFor="firstName" className="block text-sm/6 font-medium text-gray-900">
+              Ad
+            </label>
+            <div className="mt-2">
+              <input
                 id="firstName"
+                type="text"
                 {...registerForm.register("firstName")}
+                required
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
                 placeholder="Adınızı giriniz"
               />
               {registerForm.formState.errors.firstName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.firstName.message}</p>
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.firstName.message}</p>
               )}
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Soyad</Label>
-              <Input
+          </div>
+          
+          <div>
+            <label htmlFor="lastName" className="block text-sm/6 font-medium text-gray-900">
+              Soyad
+            </label>
+            <div className="mt-2">
+              <input
                 id="lastName"
+                type="text"
                 {...registerForm.register("lastName")}
+                required
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
                 placeholder="Soyadınızı giriniz"
               />
               {registerForm.formState.errors.lastName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.lastName.message}</p>
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.lastName.message}</p>
               )}
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900">
+              E-posta adresi
+            </label>
+            <div className="mt-2">
+              <input
                 id="email"
                 type="email"
                 {...registerForm.register("email")}
+                required
+                autoComplete="email"
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
                 placeholder="E-posta adresinizi giriniz"
               />
               {registerForm.formState.errors.email && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.email.message}</p>
               )}
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...registerForm.register("password")}
-                  placeholder="Şifrenizi giriniz"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">
+              Şifre
+            </label>
+            <div className="mt-2 relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                {...registerForm.register("password")}
+                required
+                autoComplete="new-password"
+                className="block w-full rounded-md bg-white px-3 py-1.5 pr-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-[#EC7830] sm:text-sm/6"
+                placeholder="Şifrenizi giriniz (en az 6 karakter)"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
               {registerForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600">{registerForm.formState.errors.password.message}</p>
               )}
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
+          </div>
+
+          <div>
+            <button
+              type="submit"
               disabled={registerLoading}
+              className="flex w-full justify-center rounded-md bg-[#EC7830] px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-[#EC7830]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EC7830] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <Link href="/login">
-              <Button variant="ghost" className="text-sm">
-                Hesabınız var mı? Giriş yapın
-              </Button>
-            </Link>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </form>
+
+        <p className="mt-10 text-center text-sm/6 text-gray-500">
+          Zaten hesabınız var mı?
+          <Link href="/login" className="font-semibold text-[#EC7830] hover:text-[#EC7830]/80 ml-1">
+            Giriş yapın
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
