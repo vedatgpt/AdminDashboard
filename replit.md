@@ -62,11 +62,11 @@ The application follows a monorepo structure with clear separation between clien
 ## External Dependencies
 
 ### Key Libraries
-- **UI**: @radix-ui components, @mui/material (Material UI), lucide-react icons
+- **UI**: @radix-ui components, lucide-react icons
 - **Forms**: react-hook-form with @hookform/resolvers
 - **Database**: drizzle-orm, @neondatabase/serverless
 - **Build Tools**: vite, esbuild, tsx
-- **Styling**: tailwindcss, @emotion/react, @emotion/styled, class-variance-authority, clsx
+- **Styling**: tailwindcss, class-variance-authority, clsx
 
 ### Development Tools
 - **Runtime**: Node.js with ES modules
@@ -268,49 +268,3 @@ Authentication features:
   - `/admin/` - Admin panel pages (existing structure maintained)
 - Updated App.tsx imports to reflect new directory structure
 - Improved project navigation and file organization
-
-### Material UI Integration (July 19, 2025)
-- Successfully installed Material UI core dependencies: @mui/material, @emotion/react, @emotion/styled, @mui/icons-material
-- Clean installation with no conflicts with existing Radix UI components
-- Both UI libraries can coexist - Radix UI for existing components, Material UI for new components
-- Created test component demonstrating proper Material UI functionality
-- All dependencies properly resolved and application running successfully
-- Material UI v7.2.0 with Emotion styling engine for consistent theming
-
-### Authentication Pages Material UI Redesign (July 19, 2025)
-- Completely redesigned register and login pages with Material UI components
-- Replaced all form inputs with Material UI TextField (outlined variant)
-- Implemented FormControl and OutlinedInput structure for password fields
-- Added Material UI icons (Visibility/VisibilityOff) for password toggle functionality
-- Applied brand color (#EC7830) styling throughout all form components
-- Register page: Name fields (Ad/Soyad) now display side by side using Grid layout
-- Both pages now use Material UI Button with custom styling and brand colors
-- Maintained all form validation, error handling, and react-hook-form integration
-- Consistent user experience across both authentication forms
-- Completely removed all shadcn components from authentication pages
-- Fixed button text capitalization with textTransform: 'none'
-- Removed all shadow effects from buttons and cards for clean design
-- Material UI Card components with no shadow and clean borders
-
-### Authentication Code Optimization (July 19, 2025)
-- Created reusable auth components to eliminate code duplication:
-  - AuthLayout: Shared page layout with logo, title, and navigation link
-  - AuthTextField: Branded input field with consistent styling
-  - AuthButton: Styled button with brand colors and loading states
-  - PasswordField: Password input with visibility toggle functionality
-- Reduced Login page from 183 lines to 65 lines (65% reduction)
-- Reduced Register page from 283 lines to 137 lines (52% reduction)
-- Eliminated repetitive Material UI styling code
-- Improved maintainability through component abstraction
-- Preserved all authentication functionality and form validation
-
-### Material UI Template Integration (July 19, 2025)
-- Applied official Material UI sign-in template design from GitHub v7.2.0
-- Modern gradient background with radial-gradient styling
-- Professional card design with proper shadows and spacing
-- FormControl with FormLabel structure following Material UI best practices
-- Responsive typography with clamp() for adaptive sizing
-- Enhanced form structure with proper Box component layout
-- Added proper autocomplete and accessibility attributes
-- Maintained brand color (#EC7830) integration throughout components
-- Clean, professional design matching Material UI standards
