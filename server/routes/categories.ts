@@ -33,6 +33,38 @@ router.get("/", requireAuth, async (req, res) => {
   }
 });
 
+// Get paginated categories by parentId for URL-based navigation
+router.get("/paginated", requireAdmin, async (req, res) => {
+  try {
+    const { parentId, page = '1', perPage = '20' } = req.query;
+    const pageNum = parseInt(page as string) || 1;
+    const perPageNum = parseInt(perPage as string) || 20;
+    const parentIdNum = parentId ? parseInt(parentId as string) : null;
+
+    const result = await storage.getCategoriesPaginated(parentIdNum, pageNum, perPageNum);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching paginated categories:", error);
+    res.status(500).json({ error: "Kategoriler alınırken hata oluştu" });
+  }
+});
+
+// Get breadcrumbs for a category (admin only)
+router.get("/:id/breadcrumbs", requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    const breadcrumbs = await storage.getCategoryBreadcrumbs(categoryId);
+    res.json(breadcrumbs);
+  } catch (error) {
+    console.error("Error fetching breadcrumbs:", error);
+    res.status(500).json({ error: "Breadcrumb alınırken hata oluştu" });
+  }
+});
+
 // Get single category by ID
 router.get("/:id", requireAuth, async (req, res) => {
   try {

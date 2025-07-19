@@ -56,6 +56,8 @@ export interface IStorage {
   updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category>;
   deleteCategory(id: number): Promise<void>;
   getCategoryTree(): Promise<CategoryWithChildren[]>;
+  getCategoriesPaginated(parentId: number | null, page: number, perPage: number): Promise<{ categories: Category[], total: number, totalPages: number }>;
+  getCategoryBreadcrumbs(categoryId: number): Promise<Category[]>;
   
   // Custom fields methods
   getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
@@ -270,6 +272,54 @@ export class DatabaseStorage implements IStorage {
   async getCategoryTree(): Promise<CategoryWithChildren[]> {
     const allCategories = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
     return this.buildCategoryTree(allCategories);
+  }
+
+  async getCategoriesPaginated(parentId: number | null, page: number, perPage: number): Promise<{ categories: Category[], total: number, totalPages: number }> {
+    const offset = (page - 1) * perPage;
+    
+    // Build the where condition based on parentId
+    const whereCondition = parentId === null ? isNull(categories.parentId) : eq(categories.parentId, parentId);
+    
+    // Get total count
+    const totalResult = await db
+      .select()
+      .from(categories)
+      .where(whereCondition);
+    
+    const total = totalResult.length;
+    const totalPages = Math.ceil(total / perPage);
+    
+    // Get paginated results
+    const categoryResults = await db
+      .select()
+      .from(categories)
+      .where(whereCondition)
+      .orderBy(asc(categories.sortOrder), asc(categories.name))
+      .limit(perPage)
+      .offset(offset);
+    
+    return {
+      categories: categoryResults,
+      total,
+      totalPages
+    };
+  }
+
+  async getCategoryBreadcrumbs(categoryId: number): Promise<Category[]> {
+    const breadcrumbs: Category[] = [];
+    let currentCategory = await this.getCategoryById(categoryId);
+    
+    while (currentCategory && currentCategory.parentId) {
+      const parentCategory = await this.getCategoryById(currentCategory.parentId);
+      if (parentCategory) {
+        breadcrumbs.unshift(parentCategory);
+        currentCategory = parentCategory;
+      } else {
+        break;
+      }
+    }
+    
+    return breadcrumbs;
   }
 
   // Custom fields implementation

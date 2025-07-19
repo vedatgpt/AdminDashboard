@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useSearch } from "wouter";
 import { 
   Plus, Tags, Edit2, Trash2, FolderOpen, ChevronRight, ChevronDown, 
   Settings, Filter, SortAsc, Eye, X, Save, Type, List, CheckSquare, Hash,
-  GripVertical, ArrowUpDown, Folder
+  GripVertical, ArrowUpDown, Folder, Home
 } from "lucide-react";
 import {
   DndContext,
@@ -35,21 +36,17 @@ import type {
   CustomFieldType
 } from "@shared/schema";
 
-// Sortable Category Item Component
-function SortableCategoryItem({ 
+// Category List Item Component for the new flat structure
+function CategoryListItem({ 
   category, 
-  level = 0, 
   onEdit, 
   onDelete, 
-  onAddChild, 
   onViewDetail, 
   onViewSubcategories 
 }: {
-  category: CategoryWithChildren;
-  level?: number;
+  category: Category;
   onEdit: (category: Category) => void;
   onDelete: (id: number) => void;
-  onAddChild: (parentId: number) => void;
   onViewDetail: (category: Category) => void;
   onViewSubcategories: (category: Category) => void;
 }) {
@@ -67,28 +64,13 @@ function SortableCategoryItem({
     transition,
   };
 
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-
-  const toggleExpanded = (id: number) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
-
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`border rounded-lg bg-white mb-2 ${isDragging ? 'opacity-50' : ''}`}
+      className={`border rounded-lg bg-white ${isDragging ? 'opacity-50' : ''}`}
     >
-      <div 
-        className="flex items-center justify-between p-4 hover:bg-gray-50"
-        style={{ paddingLeft: `${level * 20 + 16}px` }}
-      >
+      <div className="flex items-center justify-between p-4 hover:bg-gray-50">
         <div className="flex items-center gap-3">
           <div 
             {...attributes} 
@@ -98,20 +80,14 @@ function SortableCategoryItem({
             <GripVertical className="w-4 h-4 text-gray-400" />
           </div>
           
-          {category.children && category.children.length > 0 && (
-            <button
-              onClick={() => toggleExpanded(category.id)}
-              className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200"
-            >
-              {expandedItems.has(category.id) ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </button>
-          )}
-          <FolderOpen className="w-5 h-5 text-gray-500" />
-          <div>
+          <button
+            onClick={() => onViewSubcategories(category)}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <FolderOpen className="w-6 h-6 text-gray-500" />
+          </button>
+          
+          <div className="flex-1">
             <h3 className="font-medium text-gray-900">{category.name}</h3>
             {category.description && (
               <p className="text-sm text-gray-500">{category.description}</p>
@@ -128,14 +104,6 @@ function SortableCategoryItem({
           }`}>
             {category.isActive ? "Aktif" : "Pasif"}
           </span>
-          
-          <button
-            onClick={() => onViewSubcategories(category)}
-            className="p-1 text-gray-400 hover:text-purple-600 rounded hover:bg-gray-100"
-            title="Alt kategorileri görüntüle"
-          >
-            <Folder className="w-4 h-4" />
-          </button>
 
           <button
             onClick={() => onViewDetail(category)}
@@ -143,14 +111,6 @@ function SortableCategoryItem({
             title="Detayları görüntüle"
           >
             <Eye className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => onAddChild(category.id)}
-            className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
-            title="Alt kategori ekle"
-          >
-            <Plus className="w-4 h-4" />
           </button>
           
           <button
@@ -170,158 +130,18 @@ function SortableCategoryItem({
           </button>
         </div>
       </div>
-      
-      {category.children && category.children.length > 0 && expandedItems.has(category.id) && (
-        <div className="border-t">
-          <CategoryTree 
-            categories={category.children} 
-            level={level + 1}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onAddChild={onAddChild}
-            onViewDetail={onViewDetail}
-            onViewSubcategories={onViewSubcategories}
-          />
-        </div>
-      )}
     </div>
   );
 }
 
-// Category tree component for displaying hierarchical structure
-function CategoryTree({ 
-  categories, 
-  level = 0, 
-  onEdit, 
-  onDelete, 
-  onAddChild, 
-  onViewDetail, 
-  onViewSubcategories
-}: {
-  categories: CategoryWithChildren[];
-  level?: number;
-  onEdit: (category: Category) => void;
-  onDelete: (id: number) => void;
-  onAddChild: (parentId: number) => void;
-  onViewDetail: (category: Category) => void;
-  onViewSubcategories: (category: Category) => void;
-}) {
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
-  const toggleExpanded = (id: number) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
-
-  return (
-    <div className="space-y-1">
-      {level === 0 ? (
-        // Root level uses sortable items with DndContext
-        categories.map((category) => (
-          <SortableCategoryItem
-            key={category.id}
-            category={category}
-            level={level}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onAddChild={onAddChild}
-            onViewDetail={onViewDetail}
-            onViewSubcategories={onViewSubcategories}
-          />
-        ))
-      ) : (
-        // Nested levels use regular items (no drag-drop for now)
-        categories.map((category) => (
-          <div key={category.id} className="border rounded-lg bg-white mb-2">
-            <div 
-              className="flex items-center justify-between p-4 hover:bg-gray-50"
-              style={{ paddingLeft: `${level * 20 + 16}px` }}
-            >
-              <div className="flex items-center gap-3">
-                <FolderOpen className="w-5 h-5 text-gray-500" />
-                <div>
-                  <h3 className="font-medium text-gray-900">{category.name}</h3>
-                  {category.description && (
-                    <p className="text-sm text-gray-500">{category.description}</p>
-                  )}
-                  <p className="text-xs text-gray-400">Sıra: {category.sortOrder}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  category.isActive 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-red-100 text-red-800"
-                }`}>
-                  {category.isActive ? "Aktif" : "Pasif"}
-                </span>
-
-                <button
-                  onClick={() => onViewDetail(category)}
-                  className="p-1 text-gray-400 hover:text-green-600 rounded hover:bg-gray-100"
-                  title="Detayları görüntüle"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => onAddChild(category.id)}
-                  className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
-                  title="Alt kategori ekle"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-                
-                <button
-                  onClick={() => onEdit(category)}
-                  className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
-                  title="Düzenle"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                
-                <button
-                  onClick={() => onDelete(category.id)}
-                  className="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
-                  title="Sil"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            
-            {category.children && category.children.length > 0 && (
-              <div className="border-t">
-                <CategoryTree 
-                  categories={category.children} 
-                  level={level + 1}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onAddChild={onAddChild}
-                  onViewDetail={onViewDetail}
-                  onViewSubcategories={onViewSubcategories}
-                />
-              </div>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
 
 // Category form modal
 function CategoryModal({ isOpen, onClose, category, parentId }: {
   isOpen: boolean;
   onClose: () => void;
   category?: Category;
-  parentId?: number;
+  parentId?: number | null;
 }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
@@ -1359,24 +1179,49 @@ function SubcategoriesModal({ isOpen, onClose, category }: {
 }
 
 export default function Categories() {
+  const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+  const searchParams = new URLSearchParams(useSearch());
+  const parentId = searchParams.get('parent') ? parseInt(searchParams.get('parent')!) : null;
+  const page = parseInt(searchParams.get('page') || '1');
+  const perPage = 20; // Items per page
+  
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const [showModal, setShowModal] = useState(false);
-  const [parentId, setParentId] = useState<number | undefined>();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCategoryDetail, setSelectedCategoryDetail] = useState<Category | undefined>();
-  const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
-  const [selectedCategoryForSubs, setSelectedCategoryForSubs] = useState<Category | undefined>();
-  const [draggedCategory, setDraggedCategory] = useState<number | null>(null);
-  const queryClient = useQueryClient();
+  const [breadcrumbs, setBreadcrumbs] = useState<Category[]>([]);
 
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ["/api/admin/categories"],
-    queryFn: async (): Promise<CategoryWithChildren[]> => {
-      const response = await fetch("/api/admin/categories");
+  // Fetch categories based on parentId with pagination
+  const { data: categoriesData, isLoading } = useQuery({
+    queryKey: ["/api/admin/categories", parentId, page],
+    queryFn: async (): Promise<{ categories: Category[], total: number, totalPages: number }> => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        perPage: perPage.toString(),
+        ...(parentId && { parentId: parentId.toString() })
+      });
+      
+      const response = await fetch(`/api/admin/categories/paginated?${params}`);
       if (!response.ok) throw new Error("Kategoriler alınamadı");
       return response.json();
     },
   });
+
+  // Fetch breadcrumbs for current path
+  const { data: currentBreadcrumbs } = useQuery({
+    queryKey: ["/api/admin/categories/breadcrumbs", parentId],
+    queryFn: async (): Promise<Category[]> => {
+      if (!parentId) return [];
+      const response = await fetch(`/api/admin/categories/${parentId}/breadcrumbs`);
+      if (!response.ok) throw new Error("Breadcrumb alınamadı");
+      return response.json();
+    },
+    enabled: !!parentId,
+  });
+
+  const categories = categoriesData?.categories || [];
+  const totalPages = categoriesData?.totalPages || 1;
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -1390,7 +1235,7 @@ export default function Categories() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories", parentId, page] });
       alert("Kategori başarıyla silindi");
     },
     onError: (error: any) => {
@@ -1410,15 +1255,13 @@ export default function Categories() {
     }
   };
 
-  const handleAddChild = (parentCategoryId: number) => {
+  const handleAddChild = () => {
     setSelectedCategory(undefined);
-    setParentId(parentCategoryId);
     setShowModal(true);
   };
 
   const handleAddRoot = () => {
     setSelectedCategory(undefined);
-    setParentId(undefined);
     setShowModal(true);
   };
 
@@ -1428,8 +1271,24 @@ export default function Categories() {
   };
 
   const handleViewSubcategories = (category: Category) => {
-    setSelectedCategoryForSubs(category);
-    setShowSubcategoriesModal(true);
+    navigate(`/admin/categories?parent=${category.id}`);
+  };
+
+  const navigateToPage = (newPage: number) => {
+    const params = new URLSearchParams();
+    if (parentId) params.set('parent', parentId.toString());
+    if (newPage > 1) params.set('page', newPage.toString());
+    
+    const query = params.toString();
+    navigate(`/admin/categories${query ? '?' + query : ''}`);
+  };
+
+  const navigateToParent = (categoryId?: number) => {
+    if (!categoryId) {
+      navigate('/admin/categories');
+      return;
+    }
+    navigate(`/admin/categories?parent=${categoryId}`);
   };
 
   // Drag and drop sensors
@@ -1453,7 +1312,7 @@ export default function Categories() {
       await Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories", parentId, page] });
     },
   });
 
@@ -1478,61 +1337,137 @@ export default function Categories() {
     }
   };
 
-  const totalCategories = categories ? 
-    categories.reduce((count, cat) => {
-      const countChildren = (category: CategoryWithChildren): number => {
-        return 1 + (category.children?.reduce((acc, child) => acc + countChildren(child), 0) || 0);
-      };
-      return count + countChildren(cat);
-    }, 0) : 0;
-
   return (
-    <div>
-      <PageHeader
-        title="Kategori Yönetimi"
-        subtitle={`Toplam ${totalCategories} kategori`}
-        actions={
-          <button 
-            onClick={handleAddRoot}
-            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:pointer-events-none"
+    <div className="space-y-6">
+      <PageHeader 
+        title={parentId ? "Kategori Yönetimi" : "Kategori Yönetimi"} 
+        icon={<Tags className="w-6 h-6" />}
+        action={
+          <button
+            onClick={parentId ? handleAddChild : handleAddRoot}
+            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm"
           >
-            <Plus className="w-4 h-4" />
-            Ana Kategori Ekle
+            <Plus className="w-4 h-4 inline-block mr-2" />
+            {parentId ? "Alt Kategori Ekle" : "Ana Kategori Ekle"}
           </button>
         }
       />
 
+      {/* Breadcrumbs */}
+      {currentBreadcrumbs && currentBreadcrumbs.length > 0 && (
+        <div className="bg-white rounded-lg border p-4">
+          <nav className="flex items-center space-x-2 text-sm text-gray-600">
+            <button 
+              onClick={() => navigateToParent()}
+              className="hover:text-[#EC7830] flex items-center"
+            >
+              <Home className="w-4 h-4 mr-1" />
+              Ana Kategoriler
+            </button>
+            
+            {currentBreadcrumbs.map((breadcrumb, index) => (
+              <div key={breadcrumb.id} className="flex items-center space-x-2">
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                {index === currentBreadcrumbs.length - 1 ? (
+                  <span className="font-medium text-gray-900">{breadcrumb.name}</span>
+                ) : (
+                  <button 
+                    onClick={() => navigateToParent(breadcrumb.id)}
+                    className="hover:text-[#EC7830]"
+                  >
+                    {breadcrumb.name}
+                  </button>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      {/* Categories List */}
       <div className="bg-white rounded-lg border">
         {isLoading ? (
           <div className="flex items-center justify-center p-8">
             <div className="text-gray-500">Kategoriler yükleniyor...</div>
           </div>
         ) : categories && categories.length > 0 ? (
-          <div className="p-4">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={categories.map(cat => cat.id)} strategy={verticalListSortingStrategy}>
-                <CategoryTree 
-                  categories={categories}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAddChild={handleAddChild}
-                  onViewDetail={handleViewDetail}
-                  onViewSubcategories={handleViewSubcategories}
-                />
-              </SortableContext>
-            </DndContext>
-          </div>
+          <>
+            <div className="p-4">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={categories.map(cat => cat.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {categories.map((category) => (
+                      <CategoryListItem
+                        key={category.id}
+                        category={category}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onViewDetail={handleViewDetail}
+                        onViewSubcategories={handleViewSubcategories}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="border-t p-4 flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  Sayfa {page} / {totalPages}
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => navigateToPage(page - 1)}
+                    disabled={page === 1}
+                    className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Önceki
+                  </button>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => navigateToPage(pageNum)}
+                        className={`px-3 py-2 text-sm border rounded-lg ${
+                          page === pageNum 
+                            ? 'bg-[#EC7830] text-white border-[#EC7830]' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => navigateToPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sonraki
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
-          <div className="p-8">
-            <EmptyState
-              icon={Tags}
-              title="Henüz kategori yok"
-              description="İlk kategoriyi eklemek için 'Ana Kategori Ekle' butonuna tıklayın."
-            />
+          <div className="p-8 text-center text-gray-500">
+            <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-lg font-medium text-gray-900 mb-2">
+              {parentId ? "Alt kategori yok" : "Henüz kategori yok"}
+            </p>
+            <p className="text-gray-500">
+              {parentId ? "Bu kategoriye alt kategori eklemek için yukarıdaki butonu kullanın." : "İlk ana kategoriyi oluşturmak için yukarıdaki butonu kullanın."}
+            </p>
           </div>
         )}
       </div>
@@ -1549,14 +1484,6 @@ export default function Categories() {
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
           category={selectedCategoryDetail}
-        />
-      )}
-
-      {selectedCategoryForSubs && (
-        <SubcategoriesModal
-          isOpen={showSubcategoriesModal}
-          onClose={() => setShowSubcategoriesModal(false)}
-          category={selectedCategoryForSubs}
         />
       )}
     </div>
