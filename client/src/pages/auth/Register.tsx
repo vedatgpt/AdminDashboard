@@ -11,7 +11,7 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 export default function Register() {
   const [, navigate] = useLocation();
@@ -80,32 +80,21 @@ export default function Register() {
         <CardContent>
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
-              <Box sx={{ minWidth: 120 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="role-select-label">Hesap Türü</InputLabel>
-                  <Select
-                    labelId="role-select-label"
-                    id="role-select"
-                    value={registerForm.watch("role")}
-                    label="Hesap Türü"
-                    native
-                    {...registerForm.register("role")}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#EC7830',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#EC7830',
-                        },
-                      },
-                    }}
-                  >
-                    <option value="individual">Bireysel</option>
-                    <option value="corporate">Kurumsal</option>
-                  </Select>
-                </FormControl>
-              </Box>
+              <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
+                <InputLabel id="role-select-label">Hesap Türü</InputLabel>
+                <Select
+                  labelId="role-select-label"
+                  id="role-select"
+                  value={registerForm.watch("role")}
+                  label="Hesap Türü"
+                  onChange={(event) => {
+                    registerForm.setValue("role", event.target.value as "individual" | "corporate");
+                  }}
+                >
+                  <MenuItem value="individual">Bireysel</MenuItem>
+                  <MenuItem value="corporate">Kurumsal</MenuItem>
+                </Select>
+              </FormControl>
               {registerForm.formState.errors.role && (
                 <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
               )}
