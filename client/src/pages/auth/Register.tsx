@@ -68,11 +68,9 @@ export default function Register() {
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-lg border border-gray-200 shadow-lg">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-center mb-4">
-            <img src={logoPath} alt="Logo" className="h-16 w-auto" />
-          </div>
-          <h1 className="text-2xl font-bold text-center text-gray-900">
-            Kayıt Ol
+         
+          <h1 className="text-2xl font-semibold text-center text-gray-900">
+            Hesap Aç
           </h1>
         </div>
         <div className="p-6">
@@ -214,12 +212,12 @@ export default function Register() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Zaten hesabınız var mı?" "
+              Zaten hesabın var mı? {" "}
               <Link
                 href="/login"
                 className="font-medium text-primary hover:text-opacity-80"
               >
-                Giriş yapın
+                Giriş yap
               </Link>
             </p>
           </div>

@@ -62,10 +62,8 @@ export default function Login() {
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-lg border border-gray-200 shadow-lg">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-center mb-4">
-            <img src={logoPath} alt="Logo" className="h-16 w-auto" />
-          </div>
-          <h1 className="text-2xl font-bold text-center text-gray-900">
+          
+          <h1 className="text-2xl font-semibold text-center text-gray-900">
             Giriş Yap
           </h1>
         </div>
@@ -73,13 +71,13 @@ export default function Login() {
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-700">
-                E-posta Adresi
+                E-posta veya Kullanıcı Adı
               </label>
               <input
                 id="emailOrUsername"
-                type="email"
+                type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="E-posta adresinizi girin"
+                placeholder="E-posta veya kullanıcı adınızı girin"
                 {...loginForm.register("emailOrUsername")}
               />
               {loginForm.formState.errors.emailOrUsername && (
@@ -137,12 +135,12 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Hesabınız yok mu?{" "}
+              Henüz hesabın yok mu?{" "}
               <Link
                 href="/register"
                 className="font-medium text-primary hover:text-opacity-80"
               >
-                Kayıt olun
+                Hesap aç
               </Link>
             </p>
           </div>

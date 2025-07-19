@@ -2,7 +2,6 @@ import { Link, useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Users, Megaphone, Tags, MapPin, X, LogOut, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import logoPath from "@assets/logo_1752808818099.png";
 
@@ -40,19 +39,13 @@ export default function Sidebar() {
     <>
       {/* Mobile backdrop */}
       <div
-        className={cn(
-          "fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden",
-          isOpen ? "block" : "hidden"
-        )}
+        className={`fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden ${isOpen ? "block" : "hidden"}`}
         onClick={close}
       />
 
       {/* Sidebar */}
       <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        )}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
@@ -80,13 +73,11 @@ export default function Sidebar() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={cn(
-                      "group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200",
+                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                       isActive
-                        ? "bg-primary-light text-primary"
-                        : "text-gray-700 hover:bg-primary-light hover:text-primary"
-                    )}
-                    onClick={close}
+                        ? "bg-primary text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
                   >
                     <Icon className="w-5 h-5 mr-3" />
                     {item.name}
@@ -95,19 +86,12 @@ export default function Sidebar() {
               );
             })}
           </ul>
-          
-          <div className="px-3 pb-6 space-y-2">
-            <Link
-              href="/account"
-              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100"
-              onClick={close}
-            >
-              <Settings className="w-5 h-5 mr-3" />
-              Hesap
-            </Link>
+
+          {/* Logout button */}
+          <div className="px-3 pb-4">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-red-50 hover:text-red-600"
+              className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-200"
             >
               <LogOut className="w-5 h-5 mr-3" />
               Çıkış Yap
