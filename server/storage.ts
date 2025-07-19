@@ -250,8 +250,18 @@ export class DatabaseStorage implements IStorage {
     return category || undefined;
   }
 
-  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.slug, slug));
+  async getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined> {
+    let query = db.select().from(categories).where(eq(categories.slug, slug));
+    
+    if (parentId !== undefined) {
+      if (parentId === null) {
+        query = query.and(isNull(categories.parentId));
+      } else {
+        query = query.and(eq(categories.parentId, parentId));
+      }
+    }
+    
+    const [category] = await query;
     return category || undefined;
   }
 

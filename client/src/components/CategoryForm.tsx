@@ -47,7 +47,7 @@ export default function CategoryForm({
     name: "",
     slug: "",
     parentId: null as number | null,
-    icon: "",
+    icon: null as string | null,
     sortOrder: 0,
     isActive: true,
   });
@@ -62,7 +62,7 @@ export default function CategoryForm({
         name: category.name,
         slug: category.slug,
         parentId: category.parentId,
-        icon: category.icon || "",
+        icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
       });
@@ -72,7 +72,7 @@ export default function CategoryForm({
         name: "",
         slug: "",
         parentId: parentCategory.id,
-        icon: "",
+        icon: null,
         sortOrder: 0,
         isActive: true,
       });
@@ -82,7 +82,7 @@ export default function CategoryForm({
         name: "",
         slug: "",
         parentId: null,
-        icon: "",
+        icon: null,
         sortOrder: 0,
         isActive: true,
       });
@@ -165,7 +165,16 @@ export default function CategoryForm({
       }
     }
     
-    onSubmit({ ...formData, icon: iconPath });
+    // Only include icon if there's an actual value
+    const submitData = { ...formData };
+    if (iconPath) {
+      submitData.icon = iconPath;
+    } else if (!iconFile && !formData.icon) {
+      // Don't include icon field if no icon is set
+      delete submitData.icon;
+    }
+    
+    onSubmit(submitData);
   };
 
   if (!isOpen) return null;

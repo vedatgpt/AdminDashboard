@@ -126,6 +126,16 @@ router.post("/", async (req, res) => {
   try {
     const validatedData = insertCategorySchema.parse(req.body);
     console.log("Creating category with data:", validatedData);
+    
+    // Check for duplicate slug within same parent
+    const existingCategory = await storage.getCategoryBySlug(validatedData.slug, validatedData.parentId);
+    if (existingCategory) {
+      return res.status(400).json({ 
+        error: "Bu slug aynı üst kategoride zaten kullanılıyor", 
+        details: "slug must be unique within same parent category" 
+      });
+    }
+    
     const category = await storage.createCategory(validatedData);
     res.status(201).json(category);
   } catch (error: any) {
