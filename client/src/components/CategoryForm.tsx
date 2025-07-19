@@ -165,12 +165,16 @@ export default function CategoryForm({
       }
     }
     
-    // Only include icon if there's an actual value
+    // Handle icon submission properly
     const submitData = { ...formData };
     if (iconPath) {
+      // New icon uploaded
       submitData.icon = iconPath;
-    } else if (!iconFile && !formData.icon) {
-      // Don't include icon field if no icon is set
+    } else if (formData.icon === null) {
+      // Icon explicitly removed
+      submitData.icon = null;
+    } else if (!formData.icon && !iconFile) {
+      // No icon at all (new category without icon)
       delete submitData.icon;
     }
     
@@ -269,7 +273,10 @@ export default function CategoryForm({
                   <span className="text-sm text-gray-600">{formData.icon}</span>
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, icon: null }))}
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, icon: null }));
+                      setIconFile(null);
+                    }}
                     className="text-red-600 hover:text-red-800"
                     title="İkonu kaldır"
                   >

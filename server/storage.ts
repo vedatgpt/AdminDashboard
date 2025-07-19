@@ -1,6 +1,6 @@
 import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -34,7 +34,7 @@ export interface IStorage {
   getCategories(): Promise<Category[]>;
   getCategoriesTree(): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
-  getCategoryBySlug(slug: string): Promise<Category | undefined>;
+  getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined>;
   getChildCategories(parentId: number | null): Promise<Category[]>;
   createCategory(data: InsertCategory): Promise<Category>;
   updateCategory(id: number, updates: UpdateCategory): Promise<Category>;
@@ -251,17 +251,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined> {
-    let query = db.select().from(categories).where(eq(categories.slug, slug));
+    let whereCondition = eq(categories.slug, slug);
     
     if (parentId !== undefined) {
       if (parentId === null) {
-        query = query.and(isNull(categories.parentId));
+        whereCondition = and(whereCondition, isNull(categories.parentId));
       } else {
-        query = query.and(eq(categories.parentId, parentId));
+        whereCondition = and(whereCondition, eq(categories.parentId, parentId));
       }
     }
     
-    const [category] = await query;
+    const [category] = await db.select().from(categories).where(whereCondition);
     return category || undefined;
   }
 
