@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { insertAuthorizedPersonnelSchema, type InsertAuthorizedPersonnel, type AuthorizedPersonnel } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
 interface AuthorizedPersonnelFormProps {
@@ -32,14 +32,37 @@ export default function AuthorizedPersonnelForm({
   const form = useForm<InsertAuthorizedPersonnel>({
     resolver: zodResolver(insertAuthorizedPersonnelSchema),
     defaultValues: {
-      firstName: personnel?.firstName || "",
-      lastName: personnel?.lastName || "",
-      email: personnel?.email || "",
+      firstName: "",
+      lastName: "",
+      email: "",
       password: "",
-      mobilePhone: personnel?.mobilePhone || "",
-      whatsappNumber: personnel?.whatsappNumber || "",
+      mobilePhone: "",
+      whatsappNumber: "",
     },
   });
+
+  // Update form values when personnel data changes
+  useEffect(() => {
+    if (personnel) {
+      form.reset({
+        firstName: personnel.firstName || "",
+        lastName: personnel.lastName || "",
+        email: personnel.email || "",
+        password: "",
+        mobilePhone: personnel.mobilePhone || "",
+        whatsappNumber: personnel.whatsappNumber || "",
+      });
+    } else {
+      form.reset({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        mobilePhone: "",
+        whatsappNumber: "",
+      });
+    }
+  }, [personnel, form]);
 
   const handleSubmit = async (data: InsertAuthorizedPersonnel) => {
     try {

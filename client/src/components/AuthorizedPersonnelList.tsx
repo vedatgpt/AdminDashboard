@@ -157,7 +157,7 @@ export default function AuthorizedPersonnelList({
                     onClick={() => handleToggleStatus(person.id)}
                     disabled={isTogglingStatus}
                     title={person.isActive ? "Pasif Yap" : "Aktif Yap"}
-                    className={person.isActive ? "" : "text-green-600 border-green-600"}
+                    className={person.isActive ? "text-red-600 border-red-600 hover:bg-red-50" : "text-green-600 border-green-600 hover:bg-green-50"}
                   >
                     <Power className="h-4 w-4" />
                   </Button>

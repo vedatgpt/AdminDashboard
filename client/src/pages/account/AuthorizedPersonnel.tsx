@@ -54,10 +54,33 @@ export default function AuthorizedPersonnel() {
   };
 
   const handleSubmit = async (data: any) => {
-    if (editingPersonnel) {
-      await updatePersonnel({ id: editingPersonnel.id, data });
-    } else {
-      await createPersonnel(data);
+    try {
+      if (editingPersonnel) {
+        await updatePersonnel({ id: editingPersonnel.id, data });
+      } else {
+        await createPersonnel(data);
+      }
+    } catch (error) {
+      // Error handling is done in the form component
+      throw error;
+    }
+  };
+
+  const handleToggleStatus = async (id: number) => {
+    try {
+      await toggleStatus(id);
+    } catch (error) {
+      // Error handling is done in the list component
+      throw error;
+    }
+  };
+
+  const handleDeletePersonnel = async (id: number) => {
+    try {
+      await deletePersonnel(id);
+    } catch (error) {
+      // Error handling is done in the list component
+      throw error;
     }
   };
 
@@ -87,8 +110,8 @@ export default function AuthorizedPersonnel() {
               personnel={personnel}
               isLoading={isLoading}
               onEdit={handleEditPersonnel}
-              onToggleStatus={toggleStatus}
-              onDelete={deletePersonnel}
+              onToggleStatus={handleToggleStatus}
+              onDelete={handleDeletePersonnel}
               isTogglingStatus={isTogglingStatus}
               isDeleting={isDeleting}
             />
