@@ -60,36 +60,46 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          
-          <CardTitle className="text-2xl font-bold text-center">
+      <div className="w-full max-w-md bg-white rounded-lg border border-gray-200 shadow-lg">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-center mb-4">
+            <img src={logoPath} alt="Logo" className="h-16 w-auto" />
+          </div>
+          <h1 className="text-2xl font-bold text-center text-gray-900">
             Giriş Yap
-          </CardTitle>
-         
-        </CardHeader>
-        <CardContent>
+          </h1>
+        </div>
+        <div className="p-6">
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emailOrUsername">E-posta Adresi</Label>
-              <Input
+              <label htmlFor="emailOrUsername" className="block text-sm font-medium text-gray-700">
+                E-posta Adresi
+              </label>
+              <input
                 id="emailOrUsername"
+                type="email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="E-posta adresinizi girin"
                 {...loginForm.register("emailOrUsername")}
-                placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
               />
               {loginForm.formState.errors.emailOrUsername && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.emailOrUsername.message}</p>
+                <p className="text-sm text-red-500">
+                  {loginForm.formState.errors.emailOrUsername.message}
+                </p>
               )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Şifre
+              </label>
               <div className="relative">
-                <Input
+                <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Şifrenizi girin"
                   {...loginForm.register("password")}
-                  placeholder="Şifrenizi giriniz"
-                  className="pr-10"
                 />
                 <button
                   type="button"
@@ -104,27 +114,40 @@ export default function Login() {
                 </button>
               </div>
               {loginForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
+                <p className="text-sm text-red-500">
+                  {loginForm.formState.errors.password.message}
+                </p>
               )}
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
+
+            <button
+              type="submit"
               disabled={loginLoading}
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </Button>
+            </button>
+
+            {loginError && (
+              <p className="text-sm text-red-500 text-center">
+                {loginError}
+              </p>
+            )}
           </form>
-          
+
           <div className="mt-6 text-center">
-            <Link href="/register">
-              <Button variant="ghost" className="text-sm">
-                Hesabınız yok mu? Kayıt olun
-              </Button>
-            </Link>
+            <p className="text-sm text-gray-600">
+              Hesabınız yok mu?{" "}
+              <Link
+                href="/register"
+                className="font-medium text-primary hover:text-opacity-80"
+              >
+                Kayıt olun
+              </Link>
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
