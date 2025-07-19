@@ -11,7 +11,7 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment } from '@mui/material';
 
 export default function Register() {
   const [, navigate] = useLocation();
@@ -90,16 +90,6 @@ export default function Register() {
                     label="Hesap Türü"
                     native
                     {...registerForm.register("role")}
-                    sx={{ 
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#EC7830',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#EC7830',
-                        },
-                      },
-                    }}
                   >
                     <option value="individual">Bireysel</option>
                     <option value="corporate">Kurumsal</option>
@@ -113,80 +103,149 @@ export default function Register() {
             
             {registerForm.watch("role") === "corporate" && (
               <div className="space-y-2">
-                <Label htmlFor="companyName">Firma Adı</Label>
-                <Input
+                <TextField
                   id="companyName"
+                  label="Firma Adı"
+                  variant="outlined"
+                  fullWidth
                   {...registerForm.register("companyName")}
                   placeholder="Firma adınızı giriniz"
+                  error={!!registerForm.formState.errors.companyName}
+                  helperText={registerForm.formState.errors.companyName?.message}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#EC7830',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#EC7830',
+                      },
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#EC7830',
+                    },
+                  }}
                 />
-                {registerForm.formState.errors.companyName && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.companyName.message}</p>
-                )}
               </div>
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="firstName">Ad</Label>
-              <Input
+              <TextField
                 id="firstName"
+                label="Ad"
+                variant="outlined"
+                fullWidth
                 {...registerForm.register("firstName")}
                 placeholder="Adınızı giriniz"
+                error={!!registerForm.formState.errors.firstName}
+                helperText={registerForm.formState.errors.firstName?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#EC7830',
+                  },
+                }}
               />
-              {registerForm.formState.errors.firstName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.firstName.message}</p>
-              )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="lastName">Soyad</Label>
-              <Input
+              <TextField
                 id="lastName"
+                label="Soyad"
+                variant="outlined"
+                fullWidth
                 {...registerForm.register("lastName")}
                 placeholder="Soyadınızı giriniz"
+                error={!!registerForm.formState.errors.lastName}
+                helperText={registerForm.formState.errors.lastName?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#EC7830',
+                  },
+                }}
               />
-              {registerForm.formState.errors.lastName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.lastName.message}</p>
-              )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input
+              <TextField
                 id="email"
+                label="E-posta"
+                variant="outlined"
                 type="email"
+                fullWidth
                 {...registerForm.register("email")}
                 placeholder="E-posta adresinizi giriniz"
+                error={!!registerForm.formState.errors.email}
+                helperText={registerForm.formState.errors.email?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#EC7830',
+                  },
+                }}
               />
-              {registerForm.formState.errors.email && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
-              )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...registerForm.register("password")}
-                  placeholder="Şifrenizi giriniz"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {registerForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
-              )}
+              <TextField
+                id="password"
+                label="Şifre"
+                variant="outlined"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                {...registerForm.register("password")}
+                placeholder="Şifrenizi giriniz"
+                error={!!registerForm.formState.errors.password}
+                helperText={registerForm.formState.errors.password?.message}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#EC7830',
+                  },
+                }}
+              />
             </div>
             <Button 
               type="submit" 
