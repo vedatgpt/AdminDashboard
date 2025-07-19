@@ -3,6 +3,14 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
+// Generate unique username like "velikara4678"
+function generateUniqueUsername(firstName: string, lastName: string): string {
+  const cleanFirstName = firstName.toLowerCase().replace(/[^a-z]/g, '');
+  const cleanLastName = lastName.toLowerCase().replace(/[^a-z]/g, '');
+  const randomNumber = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+  return `${cleanFirstName}${cleanLastName}${randomNumber}`;
+}
+
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -56,18 +64,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async registerUser(registerData: RegisterData): Promise<User> {
-    // Check if user already exists
-    const existingUser = await this.getUserByUsername(registerData.username);
-    if (existingUser) {
-      throw new Error("Bu kullanıcı adı zaten kullanılıyor");
-    }
-
+    // Check if email already exists
     const existingEmail = await this.getUserByEmail(registerData.email);
     if (existingEmail) {
       throw new Error("Bu email adresi zaten kullanılıyor");
     }
 
-    return this.createUser(registerData);
+    // Generate unique username
+    let username = generateUniqueUsername(registerData.firstName, registerData.lastName);
+    let attempts = 0;
+    
+    // Ensure username is unique (try up to 10 times)
+    while (await this.getUserByUsername(username) && attempts < 10) {
+      username = generateUniqueUsername(registerData.firstName, registerData.lastName);
+      attempts++;
+    }
+
+    if (attempts >= 10) {
+      throw new Error("Benzersiz kullanıcı adı oluşturulamadı, lütfen tekrar deneyin");
+    }
+
+    // Create user with generated username
+    const userToCreate = {
+      ...registerData,
+      username,
+      companyName: registerData.role === "corporate" ? registerData.companyName : null,
+    };
+
+    return this.createUser(userToCreate);
   }
 }
 

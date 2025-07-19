@@ -11,6 +11,7 @@ import Locations from "@/pages/Locations";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Landing from "@/pages/Landing";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -45,6 +46,7 @@ function Router() {
       ) : (
         <Switch>
           <Route path="/" component={Landing} />
+          <Route path="/:username" component={Profile} />
           <Route component={Landing} />
         </Switch>
       )}

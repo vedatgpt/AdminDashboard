@@ -106,6 +106,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ users: [] });
   });
 
+  // Public profile route
+  app.get("/api/users/profile/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      }
+
+      // Don't return sensitive information
+      const { password, ...publicUser } = user;
+      res.json(publicUser);
+    } catch (error) {
+      res.status(500).json({ error: "Sunucu hatası" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

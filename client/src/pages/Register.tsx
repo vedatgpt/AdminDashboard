@@ -21,9 +21,11 @@ export default function Register() {
   const registerForm = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       password: "",
       email: "",
+      firstName: "",
+      lastName: "",
+      companyName: "",
       role: "individual",
     },
   });
@@ -98,17 +100,45 @@ export default function Register() {
                 <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
               )}
             </div>
+            
+            {registerForm.watch("role") === "corporate" && (
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Firma Adı</Label>
+                <Input
+                  id="companyName"
+                  {...registerForm.register("companyName")}
+                  placeholder="Firma adınızı giriniz"
+                />
+                {registerForm.formState.errors.companyName && (
+                  <p className="text-sm text-red-500">{registerForm.formState.errors.companyName.message}</p>
+                )}
+              </div>
+            )}
+            
             <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı Adı</Label>
+              <Label htmlFor="firstName">Ad</Label>
               <Input
-                id="username"
-                {...registerForm.register("username")}
-                placeholder="Kullanıcı adınızı giriniz"
+                id="firstName"
+                {...registerForm.register("firstName")}
+                placeholder="Adınızı giriniz"
               />
-              {registerForm.formState.errors.username && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.username.message}</p>
+              {registerForm.formState.errors.firstName && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.firstName.message}</p>
               )}
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Soyad</Label>
+              <Input
+                id="lastName"
+                {...registerForm.register("lastName")}
+                placeholder="Soyadınızı giriniz"
+              />
+              {registerForm.formState.errors.lastName && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.lastName.message}</p>
+              )}
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
               <Input
@@ -121,6 +151,7 @@ export default function Register() {
                 <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
               )}
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="password">Şifre</Label>
               <div className="relative">

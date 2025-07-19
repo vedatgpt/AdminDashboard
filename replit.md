@@ -110,9 +110,32 @@ Authentication features:
 - Test admin account: username "admin", password "admin123"
 
 ## Recent Changes (July 18, 2025)
+
+### Migration and Setup
 - Migrated project from Replit Agent to standard Replit environment
 - Set up PostgreSQL database with environment variables
 - Pushed database schema using Drizzle migrations
 - Created admin user for testing
 - Verified all security practices and client/server separation
-- Confirmed application runs without errors on port 5000
+
+### Enhanced Registration and Authentication
+- Added firstName, lastName, and companyName fields to user schema
+- Implemented auto-generated unique usernames (format: firstnamelastname4digits)
+- Enhanced registration form with conditional company name field for corporate users
+- Modified login to accept both email and username
+- Added password visibility toggle to all password inputs
+- Moved account type selection to top of registration form
+
+### Navigation Improvements
+- Updated logout functionality to use SPA navigation (no page refresh)
+- Fixed logout buttons in both sidebar and header dropdown
+- Implemented smooth transitions using wouter navigate()
+
+### Profile System
+- Created Instagram-style public profile pages accessible via /:username
+- Added API endpoint for public user profiles (without sensitive data)
+- Integrated profile routing with main application navigation
+
+### Current Test Accounts
+- Admin: email "admin@example.com" OR username "admin", password "admin123"
+- Sample user: username "velikara6028" (auto-generated from "Veli Kara")
