@@ -14,6 +14,7 @@ import Landing from "@/pages/Landing";
 import UserProfile from "@/pages/Profile";
 import Account from "@/pages/account/Account";
 import Profile from "@/pages/account/Profile";
+import Contact from "./pages/account/Contact";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/not-found";
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/account" component={Account} />
       <Route path="/account/profile" component={Profile} />
+      <Route path="/account/contact" component={Contact} />
       <Route path="/account/change-password" component={PasswordChange} />
       <Route path="/account/change-email" component={ChangeEmail} />
       

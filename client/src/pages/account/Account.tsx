@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Key, ChevronRight, Mail, LogOut } from "lucide-react";
+import { User, Key, ChevronRight, Mail, LogOut, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -70,6 +70,23 @@ export default function Account() {
                 </CardTitle>
                 <CardDescription>
                   Ad, soyad, e-posta ve diğer kişisel bilgilerinizi düzenleyin
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/account/contact">
+            <Card className="cursor-pointer">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-primary" />
+                    İletişim Bilgilerim
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </CardTitle>
+                <CardDescription>
+                  Telefon numaralarınızı güncelleyin
                 </CardDescription>
               </CardHeader>
             </Card>

@@ -161,10 +161,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user contact information
+  app.patch("/api/user/contact", requireAuth, async (req, res) => {
+    try {
+      const { mobilePhone, whatsappNumber, businessPhone } = req.body;
+      const userId = req.session.userId;
+
+      // Get current user to check role
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        // Contact information (available for all users)
+        mobilePhone: mobilePhone || null,
+        whatsappNumber: whatsappNumber || null,
+        // Business phone only for corporate users
+        ...(currentUser.role === "corporate" && { businessPhone: businessPhone || null }),
+      });
+
+      // Update session with fresh user data
+      req.session.user = updatedUser;
+      
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: "İletişim bilgileri güncellenirken hata oluştu" });
+    }
+  });
+
   // Update user profile
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const { firstName, lastName, companyName, username, mobilePhone, whatsappNumber, businessPhone } = req.body;
+      const { firstName, lastName, companyName, username } = req.body;
       const userId = req.session.userId;
 
       // Validate required fields
@@ -198,11 +227,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName,
         companyName: companyName || null,
         ...(currentUser.role === "corporate" && username && { username }),
-        // Contact information (available for all users)
-        mobilePhone: mobilePhone || null,
-        whatsappNumber: whatsappNumber || null,
-        // Business phone only for corporate users
-        ...(currentUser.role === "corporate" && { businessPhone: businessPhone || null }),
       });
 
       // Update session with fresh user data

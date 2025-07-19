@@ -18,10 +18,6 @@ const profileSchema = z.object({
   lastName: z.string().min(2, "Soyad en az 2 karakter olmalı"),
   companyName: z.string().optional(),
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı").optional(),
-  // Contact information fields
-  mobilePhone: z.string().optional(),
-  whatsappNumber: z.string().optional(),
-  businessPhone: z.string().optional(),
 });
 
 type ProfileData = z.infer<typeof profileSchema>;
@@ -47,9 +43,6 @@ export default function Profile() {
       lastName: user?.lastName || "",
       companyName: user?.companyName || "",
       username: user?.username || "",
-      mobilePhone: user?.mobilePhone || "",
-      whatsappNumber: user?.whatsappNumber || "",
-      businessPhone: user?.businessPhone || "",
     },
   });
 
@@ -81,9 +74,6 @@ export default function Profile() {
         lastName: data.lastName,
         companyName: data.companyName || "",
         username: data.username,
-        mobilePhone: data.mobilePhone || "",
-        whatsappNumber: data.whatsappNumber || "",
-        businessPhone: data.businessPhone || "",
       });
       // Update the cached user data immediately
       queryClient.setQueryData(["/api/auth/me"], data);
@@ -373,62 +363,7 @@ export default function Profile() {
                 </div>
               )}
 
-              {/* Contact Information Section */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim Bilgilerim</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {/* Mobile Phone - for all users */}
-                  <div className="space-y-2">
-                    <Label htmlFor="mobilePhone">Cep Telefonu</Label>
-                    <Input
-                      id="mobilePhone"
-                      type="tel"
-                      {...profileForm.register("mobilePhone")}
-                      placeholder="0555 123 4567"
-                    />
-                    {profileForm.formState.errors.mobilePhone && (
-                      <p className="text-sm text-red-500">
-                        {profileForm.formState.errors.mobilePhone.message}
-                      </p>
-                    )}
-                  </div>
 
-                  {/* WhatsApp Number - for all users */}
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsappNumber">WhatsApp Numarası</Label>
-                    <Input
-                      id="whatsappNumber"
-                      type="tel"
-                      {...profileForm.register("whatsappNumber")}
-                      placeholder="0555 123 4567"
-                    />
-                    {profileForm.formState.errors.whatsappNumber && (
-                      <p className="text-sm text-red-500">
-                        {profileForm.formState.errors.whatsappNumber.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Business Phone - only for corporate users */}
-                  {user?.role === "corporate" && (
-                    <div className="space-y-2">
-                      <Label htmlFor="businessPhone">İş Telefonu</Label>
-                      <Input
-                        id="businessPhone"
-                        type="tel"
-                        {...profileForm.register("businessPhone")}
-                        placeholder="0212 345 6789"
-                      />
-                      {profileForm.formState.errors.businessPhone && (
-                        <p className="text-sm text-red-500">
-                          {profileForm.formState.errors.businessPhone.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
 
               <Button 
                 type="submit" 
