@@ -11,6 +11,7 @@ import Locations from "@/pages/admin/Locations";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Landing from "@/pages/Landing";
+import PersonnelDashboard from "@/pages/PersonnelDashboard";
 import UserProfile from "@/pages/Profile";
 import Account from "@/pages/account/Account";
 import Profile from "@/pages/account/Profile";
@@ -44,7 +45,9 @@ function Router() {
       <Route path="/account/change-password" component={PasswordChange} />
       <Route path="/account/change-email" component={ChangeEmail} />
       
-      {isAuthenticated && user?.role === "admin" ? (
+      {isAuthenticated && user?.role === "authorized_personnel" ? (
+        <Route path="/" component={PersonnelDashboard} />
+      ) : isAuthenticated && user?.role === "admin" ? (
         <Layout>
           <Switch>
             <Route path="/" component={Users} />

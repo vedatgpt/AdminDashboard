@@ -239,3 +239,12 @@ Authentication features:
 - Form validation using Zod schemas
 - TanStack Query integration for efficient data management
 - Comprehensive TypeScript typing throughout the system
+
+### Authorized Personnel Authentication
+- Extended login system to support both regular users and authorized personnel
+- Dual authentication flow: attempts regular user login first, then personnel login
+- Email-based authentication for personnel (no username login)
+- Session management with special "authorized_personnel" role
+- Personnel dashboard with company information and personal details
+- Proper session handling and logout functionality for personnel accounts
+- Role-based routing to personnel dashboard upon successful login
