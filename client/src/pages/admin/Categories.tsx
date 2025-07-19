@@ -1,18 +1,24 @@
-import { useState } from "react";
-import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { useLocation } from "wouter";
 import PageHeader from "@/components/PageHeader";
-import CategoryTree from "@/components/CategoryTree";
 import CategoryForm from "@/components/CategoryForm";
 import { useCategoriesTree, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
 export default function Categories() {
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [location, setLocation] = useLocation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [parentCategory, setParentCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  // Extract current parent ID from URL
+  const currentParentId = useMemo(() => {
+    const match = location.match(/\/admin\/categories\/(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  }, [location]);
 
   // Queries and mutations
   const { data: categories = [], isLoading, error } = useCategoriesTree();
@@ -20,35 +26,54 @@ export default function Categories() {
   const updateMutation = useUpdateCategory();
   const deleteMutation = useDeleteCategory();
 
-  // Filter categories based on search term
-  const filterCategories = (cats: Category[], term: string): Category[] => {
-    if (!term) return cats;
+  // Get categories to display based on current parent
+  const currentCategories = useMemo(() => {
+    if (currentParentId === null) {
+      // Show only root categories
+      return categories.filter(cat => cat.parentId === null);
+    } else {
+      // Show children of current parent
+      const findCategoryAndChildren = (cats: Category[]): Category[] => {
+        for (const cat of cats) {
+          if (cat.id === currentParentId) {
+            return (cat as any).children || [];
+          }
+          if ((cat as any).children) {
+            const found = findCategoryAndChildren((cat as any).children);
+            if (found.length > 0) return found;
+          }
+        }
+        return [];
+      };
+      return findCategoryAndChildren(categories);
+    }
+  }, [categories, currentParentId]);
+
+  // Get current parent category for breadcrumb
+  const currentParent = useMemo(() => {
+    if (currentParentId === null) return null;
     
-    return cats.filter(cat => {
-      const matches = cat.name.toLowerCase().includes(term.toLowerCase()) ||
-                     (cat.description && cat.description.toLowerCase().includes(term.toLowerCase()));
-      
-      // Also include if any children match
-      const childMatches = (cat as any).children ? 
-        filterCategories((cat as any).children, term).length > 0 : false;
-      
-      return matches || childMatches;
-    }).map(cat => ({
-      ...cat,
-      children: (cat as any).children ? filterCategories((cat as any).children, term) : undefined
-    }));
-  };
+    const findCategory = (cats: Category[]): Category | null => {
+      for (const cat of cats) {
+        if (cat.id === currentParentId) return cat;
+        if ((cat as any).children) {
+          const found = findCategory((cat as any).children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return findCategory(categories);
+  }, [categories, currentParentId]);
 
-  const filteredCategories = filterCategories(categories, searchTerm);
-
-  // Calculate total category count (including children)
-  const countCategories = (cats: Category[]): number => {
-    return cats.reduce((count, cat) => {
-      return count + 1 + ((cat as any).children ? countCategories((cat as any).children) : 0);
-    }, 0);
-  };
-
-  const totalCategories = countCategories(categories);
+  // Filter current categories based on search
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return currentCategories;
+    return currentCategories.filter(cat => 
+      cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (cat.description && cat.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [currentCategories, searchTerm]);
 
   // Show alert helper
   const showAlertMessage = (type: 'success' | 'error' | 'info', message: string) => {
@@ -78,6 +103,22 @@ export default function Categories() {
     }
   };
 
+  // Navigation functions
+  const handleCategoryClick = (category: Category) => {
+    const hasChildren = (category as any).children && (category as any).children.length > 0;
+    if (hasChildren) {
+      setLocation(`/admin/categories/${category.id}`);
+    }
+  };
+
+  const handleBackClick = () => {
+    if (currentParent && currentParent.parentId !== null) {
+      setLocation(`/admin/categories/${currentParent.parentId}`);
+    } else {
+      setLocation('/admin/categories');
+    }
+  };
+
   // Handle category deletion
   const handleDelete = async (category: Category) => {
     if (!confirm(`"${category.name}" kategorisini silmek istediğinize emin misiniz?`)) {
@@ -87,9 +128,6 @@ export default function Categories() {
     try {
       await deleteMutation.mutateAsync(category.id);
       showAlertMessage('success', 'Kategori başarıyla silindi');
-      if (selectedCategory?.id === category.id) {
-        setSelectedCategory(null);
-      }
     } catch (error: any) {
       showAlertMessage('error', error.message || 'Kategori silinirken bir hata oluştu');
     }
@@ -98,7 +136,7 @@ export default function Categories() {
   // Handle adding new root category
   const handleAddRootCategory = () => {
     setEditingCategory(null);
-    setParentCategory(null);
+    setParentCategory(currentParent);
     setIsFormOpen(true);
   };
 
@@ -135,17 +173,28 @@ export default function Categories() {
       )}
 
       <PageHeader
-        title="Kategori Yönetimi"
-        subtitle={`Toplam ${totalCategories} kategori`}
+        title={currentParent ? `${currentParent.name} Kategorisi` : "Kategori Yönetimi"}
+        subtitle={currentParent ? `${currentParent.name} alt kategorileri` : `${filteredCategories.length} ana kategori`}
         actions={
-          <button 
-            onClick={handleAddRootCategory}
-            disabled={isAnyMutationLoading}
-            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="w-4 h-4" />
-            Ana Kategori Ekle
-          </button>
+          <div className="flex items-center gap-2">
+            {currentParent && (
+              <button 
+                onClick={handleBackClick}
+                className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Geri
+              </button>
+            )}
+            <button 
+              onClick={handleAddRootCategory}
+              disabled={isAnyMutationLoading}
+              className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" />
+              {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
+            </button>
+          </div>
         }
       />
 
@@ -171,7 +220,7 @@ export default function Categories() {
             </div>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 max-h-[400px] lg:max-h-[600px] overflow-y-auto">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
@@ -185,99 +234,128 @@ export default function Categories() {
             ) : filteredCategories.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <FolderTree className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Henüz kategori oluşturulmamış</p>
-                <p className="text-sm mt-1">Başlamak için "Ana Kategori Ekle" butonunu kullanın</p>
+                <p>{currentParent ? 'Bu kategorinin alt kategorisi yok' : 'Henüz kategori oluşturulmamış'}</p>
+                <p className="text-sm mt-1">{currentParent ? 'Alt kategori eklemek için yukarıdaki butonu kullanın' : 'Başlamak için "Ana Kategori Ekle" butonunu kullanın'}</p>
               </div>
             ) : (
-              <CategoryTree
-                categories={filteredCategories}
-                onSelect={setSelectedCategory}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onAddChild={handleAddChild}
-                selectedId={selectedCategory?.id}
-              />
+              <div className="divide-y divide-gray-200">
+                {filteredCategories.map((category) => {
+                  const hasChildren = (category as any).children && (category as any).children.length > 0;
+                  return (
+                    <div
+                      key={category.id}
+                      className="p-4 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div 
+                          className={`flex-1 ${hasChildren ? 'cursor-pointer' : ''}`}
+                          onClick={() => hasChildren && handleCategoryClick(category)}
+                        >
+                          <div className="flex items-center">
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <h3 className="font-medium text-gray-900">{category.name}</h3>
+                                {hasChildren && (
+                                  <ChevronRight className="w-4 h-4 ml-2 text-gray-400" />
+                                )}
+                              </div>
+                              {category.description && (
+                                <p className="text-sm text-gray-500 mt-1">{category.description}</p>
+                              )}
+                              <div className="flex items-center mt-2 text-xs text-gray-400 space-x-4">
+                                <span>Slug: {category.slug}</span>
+                                {hasChildren && (
+                                  <span>{(category as any).children.length} alt kategori</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 ml-4">
+                          {hasChildren && (
+                            <button
+                              onClick={() => handleAddChild(category)}
+                              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                              title="Alt kategori ekle"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEdit(category)}
+                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                            title="Düzenle"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                            title="Sil"
+                            disabled={isAnyMutationLoading}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Right Panel - Category Details */}
+        {/* Right Panel - Breadcrumb and Info */}
         <div className="w-full lg:w-1/3 bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategori Detayları</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategori Bilgileri</h2>
           
-          {selectedCategory ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Adı</label>
-                <p className="text-gray-900 font-medium break-words">{selectedCategory.name}</p>
-              </div>
-
-              {selectedCategory.description && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
-                  <p className="text-gray-700 break-words">{selectedCategory.description}</p>
+          {/* Breadcrumb */}
+          {currentParent && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mevcut Konum</label>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="text-sm text-gray-600">
+                  Ana Kategoriler → {currentParent.name}
                 </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL Slug</label>
-                <p className="text-gray-700 font-mono text-sm bg-gray-100 px-2 py-1 rounded break-all">
-                  {selectedCategory.slug}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">İlan Sayısı</label>
-                  <p className="text-2xl font-bold text-[#EC7830]">{selectedCategory.adCount || 0}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Durum</label>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    selectedCategory.isActive 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-red-100 text-red-800"
-                  }`}>
-                    {selectedCategory.isActive ? "Aktif" : "Pasif"}
-                  </span>
+                <div className="text-xs text-gray-500 mt-1">
+                  {currentParent.description || 'Açıklama yok'}
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Oluşturulma Tarihi</label>
-                <p className="text-gray-700 text-sm">
-                  {new Date(selectedCategory.createdAt).toLocaleDateString('tr-TR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t space-y-2">
-                <button
-                  onClick={() => handleEdit(selectedCategory)}
-                  className="w-full py-2 px-3 text-sm font-medium text-[#EC7830] bg-orange-50 rounded-lg hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-[#EC7830]"
-                >
-                  Kategoriyi Düzenle
-                </button>
-                <button
-                  onClick={() => handleAddChild(selectedCategory)}
-                  className="w-full py-2 px-3 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
-                >
-                  Alt Kategori Ekle
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <FolderTree className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">Detayları görmek için bir kategori seçin</p>
             </div>
           )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Toplam Kategori</label>
+              <p className="text-2xl font-bold text-[#EC7830]">{filteredCategories.length}</p>
+              <p className="text-xs text-gray-500">
+                {currentParent ? 'Alt kategori sayısı' : 'Ana kategori sayısı'}
+              </p>
+            </div>
+
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Hızlı İşlemler</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={handleAddRootCategory}
+                  disabled={isAnyMutationLoading}
+                  className="w-full text-left px-3 py-2 text-sm bg-[#EC7830] text-white rounded hover:bg-[#d6691a] disabled:opacity-50"
+                >
+                  + {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
+                </button>
+                {currentParent && (
+                  <button
+                    onClick={handleBackClick}
+                    className="w-full text-left px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  >
+                    ← Bir üst seviyeye dön
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
