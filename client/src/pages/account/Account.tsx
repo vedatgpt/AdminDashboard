@@ -57,7 +57,7 @@ export default function Account() {
           <p className="text-gray-600 mt-2">Hesap ayarlarınızı yönetin</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           <Link href="/account/profile">
             <Card className="cursor-pointer">
               <CardHeader className="pb-3">
@@ -156,8 +156,6 @@ export default function Account() {
             Çıkış Yap
           </Button>
         </div>
-
-        
       </div>
     </div>
   );

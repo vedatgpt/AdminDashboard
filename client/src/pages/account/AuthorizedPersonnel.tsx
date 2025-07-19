@@ -15,11 +15,9 @@ export default function AuthorizedPersonnel() {
     isLoading,
     createPersonnel,
     updatePersonnel,
-    toggleStatus,
     deletePersonnel,
     isCreating,
     isUpdating,
-    isTogglingStatus,
     isDeleting,
   } = useAuthorizedPersonnel();
 
@@ -66,15 +64,6 @@ export default function AuthorizedPersonnel() {
     }
   };
 
-  const handleToggleStatus = async (id: number) => {
-    try {
-      await toggleStatus(id);
-    } catch (error) {
-      // Error handling is done in the list component
-      throw error;
-    }
-  };
-
   const handleDeletePersonnel = async (id: number) => {
     try {
       await deletePersonnel(id);
@@ -110,9 +99,7 @@ export default function AuthorizedPersonnel() {
               personnel={personnel}
               isLoading={isLoading}
               onEdit={handleEditPersonnel}
-              onToggleStatus={handleToggleStatus}
               onDelete={handleDeletePersonnel}
-              isTogglingStatus={isTogglingStatus}
               isDeleting={isDeleting}
             />
           </CardContent>

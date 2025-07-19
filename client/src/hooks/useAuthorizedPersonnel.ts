@@ -30,16 +30,6 @@ export function useAuthorizedPersonnel() {
     },
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("PATCH", `/api/authorized-personnel/${id}/toggle-status`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/authorized-personnel"] });
-    },
-  });
-
   const deletePersonnelMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/authorized-personnel/${id}`);
@@ -55,12 +45,10 @@ export function useAuthorizedPersonnel() {
     error,
     createPersonnel: createPersonnelMutation.mutateAsync,
     updatePersonnel: updatePersonnelMutation.mutateAsync,
-    toggleStatus: toggleStatusMutation.mutateAsync,
     deletePersonnel: deletePersonnelMutation.mutateAsync,
     isCreating: createPersonnelMutation.isPending,
     isUpdating: updatePersonnelMutation.isPending,
     isDeleting: deletePersonnelMutation.isPending,
-    isTogglingStatus: toggleStatusMutation.isPending,
     createError: createPersonnelMutation.error,
     updateError: updatePersonnelMutation.error,
     deleteError: deletePersonnelMutation.error,

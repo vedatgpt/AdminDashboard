@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Edit, Power, Trash2, Users } from "lucide-react";
+import { Edit, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthorizedPersonnel } from "@shared/schema";
@@ -21,9 +21,7 @@ interface AuthorizedPersonnelListProps {
   personnel: AuthorizedPersonnel[];
   isLoading: boolean;
   onEdit: (personnel: AuthorizedPersonnel) => void;
-  onToggleStatus: (id: number) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
-  isTogglingStatus: boolean;
   isDeleting: boolean;
 }
 
@@ -31,30 +29,12 @@ export default function AuthorizedPersonnelList({
   personnel,
   isLoading,
   onEdit,
-  onToggleStatus,
   onDelete,
-  isTogglingStatus,
   isDeleting
 }: AuthorizedPersonnelListProps) {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<number | null>(null);
-
-  const handleToggleStatus = async (id: number) => {
-    try {
-      await onToggleStatus(id);
-      toast({
-        title: "Başarılı",
-        description: "Yetkili kişi durumu güncellendi",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Hata",
-        description: error.message || "Durum güncellenemedi",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleDeleteConfirm = async () => {
     if (!selectedPersonnelId) return;
@@ -149,17 +129,6 @@ export default function AuthorizedPersonnelList({
                     title="Düzenle"
                   >
                     <Edit className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleToggleStatus(person.id)}
-                    disabled={isTogglingStatus}
-                    title={person.isActive ? "Pasif Yap" : "Aktif Yap"}
-                    className={person.isActive ? "text-red-600 border-red-600 hover:bg-red-50" : "text-green-600 border-green-600 hover:bg-green-50"}
-                  >
-                    <Power className="h-4 w-4" />
                   </Button>
                   
                   <Button
