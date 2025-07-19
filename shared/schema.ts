@@ -80,8 +80,67 @@ export const insertAuthorizedPersonnelSchema = createInsertSchema(authorizedPers
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
 });
 
+// Categories table for hierarchical category structure
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  parentId: integer("parent_id").references(() => categories.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  icon: text("icon"), // Icon name or URL
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  adCount: integer("ad_count").notNull().default(0), // Number of ads in this category
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Category custom fields for dynamic form fields
+export const categoryCustomFields = pgTable("category_custom_fields", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  fieldName: text("field_name").notNull(),
+  fieldType: text("field_type").notNull(), // text, select, checkbox, radio, number, date
+  label: text("label").notNull(),
+  placeholder: text("placeholder"),
+  isRequired: boolean("is_required").notNull().default(false),
+  options: text("options"), // JSON string for select/radio options
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Schema for creating categories
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  adCount: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(2, "Kategori adı en az 2 karakter olmalıdır"),
+  slug: z.string().min(2, "Slug en az 2 karakter olmalıdır").regex(/^[a-z0-9-]+$/, "Slug sadece küçük harf, rakam ve tire içerebilir"),
+});
+
+// Schema for updating categories
+export const updateCategorySchema = insertCategorySchema.partial();
+
+// Schema for creating custom fields
+export const insertCustomFieldSchema = createInsertSchema(categoryCustomFields).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  fieldName: z.string().min(1, "Alan adı gereklidir"),
+  fieldType: z.enum(["text", "select", "checkbox", "radio", "number", "date"]),
+  label: z.string().min(1, "Etiket gereklidir"),
+});
+
 export type User = typeof users.$inferSelect;
 export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
+export type Category = typeof categories.$inferSelect;
+export type CategoryCustomField = typeof categoryCustomFields.$inferSelect;
 export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type UpdateCategory = z.infer<typeof updateCategorySchema>;
+export type InsertCustomField = z.infer<typeof insertCustomFieldSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;

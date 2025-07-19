@@ -1,6 +1,6 @@
-import { users, authorizedPersonnel, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, isNull, desc, asc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -29,6 +29,24 @@ export interface IStorage {
   updateAuthorizedPersonnel(id: number, updates: Partial<Omit<AuthorizedPersonnel, 'id' | 'companyUserId' | 'createdAt' | 'updatedAt'>>): Promise<AuthorizedPersonnel>;
   deleteAuthorizedPersonnel(id: number): Promise<void>;
   authenticateAuthorizedPersonnel(email: string, password: string): Promise<{ personnel: AuthorizedPersonnel; company: User } | null>;
+
+  // Category methods
+  getCategories(): Promise<Category[]>;
+  getCategoriesTree(): Promise<Category[]>;
+  getCategoryById(id: number): Promise<Category | undefined>;
+  getCategoryBySlug(slug: string): Promise<Category | undefined>;
+  getChildCategories(parentId: number | null): Promise<Category[]>;
+  createCategory(data: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: UpdateCategory): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
+  moveCategoryToParent(id: number, newParentId: number | null): Promise<Category>;
+  getCategoryBreadcrumbs(id: number): Promise<Category[]>;
+  
+  // Custom Fields methods
+  getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
+  createCustomField(data: InsertCustomField): Promise<CategoryCustomField>;
+  updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField>;
+  deleteCustomField(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -191,6 +209,142 @@ export class DatabaseStorage implements IStorage {
     }
 
     return { personnel, company };
+  }
+
+  // Category methods implementation
+  async getCategories(): Promise<Category[]> {
+    return await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+  }
+
+  async getCategoriesTree(): Promise<Category[]> {
+    // Get all categories ordered by parent-child relationship
+    const allCategories = await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    
+    // Build tree structure
+    const categoryMap = new Map<number, Category & { children: Category[] }>();
+    const rootCategories: (Category & { children: Category[] })[] = [];
+
+    // Initialize all categories with children array
+    allCategories.forEach(cat => {
+      categoryMap.set(cat.id, { ...cat, children: [] });
+    });
+
+    // Build parent-child relationships
+    allCategories.forEach(cat => {
+      const categoryWithChildren = categoryMap.get(cat.id)!;
+      if (cat.parentId) {
+        const parent = categoryMap.get(cat.parentId);
+        if (parent) {
+          parent.children.push(categoryWithChildren);
+        }
+      } else {
+        rootCategories.push(categoryWithChildren);
+      }
+    });
+
+    return rootCategories as Category[];
+  }
+
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category || undefined;
+  }
+
+  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.slug, slug));
+    return category || undefined;
+  }
+
+  async getChildCategories(parentId: number | null): Promise<Category[]> {
+    if (parentId === null) {
+      return await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    }
+    return await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+  }
+
+  async createCategory(data: InsertCategory): Promise<Category> {
+    const [category] = await db.insert(categories).values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return category;
+  }
+
+  async updateCategory(id: number, updates: UpdateCategory): Promise<Category> {
+    const [category] = await db.update(categories)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(categories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    // First check if category has children
+    const children = await this.getChildCategories(id);
+    if (children.length > 0) {
+      throw new Error('Bu kategorinin alt kategorileri var. Önce alt kategorileri silin.');
+    }
+    
+    await db.delete(categories).where(eq(categories.id, id));
+  }
+
+  async moveCategoryToParent(id: number, newParentId: number | null): Promise<Category> {
+    // Prevent circular references
+    if (newParentId !== null) {
+      const breadcrumbs = await this.getCategoryBreadcrumbs(newParentId);
+      if (breadcrumbs.some(cat => cat.id === id)) {
+        throw new Error('Bu işlem döngüsel referans oluşturacak.');
+      }
+    }
+
+    return await this.updateCategory(id, { parentId: newParentId });
+  }
+
+  async getCategoryBreadcrumbs(id: number): Promise<Category[]> {
+    const breadcrumbs: Category[] = [];
+    let currentCategory = await this.getCategoryById(id);
+    
+    while (currentCategory) {
+      breadcrumbs.unshift(currentCategory);
+      if (currentCategory.parentId) {
+        currentCategory = await this.getCategoryById(currentCategory.parentId);
+      } else {
+        break;
+      }
+    }
+    
+    return breadcrumbs;
+  }
+
+  // Custom Fields methods
+  async getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]> {
+    return await db.select().from(categoryCustomFields)
+      .where(eq(categoryCustomFields.categoryId, categoryId))
+      .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
+  }
+
+  async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
+    const [field] = await db.insert(categoryCustomFields).values({
+      ...data,
+      createdAt: new Date(),
+    }).returning();
+    return field;
+  }
+
+  async updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField> {
+    const [field] = await db.update(categoryCustomFields)
+      .set(updates)
+      .where(eq(categoryCustomFields.id, id))
+      .returning();
+    return field;
+  }
+
+  async deleteCustomField(id: number): Promise<void> {
+    await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
   }
 }
 
