@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,11 +23,18 @@ const profileSchema = z.object({
 type ProfileData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, navigate] = useLocation();
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(user?.profileImage || null);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]);
 
   const profileForm = useForm<ProfileData>({
     resolver: zodResolver(profileSchema),
@@ -193,15 +201,19 @@ export default function Profile() {
     fileInputRef.current?.click();
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Yetkisiz Erişim</h1>
-          <p className="text-gray-500 mt-2">Bu sayfaya erişim için giriş yapmanız gerekiyor.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-gray-500 mt-2">Yükleniyor...</p>
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login via useEffect
   }
 
   return (

@@ -66,19 +66,11 @@ export default function Login() {
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <img 
-              src={logoPath} 
-              alt="Logo" 
-              className="w-16 h-16 object-contain"
-            />
-          </div>
+          
           <CardTitle className="text-2xl font-bold text-center">
             Giriş Yap
           </CardTitle>
-          <CardDescription className="text-center">
-            Hesabınıza giriş yapın
-          </CardDescription>
+         
         </CardHeader>
         <CardContent>
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">

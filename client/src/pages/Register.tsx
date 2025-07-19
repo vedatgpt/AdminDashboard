@@ -70,19 +70,11 @@ export default function Register() {
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <img 
-              src={logoPath} 
-              alt="Logo" 
-              className="w-16 h-16 object-contain"
-            />
-          </div>
+          
           <CardTitle className="text-2xl font-bold text-center">
             Kayıt Ol
           </CardTitle>
-          <CardDescription className="text-center">
-            Yeni hesap oluşturun
-          </CardDescription>
+          
         </CardHeader>
         <CardContent>
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
@@ -93,8 +85,8 @@ export default function Register() {
                 {...registerForm.register("role")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="individual">Bireysel Kullanıcı</option>
-                <option value="corporate">Kurumsal Kullanıcı</option>
+                <option value="individual">Bireysel</option>
+                <option value="corporate">Kurumsal</option>
               </select>
               {registerForm.formState.errors.role && (
                 <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>

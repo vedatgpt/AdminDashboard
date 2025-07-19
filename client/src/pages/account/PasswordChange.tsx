@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +21,17 @@ const passwordSchema = z.object({
 type PasswordData = z.infer<typeof passwordSchema>;
 
 export default function PasswordChange() {
-  const { user } = useAuth();
+  const { user, refreshUser, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]);
 
   const passwordForm = useForm<PasswordData>({
     resolver: zodResolver(passwordSchema),
@@ -75,15 +83,19 @@ export default function PasswordChange() {
     changePasswordMutation.mutate(data);
   };
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Yetkisiz Erişim</h1>
-          <p className="text-gray-500 mt-2">Bu sayfaya erişim için giriş yapmanız gerekiyor.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-gray-500 mt-2">Yükleniyor...</p>
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login via useEffect
   }
 
   return (
