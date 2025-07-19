@@ -1,6 +1,25 @@
-import { users, authorizedPersonnel, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel } from "@shared/schema";
+import { 
+  users, 
+  authorizedPersonnel, 
+  categories,
+  categoryCustomFields,
+  categoryFilters,
+  type User, 
+  type InsertUser, 
+  type LoginData, 
+  type RegisterData, 
+  type AuthorizedPersonnel, 
+  type InsertAuthorizedPersonnel,
+  type Category,
+  type InsertCategory,
+  type CategoryWithChildren,
+  type CategoryCustomField,
+  type InsertCustomField,
+  type CategoryFilter,
+  type InsertFilter
+} from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, isNull, desc, asc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -29,6 +48,26 @@ export interface IStorage {
   updateAuthorizedPersonnel(id: number, updates: Partial<Omit<AuthorizedPersonnel, 'id' | 'companyUserId' | 'createdAt' | 'updatedAt'>>): Promise<AuthorizedPersonnel>;
   deleteAuthorizedPersonnel(id: number): Promise<void>;
   authenticateAuthorizedPersonnel(email: string, password: string): Promise<{ personnel: AuthorizedPersonnel; company: User } | null>;
+  
+  // Category management methods
+  getCategories(): Promise<CategoryWithChildren[]>;
+  getCategoryById(id: number): Promise<Category | undefined>;
+  createCategory(data: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
+  getCategoryTree(): Promise<CategoryWithChildren[]>;
+  
+  // Custom fields methods
+  getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
+  createCustomField(data: InsertCustomField): Promise<CategoryCustomField>;
+  updateCustomField(id: number, updates: Partial<Omit<CategoryCustomField, 'id' | 'createdAt'>>): Promise<CategoryCustomField>;
+  deleteCustomField(id: number): Promise<void>;
+  
+  // Category filters methods
+  getCategoryFilters(categoryId: number): Promise<CategoryFilter[]>;
+  createCategoryFilter(data: InsertFilter): Promise<CategoryFilter>;
+  updateCategoryFilter(id: number, updates: Partial<Omit<CategoryFilter, 'id' | 'createdAt'>>): Promise<CategoryFilter>;
+  deleteCategoryFilter(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -191,6 +230,119 @@ export class DatabaseStorage implements IStorage {
     }
 
     return { personnel, company };
+  }
+
+  // Category management implementation
+  async getCategories(): Promise<CategoryWithChildren[]> {
+    const allCategories = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+    return this.buildCategoryTree(allCategories);
+  }
+
+  async getCategoryById(id: number): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category || undefined;
+  }
+
+  async createCategory(data: InsertCategory): Promise<Category> {
+    const [category] = await db.insert(categories).values(data).returning();
+    return category;
+  }
+
+  async updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category> {
+    const [category] = await db
+      .update(categories)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(categories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    // Check if category has children
+    const children = await db.select().from(categories).where(eq(categories.parentId, id));
+    if (children.length > 0) {
+      throw new Error('Bu kategorinin alt kategorileri bulunmaktadır. Önce alt kategorileri silin.');
+    }
+    
+    await db.delete(categories).where(eq(categories.id, id));
+  }
+
+  async getCategoryTree(): Promise<CategoryWithChildren[]> {
+    const allCategories = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+    return this.buildCategoryTree(allCategories);
+  }
+
+  // Custom fields implementation
+  async getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]> {
+    return await db.select().from(categoryCustomFields).where(eq(categoryCustomFields.categoryId, categoryId));
+  }
+
+  async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
+    const [field] = await db.insert(categoryCustomFields).values(data).returning();
+    return field;
+  }
+
+  async updateCustomField(id: number, updates: Partial<Omit<CategoryCustomField, 'id' | 'createdAt'>>): Promise<CategoryCustomField> {
+    const [field] = await db
+      .update(categoryCustomFields)
+      .set(updates)
+      .where(eq(categoryCustomFields.id, id))
+      .returning();
+    return field;
+  }
+
+  async deleteCustomField(id: number): Promise<void> {
+    await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
+  }
+
+  // Category filters implementation
+  async getCategoryFilters(categoryId: number): Promise<CategoryFilter[]> {
+    return await db.select().from(categoryFilters).where(eq(categoryFilters.categoryId, categoryId));
+  }
+
+  async createCategoryFilter(data: InsertFilter): Promise<CategoryFilter> {
+    const [filter] = await db.insert(categoryFilters).values(data).returning();
+    return filter;
+  }
+
+  async updateCategoryFilter(id: number, updates: Partial<Omit<CategoryFilter, 'id' | 'createdAt'>>): Promise<CategoryFilter> {
+    const [filter] = await db
+      .update(categoryFilters)
+      .set(updates)
+      .where(eq(categoryFilters.id, id))
+      .returning();
+    return filter;
+  }
+
+  async deleteCategoryFilter(id: number): Promise<void> {
+    await db.delete(categoryFilters).where(eq(categoryFilters.id, id));
+  }
+
+  // Helper method to build category tree
+  private buildCategoryTree(categories: Category[]): CategoryWithChildren[] {
+    const categoryMap = new Map<number, CategoryWithChildren>();
+    const rootCategories: CategoryWithChildren[] = [];
+
+    // Create map of all categories
+    categories.forEach(category => {
+      categoryMap.set(category.id, { ...category, children: [] });
+    });
+
+    // Build tree structure
+    categories.forEach(category => {
+      const categoryWithChildren = categoryMap.get(category.id)!;
+      
+      if (category.parentId === null) {
+        rootCategories.push(categoryWithChildren);
+      } else {
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+          parent.children!.push(categoryWithChildren);
+        }
+      }
+    });
+
+    return rootCategories;
   }
 }
 

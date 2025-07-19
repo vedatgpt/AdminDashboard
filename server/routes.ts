@@ -8,6 +8,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { loginSchema, registerSchema } from "@shared/schema";
 import session from "express-session";
+import categoriesRouter from "./routes/categories";
 
 // Middleware to check if user is authenticated
 const requireAuth = (req: any, res: any, next: any) => {
@@ -621,6 +622,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Profil resmi silinirken hata oluştu" });
     }
   });
+
+  // Category management routes (admin only)
+  app.use("/api/admin/categories", categoriesRouter);
 
   const httpServer = createServer(app);
   return httpServer;
