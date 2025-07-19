@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import ModernNavbar from "@/components/Navbar";
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Landing() {
@@ -21,46 +22,14 @@ export default function Landing() {
     return `${user.firstName} ${user.lastName}`;
   };
 
+  const handleSearch = (searchTerm: string) => {
+    console.log('Landing sayfasında arama:', searchTerm);
+    // Burada arama fonksiyonunu implement edebilirsiniz
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img 
-              src={logoPath} 
-              alt="Logo" 
-              className="w-36 h-10 object-contain"
-            />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {isAuthenticated && user ? (
-              <>
-                <span className="text-gray-700 font-medium">
-                  {getUserDisplayName()}
-                </span>
-                <Link href="/account">
-                  <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    Hesap
-                  </button>
-                </Link>
-                <button 
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Çıkış Yap
-                </button>
-              </>
-            ) : (
-              <Link href="/login">
-                <button className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                  Giriş Yap
-                </button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <ModernNavbar onSearch={handleSearch} />
       
       <main className="container mx-auto px-4 py-12">
         <div className="text-center max-w-2xl mx-auto">
