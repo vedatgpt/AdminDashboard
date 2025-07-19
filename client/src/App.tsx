@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import Users from "@/pages/admin/Users";
 import Ads from "@/pages/admin/Ads";
 import Categories from "@/pages/admin/Categories";
+import CategoryTreePage from "@/pages/admin/categories/CategoryTreePage";
 import Locations from "@/pages/admin/Locations";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -52,6 +53,7 @@ function Router() {
             <Route path="/admin/users" component={Users} />
             <Route path="/admin/listings" component={Ads} />
             <Route path="/admin/categories" component={Categories} />
+            <Route path="/admin/categories/tree" component={CategoryTreePage} />
             <Route path="/admin/locations" component={Locations} />
             <Route component={NotFound} />
           </Switch>

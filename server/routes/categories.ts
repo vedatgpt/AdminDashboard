@@ -118,6 +118,46 @@ router.patch("/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// Move category to new parent (admin only)
+router.patch("/:id/move", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { parentId } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    // Validate parentId if provided
+    if (parentId !== null && parentId !== undefined) {
+      const parentIdNum = parseInt(parentId);
+      if (isNaN(parentIdNum)) {
+        return res.status(400).json({ error: "Geçersiz parent ID" });
+      }
+      
+      // Check if parent exists
+      const parentCategory = await storage.getCategoryById(parentIdNum);
+      if (!parentCategory) {
+        return res.status(404).json({ error: "Hedef kategori bulunamadı" });
+      }
+      
+      // Prevent moving category to itself or its children
+      if (parentIdNum === id) {
+        return res.status(400).json({ error: "Kategori kendisine taşınamaz" });
+      }
+    }
+
+    const updatedCategory = await storage.updateCategory(id, { 
+      parentId: parentId === null ? null : parseInt(parentId) 
+    });
+    
+    res.json(updatedCategory);
+  } catch (error) {
+    console.error("Error moving category:", error);
+    res.status(500).json({ error: "Kategori taşınırken hata oluştu" });
+  }
+});
+
 // Delete category (admin only)
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {

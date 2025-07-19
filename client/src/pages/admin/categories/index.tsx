@@ -118,14 +118,23 @@ export default function Categories() {
               }
             </p>
           </div>
-          <button
-            onClick={handleAdd}
-            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] transition-colors flex items-center gap-2"
-            disabled={deleteMutation.isPending}
-          >
-            <Plus className="w-4 h-4" />
-            {parentId ? "Alt Kategori Ekle" : "Yeni Kategori"}
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href="/admin/categories/tree"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            >
+              <Tags className="w-4 h-4" />
+              Ağaç Görünümü
+            </a>
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] transition-colors flex items-center gap-2"
+              disabled={deleteMutation.isPending}
+            >
+              <Plus className="w-4 h-4" />
+              {parentId ? "Alt Kategori Ekle" : "Yeni Kategori"}
+            </button>
+          </div>
         </div>
       </div>
 
