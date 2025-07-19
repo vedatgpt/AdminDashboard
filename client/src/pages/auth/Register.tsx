@@ -5,7 +5,7 @@ import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { FormControl, InputLabel, Select, Grid } from '@mui/material';
+import { Box, FormControl, FormLabel, Select, Grid } from '@mui/material';
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthTextField } from "@/components/auth/AuthTextField";
 import { AuthButton } from "@/components/auth/AuthButton";
@@ -63,14 +63,30 @@ export default function Register() {
       linkText="Hesabınız var mı? Giriş yapın"
       linkHref="/login"
     >
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <Box
+        component="form"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        noValidate
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          gap: 2,
+        }}
+      >
         <FormControl fullWidth>
-          <InputLabel>Hesap Türü</InputLabel>
+          <FormLabel htmlFor="role">Hesap Türü</FormLabel>
           <Select
+            id="role"
+            name="role"
             value={role}
-            label="Hesap Türü"
             native
+            required
             {...form.register("role")}
+            sx={{
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#EC7830' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#EC7830' },
+            }}
           >
             <option value="individual">Bireysel</option>
             <option value="corporate">Kurumsal</option>
@@ -79,8 +95,11 @@ export default function Register() {
 
         {role === "corporate" && (
           <AuthTextField
+            id="companyName"
+            name="companyName"
             label="Firma Adı"
             placeholder="Firma adınızı giriniz"
+            required
             error={!!form.formState.errors.companyName}
             helperText={form.formState.errors.companyName?.message}
             {...form.register("companyName")}
@@ -90,8 +109,12 @@ export default function Register() {
         <Grid container spacing={2}>
           <Grid size={6}>
             <AuthTextField
+              id="firstName"
+              name="firstName"
               label="Ad"
               placeholder="Adınızı giriniz"
+              autoComplete="given-name"
+              required
               error={!!form.formState.errors.firstName}
               helperText={form.formState.errors.firstName?.message}
               {...form.register("firstName")}
@@ -99,8 +122,12 @@ export default function Register() {
           </Grid>
           <Grid size={6}>
             <AuthTextField
+              id="lastName"
+              name="lastName"
               label="Soyad"
               placeholder="Soyadınızı giriniz"
+              autoComplete="family-name"
+              required
               error={!!form.formState.errors.lastName}
               helperText={form.formState.errors.lastName?.message}
               {...form.register("lastName")}
@@ -109,17 +136,25 @@ export default function Register() {
         </Grid>
 
         <AuthTextField
+          id="email"
+          name="email"
           label="E-posta"
           type="email"
           placeholder="E-posta adresinizi giriniz"
+          autoComplete="email"
+          required
           error={!!form.formState.errors.email}
           helperText={form.formState.errors.email?.message}
           {...form.register("email")}
         />
 
         <PasswordField
+          id="password"
+          name="password"
           label="Şifre"
-          placeholder="Şifrenizi giriniz"
+          placeholder="••••••"
+          autoComplete="new-password"
+          required
           error={!!form.formState.errors.password}
           helperText={form.formState.errors.password?.message}
           {...form.register("password")}
@@ -128,7 +163,7 @@ export default function Register() {
         <AuthButton type="submit" loading={registerLoading}>
           {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
         </AuthButton>
-      </form>
+      </Box>
     </AuthLayout>
   );
 }

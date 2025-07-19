@@ -5,6 +5,7 @@ import { loginSchema, type LoginData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { Box } from "@mui/material";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthTextField } from "@/components/auth/AuthTextField";
 import { AuthButton } from "@/components/auth/AuthButton";
@@ -53,18 +54,37 @@ export default function Login() {
       linkText="Hesabınız yok mu? Kayıt olun"
       linkHref="/register"
     >
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <Box
+        component="form"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        noValidate
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          gap: 2,
+        }}
+      >
         <AuthTextField
+          id="emailOrUsername"
+          name="emailOrUsername"
           label="E-posta veya Kullanıcı Adı"
           placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
+          autoComplete="email"
+          autoFocus
+          required
           error={!!form.formState.errors.emailOrUsername}
           helperText={form.formState.errors.emailOrUsername?.message}
           {...form.register("emailOrUsername")}
         />
         
         <PasswordField
+          id="password"
+          name="password"
           label="Şifre"
-          placeholder="Şifrenizi giriniz"
+          placeholder="••••••"
+          autoComplete="current-password"
+          required
           error={!!form.formState.errors.password}
           helperText={form.formState.errors.password?.message}
           {...form.register("password")}
@@ -73,7 +93,7 @@ export default function Login() {
         <AuthButton type="submit" loading={loginLoading}>
           {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
         </AuthButton>
-      </form>
+      </Box>
     </AuthLayout>
   );
 }
