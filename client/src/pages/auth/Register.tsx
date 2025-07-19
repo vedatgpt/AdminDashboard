@@ -74,7 +74,7 @@ export default function Register() {
         <CardHeader className="space-y-1">
           
           <CardTitle className="text-2xl font-bold text-center">
-           Hesap Aç
+            Kayıt Ol
           </CardTitle>
           
         </CardHeader>
@@ -263,7 +263,7 @@ export default function Register() {
                 fontWeight: 600,
               }}
             >
-              {registerLoading ? "Hesap Açılıyor..." : "Hesap Aç"}
+              {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
             </MuiButton>
           </form>
           
