@@ -10,15 +10,17 @@ export default function Profile() {
   const { data: user, isLoading, error } = useQuery<UserType | null>({
     queryKey: [`/api/users/profile/${params?.username}`],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !!params?.username,
+    enabled: !!params?.username && params.username !== "admin", // Don't show admin profile
+    staleTime: 2 * 60 * 1000, // 2 minutes cache for profile data
+    gcTime: 5 * 60 * 1000, // Keep profile data for 5 minutes
   });
 
-  if (!match || !params?.username) {
+  if (!match || !params?.username || params.username === "admin") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Geçersiz Profil</h1>
-          <p className="text-gray-500 mt-2">Bu profil bulunamadı.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Profil Bulunamadı</h1>
+          <p className="text-gray-500 mt-2">Bu profil görüntülenemiyor.</p>
         </div>
       </div>
     );

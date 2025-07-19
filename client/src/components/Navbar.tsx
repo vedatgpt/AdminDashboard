@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDownIcon, UserIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,15 +117,30 @@ const UserDropdown = ({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange:
           </div>
         </div>
         <div className="p-1 space-y-0.5">
-          {["Profil", "Hesap Ayarları", "İletişim", "Şifre Değiştir"].map((item, index) => (
-            <button
-              key={index}
-              className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
-              onClick={() => handleMenuItemClick(item)}
-            >
-              {item}
-            </button>
-          ))}
+          <button
+            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
+            onClick={() => handleMenuItemClick("Profil")}
+          >
+            Profil
+          </button>
+          <button
+            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
+            onClick={() => handleMenuItemClick("Hesap Ayarları")}
+          >
+            Hesap Ayarları
+          </button>
+          <button
+            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
+            onClick={() => handleMenuItemClick("İletişim")}
+          >
+            İletişim
+          </button>
+          <button
+            className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-300 dark:focus:bg-neutral-700 w-full text-left"
+            onClick={() => handleMenuItemClick("Şifre Değiştir")}
+          >
+            Şifre Değiştir
+          </button>
           <div className="border-t border-gray-200 my-1"></div>
           <button
             className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:bg-red-50 dark:text-red-500 dark:hover:bg-red-800/30 dark:focus:bg-red-800/30 w-full text-left"
@@ -147,6 +162,16 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  // Initialize Preline dropdown after component mounts
+  useEffect(() => {
+    const initDropdown = async () => {
+      if (typeof window !== 'undefined' && window.HSDropdown) {
+        window.HSDropdown.autoInit();
+      }
+    };
+    initDropdown();
+  }, []);
 
   const handleSearchSubmit = async () => {
     if (!searchTerm.trim() || searchTerm.length < 2) {
@@ -201,7 +226,7 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
-                className="w-full pl-10 pr-10 h-9 rounded-lg bg-gray-100 border-0 focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 transition-all duration-200 text-sm lg:text-base py-3 px-4 block border-gray-200 focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full pl-10 pr-10 h-9 rounded-lg bg-gray-100 border-0 focus:bg-gray-100 focus:outline-none focus:ring-0 focus:border-0 transition-all duration-200 text-sm lg:text-base py-3 px-4 block disabled:opacity-50 disabled:pointer-events-none"
                 disabled={isSearching}
               />
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

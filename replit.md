@@ -289,3 +289,12 @@ Authentication features:
 - Updated main.tsx with Preline UI JavaScript initialization
 - Navbar features: responsive design, user authentication states, dropdown menus
 - All components now use Preline UI standards instead of Shadcn components
+
+### Performance Optimizations & Security Improvements (July 19, 2025)
+- Fixed search input to remove all border/ring effects for cleaner UI
+- Hidden admin profile from public access (/admin usernames blocked)
+- Optimized useAuth hook with 5-minute staleTime and 10-minute cache time
+- Reduced unnecessary API calls by disabling refetchOnWindowFocus and refetchOnMount
+- Added caching to Profile component with 2-minute staleTime
+- Improved dropdown menu implementation with individual button handlers
+- Enhanced Preline UI dropdown initialization for better functionality

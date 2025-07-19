@@ -9,11 +9,11 @@ export function useAuth() {
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    staleTime: 0, // Always consider data fresh, will be invalidated manually
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes - optimize for performance
+    refetchOnWindowFocus: false, // Reduce unnecessary API calls
+    refetchOnMount: false, // Don't refetch on component mount
     refetchOnReconnect: true,
-    gcTime: 0, // Don't cache old data
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const loginMutation = useMutation({
