@@ -1,10 +1,31 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Key, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, Key, ChevronRight, Mail, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Account() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Başarılı",
+        description: "Başarıyla çıkış yapıldı",
+      });
+      navigate("/login");
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çıkış yaparken bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!user) {
     return (
@@ -43,6 +64,23 @@ export default function Account() {
             </Card>
           </Link>
 
+          <Link href="/account/change-email">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-primary" />
+                    E-posta Değişikliği
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </CardTitle>
+                <CardDescription>
+                  E-posta adresinizi güncelleyin
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
           <Link href="/account/change-password">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
@@ -59,6 +97,17 @@ export default function Account() {
               </CardHeader>
             </Card>
           </Link>
+        </div>
+
+        <div className="mt-6">
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Çıkış Yap
+          </Button>
         </div>
 
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">

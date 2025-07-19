@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, User } from "lucide-react";
+import { Save, User, Upload, X, Camera } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,6 @@ import { apiRequest } from "@/lib/queryClient";
 const profileSchema = z.object({
   firstName: z.string().min(2, "Ad en az 2 karakter olmalı"),
   lastName: z.string().min(2, "Soyad en az 2 karakter olmalı"),
-  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
   companyName: z.string().optional(),
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı").optional(),
 });
@@ -25,24 +25,36 @@ export default function Profile() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(user?.profileImage || null);
 
   const profileForm = useForm<ProfileData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
-      email: user?.email || "",
       companyName: user?.companyName || "",
       username: user?.username || "",
     },
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: ProfileData) => 
-      apiRequest("/api/user/profile", {
+    mutationFn: async (data: ProfileData) => {
+      const response = await fetch("/api/user/profile", {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
-      }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Profil güncellenirken hata oluştu");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Başarılı",
@@ -60,8 +72,109 @@ export default function Profile() {
     },
   });
 
+  const uploadProfileImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      
+      const response = await fetch("/api/user/profile-image", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Profil resmi yüklenirken hata oluştu");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı",
+        description: "Profil resminiz güncellendi",
+      });
+      setProfileImagePreview(data.profileImage);
+      refreshUser();
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Profil resmi yüklenirken hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteProfileImageMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/user/profile-image", {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Profil resmi silinirken hata oluştu");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı",
+        description: "Profil resminiz silindi",
+      });
+      setProfileImagePreview(null);
+      refreshUser();
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Profil resmi silinirken hata oluştu",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProfileUpdate = (data: ProfileData) => {
     updateProfileMutation.mutate(data);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // File size check (5MB = 5 * 1024 * 1024 bytes)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Hata",
+        description: "Dosya boyutu 5MB'dan küçük olmalıdır",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // File type check
+    if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+      toast({
+        title: "Hata",
+        description: "Sadece JPG ve PNG dosyaları desteklenmektedir",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    uploadProfileImageMutation.mutate(file);
+  };
+
+  const handleImageDelete = () => {
+    deleteProfileImageMutation.mutate();
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   if (!user) {
@@ -94,6 +207,66 @@ export default function Profile() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {user.role === "corporate" && (
+              <div className="mb-6 pb-6 border-b border-gray-200">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    {profileImagePreview ? (
+                      <img
+                        src={profileImagePreview}
+                        alt="Profil resmi"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                        <Camera className="w-8 h-8 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={triggerFileInput}
+                        disabled={uploadProfileImageMutation.isPending}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {profileImagePreview ? "Değiştir" : "Yükle"}
+                      </Button>
+                      
+                      {profileImagePreview && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleImageDelete}
+                          disabled={deleteProfileImageMutation.isPending}
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Sil
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <p className="text-sm text-gray-500">
+                      Maksimum 5MB, JPG/PNG formatları desteklenir
+                    </p>
+                  </div>
+                </div>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </div>
+            )}
+            
             <form onSubmit={profileForm.handleSubmit(handleProfileUpdate)} className="space-y-6">
               {user.role === "corporate" && (
                 <div className="space-y-2">
@@ -141,20 +314,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">E-posta</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...profileForm.register("email")}
-                  placeholder="E-posta adresiniz"
-                />
-                {profileForm.formState.errors.email && (
-                  <p className="text-sm text-red-500">
-                    {profileForm.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
+
 
               {user.role === "corporate" && (
                 <div className="space-y-2">

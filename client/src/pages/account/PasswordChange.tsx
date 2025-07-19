@@ -34,14 +34,25 @@ export default function PasswordChange() {
   });
 
   const changePasswordMutation = useMutation({
-    mutationFn: (data: PasswordData) => 
-      apiRequest("/api/user/change-password", {
+    mutationFn: async (data: PasswordData) => {
+      const response = await fetch("/api/user/change-password", {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
         }),
-      }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Şifre değiştirilirken hata oluştu");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Başarılı",

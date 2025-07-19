@@ -1,5 +1,10 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
+import multer from "multer";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { loginSchema, registerSchema } from "@shared/schema";
 import session from "express-session";
@@ -9,6 +14,7 @@ const requireAuth = (req: any, res: any, next: any) => {
   if (!req.session?.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  req.session.userId = req.session.user.id; // Add userId for backward compatibility
   next();
 };
 
@@ -19,6 +25,21 @@ const requireAdmin = (req: any, res: any, next: any) => {
   }
   next();
 };
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG and PNG files are allowed'));
+    }
+  },
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session middleware
@@ -32,6 +53,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));
+
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
@@ -127,24 +151,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const { firstName, lastName, email, companyName, username } = req.body;
+      const { firstName, lastName, companyName, username } = req.body;
       const userId = req.session.userId;
 
       // Validate required fields
-      if (!firstName || !lastName || !email) {
-        return res.status(400).json({ error: "Ad, soyad ve e-posta zorunludur" });
+      if (!firstName || !lastName) {
+        return res.status(400).json({ error: "Ad ve soyad zorunludur" });
       }
 
       // Get current user to check role
       const currentUser = await storage.getUserById(userId);
       if (!currentUser) {
         return res.status(404).json({ error: "Kullanıcı bulunamadı" });
-      }
-
-      // Check if email is already taken by another user
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser && existingUser.id !== userId) {
-        return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
       }
 
       // Validate username for corporate users
@@ -165,7 +183,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, {
         firstName,
         lastName,
-        email,
         companyName: companyName || null,
         ...(currentUser.role === "corporate" && username && { username }),
       });
@@ -212,6 +229,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Şifre başarıyla değiştirildi" });
     } catch (error) {
       res.status(500).json({ error: "Şifre değiştirilirken hata oluştu" });
+    }
+  });
+
+  // Change user email
+  app.patch("/api/user/change-email", requireAuth, async (req, res) => {
+    try {
+      const { email } = req.body;
+      const userId = req.session.userId;
+
+      // Validate email format
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Geçerli bir e-posta adresi giriniz" });
+      }
+
+      // Check if email is already taken by another user
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { email });
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ error: "E-posta güncellenirken hata oluştu" });
+    }
+  });
+
+  // Upload profile image
+  app.post("/api/user/profile-image", requireAuth, upload.single("profileImage"), async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ error: "Profil resmi gerekli" });
+      }
+
+      // Get current user to check role
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      }
+
+      // Only corporate users can upload profile images
+      if (currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Sadece kurumsal kullanıcılar profil resmi yükleyebilir" });
+      }
+
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Generate unique filename
+      const fileExtension = path.extname(file.originalname);
+      const fileName = `profile_${userId}_${Date.now()}${fileExtension}`;
+      const filePath = path.join(uploadsDir, fileName);
+
+      // Process and compress image
+      await sharp(file.buffer)
+        .resize(400, 400, { fit: "cover", position: "center" })
+        .jpeg({ quality: 85 })
+        .toFile(filePath);
+
+      // Delete old profile image if exists
+      if (currentUser.profileImage) {
+        const oldImagePath = path.join(process.cwd(), currentUser.profileImage);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+
+      // Update user with new profile image URL
+      const profileImageUrl = `/uploads/${fileName}`;
+      const updatedUser = await storage.updateUser(userId, { profileImage: profileImageUrl });
+
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json({ ...userWithoutPassword, profileImage: profileImageUrl });
+    } catch (error) {
+      console.error("Profile image upload error:", error);
+      res.status(500).json({ error: "Profil resmi yüklenirken hata oluştu" });
+    }
+  });
+
+  // Delete profile image
+  app.delete("/api/user/profile-image", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+
+      // Get current user
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      }
+
+      // Only corporate users can delete profile images
+      if (currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Sadece kurumsal kullanıcılar profil resmi silebilir" });
+      }
+
+      // Delete physical file if exists
+      if (currentUser.profileImage) {
+        const imagePath = path.join(process.cwd(), currentUser.profileImage);
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      }
+
+      // Update user to remove profile image URL
+      const updatedUser = await storage.updateUser(userId, { profileImage: null });
+
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Profile image delete error:", error);
+      res.status(500).json({ error: "Profil resmi silinirken hata oluştu" });
     }
   });
 

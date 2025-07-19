@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   companyName: text("company_name"), // Only for corporate users
+  profileImage: text("profile_image"), // Profile image URL for corporate users
   role: text("role").notNull().default("individual"), // admin, editor, corporate, individual
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),

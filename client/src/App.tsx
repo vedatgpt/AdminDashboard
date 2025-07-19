@@ -15,6 +15,7 @@ import UserProfile from "@/pages/Profile";
 import Account from "@/pages/account/Account";
 import Profile from "@/pages/account/Profile";
 import PasswordChange from "@/pages/account/PasswordChange";
+import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/account" component={Account} />
       <Route path="/account/profile" component={Profile} />
       <Route path="/account/change-password" component={PasswordChange} />
+      <Route path="/account/change-email" component={ChangeEmail} />
       
       {isAuthenticated && user?.role === "admin" ? (
         <Layout>
