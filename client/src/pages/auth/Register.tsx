@@ -75,18 +75,21 @@ export default function Register() {
         </div>
         <div className="p-6">
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Hesap Türü
-              </label>
+            <div className="relative">
               <select
                 id="role"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="peer p-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 not-placeholder-shown:pt-6 not-placeholder-shown:pb-2 autofill:pt-6 autofill:pb-2"
                 {...registerForm.register("role")}
               >
                 <option value="individual">Bireysel</option>
                 <option value="corporate">Kurumsal</option>
               </select>
+              <label 
+                htmlFor="role"
+                className="absolute top-0 start-0 p-4 h-full truncate pointer-events-none transition ease-in-out duration-100 border border-transparent peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:text-xs peer-focus:-translate-y-1.5 peer-focus:text-gray-500 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:-translate-y-1.5 peer-not-placeholder-shown:text-gray-500 text-gray-500"
+              >
+                Hesap Türü
+              </label>
             </div>
 
             {selectedRole === "corporate" && (
