@@ -138,25 +138,7 @@ export default function PersonnelDashboard() {
               {user.companyName} şirketinin yetkili personeli olarak sisteme giriş yaptınız.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="bg-blue-50 p-4 rounded-lg mb-4">
-              <p className="text-sm text-blue-700">
-                Bu panele şirketinizin ana hesap sahibi tarafından eklendiniz. 
-                Şirketiniz adına yapabileceğiniz işlemler için sistem yöneticinize danışabilirsiniz.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="text-sm text-gray-600">
-                <h3 className="font-medium mb-2">Mevcut Yetkileriniz:</h3>
-                <ul className="space-y-1 ml-4">
-                  <li>• Hesap bilgilerinizi görüntüleme</li>
-                  <li>• Şirket bilgilerine erişim</li>
-                  <li>• (İlave yetkiler sistem yöneticisi tarafından tanımlanacaktır)</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
+          
         </Card>
 
         <div className="mt-6">
