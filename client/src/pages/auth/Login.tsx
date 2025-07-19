@@ -1,5 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, type LoginData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -59,59 +63,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-base-100 flex items-center justify-center">
-      <div className="card w-full max-w-sm shadow-2xl bg-base-100">
-        <div className="card-body">
-          <div className="text-center mb-6">
-            <img
-              alt="Logo"
-              src={logoPath}
-              className="mx-auto h-12 w-auto mb-4"
-            />
-            <h1 className="text-3xl font-bold text-base-content">Giriş Yap</h1>
-            <p className="text-base-content/70 mt-2">Hesabınıza giriş yapın</p>
-          </div>
-
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          
+          <CardTitle className="text-2xl font-bold text-center">
+            Giriş Yap
+          </CardTitle>
+         
+        </CardHeader>
+        <CardContent>
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">E-posta veya Kullanıcı Adı</span>
-              </label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <Label htmlFor="emailOrUsername">E-posta Adresi</Label>
+              <Input
+                id="emailOrUsername"
                 {...loginForm.register("emailOrUsername")}
                 placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
-                className="input input-bordered w-full"
-                required
               />
               {loginForm.formState.errors.emailOrUsername && (
-                <label className="label">
-                  <span className="label-text-alt text-error">
-                    {loginForm.formState.errors.emailOrUsername.message}
-                  </span>
-                </label>
+                <p className="text-sm text-red-500">{loginForm.formState.errors.emailOrUsername.message}</p>
               )}
             </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Şifre</span>
-                <a href="#" className="label-text-alt link link-hover text-primary">
-                  Şifrenizi mi unuttunuz?
-                </a>
-              </label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Şifre</Label>
               <div className="relative">
-                <input
+                <Input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   {...loginForm.register("password")}
                   placeholder="Şifrenizi giriniz"
-                  className="input input-bordered w-full pr-12"
-                  required
+                  className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-base-content/60 hover:text-base-content"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -121,37 +108,27 @@ export default function Login() {
                 </button>
               </div>
               {loginForm.formState.errors.password && (
-                <label className="label">
-                  <span className="label-text-alt text-error">
-                    {loginForm.formState.errors.password.message}
-                  </span>
-                </label>
+                <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
               )}
             </div>
-
-            <div className="form-control mt-6">
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className={`btn btn-primary w-full ${loginLoading ? 'loading' : ''}`}
-              >
-                {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-              </button>
-            </div>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loginLoading}
+            >
+              {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            </Button>
           </form>
-
-          <div className="divider">veya</div>
           
-          <div className="text-center">
-            <p className="text-base-content/70">
-              Hesabınız yok mu?{' '}
-              <Link href="/register" className="link link-primary font-semibold">
-                Kayıt olun
-              </Link>
-            </p>
+          <div className="mt-6 text-center">
+            <Link href="/register">
+              <Button variant="ghost" className="text-sm">
+                Hesabınız yok mu? Kayıt olun
+              </Button>
+            </Link>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
