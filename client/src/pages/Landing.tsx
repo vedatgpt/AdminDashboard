@@ -40,8 +40,8 @@ export default function Landing() {
                 <span className="text-gray-700 font-medium">
                   {getUserDisplayName()}
                 </span>
-                <Link href="/settings">
-                  <Button variant="outline">Ayarlar</Button>
+                <Link href="/account">
+                  <Button variant="outline">Hesap</Button>
                 </Link>
                 <Button 
                   variant="outline" 

@@ -149,25 +149,37 @@ Authentication features:
 - Updated import paths and routing configuration
 - All admin functionality grouped under admin namespace
 
-### Settings Page Implementation
-- Created comprehensive user settings page accessible at /settings
+### Account Management System
+- Restructured account system with organized route structure
+- Main account page at /account with navigation options
+- Dedicated profile management at /account/profile
+- Separate password change page at /account/change-password
+- Modular file organization under /pages/account/ directory
+
+### Account Profile Features
 - Profile information management (firstName, lastName, email)
-- Conditional company name field for corporate users
-- Password change functionality with current password verification
-- Form validation using Zod schemas with password confirmation
-- Password visibility toggles on all password fields
-- Real-time feedback with toast notifications
-- Responsive design with card-based layout
+- Company name field positioned above name fields for corporate users
+- Username editing capability for corporate users only
+- URL-friendly username validation and uniqueness checking
+- Real-time preview of profile URL for username changes
+- Form validation using Zod schemas with comprehensive error handling
+
+### Password Change Improvements  
+- Simplified password change form (removed confirmation field)
+- Current password verification required
+- Minimum 6-character password validation
+- Password visibility toggles on all password inputs
+- Enhanced security with bcrypt hashing
 
 ### API Endpoints for User Management
-- PATCH /api/user/profile - Update user profile information
-- PATCH /api/user/change-password - Change user password with verification
-- Email uniqueness validation during profile updates
-- Secure password hashing with bcrypt
+- PATCH /api/user/profile - Update profile with username support for corporate users
+- PATCH /api/user/change-password - Secure password change with verification
+- Email and username uniqueness validation during updates
+- Role-based field access control
 
 ### Navigation Updates
-- Settings link added to Landing page navbar for authenticated users
-- Settings link added to admin sidebar navigation
+- "Hesap" (Account) button replaces "Ayarlar" (Settings) in navbar
+- Account navigation added to admin sidebar
 - Consistent SPA navigation throughout the application
 
 ### Current Test Accounts

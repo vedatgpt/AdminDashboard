@@ -98,12 +98,12 @@ export default function Sidebar() {
           
           <div className="px-3 pb-6 space-y-2">
             <Link
-              href="/settings"
+              href="/account"
               className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100"
               onClick={close}
             >
               <Settings className="w-5 h-5 mr-3" />
-              Ayarlar
+              Hesap
             </Link>
             <button
               onClick={handleLogout}

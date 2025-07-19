@@ -127,12 +127,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const { firstName, lastName, email, companyName } = req.body;
+      const { firstName, lastName, email, companyName, username } = req.body;
       const userId = req.session.userId;
 
       // Validate required fields
       if (!firstName || !lastName || !email) {
         return res.status(400).json({ error: "Ad, soyad ve e-posta zorunludur" });
+      }
+
+      // Get current user to check role
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser) {
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
       }
 
       // Check if email is already taken by another user
@@ -141,11 +147,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
       }
 
+      // Validate username for corporate users
+      if (currentUser.role === "corporate" && username) {
+        if (username.length < 3) {
+          return res.status(400).json({ error: "Kullanıcı adı en az 3 karakter olmalı" });
+        }
+
+        // Check if username is already taken by another user
+        if (username !== currentUser.username) {
+          const existingUsername = await storage.getUserByUsername(username);
+          if (existingUsername && existingUsername.id !== userId) {
+            return res.status(400).json({ error: "Bu kullanıcı adı zaten kullanılıyor" });
+          }
+        }
+      }
+
       const updatedUser = await storage.updateUser(userId, {
         firstName,
         lastName,
         email,
         companyName: companyName || null,
+        ...(currentUser.role === "corporate" && username && { username }),
       });
 
       const { password, ...userWithoutPassword } = updatedUser;

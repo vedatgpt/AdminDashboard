@@ -11,8 +11,10 @@ import Locations from "@/pages/admin/Locations";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Landing from "@/pages/Landing";
-import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
+import UserProfile from "@/pages/Profile";
+import Account from "@/pages/account/Account";
+import Profile from "@/pages/account/Profile";
+import PasswordChange from "@/pages/account/PasswordChange";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -32,7 +34,9 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/settings" component={Settings} />
+      <Route path="/account" component={Account} />
+      <Route path="/account/profile" component={Profile} />
+      <Route path="/account/change-password" component={PasswordChange} />
       
       {isAuthenticated && user?.role === "admin" ? (
         <Layout>
@@ -48,7 +52,7 @@ function Router() {
       ) : (
         <Switch>
           <Route path="/" component={Landing} />
-          <Route path="/:username" component={Profile} />
+          <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>
       )}
