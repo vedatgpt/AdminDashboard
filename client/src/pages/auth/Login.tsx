@@ -1,16 +1,22 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, type LoginData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { login, loginError, loginLoading, user, isAuthenticated } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -25,8 +31,6 @@ export default function Login() {
     if (isAuthenticated && user) {
       if (user.role === "admin") {
         navigate("/admin/users");
-      } else if (user.userType === "personnel") {
-        navigate("/personnel-dashboard");
       } else {
         navigate("/");
       }
@@ -59,112 +63,72 @@ export default function Login() {
   };
 
   return (
-    <section className="bg-white dark:bg-gray-900">
-      <div className="container flex items-center justify-center min-h-screen px-6 mx-auto">
-        <form className="w-full max-w-md" onSubmit={loginForm.handleSubmit(handleLogin)}>
-          <img 
-            className="w-auto h-7 sm:h-8" 
-            src={logoPath} 
-            alt="Logo"
-          />
-
-          <h1 className="mt-3 text-2xl font-semibold text-gray-800 capitalize sm:text-3xl dark:text-white">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          
+          <CardTitle className="text-2xl font-bold text-center">
             Giriş Yap
-          </h1>
-
-          <div className="relative flex items-center mt-8">
-            <span className="absolute">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="w-6 h-6 mx-3 text-gray-300 dark:text-gray-500" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
-                strokeWidth="2"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
+          </CardTitle>
+         
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="emailOrUsername">E-posta Adresi</Label>
+              <Input
+                id="emailOrUsername"
+                {...loginForm.register("emailOrUsername")}
+                placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
+              />
+              {loginForm.formState.errors.emailOrUsername && (
+                <p className="text-sm text-red-500">{loginForm.formState.errors.emailOrUsername.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Şifre</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...loginForm.register("password")}
+                  placeholder="Şifrenizi giriniz"
+                  className="pr-10"
                 />
-              </svg>
-            </span>
-
-            <input 
-              type="text" 
-              {...loginForm.register("emailOrUsername")}
-              className="block w-full py-3 text-gray-700 bg-white border rounded-lg px-11 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40" 
-              placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
-            />
-          </div>
-          {loginForm.formState.errors.emailOrUsername && (
-            <p className="text-xs text-red-600 mt-2">{loginForm.formState.errors.emailOrUsername.message}</p>
-          )}
-
-          <div className="relative flex items-center mt-4">
-            <span className="absolute">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="w-6 h-6 mx-3 text-gray-300 dark:text-gray-500" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
-                strokeWidth="2"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-                />
-              </svg>
-            </span>
-
-            <input 
-              type="password"
-              {...loginForm.register("password")}
-              className="block w-full px-10 py-3 text-gray-700 bg-white border rounded-lg dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-300 focus:ring-blue-300 focus:outline-none focus:ring focus:ring-opacity-40" 
-              placeholder="Şifrenizi giriniz"
-            />
-          </div>
-          {loginForm.formState.errors.password && (
-            <p className="text-xs text-red-600 mt-2">{loginForm.formState.errors.password.message}</p>
-          )}
-
-          <div className="mt-6">
-            <button 
-              type="submit"
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {loginForm.formState.errors.password && (
+                <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
+              )}
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full" 
               disabled={loginLoading}
-              className="w-full px-6 py-3 text-sm font-medium tracking-wide text-white capitalize transition-colors duration-300 transform bg-blue-500 rounded-lg hover:bg-blue-400 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-50 disabled:opacity-50"
             >
               {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </button>
-
-            <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
-              ya da Google ile giriş yapın
-            </p>
-
-            <a 
-              href="#" 
-              className="flex items-center justify-center px-6 py-3 mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              <svg className="w-6 h-6 mx-2" viewBox="0 0 40 40">
-                <path d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.045 27.2142 24.3525 30 20 30C14.4775 30 10 25.5225 10 20C10 14.4775 14.4775 9.99999 20 9.99999C22.5492 9.99999 24.8683 10.9617 26.6342 12.5325L31.3483 7.81833C28.3717 5.04416 24.39 3.33333 20 3.33333C10.7958 3.33333 3.33335 10.7958 3.33335 20C3.33335 29.2042 10.7958 36.6667 20 36.6667C29.2042 36.6667 36.6667 29.2042 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z" fill="#FFC107" />
-                <path d="M5.25497 12.2425L10.7308 16.2583C12.2125 12.59 15.8008 9.99999 20 9.99999C22.5491 9.99999 24.8683 10.9617 26.6341 12.5325L31.3483 7.81833C28.3716 5.04416 24.39 3.33333 20 3.33333C13.5983 3.33333 8.04663 6.94749 5.25497 12.2425Z" fill="#FF3D00" />
-                <path d="M20 36.6667C24.305 36.6667 28.2167 35.0192 31.1742 32.34L26.0159 27.975C24.3425 29.2425 22.2625 30 20 30C15.665 30 11.9842 27.2359 10.5975 23.3784L5.16254 27.5659C7.92087 32.9634 13.5225 36.6667 20 36.6667Z" fill="#4CAF50" />
-                <path d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.7592 25.1975 27.56 26.805 26.0133 27.9758C26.0142 27.975 26.015 27.975 26.0158 27.9742L31.1742 32.3392C30.8092 32.6708 36.6667 28.3333 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z" fill="#1976D2" />
-              </svg>
-
-              <span className="mx-2">Google ile Giriş Yap</span>
-            </a>
-
-            <div className="mt-6 text-center">
-              <Link href="/register" className="text-sm text-blue-500 hover:underline dark:text-blue-400">
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <Link href="/register">
+              <Button variant="ghost" className="text-sm">
                 Hesabınız yok mu? Kayıt olun
-              </Link>
-            </div>
+              </Button>
+            </Link>
           </div>
-        </form>
-      </div>
-    </section>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
