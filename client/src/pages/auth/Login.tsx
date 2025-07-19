@@ -1,16 +1,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, type LoginData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
+import { TextField, FormControl, InputLabel, OutlinedInput, InputAdornment, IconButton, Button as MuiButton } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -75,49 +74,87 @@ export default function Login() {
         <CardContent>
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emailOrUsername">E-posta Adresi</Label>
-              <Input
+              <TextField
                 id="emailOrUsername"
+                label="E-posta veya Kullanıcı Adı"
+                variant="outlined"
+                fullWidth
                 {...loginForm.register("emailOrUsername")}
                 placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
+                error={!!loginForm.formState.errors.emailOrUsername}
+                helperText={loginForm.formState.errors.emailOrUsername?.message}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#EC7830',
+                    },
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#EC7830',
+                  },
+                }}
               />
-              {loginForm.formState.errors.emailOrUsername && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.emailOrUsername.message}</p>
-              )}
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
+              <FormControl fullWidth variant="outlined">
+                <InputLabel htmlFor="outlined-adornment-password">Şifre</InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-password"
+                  type={showPassword ? 'text' : 'password'}
                   {...loginForm.register("password")}
                   placeholder="Şifrenizi giriniz"
-                  className="pr-10"
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={showPassword ? 'hide the password' : 'display the password'}
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Şifre"
+                  error={!!loginForm.formState.errors.password}
+                  sx={{
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#EC7830',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#EC7830',
+                    },
+                  }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-              {loginForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
-              )}
+                {loginForm.formState.errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{loginForm.formState.errors.password.message}</p>
+                )}
+              </FormControl>
             </div>
-            <Button 
+            
+            <MuiButton 
               type="submit" 
-              className="w-full" 
+              variant="contained"
+              fullWidth
               disabled={loginLoading}
+              sx={{
+                backgroundColor: '#EC7830',
+                '&:hover': {
+                  backgroundColor: '#d9661a',
+                },
+                '&:disabled': {
+                  backgroundColor: '#f3f4f6',
+                },
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
+              }}
             >
               {loginLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </Button>
+            </MuiButton>
           </form>
           
           <div className="mt-6 text-center">

@@ -11,7 +11,7 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment, OutlinedInput } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment, OutlinedInput, Button as MuiButton, Grid } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export default function Register() {
@@ -130,57 +130,58 @@ export default function Register() {
               </div>
             )}
             
-            <div className="space-y-2">
-              <TextField
-                id="firstName"
-                label="Ad"
-                variant="outlined"
-                fullWidth
-                {...registerForm.register("firstName")}
-                placeholder="Adınızı giriniz"
-                error={!!registerForm.formState.errors.firstName}
-                helperText={registerForm.formState.errors.firstName?.message}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#EC7830',
+            <Grid container spacing={2}>
+              <Grid size={6}>
+                <TextField
+                  id="firstName"
+                  label="Ad"
+                  variant="outlined"
+                  fullWidth
+                  {...registerForm.register("firstName")}
+                  placeholder="Adınızı giriniz"
+                  error={!!registerForm.formState.errors.firstName}
+                  helperText={registerForm.formState.errors.firstName?.message}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#EC7830',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#EC7830',
+                      },
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#EC7830',
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#EC7830',
                     },
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#EC7830',
-                  },
-                }}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <TextField
-                id="lastName"
-                label="Soyad"
-                variant="outlined"
-                fullWidth
-                {...registerForm.register("lastName")}
-                placeholder="Soyadınızı giriniz"
-                error={!!registerForm.formState.errors.lastName}
-                helperText={registerForm.formState.errors.lastName?.message}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#EC7830',
+                  }}
+                />
+              </Grid>
+              <Grid size={6}>
+                <TextField
+                  id="lastName"
+                  label="Soyad"
+                  variant="outlined"
+                  fullWidth
+                  {...registerForm.register("lastName")}
+                  placeholder="Soyadınızı giriniz"
+                  error={!!registerForm.formState.errors.lastName}
+                  helperText={registerForm.formState.errors.lastName?.message}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#EC7830',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#EC7830',
+                      },
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#EC7830',
+                    '& .MuiInputLabel-root.Mui-focused': {
+                      color: '#EC7830',
                     },
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#EC7830',
-                  },
-                }}
-              />
-            </div>
+                  }}
+                />
+              </Grid>
+            </Grid>
             
             <div className="space-y-2">
               <TextField
@@ -244,13 +245,26 @@ export default function Register() {
                 )}
               </FormControl>
             </div>
-            <Button 
+            <MuiButton 
               type="submit" 
-              className="w-full" 
+              variant="contained"
+              fullWidth
               disabled={registerLoading}
+              sx={{
+                backgroundColor: '#EC7830',
+                '&:hover': {
+                  backgroundColor: '#d9661a',
+                },
+                '&:disabled': {
+                  backgroundColor: '#f3f4f6',
+                },
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
+              }}
             >
               {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
-            </Button>
+            </MuiButton>
           </form>
           
           <div className="mt-6 text-center">
