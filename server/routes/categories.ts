@@ -95,14 +95,16 @@ router.use(requireAdmin);
 router.post("/", async (req, res) => {
   try {
     const validatedData = insertCategorySchema.parse(req.body);
+    console.log("Creating category with data:", validatedData);
     const category = await storage.createCategory(validatedData);
     res.status(201).json(category);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating category:", error);
+    console.error("Error details:", error.message);
     if (error.name === "ZodError") {
       return res.status(400).json({ error: "Invalid input data", details: error.errors });
     }
-    res.status(500).json({ error: "Failed to create category" });
+    res.status(500).json({ error: "Failed to create category", details: error.message });
   }
 });
 

@@ -182,6 +182,12 @@ export default function Categories() {
                 <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
                 <p>Kategoriler yüklenirken bir hata oluştu</p>
               </div>
+            ) : filteredCategories.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <FolderTree className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Henüz kategori oluşturulmamış</p>
+                <p className="text-sm mt-1">Başlamak için "Ana Kategori Ekle" butonunu kullanın</p>
+              </div>
             ) : (
               <CategoryTree
                 categories={filteredCategories}

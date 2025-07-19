@@ -11,7 +11,10 @@ export function useCategories() {
 export function useCategoriesTree() {
   return useQuery<Category[]>({
     queryKey: ["/api/categories", "tree"],
-    queryFn: () => apiRequest("/api/categories"),
+    queryFn: () => fetch("/api/categories").then(res => {
+      if (!res.ok) throw new Error('Failed to fetch categories');
+      return res.json();
+    }),
   });
 }
 

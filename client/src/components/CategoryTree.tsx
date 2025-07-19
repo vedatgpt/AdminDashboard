@@ -62,10 +62,10 @@ function CategoryNode({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center py-2 px-2 lg:px-3 rounded-lg cursor-pointer transition-colors ${
+        className={`group flex items-center py-2 px-2 lg:px-3 rounded-lg cursor-pointer transition-all duration-200 ${
           isSelected 
-            ? "bg-[#EC7830] text-white" 
-            : "hover:bg-gray-50 text-gray-800"
+            ? "bg-[#EC7830] text-white shadow-sm" 
+            : "hover:bg-gray-50 text-gray-800 hover:shadow-sm"
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleSelect}
