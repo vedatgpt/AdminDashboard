@@ -46,6 +46,10 @@ export function useAuth() {
     },
   });
 
+  const refreshUser = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+  };
+
   return {
     user,
     isLoading,
@@ -55,6 +59,7 @@ export function useAuth() {
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
+    refreshUser,
     loginError: loginMutation.error,
     registerError: registerMutation.error,
     loginLoading: loginMutation.isPending,

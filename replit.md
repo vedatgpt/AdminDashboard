@@ -149,7 +149,29 @@ Authentication features:
 - Updated import paths and routing configuration
 - All admin functionality grouped under admin namespace
 
+### Settings Page Implementation
+- Created comprehensive user settings page accessible at /settings
+- Profile information management (firstName, lastName, email)
+- Conditional company name field for corporate users
+- Password change functionality with current password verification
+- Form validation using Zod schemas with password confirmation
+- Password visibility toggles on all password fields
+- Real-time feedback with toast notifications
+- Responsive design with card-based layout
+
+### API Endpoints for User Management
+- PATCH /api/user/profile - Update user profile information
+- PATCH /api/user/change-password - Change user password with verification
+- Email uniqueness validation during profile updates
+- Secure password hashing with bcrypt
+
+### Navigation Updates
+- Settings link added to Landing page navbar for authenticated users
+- Settings link added to admin sidebar navigation
+- Consistent SPA navigation throughout the application
+
 ### Current Test Accounts
 - Admin: email "admin@example.com" OR username "admin", password "admin123"
 - Sample user: username "velikara6028" (auto-generated from "Veli Kara")
 - Corporate test user: username "orhanyenen2548" (auto-generated)
+- Test user: username "cemalteyyare8994" (auto-generated)

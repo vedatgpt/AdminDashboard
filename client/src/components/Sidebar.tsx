@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, Megaphone, Tags, MapPin, X, LogOut } from "lucide-react";
+import { Users, Megaphone, Tags, MapPin, X, LogOut, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import logoPath from "@assets/logo_1752808818099.png";
@@ -96,7 +96,15 @@ export default function Sidebar() {
             })}
           </ul>
           
-          <div className="px-3 pb-6">
+          <div className="px-3 pb-6 space-y-2">
+            <Link
+              href="/settings"
+              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-100"
+              onClick={close}
+            >
+              <Settings className="w-5 h-5 mr-3" />
+              Ayarlar
+            </Link>
             <button
               onClick={handleLogout}
               className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-red-50 hover:text-red-600"

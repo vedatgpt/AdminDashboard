@@ -18,6 +18,8 @@ export interface IStorage {
   createUser(insertUser: InsertUser): Promise<User>;
   authenticateUser(loginData: LoginData): Promise<User | null>;
   registerUser(registerData: RegisterData): Promise<User>;
+  updateUser(id: number, updates: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User>;
+  getUserById(id: number): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -92,6 +94,24 @@ export class DatabaseStorage implements IStorage {
     };
 
     return this.createUser(userToCreate);
+  }
+
+  async updateUser(id: number, updates: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User> {
+    const [result] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (!result) {
+      throw new Error("Kullanıcı bulunamadı");
+    }
+    
+    return result;
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.getUser(id);
   }
 }
 
