@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user profile
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
-      const { firstName, lastName, companyName, username } = req.body;
+      const { firstName, lastName, companyName, username, mobilePhone, whatsappNumber, businessPhone } = req.body;
       const userId = req.session.userId;
 
       // Validate required fields
@@ -198,6 +198,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName,
         companyName: companyName || null,
         ...(currentUser.role === "corporate" && username && { username }),
+        // Contact information (available for all users)
+        mobilePhone: mobilePhone || null,
+        whatsappNumber: whatsappNumber || null,
+        // Business phone only for corporate users
+        ...(currentUser.role === "corporate" && { businessPhone: businessPhone || null }),
       });
 
       // Update session with fresh user data

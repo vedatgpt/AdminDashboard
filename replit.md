@@ -170,6 +170,15 @@ Authentication features:
 - Consistent SPA navigation throughout the application
 - Logout functionality on main account page
 
+### Contact Information Management (July 19, 2025)
+- Added contact information fields to user schema: mobilePhone, whatsappNumber, businessPhone
+- Enhanced profile management with "İletişim Bilgilerim" section
+- Individual users: Mobile Phone and WhatsApp Number fields
+- Corporate users: Mobile Phone, WhatsApp Number, and Business Phone fields
+- Database schema updated with new contact fields
+- API endpoints updated to handle contact information updates
+- Real-time form updates and cache synchronization maintained
+
 ### Current Test Accounts
 - Admin: email "admin@example.com" OR username "admin", password "admin123"
 - Corporate user: email "updated@test.com", username "updatedcorporateuser", password "newpass123"
