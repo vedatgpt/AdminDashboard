@@ -2,8 +2,26 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Plus, Tags, Edit2, Trash2, FolderOpen, ChevronRight, ChevronDown, 
-  Settings, Filter, SortAsc, Eye, X, Save, Type, List, CheckSquare, Hash
+  Settings, Filter, SortAsc, Eye, X, Save, Type, List, CheckSquare, Hash,
+  GripVertical, ArrowUpDown, Folder
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import PageHeader from "@/components/PageHeader";
 import EmptyState from "@/components/EmptyState";
 import type { 
@@ -17,14 +35,176 @@ import type {
   CustomFieldType
 } from "@shared/schema";
 
+// Sortable Category Item Component
+function SortableCategoryItem({ 
+  category, 
+  level = 0, 
+  onEdit, 
+  onDelete, 
+  onAddChild, 
+  onViewDetail, 
+  onViewSubcategories 
+}: {
+  category: CategoryWithChildren;
+  level?: number;
+  onEdit: (category: Category) => void;
+  onDelete: (id: number) => void;
+  onAddChild: (parentId: number) => void;
+  onViewDetail: (category: Category) => void;
+  onViewSubcategories: (category: Category) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
+
+  const toggleExpanded = (id: number) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border rounded-lg bg-white mb-2 ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <div 
+        className="flex items-center justify-between p-4 hover:bg-gray-50"
+        style={{ paddingLeft: `${level * 20 + 16}px` }}
+      >
+        <div className="flex items-center gap-3">
+          <div 
+            {...attributes} 
+            {...listeners} 
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="w-4 h-4 text-gray-400" />
+          </div>
+          
+          {category.children && category.children.length > 0 && (
+            <button
+              onClick={() => toggleExpanded(category.id)}
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200"
+            >
+              {expandedItems.has(category.id) ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+          )}
+          <FolderOpen className="w-5 h-5 text-gray-500" />
+          <div>
+            <h3 className="font-medium text-gray-900">{category.name}</h3>
+            {category.description && (
+              <p className="text-sm text-gray-500">{category.description}</p>
+            )}
+            <p className="text-xs text-gray-400">Sıra: {category.sortOrder}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-1 text-xs rounded-full ${
+            category.isActive 
+              ? "bg-green-100 text-green-800" 
+              : "bg-red-100 text-red-800"
+          }`}>
+            {category.isActive ? "Aktif" : "Pasif"}
+          </span>
+          
+          <button
+            onClick={() => onViewSubcategories(category)}
+            className="p-1 text-gray-400 hover:text-purple-600 rounded hover:bg-gray-100"
+            title="Alt kategorileri görüntüle"
+          >
+            <Folder className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => onViewDetail(category)}
+            className="p-1 text-gray-400 hover:text-green-600 rounded hover:bg-gray-100"
+            title="Detayları görüntüle"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => onAddChild(category.id)}
+            className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
+            title="Alt kategori ekle"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => onEdit(category)}
+            className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
+            title="Düzenle"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => onDelete(category.id)}
+            className="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
+            title="Sil"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+      
+      {category.children && category.children.length > 0 && expandedItems.has(category.id) && (
+        <div className="border-t">
+          <CategoryTree 
+            categories={category.children} 
+            level={level + 1}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAddChild={onAddChild}
+            onViewDetail={onViewDetail}
+            onViewSubcategories={onViewSubcategories}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Category tree component for displaying hierarchical structure
-function CategoryTree({ categories, level = 0, onEdit, onDelete, onAddChild, onViewDetail }: {
+function CategoryTree({ 
+  categories, 
+  level = 0, 
+  onEdit, 
+  onDelete, 
+  onAddChild, 
+  onViewDetail, 
+  onViewSubcategories
+}: {
   categories: CategoryWithChildren[];
   level?: number;
   onEdit: (category: Category) => void;
   onDelete: (id: number) => void;
   onAddChild: (parentId: number) => void;
   onViewDetail: (category: Category) => void;
+  onViewSubcategories: (category: Category) => void;
 }) {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
@@ -40,91 +220,98 @@ function CategoryTree({ categories, level = 0, onEdit, onDelete, onAddChild, onV
 
   return (
     <div className="space-y-1">
-      {categories.map((category) => (
-        <div key={category.id} className="border rounded-lg bg-white">
-          <div 
-            className="flex items-center justify-between p-4 hover:bg-gray-50"
-            style={{ paddingLeft: `${level * 20 + 16}px` }}
-          >
-            <div className="flex items-center gap-3">
-              {category.children && category.children.length > 0 && (
-                <button
-                  onClick={() => toggleExpanded(category.id)}
-                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200"
-                >
-                  {expandedItems.has(category.id) ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
+      {level === 0 ? (
+        // Root level uses sortable items with DndContext
+        categories.map((category) => (
+          <SortableCategoryItem
+            key={category.id}
+            category={category}
+            level={level}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAddChild={onAddChild}
+            onViewDetail={onViewDetail}
+            onViewSubcategories={onViewSubcategories}
+          />
+        ))
+      ) : (
+        // Nested levels use regular items (no drag-drop for now)
+        categories.map((category) => (
+          <div key={category.id} className="border rounded-lg bg-white mb-2">
+            <div 
+              className="flex items-center justify-between p-4 hover:bg-gray-50"
+              style={{ paddingLeft: `${level * 20 + 16}px` }}
+            >
+              <div className="flex items-center gap-3">
+                <FolderOpen className="w-5 h-5 text-gray-500" />
+                <div>
+                  <h3 className="font-medium text-gray-900">{category.name}</h3>
+                  {category.description && (
+                    <p className="text-sm text-gray-500">{category.description}</p>
                   )}
+                  <p className="text-xs text-gray-400">Sıra: {category.sortOrder}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  category.isActive 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  {category.isActive ? "Aktif" : "Pasif"}
+                </span>
+
+                <button
+                  onClick={() => onViewDetail(category)}
+                  className="p-1 text-gray-400 hover:text-green-600 rounded hover:bg-gray-100"
+                  title="Detayları görüntüle"
+                >
+                  <Eye className="w-4 h-4" />
                 </button>
-              )}
-              <FolderOpen className="w-5 h-5 text-gray-500" />
-              <div>
-                <h3 className="font-medium text-gray-900">{category.name}</h3>
-                {category.description && (
-                  <p className="text-sm text-gray-500">{category.description}</p>
-                )}
+
+                <button
+                  onClick={() => onAddChild(category.id)}
+                  className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
+                  title="Alt kategori ekle"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={() => onEdit(category)}
+                  className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
+                  title="Düzenle"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={() => onDelete(category.id)}
+                  className="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
+                  title="Sil"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                category.isActive 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-red-100 text-red-800"
-              }`}>
-                {category.isActive ? "Aktif" : "Pasif"}
-              </span>
-              
-              <button
-                onClick={() => onViewDetail(category)}
-                className="p-1 text-gray-400 hover:text-green-600 rounded hover:bg-gray-100"
-                title="Detayları görüntüle"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => onAddChild(category.id)}
-                className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
-                title="Alt kategori ekle"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-              
-              <button
-                onClick={() => onEdit(category)}
-                className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
-                title="Düzenle"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              
-              <button
-                onClick={() => onDelete(category.id)}
-                className="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
-                title="Sil"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            {category.children && category.children.length > 0 && (
+              <div className="border-t">
+                <CategoryTree 
+                  categories={category.children} 
+                  level={level + 1}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onAddChild={onAddChild}
+                  onViewDetail={onViewDetail}
+                  onViewSubcategories={onViewSubcategories}
+                />
+              </div>
+            )}
           </div>
-          
-          {category.children && category.children.length > 0 && expandedItems.has(category.id) && (
-            <div className="border-t">
-              <CategoryTree 
-                categories={category.children} 
-                level={level + 1}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onAddChild={onAddChild}
-                onViewDetail={onViewDetail}
-              />
-            </div>
-          )}
-        </div>
-      ))}
+        ))
+      )}
     </div>
   );
 }
@@ -283,7 +470,7 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
   category: Category;
 }) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'fields' | 'filters'>('fields');
+  const [activeTab, setActiveTab] = useState<'fields' | 'filters' | 'sorting'>('fields');
   const [showCustomFieldForm, setShowCustomFieldForm] = useState(false);
   const [showFilterForm, setShowFilterForm] = useState(false);
   const [editingField, setEditingField] = useState<CategoryCustomField | undefined>();
@@ -352,7 +539,18 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
             onClick={() => setActiveTab('filters')}
           >
             <Filter className="w-4 h-4 inline-block mr-2" />
-            Filtreler ve Sıralama ({filters?.length || 0})
+            Filtreler ({filters?.filter(f => f.filterType === 'filter').length || 0})
+          </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium border-b-2 ${
+              activeTab === 'sorting'
+                ? 'border-[#EC7830] text-[#EC7830]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('sorting')}
+          >
+            <SortAsc className="w-4 h-4 inline-block mr-2" />
+            Sıralama ({filters?.filter(f => f.filterType === 'sort').length || 0})
           </button>
         </div>
 
@@ -373,12 +571,26 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
           {activeTab === 'filters' && (
             <FiltersTab
               categoryId={category.id}
-              filters={filters || []}
+              filters={filters?.filter(f => f.filterType === 'filter') || []}
               onRefetch={refetchFilters}
               showForm={showFilterForm}
               setShowForm={setShowFilterForm}
               editingFilter={editingFilter}
               setEditingFilter={setEditingFilter}
+              filterType="filter"
+            />
+          )}
+          
+          {activeTab === 'sorting' && (
+            <FiltersTab
+              categoryId={category.id}
+              filters={filters?.filter(f => f.filterType === 'sort') || []}
+              onRefetch={refetchFilters}
+              showForm={showFilterForm}
+              setShowForm={setShowFilterForm}
+              editingFilter={editingFilter}
+              setEditingFilter={setEditingFilter}
+              filterType="sort"
             />
           )}
         </div>
@@ -682,8 +894,8 @@ function CustomFieldForm({ categoryId, field, onClose, onSuccess }: {
   );
 }
 
-// Filters Tab Component (similar structure for filters)
-function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, editingFilter, setEditingFilter }: {
+// Filters Tab Component (separate for filters and sorting)
+function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, editingFilter, setEditingFilter, filterType }: {
   categoryId: number;
   filters: CategoryFilter[];
   onRefetch: () => void;
@@ -691,6 +903,7 @@ function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, edi
   setShowForm: (show: boolean) => void;
   editingFilter?: CategoryFilter;
   setEditingFilter: (filter?: CategoryFilter) => void;
+  filterType: 'filter' | 'sort';
 }) {
   const deleteFilterMutation = useMutation({
     mutationFn: async (filterId: number) => {
@@ -725,13 +938,13 @@ function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, edi
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Filtreler ve Sıralama</h3>
+        <h3 className="text-lg font-medium">{filterType === 'filter' ? 'Filtreler' : 'Sıralama Seçenekleri'}</h3>
         <button
           onClick={() => setShowForm(true)}
           className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm"
         >
           <Plus className="w-4 h-4 inline-block mr-2" />
-          Yeni Filtre
+          {filterType === 'filter' ? 'Yeni Filtre' : 'Yeni Sıralama'}
         </button>
       </div>
 
@@ -741,14 +954,15 @@ function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, edi
           filter={editingFilter}
           onClose={handleCloseForm}
           onSuccess={onRefetch}
+          defaultFilterType={filterType}
         />
       )}
 
       {filters.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          <Filter className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p>Bu kategori için filtre tanımlanmamış</p>
-          <p className="text-sm">İlanları filtreleme ve sıralama seçenekleri oluşturun</p>
+          {filterType === 'filter' ? <Filter className="w-12 h-12 mx-auto mb-3 text-gray-300" /> : <SortAsc className="w-12 h-12 mx-auto mb-3 text-gray-300" />}
+          <p>Bu kategori için {filterType === 'filter' ? 'filtre' : 'sıralama seçeneği'} tanımlanmamış</p>
+          <p className="text-sm">{filterType === 'filter' ? 'İlanları filtrelemek için filtreler oluşturun' : 'İlanları sıralamak için seçenekler oluşturun'}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -794,14 +1008,15 @@ function FiltersTab({ categoryId, filters, onRefetch, showForm, setShowForm, edi
 }
 
 // Filter Form Component
-function FilterForm({ categoryId, filter, onClose, onSuccess }: {
+function FilterForm({ categoryId, filter, onClose, onSuccess, defaultFilterType }: {
   categoryId: number;
   filter?: CategoryFilter;
   onClose: () => void;
   onSuccess: () => void;
+  defaultFilterType?: 'filter' | 'sort';
 }) {
   const [formData, setFormData] = useState({
-    filterType: filter?.filterType || "filter",
+    filterType: filter?.filterType || defaultFilterType || "filter",
     fieldName: filter?.fieldName || "",
     label: filter?.label || "",
     options: filter?.options || null,
@@ -965,12 +1180,193 @@ function FilterForm({ categoryId, filter, onClose, onSuccess }: {
   );
 }
 
+// Subcategories Modal Component
+function SubcategoriesModal({ isOpen, onClose, category }: {
+  isOpen: boolean;
+  onClose: () => void;
+  category: Category;
+}) {
+  const queryClient = useQueryClient();
+  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
+  const [showModal, setShowModal] = useState(false);
+  const [draggedCategory, setDraggedCategory] = useState<number | null>(null);
+
+  // Fetch subcategories for this category
+  const { data: subcategories, isLoading } = useQuery({
+    queryKey: [`/api/admin/categories/subcategories/${category.id}`],
+    queryFn: async (): Promise<CategoryWithChildren[]> => {
+      const response = await fetch("/api/admin/categories");
+      if (!response.ok) throw new Error("Kategoriler alınamadı");
+      const allCategories: CategoryWithChildren[] = await response.json();
+      
+      // Filter to get only direct subcategories of this category
+      const findSubcategories = (categories: CategoryWithChildren[]): CategoryWithChildren[] => {
+        const result: CategoryWithChildren[] = [];
+        categories.forEach(cat => {
+          if (cat.parentId === category.id) {
+            result.push(cat);
+          }
+          if (cat.children && cat.children.length > 0) {
+            result.push(...findSubcategories(cat.children));
+          }
+        });
+        return result;
+      };
+      
+      return findSubcategories(allCategories);
+    },
+    enabled: isOpen,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/admin/categories/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Kategori silinemedi");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/categories/subcategories/${category.id}`] });
+      alert("Kategori başarıyla silindi");
+    },
+    onError: (error: any) => {
+      alert(error.message || "Kategori silinirken hata oluştu");
+    },
+  });
+
+  const handleEdit = (cat: Category) => {
+    setSelectedCategory(cat);
+    setShowModal(true);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Bu kategoriyi silmek istediğinizden emin misiniz?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleAddChild = (parentId: number) => {
+    setSelectedCategory(undefined);
+    setShowModal(true);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">{category.name} - Alt Kategoriler</h2>
+            <p className="text-sm text-gray-500">{category.description || "Açıklama yok"}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Action Bar */}
+        <div className="p-4 border-b bg-gray-50">
+          <button
+            onClick={() => handleAddChild(category.id)}
+            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm"
+          >
+            <Plus className="w-4 h-4 inline-block mr-2" />
+            Alt Kategori Ekle
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-gray-500">Alt kategoriler yükleniyor...</div>
+            </div>
+          ) : subcategories && subcategories.length > 0 ? (
+            <div className="space-y-3">
+              {subcategories.map((subcat) => (
+                <div key={subcat.id} className="border rounded-lg p-4 bg-white hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                      <FolderOpen className="w-5 h-5 text-gray-500" />
+                      <div>
+                        <h4 className="font-medium text-gray-900">{subcat.name}</h4>
+                        {subcat.description && (
+                          <p className="text-sm text-gray-500">{subcat.description}</p>
+                        )}
+                        <p className="text-xs text-gray-400">Sıra: {subcat.sortOrder}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        subcat.isActive 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {subcat.isActive ? "Aktif" : "Pasif"}
+                      </span>
+                      
+                      <button
+                        onClick={() => handleEdit(subcat)}
+                        className="p-1 text-gray-400 hover:text-blue-600 rounded hover:bg-gray-100"
+                        title="Düzenle"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDelete(subcat.id)}
+                        className="p-1 text-gray-400 hover:text-red-600 rounded hover:bg-gray-100"
+                        title="Sil"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Folder className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium text-gray-900 mb-2">Alt kategori yok</p>
+              <p className="text-gray-500">Bu kategoriye alt kategori eklemek için yukarıdaki butonu kullanın.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Category Edit Modal */}
+      <CategoryModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        category={selectedCategory}
+        parentId={category.id}
+      />
+    </div>
+  );
+}
+
 export default function Categories() {
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
   const [showModal, setShowModal] = useState(false);
   const [parentId, setParentId] = useState<number | undefined>();
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCategoryDetail, setSelectedCategoryDetail] = useState<Category | undefined>();
+  const [showSubcategoriesModal, setShowSubcategoriesModal] = useState(false);
+  const [selectedCategoryForSubs, setSelectedCategoryForSubs] = useState<Category | undefined>();
+  const [draggedCategory, setDraggedCategory] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data: categories, isLoading } = useQuery({
@@ -1031,6 +1427,57 @@ export default function Categories() {
     setShowDetailModal(true);
   };
 
+  const handleViewSubcategories = (category: Category) => {
+    setSelectedCategoryForSubs(category);
+    setShowSubcategoriesModal(true);
+  };
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Update category sort order via drag and drop
+  const updateCategoryOrder = useMutation({
+    mutationFn: async (updates: { id: number; sortOrder: number }[]) => {
+      const promises = updates.map(update => 
+        fetch(`/api/admin/categories/${update.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sortOrder: update.sortOrder }),
+        })
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+    },
+  });
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id && categories) {
+      const oldIndex = categories.findIndex(cat => cat.id === active.id);
+      const newIndex = categories.findIndex(cat => cat.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedCategories = arrayMove(categories, oldIndex, newIndex);
+        
+        // Update sort orders
+        const updates = reorderedCategories.map((cat, index) => ({
+          id: cat.id,
+          sortOrder: index + 1
+        }));
+        
+        updateCategoryOrder.mutate(updates);
+      }
+    }
+  };
+
   const totalCategories = categories ? 
     categories.reduce((count, cat) => {
       const countChildren = (category: CategoryWithChildren): number => {
@@ -1062,13 +1509,22 @@ export default function Categories() {
           </div>
         ) : categories && categories.length > 0 ? (
           <div className="p-4">
-            <CategoryTree 
-              categories={categories}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onAddChild={handleAddChild}
-              onViewDetail={handleViewDetail}
-            />
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={categories.map(cat => cat.id)} strategy={verticalListSortingStrategy}>
+                <CategoryTree 
+                  categories={categories}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onAddChild={handleAddChild}
+                  onViewDetail={handleViewDetail}
+                  onViewSubcategories={handleViewSubcategories}
+                />
+              </SortableContext>
+            </DndContext>
           </div>
         ) : (
           <div className="p-8">
@@ -1093,6 +1549,14 @@ export default function Categories() {
           isOpen={showDetailModal}
           onClose={() => setShowDetailModal(false)}
           category={selectedCategoryDetail}
+        />
+      )}
+
+      {selectedCategoryForSubs && (
+        <SubcategoriesModal
+          isOpen={showSubcategoriesModal}
+          onClose={() => setShowSubcategoriesModal(false)}
+          category={selectedCategoryForSubs}
         />
       )}
     </div>
