@@ -8,23 +8,9 @@ import fs from "fs";
 import { storage } from "./storage";
 import { loginSchema, registerSchema } from "@shared/schema";
 import session from "express-session";
+import categoriesRouter from "./routes/admin/categories";
 
-// Middleware to check if user is authenticated
-const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.session?.user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  req.session.userId = req.session.user.id; // Add userId for backward compatibility
-  next();
-};
-
-// Middleware to check if user is admin
-const requireAdmin = (req: any, res: any, next: any) => {
-  if (!req.session?.user || req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  next();
-};
+import { requireAuth, requireAdmin } from "./middleware/auth";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -621,6 +607,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Profil resmi silinirken hata oluştu" });
     }
   });
+
+  // Register admin categories router
+  app.use("/api/admin/categories", categoriesRouter);
 
   const httpServer = createServer(app);
   return httpServer;
