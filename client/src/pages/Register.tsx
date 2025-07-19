@@ -8,13 +8,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Register() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { register, registerError, registerLoading, user, isAuthenticated } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const registerForm = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -83,6 +85,20 @@ export default function Register() {
         <CardContent>
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="role">Hesap Türü</Label>
+              <select 
+                id="role"
+                {...registerForm.register("role")}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="individual">Bireysel Kullanıcı</option>
+                <option value="corporate">Kurumsal Kullanıcı</option>
+              </select>
+              {registerForm.formState.errors.role && (
+                <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="username">Kullanıcı Adı</Label>
               <Input
                 id="username"
@@ -107,28 +123,28 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Şifre</Label>
-              <Input
-                id="password"
-                type="password"
-                {...registerForm.register("password")}
-                placeholder="Şifrenizi giriniz"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...registerForm.register("password")}
+                  placeholder="Şifrenizi giriniz"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {registerForm.formState.errors.password && (
                 <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Hesap Türü</Label>
-              <select 
-                id="role"
-                {...registerForm.register("role")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="individual">Bireysel Kullanıcı</option>
-                <option value="corporate">Kurumsal Kullanıcı</option>
-              </select>
-              {registerForm.formState.errors.role && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
               )}
             </div>
             <Button 

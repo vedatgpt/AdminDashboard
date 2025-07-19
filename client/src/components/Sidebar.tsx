@@ -1,7 +1,9 @@
 import { Link, useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
-import { Users, Megaphone, Tags, MapPin, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Users, Megaphone, Tags, MapPin, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import logoPath from "@assets/logo_1752808818099.png";
 
 const navigation = [
@@ -13,7 +15,26 @@ const navigation = [
 
 export default function Sidebar() {
   const { isOpen, close } = useSidebar();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { logout } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+      toast({
+        title: "Başarılı",
+        description: "Başarıyla çıkış yapıldı",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çıkış işlemi başarısız",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -49,8 +70,8 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <nav className="mt-8">
-          <ul className="space-y-2 px-3">
+        <nav className="mt-8 flex flex-col h-full">
+          <ul className="space-y-2 px-3 flex-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href || (location === "/" && item.href === "/admin/users");
@@ -74,6 +95,16 @@ export default function Sidebar() {
               );
             })}
           </ul>
+          
+          <div className="px-3 pb-6">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-red-50 hover:text-red-600"
+            >
+              <LogOut className="w-5 h-5 mr-3" />
+              Çıkış Yap
+            </button>
+          </div>
         </nav>
       </div>
     </>

@@ -41,7 +41,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async authenticateUser(loginData: LoginData): Promise<User | null> {
-    const user = await this.getUserByUsername(loginData.username);
+    // Try to find user by email first, then by username
+    let user = await this.getUserByEmail(loginData.emailOrUsername);
+    if (!user) {
+      user = await this.getUserByUsername(loginData.emailOrUsername);
+    }
+    
     if (!user) return null;
 
     const isValidPassword = await bcrypt.compare(loginData.password, user.password);

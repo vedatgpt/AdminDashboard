@@ -8,18 +8,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { loginSchema, type LoginData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Login() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { login, loginError, loginLoading, user, isAuthenticated } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      emailOrUsername: "",
       password: "",
     },
   });
@@ -81,24 +83,38 @@ export default function Login() {
         <CardContent>
           <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı Adı</Label>
+              <Label htmlFor="emailOrUsername">E-posta Adresi</Label>
               <Input
-                id="username"
-                {...loginForm.register("username")}
-                placeholder="Kullanıcı adınızı giriniz"
+                id="emailOrUsername"
+                {...loginForm.register("emailOrUsername")}
+                placeholder="E-posta adresinizi veya kullanıcı adınızı giriniz"
               />
-              {loginForm.formState.errors.username && (
-                <p className="text-sm text-red-500">{loginForm.formState.errors.username.message}</p>
+              {loginForm.formState.errors.emailOrUsername && (
+                <p className="text-sm text-red-500">{loginForm.formState.errors.emailOrUsername.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Şifre</Label>
-              <Input
-                id="password"
-                type="password"
-                {...loginForm.register("password")}
-                placeholder="Şifrenizi giriniz"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  {...loginForm.register("password")}
+                  placeholder="Şifrenizi giriniz"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               {loginForm.formState.errors.password && (
                 <p className="text-sm text-red-500">{loginForm.formState.errors.password.message}</p>
               )}

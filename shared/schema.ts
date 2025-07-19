@@ -21,7 +21,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const loginSchema = z.object({
-  username: z.string().min(1, "Kullanıcı adı gereklidir"),
+  emailOrUsername: z.string().min(1, "E-posta adresi veya kullanıcı adı gereklidir"),
   password: z.string().min(1, "Şifre gereklidir"),
 });
 
