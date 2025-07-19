@@ -45,7 +45,6 @@ export default function CategoryForm({
 }: CategoryFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     slug: "",
     parentId: null as number | null,
     icon: "",
@@ -60,7 +59,6 @@ export default function CategoryForm({
       // Edit mode
       setFormData({
         name: category.name,
-        description: category.description || "",
         slug: category.slug,
         parentId: category.parentId,
         icon: category.icon || "",
@@ -71,7 +69,6 @@ export default function CategoryForm({
       // Add child mode
       setFormData({
         name: "",
-        description: "",
         slug: "",
         parentId: parentCategory.id,
         icon: "",
@@ -82,7 +79,6 @@ export default function CategoryForm({
       // Add root category mode
       setFormData({
         name: "",
-        description: "",
         slug: "",
         parentId: null,
         icon: "",
@@ -203,19 +199,7 @@ export default function CategoryForm({
             )}
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Açıklama
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-              placeholder="Kategori açıklaması (opsiyonel)"
-            />
-          </div>
+
 
           {/* Parent Category */}
           {!parentCategory && (

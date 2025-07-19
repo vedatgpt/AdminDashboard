@@ -303,13 +303,12 @@ Authentication features:
 - Migrated from tree view to page-based navigation system
 - URL-based navigation: /admin/categories/:parentId for hierarchical browsing
 - Categories display simplified with alt kategori sayısı next to category name (e.g., "Otomobil (3)")
-- Removed description fields and slug display from category listings
-- Added drag & drop reordering functionality with visual feedback
+- Completely removed description fields from all forms, modals, and database interactions
+- Added drag & drop reordering functionality with visual feedback and grip handle
 - All categories are now clickable regardless of having children
-- Enhanced with hover effects and grip handle for drag operations
-- Breadcrumb navigation shows current location in hierarchy
+- Enhanced with hover effects - buttons (edit, delete, add child) only visible on hover
+- Breadcrumb navigation system replaces "Kategori Ağacı" text for better navigation
 - Right panel shows category statistics and quick actions
-- Buttons (edit, delete, add child) only visible on hover for cleaner interface
-- Real-time category count updates and proper sort order management
+- Real-time category count updates and improved sort order management
 - Turkish character slug generation maintained (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u)
 - Full CRUD operations with proper error handling and user feedback

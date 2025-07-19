@@ -66,6 +66,27 @@ export default function Categories() {
     return findCategory(categories);
   }, [categories, currentParentId]);
 
+  // Build breadcrumb trail
+  const breadcrumbs = useMemo(() => {
+    if (!currentParentId || !categories.length) return [];
+    
+    const findPath = (cats: Category[], targetId: number, path: Category[] = []): Category[] | null => {
+      for (const cat of cats) {
+        const newPath = [...path, cat];
+        if (cat.id === targetId) {
+          return newPath;
+        }
+        if ((cat as any).children) {
+          const result = findPath((cat as any).children, targetId, newPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+    
+    return findPath(categories, currentParentId) || [];
+  }, [categories, currentParentId]);
+
   // Filter current categories based on search
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return currentCategories;
@@ -168,8 +189,33 @@ export default function Categories() {
         </div>
       )}
 
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+        <button
+          onClick={() => setLocation('/admin/categories')}
+          className={`hover:text-[#EC7830] transition-colors ${
+            !currentParentId ? 'text-[#EC7830] font-medium' : ''
+          }`}
+        >
+          Ana Kategoriler
+        </button>
+        {breadcrumbs.map((crumb, index) => (
+          <div key={crumb.id} className="flex items-center space-x-2">
+            <span className="text-gray-400">/</span>
+            <button
+              onClick={() => setLocation(`/admin/categories/${crumb.id}`)}
+              className={`hover:text-[#EC7830] transition-colors ${
+                index === breadcrumbs.length - 1 ? 'text-[#EC7830] font-medium' : ''
+              }`}
+            >
+              {crumb.name}
+            </button>
+          </div>
+        ))}
+      </div>
+
       <PageHeader
-        title={currentParent ? `${currentParent.name} Kategorisi` : "Kategori Yönetimi"}
+        title={currentParent ? `${currentParent.name}` : "Ana Kategoriler"}
         subtitle={currentParent ? `${currentParent.name} alt kategorileri` : `${filteredCategories.length} ana kategori`}
         actions={
           <div className="flex items-center gap-2">
@@ -200,7 +246,7 @@ export default function Categories() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FolderTree className="w-5 h-5 mr-2 text-[#EC7830]" />
-              Kategori Ağacı
+              {currentParent ? currentParent.name : "Ana Kategoriler"}
             </h2>
             
             {/* Search */}
@@ -264,14 +310,21 @@ export default function Categories() {
                           const [removed] = newCategories.splice(draggedIndex, 1);
                           newCategories.splice(index, 0, removed);
                           
-                          // Update sort orders
-                          newCategories.forEach((cat, idx) => {
-                            if (cat.sortOrder !== idx + 1) {
-                              updateMutation.mutate({ 
-                                id: cat.id, 
-                                data: { sortOrder: idx + 1 } 
-                              });
-                            }
+                          // Update sort orders - batch update
+                          const updates = newCategories.map((cat, idx) => ({
+                            id: cat.id,
+                            sortOrder: idx + 1
+                          })).filter(update => {
+                            const originalCat = filteredCategories.find(c => c.id === update.id);
+                            return originalCat && originalCat.sortOrder !== update.sortOrder;
+                          });
+
+                          // Execute batch updates
+                          updates.forEach(update => {
+                            updateMutation.mutate({ 
+                              id: update.id, 
+                              data: { sortOrder: update.sortOrder } 
+                            });
                           });
                         }
                       }}
