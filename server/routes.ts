@@ -60,58 +60,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const loginData = loginSchema.parse(req.body);
+      const { identifier, password } = req.body;
       
-      // First try to authenticate as regular user
-      const user = await storage.authenticateUser(loginData);
-      
-      if (user) {
-        if (!user.isActive) {
-          return res.status(401).json({ error: "Hesabınız devre dışı bırakılmış" });
-        }
-
-        // Store user in session
-        req.session.user = user;
-        req.session.userType = "user";
-        
-        // Return user without password
-        const { password, ...userWithoutPassword } = user;
-        return res.json({ user: userWithoutPassword });
+      // Basic validation
+      if (!identifier || !password) {
+        return res.status(400).json({ error: "E-posta/kullanıcı adı ve şifre gerekli" });
       }
 
-      // If regular user authentication fails, try authorized personnel authentication
-      // Only attempt if identifier looks like an email
-      if (loginData.identifier.includes("@")) {
-        const personnelAuth = await storage.authenticateAuthorizedPersonnel(loginData.identifier, loginData.password);
+      // First try regular user authentication
+      try {
+        const loginData = { emailOrUsername: identifier, password };
+        const user = await storage.authenticateUser(loginData);
         
-        if (personnelAuth) {
-          // Store personnel info in session with special markers
-          req.session.user = {
-            id: personnelAuth.personnel.id,
-            username: personnelAuth.personnel.email, // Use email as username for personnel
-            email: personnelAuth.personnel.email,
-            firstName: personnelAuth.personnel.firstName,
-            lastName: personnelAuth.personnel.lastName,
-            role: "authorized_personnel", // Special role for personnel
-            companyName: personnelAuth.company.companyName,
-            companyId: personnelAuth.company.id,
-            mobilePhone: personnelAuth.personnel.mobilePhone,
-            whatsappNumber: personnelAuth.personnel.whatsappNumber,
-            isActive: personnelAuth.personnel.isActive,
-            createdAt: personnelAuth.personnel.createdAt,
-            updatedAt: personnelAuth.personnel.updatedAt,
-          };
-          req.session.userType = "personnel";
+        if (user) {
+          if (!user.isActive) {
+            return res.status(401).json({ error: "Hesabınız devre dışı bırakılmış" });
+          }
 
-          const { password: _, ...personnelData } = req.session.user;
-          return res.json({ user: personnelData });
+          // Store user in session
+          req.session.user = user;
+          req.session.userType = "user";
+          
+          // Return user without password
+          const { password: _, ...userWithoutPassword } = user;
+          return res.json({ user: userWithoutPassword });
+        }
+      } catch (userAuthError) {
+        console.log("Regular user authentication failed for:", identifier);
+      }
+
+      // If regular user authentication fails and identifier is email, try personnel
+      if (identifier && typeof identifier === 'string' && identifier.includes("@")) {
+        try {
+          const personnelAuth = await storage.authenticateAuthorizedPersonnel(identifier, password);
+          
+          if (personnelAuth) {
+            console.log("Personnel authentication successful for:", identifier);
+            // Store personnel info in session
+            req.session.user = {
+              id: personnelAuth.personnel.id,
+              username: personnelAuth.personnel.email,
+              email: personnelAuth.personnel.email,
+              firstName: personnelAuth.personnel.firstName,
+              lastName: personnelAuth.personnel.lastName,
+              role: "authorized_personnel",
+              companyName: personnelAuth.company.companyName,
+              companyId: personnelAuth.company.id,
+              mobilePhone: personnelAuth.personnel.mobilePhone,
+              whatsappNumber: personnelAuth.personnel.whatsappNumber,
+              isActive: personnelAuth.personnel.isActive,
+              createdAt: personnelAuth.personnel.createdAt,
+              updatedAt: personnelAuth.personnel.updatedAt,
+            };
+            req.session.userType = "personnel";
+
+            const { password: _, ...personnelData } = req.session.user;
+            return res.json({ user: personnelData });
+          }
+        } catch (personnelAuthError) {
+          console.log("Personnel authentication failed for:", identifier);
         }
       }
 
       // If both authentications fail
-      return res.status(401).json({ error: "Kullanıcı adı veya şifre hatalı" });
+      return res.status(401).json({ error: "E-posta/kullanıcı adı veya şifre hatalı" });
     } catch (error) {
-      res.status(400).json({ error: "Geçersiz veri" });
+      console.error("Login error:", error);
+      console.error("Request body:", req.body);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ error: "Giriş işlemi sırasında hata oluştu" });
     }
   });
 
