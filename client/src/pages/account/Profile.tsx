@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Save, User, Upload, X, Camera } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -20,7 +20,7 @@ type ProfileData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
   const { user, refreshUser, isLoading } = useAuth();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, navigate] = useLocation();
@@ -60,10 +60,7 @@ export default function Profile() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Başarılı",
-        description: "Profil bilgileriniz güncellendi",
-      });
+      alert("Profil bilgileriniz başarıyla güncellendi");
       // Update form with new data
       profileForm.reset({
         firstName: data.firstName,
@@ -77,11 +74,7 @@ export default function Profile() {
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "Profil güncellenirken bir hata oluştu",
-        variant: "destructive",
-      });
+      alert(error.message || "Profil güncellenirken bir hata oluştu");
     },
   });
 
@@ -103,10 +96,7 @@ export default function Profile() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Başarılı",
-        description: "Profil resminiz güncellendi",
-      });
+      alert("Profil resminiz başarıyla güncellendi");
       setProfileImagePreview(data.profileImage);
       // Update the cached user data immediately
       queryClient.setQueryData(["/api/auth/me"], data);
@@ -114,11 +104,7 @@ export default function Profile() {
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "Profil resmi yüklenirken hata oluştu",
-        variant: "destructive",
-      });
+      alert(error.message || "Profil resmi yüklenirken hata oluştu");
     },
   });
 
@@ -136,10 +122,7 @@ export default function Profile() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Başarılı",
-        description: "Profil resminiz silindi",
-      });
+      alert("Profil resminiz başarıyla silindi");
       setProfileImagePreview(null);
       // Update the cached user data immediately
       const currentUser = queryClient.getQueryData(["/api/auth/me"]) as any;
@@ -150,11 +133,7 @@ export default function Profile() {
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "Profil resmi silinirken hata oluştu",
-        variant: "destructive",
-      });
+      alert(error.message || "Profil resmi silinirken hata oluştu");
     },
   });
 
@@ -168,21 +147,13 @@ export default function Profile() {
 
     // File size check (5MB = 5 * 1024 * 1024 bytes)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "Hata",
-        description: "Dosya boyutu 5MB'dan küçük olmalıdır",
-        variant: "destructive",
-      });
+      alert("Dosya boyutu 5MB'dan küçük olmalıdır");
       return;
     }
 
     // File type check
     if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-      toast({
-        title: "Hata",
-        description: "Sadece JPG ve PNG dosyaları desteklenmektedir",
-        variant: "destructive",
-      });
+      alert("Sadece JPG ve PNG dosyaları desteklenmektedir");
       return;
     }
 
@@ -199,10 +170,13 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-gray-500 mt-2">Yükleniyor...</p>
+      <div className="min-h-60 flex flex-col bg-white border border-gray-200 shadow-2xs rounded-xl dark:bg-neutral-800 dark:border-neutral-700 dark:shadow-neutral-700/70">
+        <div className="flex flex-auto flex-col justify-center items-center p-4 md:p-5">
+          <div className="flex justify-center">
+            <div className="animate-spin inline-block size-6 border-3 border-current border-t-transparent text-blue-600 rounded-full dark:text-blue-500" role="status" aria-label="loading">
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -369,10 +343,10 @@ export default function Profile() {
 
               <button 
                 type="submit" 
-                className="w-full"
+                className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:pointer-events-none"
                 disabled={updateProfileMutation.isPending}
               >
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-4 h-4" />
                 {updateProfileMutation.isPending ? "Güncelleniyor..." : "Profili Güncelle"}
               </button>
             </form>
