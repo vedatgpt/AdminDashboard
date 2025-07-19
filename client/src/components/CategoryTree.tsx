@@ -62,12 +62,12 @@ function CategoryNode({
   return (
     <div className="select-none">
       <div
-        className={`flex items-center py-2 px-3 rounded-lg cursor-pointer transition-colors ${
+        className={`flex items-center py-2 px-2 lg:px-3 rounded-lg cursor-pointer transition-colors ${
           isSelected 
             ? "bg-[#EC7830] text-white" 
             : "hover:bg-gray-50 text-gray-800"
         }`}
-        style={{ paddingLeft: `${level * 24 + 12}px` }}
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleSelect}
       >
         {/* Expand/Collapse button */}
@@ -95,9 +95,9 @@ function CategoryNode({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-sm truncate">{category.name}</h3>
+              <h3 className="font-medium text-xs lg:text-sm truncate">{category.name}</h3>
               {category.description && (
-                <p className={`text-xs truncate mt-1 ${
+                <p className={`text-xs truncate mt-1 hidden sm:block ${
                   isSelected ? "text-orange-100" : "text-gray-500"
                 }`}>
                   {category.description}
@@ -105,8 +105,8 @@ function CategoryNode({
               )}
             </div>
             
-            <div className="flex items-center space-x-1 ml-3">
-              <span className={`text-xs px-2 py-1 rounded ${
+            <div className="flex items-center space-x-1 ml-2">
+              <span className={`text-xs px-1 lg:px-2 py-1 rounded ${
                 isSelected 
                   ? "bg-orange-100 text-orange-800" 
                   : "bg-gray-100 text-gray-600"

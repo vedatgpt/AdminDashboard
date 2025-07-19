@@ -149,29 +149,29 @@ export default function Categories() {
         }
       />
 
-      <div className="flex-1 flex gap-6">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Category Tree */}
-        <div className="w-2/3 bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="w-full lg:w-2/3 bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FolderTree className="w-5 h-5 mr-2 text-[#EC7830]" />
               Kategori Ağacı
             </h2>
             
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Kategori ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
               />
             </div>
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 max-h-[600px] overflow-y-auto">
+          <div className="border border-gray-200 rounded-lg p-4 max-h-[400px] lg:max-h-[600px] overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
@@ -196,31 +196,31 @@ export default function Categories() {
         </div>
 
         {/* Right Panel - Category Details */}
-        <div className="w-1/3 bg-white rounded-lg border border-gray-200 p-6">
+        <div className="w-full lg:w-1/3 bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategori Detayları</h2>
           
           {selectedCategory ? (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Adı</label>
-                <p className="text-gray-900 font-medium">{selectedCategory.name}</p>
+                <p className="text-gray-900 font-medium break-words">{selectedCategory.name}</p>
               </div>
 
               {selectedCategory.description && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
-                  <p className="text-gray-700">{selectedCategory.description}</p>
+                  <p className="text-gray-700 break-words">{selectedCategory.description}</p>
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">URL Slug</label>
-                <p className="text-gray-700 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                <p className="text-gray-700 font-mono text-sm bg-gray-100 px-2 py-1 rounded break-all">
                   {selectedCategory.slug}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">İlan Sayısı</label>
                   <p className="text-2xl font-bold text-[#EC7830]">{selectedCategory.adCount || 0}</p>
@@ -269,7 +269,7 @@ export default function Categories() {
           ) : (
             <div className="text-center py-8 text-gray-500">
               <FolderTree className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>Detayları görmek için bir kategori seçin</p>
+              <p className="text-sm">Detayları görmek için bir kategori seçin</p>
             </div>
           )}
         </div>

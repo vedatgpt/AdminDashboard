@@ -27,10 +27,13 @@ export function useCreateCategory() {
   
   return useMutation({
     mutationFn: (data: InsertCategory) => 
-      apiRequest("/api/categories", {
+      fetch("/api/categories", {
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to create category');
+        return res.json();
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
@@ -43,10 +46,13 @@ export function useUpdateCategory() {
   
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCategory }) =>
-      apiRequest(`/api/categories/${id}`, {
+      fetch(`/api/categories/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to update category');
+        return res.json();
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
@@ -59,8 +65,11 @@ export function useDeleteCategory() {
   
   return useMutation({
     mutationFn: (id: number) =>
-      apiRequest(`/api/categories/${id}`, {
+      fetch(`/api/categories/${id}`, {
         method: "DELETE",
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to delete category');
+        return res.ok;
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
@@ -73,10 +82,13 @@ export function useMoveCategory() {
   
   return useMutation({
     mutationFn: ({ id, newParentId }: { id: number; newParentId: number | null }) =>
-      apiRequest(`/api/categories/${id}/move`, {
+      fetch(`/api/categories/${id}/move`, {
         method: "PATCH",
         body: JSON.stringify({ newParentId }),
         headers: { "Content-Type": "application/json" },
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to move category');
+        return res.json();
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
