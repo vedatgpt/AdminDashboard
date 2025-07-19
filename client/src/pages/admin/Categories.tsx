@@ -26,14 +26,14 @@ export default function Categories() {
         subtitle="Toplam 0 kategori"
         actions={
           <>
-            <Button variant="outline">
+            <button variant="outline">
               <ArrowUpDown className="w-4 h-4 mr-2" />
               Sırala
-            </Button>
-            <Button>
+            </button>
+            <button>
               <Plus className="w-4 h-4 mr-2" />
               Kategori Ekle
-            </Button>
+            </button>
           </>
         }
       />

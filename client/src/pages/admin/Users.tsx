@@ -25,10 +25,10 @@ export default function Users() {
         title="Kullanıcı Listesi"
         subtitle="Toplam 0 kullanıcı"
         actions={
-          <Button>
+          <button>
             <Plus className="w-4 h-4 mr-2" />
             Kullanıcı Ekle
-          </Button>
+          </button>
         }
       />
 

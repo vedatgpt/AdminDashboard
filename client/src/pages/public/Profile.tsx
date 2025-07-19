@@ -49,21 +49,21 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card className="w-full">
-          <CardHeader className="text-center">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg w-full">
+          <div className="text-center">
             <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
               <User className="w-12 h-12 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold">
+            <h3 className="text-2xl font-bold">
               {user.firstName} {user.lastName}
-            </CardTitle>
+            </h3>
             <p className="text-gray-500">@{user.username}</p>
             {user.companyName && (
               <p className="text-sm text-gray-600 mt-1">{user.companyName}</p>
             )}
-          </CardHeader>
+          </div>
           
-          <CardContent className="space-y-4">
+          <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-gray-400" />
@@ -100,8 +100,8 @@ export default function Profile() {
                 <p className="text-gray-500">Henüz aktivite bulunmuyor.</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -40,18 +40,22 @@ export default function Landing() {
                   {getUserDisplayName()}
                 </span>
                 <Link href="/account">
-                  <Button variant="outline">Hesap</Button>
+                  <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Hesap
+                  </button>
                 </Link>
-                <Button 
-                  variant="outline" 
+                <button 
                   onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   Çıkış Yap
-                </Button>
+                </button>
               </>
             ) : (
               <Link href="/login">
-                <Button>Giriş Yap</Button>
+                <button className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                  Giriş Yap
+                </button>
               </Link>
             )}
           </div>

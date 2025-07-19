@@ -2,15 +2,14 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
-import { Mail, Save } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 
 const emailSchema = z.object({
-  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
+  email: z.string().email("Geçerli bir e-posta adresi girin"),
 });
 
 type EmailData = z.infer<typeof emailSchema>;
@@ -56,11 +55,8 @@ export default function ChangeEmail() {
         title: "Başarılı",
         description: "E-posta adresiniz güncellendi",
       });
-      // Update form with new email
       emailForm.reset({ email: data.email });
-      // Update the cached user data immediately
       queryClient.setQueryData(["/api/auth/me"], data);
-      // Force a refetch to ensure sync
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
@@ -88,7 +84,7 @@ export default function ChangeEmail() {
   }
 
   if (!user) {
-    return null; // Will redirect to login via useEffect
+    return null;
   }
 
   return (
@@ -99,25 +95,28 @@ export default function ChangeEmail() {
           <p className="text-gray-600 mt-2">E-posta adresinizi günceleyin</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Mail className="w-5 h-5" />
-              E-posta Adresi
-            </CardTitle>
-            <CardDescription>
-              Hesabınıza bağlı e-posta adresini değiştirebilirsiniz
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+              E-posta Adresi Güncelle
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Yeni e-posta adresinizi buradan güncelleyebilirsiniz
+            </p>
+          </div>
+          <div className="p-6">
             <form onSubmit={emailForm.handleSubmit(handleEmailUpdate)} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Yeni E-posta</Label>
-                <Input
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Yeni E-posta Adresi
+                </label>
+                <input
                   id="email"
                   type="email"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="yeni@email.com"
                   {...emailForm.register("email")}
-                  placeholder="Yeni e-posta adresiniz"
                 />
                 {emailForm.formState.errors.email && (
                   <p className="text-sm text-red-500">
@@ -126,17 +125,16 @@ export default function ChangeEmail() {
                 )}
               </div>
 
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full"
                 disabled={updateEmailMutation.isPending}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4 mr-2" />
-                {updateEmailMutation.isPending ? "Güncelleniyor..." : "E-posta Güncelle"}
-              </Button>
+                {updateEmailMutation.isPending ? "Güncelleniyor..." : "E-postayı Güncelle"}
+              </button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

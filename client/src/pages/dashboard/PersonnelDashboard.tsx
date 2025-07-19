@@ -1,39 +1,36 @@
-import { useAuth } from "@/hooks/useAuth";
-import { LogOut, User, Building2, Mail, Phone, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { User, Mail, Phone, MessageSquare, Building2, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 export default function PersonnelDashboard() {
-  const { user, isLoading } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && (!user || user.role !== "authorized_personnel")) {
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-      
-      if (!response.ok) {
-        throw new Error("Çıkış işlemi başarısız");
-      }
-      
-      return response.json();
+      await logout();
     },
     onSuccess: () => {
       toast({
         title: "Başarılı",
-        description: "Başarıyla çıkış yapıldınız",
+        description: "Başarıyla çıkış yapıldı",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       navigate("/login");
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Hata",
-        description: error.message,
+        description: "Çıkış yaparken bir hata oluştu",
         variant: "destructive",
       });
     },
@@ -70,14 +67,14 @@ export default function PersonnelDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <User className="w-5 h-5 text-primary" />
                 Kişisel Bilgiler
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              </h3>
+            </div>
+            <div className="p-6 space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <User className="w-4 h-4 text-gray-500" />
                 <span className="font-medium">Ad Soyad:</span>
@@ -102,17 +99,17 @@ export default function PersonnelDashboard() {
                   <span>{user.whatsappNumber}</span>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-primary" />
                 Şirket Bilgileri
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+              </h3>
+            </div>
+            <div className="p-6 space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Building2 className="w-4 h-4 text-gray-500" />
                 <span className="font-medium">Şirket:</span>
@@ -125,30 +122,28 @@ export default function PersonnelDashboard() {
                   Yetkili Personel
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Hoş Geldiniz</CardTitle>
-            <CardDescription>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg mt-6">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-900">Hoş Geldiniz</h3>
+            <p className="text-gray-600 mt-1">
               {user.companyName} şirketinin yetkili personeli olarak sisteme giriş yaptınız.
-            </CardDescription>
-          </CardHeader>
-          
-        </Card>
+            </p>
+          </div>
+        </div>
 
         <div className="mt-6">
-          <Button
+          <button
             onClick={handleLogout}
-            variant="outline"
-            className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             disabled={logoutMutation.isPending}
+            className="flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut className="w-4 h-4 mr-2" />
             {logoutMutation.isPending ? "Çıkış yapılıyor..." : "Çıkış Yap"}
-          </Button>
+          </button>
         </div>
       </div>
     </div>

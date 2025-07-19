@@ -2,16 +2,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
 import { Eye, EyeOff, Key } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Mevcut şifre gerekli"),
-  newPassword: z.string().min(6, "Yeni şifre en az 6 karakter olmalı"),
+  newPassword: z.string().min(6, "Şifre en az 6 karakter uzunluğunda olmalıdır"),
 });
 
 type PasswordData = z.infer<typeof passwordSchema>;
@@ -63,7 +62,6 @@ export default function PasswordChange() {
         description: "Şifreniz başarıyla değiştirildi",
       });
       passwordForm.reset();
-      // Force user data refresh to ensure any session updates are reflected
       refreshUser();
     },
     onError: (error: any) => {
@@ -91,7 +89,7 @@ export default function PasswordChange() {
   }
 
   if (!user) {
-    return null; // Will redirect to login via useEffect
+    return null;
   }
 
   return (
@@ -102,27 +100,29 @@ export default function PasswordChange() {
           <p className="text-gray-600 mt-2">Hesap güvenliğiniz için şifrenizi güncelleyin</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Key className="w-5 h-5" />
               Yeni Şifre Belirle
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-gray-600 mt-1">
               Güvenli bir şifre seçerek hesabınızı koruyun
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mevcut Şifre</Label>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+                  Mevcut Şifre
+                </label>
                 <div className="relative">
-                  <Input
+                  <input
                     id="currentPassword"
                     type={showCurrentPassword ? "text" : "password"}
-                    {...passwordForm.register("currentPassword")}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Mevcut şifrenizi giriniz"
-                    className="pr-10"
+                    {...passwordForm.register("currentPassword")}
                   />
                   <button
                     type="button"
@@ -144,14 +144,16 @@ export default function PasswordChange() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Yeni Şifre</Label>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                  Yeni Şifre
+                </label>
                 <div className="relative">
-                  <Input
+                  <input
                     id="newPassword"
                     type={showNewPassword ? "text" : "password"}
-                    {...passwordForm.register("newPassword")}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Yeni şifrenizi giriniz"
-                    className="pr-10"
+                    {...passwordForm.register("newPassword")}
                   />
                   <button
                     type="button"
@@ -175,17 +177,16 @@ export default function PasswordChange() {
                 )}
               </div>
 
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full"
                 disabled={changePasswordMutation.isPending}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Key className="w-4 h-4 mr-2" />
                 {changePasswordMutation.isPending ? "Değiştiriliyor..." : "Şifreyi Değiştir"}
-              </Button>
+              </button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

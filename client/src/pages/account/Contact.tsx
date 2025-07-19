@@ -7,7 +7,6 @@ import { Phone, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 
 const contactSchema = z.object({
   mobilePhone: z.string().optional(),
@@ -60,15 +59,12 @@ export default function Contact() {
         title: "Başarılı",
         description: "İletişim bilgileriniz güncellendi",
       });
-      // Update form with new data
       contactForm.reset({
         mobilePhone: data.mobilePhone || "",
         whatsappNumber: data.whatsappNumber || "",
         businessPhone: data.businessPhone || "",
       });
-      // Update the cached user data immediately
       queryClient.setQueryData(["/api/auth/me"], data);
-      // Force a refetch to ensure sync
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
@@ -96,7 +92,7 @@ export default function Contact() {
   }
 
   if (!user) {
-    return null; // Will redirect to login via useEffect
+    return null;
   }
 
   return (
@@ -107,27 +103,29 @@ export default function Contact() {
           <p className="text-gray-600 mt-2">İletişim bilgilerinizi güncelleyin</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Phone className="w-5 h-5" />
               İletişim Bilgileri
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-gray-600 mt-1">
               Telefon numaralarınızı buradan güncelleyebilirsiniz
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             <form onSubmit={contactForm.handleSubmit(handleContactUpdate)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Mobile Phone - for all users */}
                 <div className="space-y-2">
-                  <Label htmlFor="mobilePhone">Cep Telefonu</Label>
-                  <Input
+                  <label htmlFor="mobilePhone" className="block text-sm font-medium text-gray-700">
+                    Cep Telefonu
+                  </label>
+                  <input
                     id="mobilePhone"
                     type="tel"
-                    {...contactForm.register("mobilePhone")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="0555 123 4567"
+                    {...contactForm.register("mobilePhone")}
                   />
                   {contactForm.formState.errors.mobilePhone && (
                     <p className="text-sm text-red-500">
@@ -136,14 +134,16 @@ export default function Contact() {
                   )}
                 </div>
 
-                {/* WhatsApp Number - for all users */}
                 <div className="space-y-2">
-                  <Label htmlFor="whatsappNumber">WhatsApp Numarası</Label>
-                  <Input
+                  <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700">
+                    WhatsApp Numarası
+                  </label>
+                  <input
                     id="whatsappNumber"
                     type="tel"
-                    {...contactForm.register("whatsappNumber")}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="0555 123 4567"
+                    {...contactForm.register("whatsappNumber")}
                   />
                   {contactForm.formState.errors.whatsappNumber && (
                     <p className="text-sm text-red-500">
@@ -152,15 +152,17 @@ export default function Contact() {
                   )}
                 </div>
 
-                {/* Business Phone - only for corporate users */}
                 {user.role === "corporate" && (
                   <div className="space-y-2">
-                    <Label htmlFor="businessPhone">İş Telefonu</Label>
-                    <Input
+                    <label htmlFor="businessPhone" className="block text-sm font-medium text-gray-700">
+                      İş Telefonu
+                    </label>
+                    <input
                       id="businessPhone"
                       type="tel"
-                      {...contactForm.register("businessPhone")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="0212 345 6789"
+                      {...contactForm.register("businessPhone")}
                     />
                     {contactForm.formState.errors.businessPhone && (
                       <p className="text-sm text-red-500">
@@ -171,17 +173,17 @@ export default function Contact() {
                 )}
               </div>
 
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full"
                 disabled={updateContactMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4 mr-2" />
-                {updateContactMutation.isPending ? "Güncelleniyor..." : "İletişim Bilgilerini Güncelle"}
-              </Button>
+                <Save className="w-4 h-4" />
+                {updateContactMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+              </button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

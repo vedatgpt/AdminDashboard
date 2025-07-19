@@ -26,10 +26,10 @@ export default function Locations() {
         title="Lokasyon Listesi"
         subtitle="Toplam 0 lokasyon"
         actions={
-          <Button>
+          <button>
             <Plus className="w-4 h-4 mr-2" />
             Lokasyon Ekle
-          </Button>
+          </button>
         }
       />
 

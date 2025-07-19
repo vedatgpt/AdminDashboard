@@ -214,7 +214,7 @@ export default function Register() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Zaten hesabınız var mı?{" "}
+              Zaten hesabınız var mı?" "
               <Link
                 href="/login"
                 className="font-medium text-primary hover:text-opacity-80"

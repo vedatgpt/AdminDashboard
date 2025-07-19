@@ -193,7 +193,7 @@ export default function Profile() {
     deleteProfileImageMutation.mutate();
   };
 
-  const triggerFileInput = () => {
+  const triggerFileinput = () => {
     fileInputRef.current?.click();
   };
 
@@ -220,17 +220,17 @@ export default function Profile() {
           <p className="text-gray-600 mt-2">Profil bilgilerinizi güncelleyin</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-lg">
+          <div>
+            <h3 className="flex items-center gap-2">
               <User className="w-5 h-5" />
               Kişisel Bilgiler
-            </CardTitle>
-            <CardDescription>
+            </h3>
+            <p>
               Hesap bilgilerinizi buradan düzenleyebilirsiniz
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="p-6">
             {user.role === "corporate" && (
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <div className="flex items-center space-x-4">
@@ -250,28 +250,26 @@ export default function Profile() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
                         onClick={triggerFileInput}
                         disabled={uploadProfileImageMutation.isPending}
+                        className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         {profileImagePreview ? "Değiştir" : "Yükle"}
-                      </Button>
+                      </button>
                       
                       {profileImagePreview && (
-                        <Button
+                        <button
                           type="button"
-                          variant="outline"
-                          size="sm"
                           onClick={handleImageDelete}
                           disabled={deleteProfileImageMutation.isPending}
+                          className="flex items-center px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <X className="w-4 h-4 mr-2" />
                           Sil
-                        </Button>
+                        </button>
                       )}
                     </div>
                     
@@ -294,7 +292,7 @@ export default function Profile() {
             <form onSubmit={profileForm.handleSubmit(handleProfileUpdate)} className="space-y-6">
               {user.role === "corporate" && (
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Firma Adı</Label>
+                  <label htmlFor="companyName">Firma Adı</label>
                   <Input
                     id="companyName"
                     {...profileForm.register("companyName")}
@@ -310,7 +308,7 @@ export default function Profile() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Ad</Label>
+                  <label htmlFor="firstName">Ad</label>
                   <Input
                     id="firstName"
                     {...profileForm.register("firstName")}
@@ -324,7 +322,7 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Soyad</Label>
+                  <label htmlFor="lastName">Soyad</label>
                   <Input
                     id="lastName"
                     {...profileForm.register("lastName")}
@@ -342,7 +340,7 @@ export default function Profile() {
 
               {user.role === "corporate" && (
                 <div className="space-y-2">
-                  <Label htmlFor="username">Kullanıcı Adı</Label>
+                  <label htmlFor="username">Kullanıcı Adı</label>
                   <Input
                     id="username"
                     {...profileForm.register("username")}
@@ -361,17 +359,17 @@ export default function Profile() {
 
 
 
-              <Button 
+              <button 
                 type="submit" 
                 className="w-full"
                 disabled={updateProfileMutation.isPending}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {updateProfileMutation.isPending ? "Güncelleniyor..." : "Profili Güncelle"}
-              </Button>
+              </button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

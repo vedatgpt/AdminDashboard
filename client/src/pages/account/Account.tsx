@@ -57,102 +57,101 @@ export default function Account() {
 
         <div className="flex flex-col gap-4">
           <Link href="/account/profile">
-            <Card className="cursor-pointer">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <User className="w-5 h-5 text-primary" />
-                    Hesap Bilgilerim
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Hesap Bilgilerim</h3>
+                      <p className="text-gray-600 text-sm">Ad, soyad, e-posta ve diğer kişisel bilgilerinizi düzenleyin</p>
+                    </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </CardTitle>
-                <CardDescription>
-                  Ad, soyad, e-posta ve diğer kişisel bilgilerinizi düzenleyin
-                </CardDescription>
-              </CardHeader>
-            </Card>
+                </div>
+              </div>
+            </div>
           </Link>
 
           <Link href="/account/contact">
-            <Card className="cursor-pointer">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
+              <div className="pb-3">
+                <h3 className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Phone className="w-5 h-5 text-primary" />
                     İletişim Bilgilerim
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </CardTitle>
-                <CardDescription>
+                </h3>
+                <p>
                   Telefon numaralarınızı güncelleyin
-                </CardDescription>
-              </CardHeader>
-            </Card>
+                </p>
+              </div>
+            </div>
           </Link>
 
           <Link href="/account/change-email">
-            <Card className="cursor-pointer">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
+              <div className="pb-3">
+                <h3 className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-primary" />
                     E-posta Değişikliği
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </CardTitle>
-                <CardDescription>
+                </h3>
+                <p>
                   E-posta adresinizi güncelleyin
-                </CardDescription>
-              </CardHeader>
-            </Card>
+                </p>
+              </div>
+            </div>
           </Link>
 
           <Link href="/account/change-password">
-            <Card className="cursor-pointer">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center justify-between">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
+              <div className="pb-3">
+                <h3 className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Key className="w-5 h-5 text-primary" />
                     Şifre Değişikliği
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
-                </CardTitle>
-                <CardDescription>
+                </h3>
+                <p>
                   Hesap güvenliğiniz için şifrenizi güncelleyin
-                </CardDescription>
-              </CardHeader>
-            </Card>
+                </p>
+              </div>
+            </div>
           </Link>
 
           {user.role === "corporate" && (
             <Link href="/account/authorized-personnel">
-              <Card className="cursor-pointer">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between">
+              <div className="bg-white rounded-lg border border-gray-200 shadow-lg cursor-pointer">
+                <div className="pb-3">
+                  <h3 className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Users className="w-5 h-5 text-primary" />
                       Yetkili Kişiler
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
-                  </CardTitle>
-                  <CardDescription>
+                  </h3>
+                  <p>
                     Şirketiniz adına işlem yapacak yetkili kişileri yönetin
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+                  </p>
+                </div>
+              </div>
             </Link>
           )}
         </div>
 
         <div className="mt-6">
-          <Button
+          <button
             onClick={handleLogout}
-            variant="outline"
-            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-md hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Çıkış Yap
-          </Button>
+          </button>
         </div>
       </div>
     </div>
