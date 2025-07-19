@@ -53,6 +53,7 @@ export default function CategoryForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [iconFile, setIconFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (category) {
@@ -115,14 +116,56 @@ export default function CategoryForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.includes('png')) {
+        setErrors(prev => ({ ...prev, icon: 'Sadece PNG formatı kabul edilir' }));
+        return;
+      }
+      
+      // Validate file size (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setErrors(prev => ({ ...prev, icon: 'Dosya boyutu 2MB\'dan küçük olmalıdır' }));
+        return;
+      }
+      
+      setIconFile(file);
+      setErrors(prev => ({ ...prev, icon: '' }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    onSubmit(formData);
+    let iconPath = formData.icon;
+    
+    // Upload icon if a new file is selected
+    if (iconFile) {
+      const iconFormData = new FormData();
+      iconFormData.append('icon', iconFile);
+      
+      try {
+        const response = await fetch('/api/categories/upload-icon', {
+          method: 'POST',
+          body: iconFormData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          iconPath = result.filename;
+        }
+      } catch (error) {
+        console.error('Icon upload failed:', error);
+      }
+    }
+    
+    onSubmit({ ...formData, icon: iconPath });
   };
 
   if (!isOpen) return null;
@@ -201,44 +244,44 @@ export default function CategoryForm({
 
 
 
-          {/* Parent Category */}
-          {!parentCategory && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Üst Kategori
-              </label>
-              <select
-                value={formData.parentId || ""}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  parentId: e.target.value ? parseInt(e.target.value) : null 
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-              >
-                <option value="">Ana Kategori</option>
-                {flatCategoryList
-                  .filter(cat => !category || cat.id !== category.id) // Exclude self when editing
-                  .map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {"—".repeat(cat.level)} {cat.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          )}
-
-          {/* Sort Order */}
+          {/* Category Icon */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sıralama
+              Kategori İkonu
             </label>
-            <input
-              type="number"
-              value={formData.sortOrder}
-              onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: parseInt(e.target.value) || 0 }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-              placeholder="0"
-            />
+            <div className="space-y-2">
+              {formData.icon && (
+                <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                  <img
+                    src={`/uploads/category-icons/${formData.icon}`}
+                    alt="Category icon"
+                    className="w-8 h-8 object-contain"
+                  />
+                  <span className="text-sm text-gray-600">{formData.icon}</span>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, icon: null }))}
+                    className="text-red-600 hover:text-red-800"
+                    title="İkonu kaldır"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <input
+                type="file"
+                accept=".png"
+                onChange={handleIconUpload}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+              />
+              {errors.icon && (
+                <p className="text-red-500 text-sm mt-1 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  {errors.icon}
+                </p>
+              )}
+              <p className="text-xs text-gray-500">Sadece PNG formatı kabul edilir. Maksimum 2MB.</p>
+            </div>
           </div>
 
           {/* Active Status */}

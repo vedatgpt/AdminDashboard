@@ -332,6 +332,13 @@ export default function Categories() {
                           <GripVertical className="w-4 h-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
                           <div className="flex-1">
                             <div className="flex items-center">
+                              {category.icon && (
+                                <img
+                                  src={`/uploads/category-icons/${category.icon}`}
+                                  alt={`${category.name} icon`}
+                                  className="w-5 h-5 mr-2 object-contain"
+                                />
+                              )}
                               <h3 className="font-medium text-gray-900">
                                 {category.name}
                                 {childrenCount > 0 && (

@@ -57,6 +57,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
+  // Serve category icons
+  app.use('/uploads/category-icons', express.static(path.join(process.cwd(), 'uploads', 'category-icons')));
 
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {

@@ -1,4 +1,7 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { storage } from "../storage";
 import { insertCategorySchema, updateCategorySchema, insertCustomFieldSchema } from "@shared/schema";
 // Middleware functions inline since they're not exported from routes.ts
@@ -28,6 +31,33 @@ const requireAdmin = async (req: any, res: any, next: any) => {
 };
 
 const router = express.Router();
+
+// Configure multer for icon uploads
+const storage_config = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'category-icons');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+
+const upload = multer({
+  storage: storage_config,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'image/png') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PNG files are allowed'));
+    }
+  }
+});
 
 // Get all categories in tree structure (public endpoint)
 router.get("/", async (req, res) => {
@@ -207,6 +237,24 @@ router.delete("/custom-fields/:fieldId", async (req, res) => {
   } catch (error) {
     console.error("Error deleting custom field:", error);
     res.status(500).json({ error: "Failed to delete custom field" });
+  }
+});
+
+// Upload category icon
+router.post("/upload-icon", requireAdmin, upload.single('icon'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    res.json({ 
+      success: true, 
+      filename: req.file.filename,
+      path: `/uploads/category-icons/${req.file.filename}`
+    });
+  } catch (error) {
+    console.error("Icon upload error:", error);
+    res.status(500).json({ error: "Failed to upload icon" });
   }
 });
 

@@ -299,16 +299,20 @@ Authentication features:
 - Improved dropdown menu implementation with individual button handlers
 - Enhanced Preline UI dropdown initialization for better functionality
 
-### Page-Based Category Management System (July 19, 2025)
-- Migrated from tree view to page-based navigation system
+### Page-Based Category Management System with Icon Support (July 19, 2025)
+- Migrated from tree view to page-based navigation system with full-width design
 - URL-based navigation: /admin/categories/:parentId for hierarchical browsing
 - Categories display simplified with alt kategori sayısı next to category name (e.g., "Otomobil (3)")
-- Completely removed description fields from all forms, modals, and database interactions
-- Added drag & drop reordering functionality with visual feedback and grip handle
-- All categories are now clickable regardless of having children
-- Enhanced with hover effects - buttons (edit, delete, add child) only visible on hover
-- Breadcrumb navigation system replaces "Kategori Ağacı" text for better navigation
-- Right panel shows category statistics and quick actions
-- Real-time category count updates and improved sort order management
+- Completely removed description fields and parent/sorting fields from all forms and modals
+- Added comprehensive category icon upload system (PNG format only, 2MB max)
+- Icons displayed to the left of category names, similar to sahibinden.com design
+- Category form supports icon upload, preview, and removal functionality
+- Enhanced drag & drop reordering with improved visual feedback and performance
+- All categories clickable regardless of having children
+- Breadcrumb navigation positioned next to search box for better UX
+- Removed right panel for cleaner, full-width category management interface
+- Enhanced hover effects with buttons (edit, delete, add child) visible on hover
+- Real-time category count updates and optimized sort order management
+- Static file serving for category icons via /uploads/category-icons/ endpoint
 - Turkish character slug generation maintained (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u)
-- Full CRUD operations with proper error handling and user feedback
+- Full CRUD operations with comprehensive error handling and user feedback
