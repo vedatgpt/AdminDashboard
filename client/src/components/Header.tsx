@@ -1,5 +1,7 @@
 import { useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Menu, Bell, User, Settings, LogOut } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -14,10 +16,29 @@ const pageConfigs = {
 
 export default function Header() {
   const { toggle } = useSidebar();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
+  const { logout } = useAuth();
+  const { toast } = useToast();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const config = pageConfigs[location as keyof typeof pageConfigs] || pageConfigs["/"];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+      toast({
+        title: "Başarılı",
+        description: "Başarıyla çıkış yapıldı",
+      });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çıkış işlemi başarısız",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -71,15 +92,7 @@ export default function Header() {
                     Ayarlar
                   </button>
                   <button 
-                    onClick={async () => {
-                      try {
-                        await fetch("/api/auth/logout", { method: "POST" });
-                        window.location.href = "/";
-                      } catch (error) {
-                        console.error("Logout failed:", error);
-                        window.location.href = "/";
-                      }
-                    }}
+                    onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                   >
                     <LogOut className="w-4 h-4 mr-3" />
