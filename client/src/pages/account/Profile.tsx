@@ -55,13 +55,22 @@ export default function Profile() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Başarılı",
         description: "Profil bilgileriniz güncellendi",
       });
+      // Update form with new data
+      form.reset({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        companyName: data.companyName || "",
+        username: data.username,
+      });
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      // Force a refetch of user data
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
       toast({

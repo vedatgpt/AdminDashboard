@@ -109,60 +109,38 @@ Authentication features:
 - Form validation using Zod schemas
 - Test admin account: username "admin", password "admin123"
 
-## Recent Changes (July 18, 2025)
+## Recent Changes (July 19, 2025)
 
-### Migration and Setup
-- Migrated project from Replit Agent to standard Replit environment
-- Set up PostgreSQL database with environment variables
-- Pushed database schema using Drizzle migrations
-- Created admin user for testing
-- Verified all security practices and client/server separation
-
-### Enhanced Registration and Authentication
-- Added firstName, lastName, and companyName fields to user schema
-- Implemented auto-generated unique usernames (format: firstnamelastname4digits)
-- Enhanced registration form with conditional company name field for corporate users
-- Modified login to accept both email and username
-- Added password visibility toggle to all password inputs
-- Moved account type selection to top of registration form
-
-### Navigation Improvements
-- Updated logout functionality to use SPA navigation (no page refresh)
-- Fixed logout buttons in both sidebar and header dropdown
-- Implemented smooth transitions using wouter navigate()
-
-### Profile System
-- Created Instagram-style public profile pages accessible via /:username
-- Added API endpoint for public user profiles (without sensitive data)
-- Integrated profile routing with main application navigation
-
-### Landing Page Enhancements
-- Dynamic authentication state display in navbar
-- Show "Giriş Yap" button for unauthenticated users
-- Show user/company name and "Çıkış Yap" button for authenticated users
-- Corporate users display company name, individual users show first/last name
-- SPA-compliant logout with smooth navigation
-
-### Admin Panel Structure
-- Reorganized admin pages into dedicated `/pages/admin` folder
-- Modular file structure for better maintainability
-- Updated import paths and routing configuration
-- All admin functionality grouped under admin namespace
-
-### Account Management System
+### Account Management System Enhancement
 - Restructured account system with organized route structure
 - Main account page at /account with navigation options
 - Dedicated profile management at /account/profile
 - Separate password change page at /account/change-password
+- Separate email change page at /account/change-email
 - Modular file organization under /pages/account/ directory
 
+### Profile Image Management for Corporate Users
+- Added profile image upload capability for corporate users only
+- File restrictions: 5MB maximum, JPG/PNG formats only
+- Image compression using Sharp (resize to 400x400, 85% quality)
+- Organized file structure: `/uploads/users/{userId}/profile-images/`
+- User-specific directories based on permanent userId (not username)
+- Automatic cleanup of old profile images when new ones are uploaded
+
 ### Account Profile Features
-- Profile information management (firstName, lastName, email)
+- Profile information management (firstName, lastName)
 - Company name field positioned above name fields for corporate users
 - Username editing capability for corporate users only
 - URL-friendly username validation and uniqueness checking
 - Real-time preview of profile URL for username changes
 - Form validation using Zod schemas with comprehensive error handling
+- Improved cache invalidation for immediate UI updates
+
+### Email Management
+- Dedicated /account/change-email page for email updates
+- Removed "current email" display field for cleaner interface
+- Email uniqueness validation across all users
+- Proper form reset after successful email updates
 
 ### Password Change Improvements  
 - Simplified password change form (removed confirmation field)
@@ -172,18 +150,27 @@ Authentication features:
 - Enhanced security with bcrypt hashing
 
 ### API Endpoints for User Management
-- PATCH /api/user/profile - Update profile with username support for corporate users
+- PATCH /api/user/profile - Update profile (firstName, lastName, companyName, username)
+- PATCH /api/user/change-email - Separate email update endpoint
 - PATCH /api/user/change-password - Secure password change with verification
-- Email and username uniqueness validation during updates
-- Role-based field access control
+- POST /api/user/profile-image - Upload profile image (corporate users only)
+- DELETE /api/user/profile-image - Remove profile image (corporate users only)
+- Role-based field access control throughout all endpoints
+
+### Technical Improvements
+- Fixed authentication middleware for consistent session handling
+- Enhanced error handling and user feedback across all forms
+- Improved cache invalidation and data synchronization
+- Static file serving for user-uploaded content
+- Comprehensive form state management with proper resets
 
 ### Navigation Updates
-- "Hesap" (Account) button replaces "Ayarlar" (Settings) in navbar
+- "Hesap" (Account) button in navbar for authenticated users
 - Account navigation added to admin sidebar
 - Consistent SPA navigation throughout the application
+- Logout functionality on main account page
 
 ### Current Test Accounts
 - Admin: email "admin@example.com" OR username "admin", password "admin123"
-- Sample user: username "velikara6028" (auto-generated from "Veli Kara")
-- Corporate test user: username "orhanyenen2548" (auto-generated)
-- Test user: username "cemalteyyare8994" (auto-generated)
+- Corporate user: email "updated@test.com", username "updatedcorporateuser", password "newpass123"
+- Individual user: email "newindividualupdated@test.com", username "testindividual8980", password "newerpass123"

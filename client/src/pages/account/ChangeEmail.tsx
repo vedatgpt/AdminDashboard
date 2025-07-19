@@ -46,13 +46,17 @@ export default function ChangeEmail() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Başarılı",
         description: "E-posta adresiniz güncellendi",
       });
+      // Update form with new email
+      emailForm.reset({ email: data.email });
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      // Force a refetch of user data
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
       toast({
@@ -98,20 +102,6 @@ export default function ChangeEmail() {
           </CardHeader>
           <CardContent>
             <form onSubmit={emailForm.handleSubmit(handleEmailUpdate)} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="currentEmail">Mevcut E-posta</Label>
-                <Input
-                  id="currentEmail"
-                  type="email"
-                  value={user.email}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-sm text-gray-500">
-                  Bu sizin mevcut e-posta adresinizdir
-                </p>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Yeni E-posta</Label>
                 <Input

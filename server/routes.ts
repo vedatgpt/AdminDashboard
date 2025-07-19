@@ -279,16 +279,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Sadece kurumsal kullanıcılar profil resmi yükleyebilir" });
       }
 
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = path.join(process.cwd(), "uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+      // Create user-specific uploads directory if it doesn't exist
+      const userUploadsDir = path.join(process.cwd(), "uploads", "users", userId.toString(), "profile-images");
+      if (!fs.existsSync(userUploadsDir)) {
+        fs.mkdirSync(userUploadsDir, { recursive: true });
       }
 
       // Generate unique filename
       const fileExtension = path.extname(file.originalname);
-      const fileName = `profile_${userId}_${Date.now()}${fileExtension}`;
-      const filePath = path.join(uploadsDir, fileName);
+      const fileName = `profile_${Date.now()}${fileExtension}`;
+      const filePath = path.join(userUploadsDir, fileName);
 
       // Process and compress image
       await sharp(file.buffer)
@@ -305,7 +305,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update user with new profile image URL
-      const profileImageUrl = `/uploads/${fileName}`;
+      const profileImageUrl = `/uploads/users/${userId}/profile-images/${fileName}`;
       const updatedUser = await storage.updateUser(userId, { profileImage: profileImageUrl });
 
       const { password, ...userWithoutPassword } = updatedUser;

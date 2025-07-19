@@ -48,7 +48,7 @@ export default function Account() {
 
         <div className="space-y-4">
           <Link href="/account/profile">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card className="cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -65,7 +65,7 @@ export default function Account() {
           </Link>
 
           <Link href="/account/change-email">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card className="cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export default function Account() {
           </Link>
 
           <Link href="/account/change-password">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
+            <Card className="cursor-pointer">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -110,21 +110,7 @@ export default function Account() {
           </Button>
         </div>
 
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">Hesap Bilgileri</h3>
-          <div className="text-sm text-blue-800 space-y-1">
-            <p><strong>Kullanıcı Adı:</strong> @{user.username}</p>
-            <p><strong>E-posta:</strong> {user.email}</p>
-            <p><strong>Hesap Türü:</strong> {
-              user.role === "individual" ? "Bireysel" : 
-              user.role === "corporate" ? "Kurumsal" :
-              user.role === "admin" ? "Yönetici" : "Editör"
-            }</p>
-            {user.companyName && (
-              <p><strong>Firma:</strong> {user.companyName}</p>
-            )}
-          </div>
-        </div>
+        
       </div>
     </div>
   );
