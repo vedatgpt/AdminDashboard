@@ -55,6 +55,33 @@ export const registerSchema = z.object({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+// Authorized Personnel table for corporate users
+export const authorizedPersonnel = pgTable("authorized_personnel", {
+  id: serial("id").primaryKey(),
+  companyUserId: integer("company_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  mobilePhone: text("mobile_phone"),
+  whatsappNumber: text("whatsapp_number"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating authorized personnel
+export const insertAuthorizedPersonnelSchema = createInsertSchema(authorizedPersonnel).omit({
+  id: true,
+  companyUserId: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+});
+
 export type User = typeof users.$inferSelect;
+export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
+export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;

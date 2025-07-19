@@ -239,6 +239,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Authorized Personnel Management API endpoints
+
+  // Get authorized personnel for current corporate user
+  app.get("/api/authorized-personnel", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      
+      // Verify user is corporate
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser || currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Bu özellik sadece kurumsal hesaplar için geçerlidir" });
+      }
+
+      const personnelList = await storage.getAuthorizedPersonnel(userId);
+      res.json(personnelList);
+    } catch (error) {
+      res.status(500).json({ error: "Yetkili kişiler alınırken hata oluştu" });
+    }
+  });
+
+  // Create new authorized personnel
+  app.post("/api/authorized-personnel", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
+      
+      // Verify user is corporate
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser || currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Bu özellik sadece kurumsal hesaplar için geçerlidir" });
+      }
+
+      // Validate required fields
+      if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ error: "Ad, soyad, e-posta ve şifre zorunludur" });
+      }
+
+      // Check if email already exists (both in users and authorized personnel)
+      const existingUser = await storage.getUserByEmail(email);
+      const existingPersonnel = await storage.getAuthorizedPersonnelByEmail(email);
+      
+      if (existingUser || existingPersonnel) {
+        return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
+      }
+
+      const personnel = await storage.createAuthorizedPersonnel(userId, {
+        firstName,
+        lastName,
+        email,
+        password,
+        mobilePhone: mobilePhone || null,
+        whatsappNumber: whatsappNumber || null,
+        isActive: true,
+      });
+
+      // Don't return password
+      const { password: _, ...personnelData } = personnel;
+      res.status(201).json(personnelData);
+    } catch (error) {
+      res.status(500).json({ error: "Yetkili kişi oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Update authorized personnel
+  app.patch("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const personnelId = parseInt(req.params.id);
+      const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
+      
+      // Verify user is corporate
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser || currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Bu özellik sadece kurumsal hesaplar için geçerlidir" });
+      }
+
+      // Verify personnel belongs to current user
+      const personnel = await storage.getAuthorizedPersonnelById(personnelId);
+      if (!personnel || personnel.companyUserId !== userId) {
+        return res.status(404).json({ error: "Yetkili kişi bulunamadı" });
+      }
+
+      // Check if email already exists (excluding current personnel)
+      if (email && email !== personnel.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        const existingPersonnel = await storage.getAuthorizedPersonnelByEmail(email);
+        
+        if (existingUser || (existingPersonnel && existingPersonnel.id !== personnelId)) {
+          return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
+        }
+      }
+
+      const updatedPersonnel = await storage.updateAuthorizedPersonnel(personnelId, {
+        firstName,
+        lastName,
+        email,
+        ...(password && { password }),
+        mobilePhone: mobilePhone || null,
+        whatsappNumber: whatsappNumber || null,
+      });
+
+      // Don't return password
+      const { password: _, ...personnelData } = updatedPersonnel;
+      res.json(personnelData);
+    } catch (error) {
+      res.status(500).json({ error: "Yetkili kişi güncellenirken hata oluştu" });
+    }
+  });
+
+  // Toggle authorized personnel active status
+  app.patch("/api/authorized-personnel/:id/toggle-status", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const personnelId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      // Verify user is corporate
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser || currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Bu özellik sadece kurumsal hesaplar için geçerlidir" });
+      }
+
+      // Verify personnel belongs to current user
+      const personnel = await storage.getAuthorizedPersonnelById(personnelId);
+      if (!personnel || personnel.companyUserId !== userId) {
+        return res.status(404).json({ error: "Yetkili kişi bulunamadı" });
+      }
+
+      const updatedPersonnel = await storage.updateAuthorizedPersonnel(personnelId, {
+        isActive,
+      });
+
+      // Don't return password
+      const { password: _, ...personnelData } = updatedPersonnel;
+      res.json(personnelData);
+    } catch (error) {
+      res.status(500).json({ error: "Yetkili durumu değiştirilirken hata oluştu" });
+    }
+  });
+
+  // Delete authorized personnel
+  app.delete("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const personnelId = parseInt(req.params.id);
+      
+      // Verify user is corporate
+      const currentUser = await storage.getUserById(userId);
+      if (!currentUser || currentUser.role !== "corporate") {
+        return res.status(403).json({ error: "Bu özellik sadece kurumsal hesaplar için geçerlidir" });
+      }
+
+      // Verify personnel belongs to current user
+      const personnel = await storage.getAuthorizedPersonnelById(personnelId);
+      if (!personnel || personnel.companyUserId !== userId) {
+        return res.status(404).json({ error: "Yetkili kişi bulunamadı" });
+      }
+
+      await storage.deleteAuthorizedPersonnel(personnelId);
+      res.json({ message: "Yetkili kişi silindi" });
+    } catch (error) {
+      res.status(500).json({ error: "Yetkili kişi silinirken hata oluştu" });
+    }
+  });
+
   // Change password
   app.patch("/api/user/change-password", requireAuth, async (req, res) => {
     try {

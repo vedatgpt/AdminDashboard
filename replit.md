@@ -183,3 +183,59 @@ Authentication features:
 - Admin: email "admin@example.com" OR username "admin", password "admin123"
 - Corporate user: email "updated@test.com", username "updatedcorporateuser", password "newpass123"
 - Individual user: email "newindividualupdated@test.com", username "testindividual8980", password "newerpass123"
+
+## Recent Changes (July 19, 2025) - Authorized Personnel System
+
+### Comprehensive Authorized Personnel Management System
+- Added complete database schema for authorized personnel with proper foreign key relationships
+- Extended user management system to support corporate user hierarchy
+- Implemented role-based access control for corporate users and their authorized personnel
+
+### Database Schema Enhancements
+- Created `authorized_personnel` table with fields: id, companyUserId, email, password, firstName, lastName, mobilePhone, whatsappNumber, isActive
+- Added proper foreign key constraints with cascade delete for data integrity
+- Implemented timestamps for creation and update tracking
+- All personnel emails must be unique across the entire system
+
+### Authorized Personnel Management Features
+- Corporate users can create, edit, delete, and manage authorized personnel
+- Personnel can be activated/deactivated without deletion
+- Secure password hashing for all personnel accounts
+- Email uniqueness validation across both users and authorized personnel tables
+- Company-specific personnel lists (users can only manage their own personnel)
+
+### API Endpoints for Personnel Management
+- GET /api/authorized-personnel - List all personnel for current corporate user
+- POST /api/authorized-personnel - Create new authorized personnel
+- PATCH /api/authorized-personnel/:id - Update existing personnel information
+- PATCH /api/authorized-personnel/:id/toggle-status - Activate/deactivate personnel
+- DELETE /api/authorized-personnel/:id - Permanently delete personnel
+- All endpoints include proper role validation and ownership verification
+
+### User Interface Components
+- Complete AuthorizedPersonnel.tsx page with comprehensive personnel management
+- Add/Edit dialogs with form validation and password visibility toggles
+- Personnel listing with status badges and action buttons
+- Empty state handling for new corporate users
+- Real-time status updates and cache synchronization
+- Responsive design matching the overall application theme
+
+### Security Features
+- Role-based access (only corporate users can access personnel management)
+- Ownership verification (users can only manage their own personnel)
+- Secure password handling with bcrypt hashing
+- Email uniqueness validation across entire system
+- Proper error handling and user feedback
+
+### Navigation Integration
+- "Yetkili Kişiler" menu item added to corporate user account pages
+- Role-based menu display (only shown to corporate users)
+- Proper SPA navigation integration
+- Consistent UI/UX with existing account management sections
+
+### Technical Implementation
+- Extended IStorage interface with comprehensive personnel management methods
+- Database storage implementation with proper error handling
+- Form validation using Zod schemas
+- TanStack Query integration for efficient data management
+- Comprehensive TypeScript typing throughout the system

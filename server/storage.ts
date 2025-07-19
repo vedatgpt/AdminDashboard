@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, type LoginData, type RegisterData } from "@shared/schema";
+import { users, authorizedPersonnel, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -20,6 +20,15 @@ export interface IStorage {
   registerUser(registerData: RegisterData): Promise<User>;
   updateUser(id: number, updates: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User>;
   getUserById(id: number): Promise<User | undefined>;
+  
+  // Authorized Personnel methods
+  getAuthorizedPersonnel(companyUserId: number): Promise<AuthorizedPersonnel[]>;
+  getAuthorizedPersonnelById(id: number): Promise<AuthorizedPersonnel | undefined>;
+  getAuthorizedPersonnelByEmail(email: string): Promise<AuthorizedPersonnel | undefined>;
+  createAuthorizedPersonnel(companyUserId: number, data: InsertAuthorizedPersonnel): Promise<AuthorizedPersonnel>;
+  updateAuthorizedPersonnel(id: number, updates: Partial<Omit<AuthorizedPersonnel, 'id' | 'companyUserId' | 'createdAt' | 'updatedAt'>>): Promise<AuthorizedPersonnel>;
+  deleteAuthorizedPersonnel(id: number): Promise<void>;
+  authenticateAuthorizedPersonnel(email: string, password: string): Promise<{ personnel: AuthorizedPersonnel; company: User } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -112,6 +121,76 @@ export class DatabaseStorage implements IStorage {
 
   async getUserById(id: number): Promise<User | undefined> {
     return this.getUser(id);
+  }
+
+  // Authorized Personnel methods
+  async getAuthorizedPersonnel(companyUserId: number): Promise<AuthorizedPersonnel[]> {
+    return db.select().from(authorizedPersonnel).where(eq(authorizedPersonnel.companyUserId, companyUserId));
+  }
+
+  async getAuthorizedPersonnelById(id: number): Promise<AuthorizedPersonnel | undefined> {
+    const [personnel] = await db.select().from(authorizedPersonnel).where(eq(authorizedPersonnel.id, id));
+    return personnel || undefined;
+  }
+
+  async getAuthorizedPersonnelByEmail(email: string): Promise<AuthorizedPersonnel | undefined> {
+    const [personnel] = await db.select().from(authorizedPersonnel).where(eq(authorizedPersonnel.email, email));
+    return personnel || undefined;
+  }
+
+  async createAuthorizedPersonnel(companyUserId: number, data: InsertAuthorizedPersonnel): Promise<AuthorizedPersonnel> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    const [personnel] = await db.insert(authorizedPersonnel).values({
+      ...data,
+      companyUserId,
+      password: hashedPassword,
+    }).returning();
+
+    return personnel;
+  }
+
+  async updateAuthorizedPersonnel(id: number, updates: Partial<Omit<AuthorizedPersonnel, 'id' | 'companyUserId' | 'createdAt' | 'updatedAt'>>): Promise<AuthorizedPersonnel> {
+    const updateData = { ...updates };
+    
+    // Hash password if provided
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+
+    const [personnel] = await db.update(authorizedPersonnel)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
+      .where(eq(authorizedPersonnel.id, id))
+      .returning();
+
+    return personnel;
+  }
+
+  async deleteAuthorizedPersonnel(id: number): Promise<void> {
+    await db.delete(authorizedPersonnel).where(eq(authorizedPersonnel.id, id));
+  }
+
+  async authenticateAuthorizedPersonnel(email: string, password: string): Promise<{ personnel: AuthorizedPersonnel; company: User } | null> {
+    const personnel = await this.getAuthorizedPersonnelByEmail(email);
+    
+    if (!personnel || !personnel.isActive) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, personnel.password);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const company = await this.getUserById(personnel.companyUserId);
+    if (!company) {
+      return null;
+    }
+
+    return { personnel, company };
   }
 }
 

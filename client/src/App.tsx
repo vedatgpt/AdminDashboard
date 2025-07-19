@@ -15,6 +15,7 @@ import UserProfile from "@/pages/Profile";
 import Account from "@/pages/account/Account";
 import Profile from "@/pages/account/Profile";
 import Contact from "./pages/account/Contact";
+import AuthorizedPersonnel from "./pages/account/AuthorizedPersonnel";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/not-found";
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/account" component={Account} />
       <Route path="/account/profile" component={Profile} />
       <Route path="/account/contact" component={Contact} />
+      <Route path="/account/authorized-personnel" component={AuthorizedPersonnel} />
       <Route path="/account/change-password" component={PasswordChange} />
       <Route path="/account/change-email" component={ChangeEmail} />
       
