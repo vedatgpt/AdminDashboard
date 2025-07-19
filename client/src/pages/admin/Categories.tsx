@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useSearch } from "wouter";
 import { 
@@ -152,6 +152,19 @@ function CategoryModal({ isOpen, onClose, category, parentId }: {
     sortOrder: category?.sortOrder || 0,
   });
 
+  // Reset form when category changes
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: category?.name || "",
+        description: category?.description || "",
+        parentId: parentId || category?.parentId || null,
+        isActive: category?.isActive ?? true,
+        sortOrder: category?.sortOrder || 0,
+      });
+    }
+  }, [category, parentId, isOpen]);
+
   const createMutation = useMutation({
     mutationFn: async (data: InsertCategory) => {
       const response = await fetch("/api/admin/categories", {
@@ -164,6 +177,14 @@ function CategoryModal({ isOpen, onClose, category, parentId }: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories", parentId] });
+      setFormData({
+        name: "",
+        description: "",
+        parentId: parentId || null,
+        isActive: true,
+        sortOrder: 0,
+      });
       onClose();
       alert("Kategori başarıyla oluşturuldu");
     },
@@ -184,6 +205,7 @@ function CategoryModal({ isOpen, onClose, category, parentId }: {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categories", parentId] });
       onClose();
       alert("Kategori başarıyla güncellendi");
     },
@@ -321,10 +343,10 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{category.name} - Detaylar</h2>
             <p className="text-sm text-gray-500">{category.description || "Açıklama yok"}</p>
@@ -338,7 +360,7 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b">
+        <div className="flex border-b flex-shrink-0">
           <button
             className={`px-6 py-3 text-sm font-medium border-b-2 ${
               activeTab === 'fields'
@@ -375,7 +397,8 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6">
           {activeTab === 'fields' && (
             <CustomFieldsTab
               categoryId={category.id}
@@ -413,6 +436,7 @@ function CategoryDetailModal({ isOpen, onClose, category }: {
               filterType="sort"
             />
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -1339,19 +1363,25 @@ export default function Categories() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title={parentId ? "Kategori Yönetimi" : "Kategori Yönetimi"} 
-        icon={<Tags className="w-6 h-6" />}
-        action={
+      {/* Page Header with Add Button */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Tags className="w-6 h-6 text-[#EC7830]" />
+            <h1 className="text-2xl font-bold text-gray-900">Kategori Yönetimi</h1>
+          </div>
           <button
-            onClick={parentId ? handleAddChild : handleAddRoot}
-            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm"
+            onClick={() => {
+              setSelectedCategory(undefined);
+              setShowModal(true);
+            }}
+            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm flex items-center gap-2"
           >
-            <Plus className="w-4 h-4 inline-block mr-2" />
+            <Plus className="w-4 h-4" />
             {parentId ? "Alt Kategori Ekle" : "Ana Kategori Ekle"}
           </button>
-        }
-      />
+        </div>
+      </div>
 
       {/* Breadcrumbs */}
       {currentBreadcrumbs && currentBreadcrumbs.length > 0 && (
