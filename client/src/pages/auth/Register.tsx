@@ -11,7 +11,8 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment, OutlinedInput } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export default function Register() {
   const [, navigate] = useLocation();
@@ -209,43 +210,39 @@ export default function Register() {
             </div>
             
             <div className="space-y-2">
-              <TextField
-                id="password"
-                label="Şifre"
-                variant="outlined"
-                type={showPassword ? "text" : "password"}
-                fullWidth
-                {...registerForm.register("password")}
-                placeholder="Şifrenizi giriniz"
-                error={!!registerForm.formState.errors.password}
-                helperText={registerForm.formState.errors.password?.message}
-                InputProps={{
-                  endAdornment: (
+              <FormControl fullWidth variant="outlined">
+                <InputLabel htmlFor="outlined-adornment-password">Şifre</InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-password"
+                  type={showPassword ? 'text' : 'password'}
+                  {...registerForm.register("password")}
+                  placeholder="Şifrenizi giriniz"
+                  endAdornment={
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle password visibility"
+                        aria-label={showPassword ? 'hide the password' : 'display the password'}
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                       >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
+                  }
+                  label="Şifre"
+                  error={!!registerForm.formState.errors.password}
+                  sx={{
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#EC7830',
                     },
-                    '&.Mui-focused fieldset': {
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#EC7830',
                     },
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#EC7830',
-                  },
-                }}
-              />
+                  }}
+                />
+                {registerForm.formState.errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{registerForm.formState.errors.password.message}</p>
+                )}
+              </FormControl>
             </div>
             <Button 
               type="submit" 
