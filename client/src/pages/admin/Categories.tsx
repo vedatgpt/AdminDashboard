@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical } from "lucide-react";
 import { useLocation } from "wouter";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
@@ -70,8 +70,7 @@ export default function Categories() {
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return currentCategories;
     return currentCategories.filter(cat => 
-      cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (cat.description && cat.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      cat.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [currentCategories, searchTerm]);
 
@@ -105,10 +104,7 @@ export default function Categories() {
 
   // Navigation functions
   const handleCategoryClick = (category: Category) => {
-    const hasChildren = (category as any).children && (category as any).children.length > 0;
-    if (hasChildren) {
-      setLocation(`/admin/categories/${category.id}`);
-    }
+    setLocation(`/admin/categories/${category.id}`);
   };
 
   const handleBackClick = () => {
@@ -239,59 +235,91 @@ export default function Categories() {
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
-                {filteredCategories.map((category) => {
-                  const hasChildren = (category as any).children && (category as any).children.length > 0;
+                {filteredCategories.map((category, index) => {
+                  const childrenCount = (category as any).children ? (category as any).children.length : 0;
                   return (
                     <div
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition-colors duration-200"
+                      className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({
+                          id: category.id,
+                          index: index
+                        }));
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+                        const draggedIndex = dragData.index;
+                        
+                        if (draggedIndex !== index) {
+                          // Create new array with reordered categories
+                          const newCategories = [...filteredCategories];
+                          const [removed] = newCategories.splice(draggedIndex, 1);
+                          newCategories.splice(index, 0, removed);
+                          
+                          // Update sort orders
+                          newCategories.forEach((cat, idx) => {
+                            if (cat.sortOrder !== idx + 1) {
+                              updateMutation.mutate({ 
+                                id: cat.id, 
+                                data: { sortOrder: idx + 1 } 
+                              });
+                            }
+                          });
+                        }
+                      }}
+                      onClick={() => handleCategoryClick(category)}
                     >
                       <div className="flex items-center justify-between">
-                        <div 
-                          className={`flex-1 ${hasChildren ? 'cursor-pointer' : ''}`}
-                          onClick={() => hasChildren && handleCategoryClick(category)}
-                        >
-                          <div className="flex items-center">
-                            <div className="flex-1">
-                              <div className="flex items-center">
-                                <h3 className="font-medium text-gray-900">{category.name}</h3>
-                                {hasChildren && (
-                                  <ChevronRight className="w-4 h-4 ml-2 text-gray-400" />
+                        <div className="flex items-center flex-1">
+                          <GripVertical className="w-4 h-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex-1">
+                            <div className="flex items-center">
+                              <h3 className="font-medium text-gray-900">
+                                {category.name}
+                                {childrenCount > 0 && (
+                                  <span className="text-gray-500 ml-1">({childrenCount})</span>
                                 )}
-                              </div>
-                              {category.description && (
-                                <p className="text-sm text-gray-500 mt-1">{category.description}</p>
-                              )}
-                              <div className="flex items-center mt-2 text-xs text-gray-400 space-x-4">
-                                <span>Slug: {category.slug}</span>
-                                {hasChildren && (
-                                  <span>{(category as any).children.length} alt kategori</span>
-                                )}
-                              </div>
+                              </h3>
+                              <ChevronRight className="w-4 h-4 ml-2 text-gray-400" />
                             </div>
                           </div>
                         </div>
                         
                         <div className="flex items-center space-x-2 ml-4">
-                          {hasChildren && (
-                            <button
-                              onClick={() => handleAddChild(category)}
-                              className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                              title="Alt kategori ekle"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )}
                           <button
-                            onClick={() => handleEdit(category)}
-                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddChild(category);
+                            }}
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Alt kategori ekle"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(category);
+                            }}
+                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Düzenle"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(category)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(category);
+                            }}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                             title="Sil"
                             disabled={isAnyMutationLoading}
                           >

@@ -299,16 +299,17 @@ Authentication features:
 - Improved dropdown menu implementation with individual button handlers
 - Enhanced Preline UI dropdown initialization for better functionality
 
-### TreeWithDetails-Style Category Management System (July 19, 2025)
-- Implemented comprehensive hierarchical category system similar to sahibinden.com
-- Created database schema with categories and categoryCustomFields tables
-- Built TreeWithDetails-inspired admin interface with dual-panel layout
-- Added category tree component with expand/collapse functionality
-- Implemented real-time search and filtering across category hierarchy
-- Created category form modal with Turkish character support in slug generation
-- Added full CRUD operations: create, read, update, delete categories
-- Implemented parent-child relationships with proper validation
-- Added responsive design for mobile devices
-- Fixed API request methods and authentication middleware
-- Integrated category management into admin panel navigation
-- System supports unlimited nesting levels and drag-drop style management
+### Page-Based Category Management System (July 19, 2025)
+- Migrated from tree view to page-based navigation system
+- URL-based navigation: /admin/categories/:parentId for hierarchical browsing
+- Categories display simplified with alt kategori sayısı next to category name (e.g., "Otomobil (3)")
+- Removed description fields and slug display from category listings
+- Added drag & drop reordering functionality with visual feedback
+- All categories are now clickable regardless of having children
+- Enhanced with hover effects and grip handle for drag operations
+- Breadcrumb navigation shows current location in hierarchy
+- Right panel shows category statistics and quick actions
+- Buttons (edit, delete, add child) only visible on hover for cleaner interface
+- Real-time category count updates and proper sort order management
+- Turkish character slug generation maintained (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u)
+- Full CRUD operations with proper error handling and user feedback
