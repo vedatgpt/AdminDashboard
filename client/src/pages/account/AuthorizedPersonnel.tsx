@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthorizedPersonnel } from "@/hooks/useAuthorizedPersonnel";
@@ -76,25 +74,25 @@ export default function AuthorizedPersonnel() {
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
-          <CardHeader>
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-bold">Yetkili Kişiler</CardTitle>
-                <CardDescription>
+                <h1 className="text-2xl font-bold text-gray-900">Yetkili Kişiler</h1>
+                <p className="text-gray-600 mt-1">
                   Şirketiniz adına sistem kullanabilecek yetkili kişileri yönetin
-                </CardDescription>
+                </p>
               </div>
-              <Button 
+              <button 
                 onClick={handleAddPersonnel}
-                className="bg-[#EC7830] hover:bg-[#EC7830]/90"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Yetkili Ekle
-              </Button>
+              </button>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="p-6">
             <AuthorizedPersonnelList
               personnel={personnel}
               isLoading={isLoading}
@@ -102,8 +100,8 @@ export default function AuthorizedPersonnel() {
               onDelete={handleDeletePersonnel}
               isDeleting={isDeleting}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <AuthorizedPersonnelForm
           isOpen={isFormOpen}

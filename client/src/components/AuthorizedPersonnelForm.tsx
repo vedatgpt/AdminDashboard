@@ -1,13 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { insertAuthorizedPersonnelSchema, type InsertAuthorizedPersonnel, type AuthorizedPersonnel } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 
 interface AuthorizedPersonnelFormProps {
   isOpen: boolean;
@@ -92,120 +88,158 @@ export default function AuthorizedPersonnelForm({
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+          <button
+            onClick={handleClose}
+            type="button"
+            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Ad *
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Ad"
+                  {...form.register("firstName")}
+                />
+                {form.formState.errors.firstName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {form.formState.errors.firstName.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Soyad *
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Soyad"
+                  {...form.register("lastName")}
+                />
+                {form.formState.errors.lastName && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {form.formState.errors.lastName.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div>
-              <Label htmlFor="firstName">Ad *</Label>
-              <Input
-                id="firstName"
-                {...form.register("firstName")}
-                placeholder="Ad"
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                E-posta *
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="E-posta adresi"
+                {...form.register("email")}
               />
-              {form.formState.errors.firstName && (
+              {form.formState.errors.email && (
                 <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.firstName.message}
+                  {form.formState.errors.email.message}
                 </p>
               )}
             </div>
+
             <div>
-              <Label htmlFor="lastName">Soyad *</Label>
-              <Input
-                id="lastName"
-                {...form.register("lastName")}
-                placeholder="Soyad"
-              />
-              {form.formState.errors.lastName && (
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                {personnel ? "Şifre (Boş bırakılırsa değişmez)" : "Şifre *"}
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder={personnel ? "Yeni şifre (isteğe bağlı)" : "Şifre"}
+                  {...form.register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {form.formState.errors.password && (
                 <p className="text-sm text-red-500 mt-1">
-                  {form.formState.errors.lastName.message}
+                  {form.formState.errors.password.message}
                 </p>
               )}
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="email">E-posta *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register("email")}
-              placeholder="E-posta adresi"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="mobilePhone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Cep Telefonu
+                </label>
+                <input
+                  id="mobilePhone"
+                  type="tel"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="0555 123 45 67"
+                  {...form.register("mobilePhone")}
+                />
+              </div>
+              <div>
+                <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                  WhatsApp Numarası
+                </label>
+                <input
+                  id="whatsappNumber"
+                  type="tel"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="0555 123 45 67"
+                  {...form.register("whatsappNumber")}
+                />
+              </div>
+            </div>
 
-          <div>
-            <Label htmlFor="password">
-              {personnel ? "Şifre (Boş bırakılırsa değişmez)" : "Şifre *"}
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...form.register("password")}
-                placeholder={personnel ? "Yeni şifre (isteğe bağlı)" : "Şifre"}
-                className="pr-10"
-              />
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                onClick={handleClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                İptal
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting 
+                  ? (personnel ? "Güncelleniyor..." : "Ekleniyor...") 
+                  : (personnel ? "Güncelle" : "Ekle")
+                }
               </button>
             </div>
-            {form.formState.errors.password && (
-              <p className="text-sm text-red-500 mt-1">
-                {form.formState.errors.password.message}
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="mobilePhone">Cep Telefonu</Label>
-              <Input
-                id="mobilePhone"
-                {...form.register("mobilePhone")}
-                placeholder="0555 123 45 67"
-              />
-            </div>
-            <div>
-              <Label htmlFor="whatsappNumber">WhatsApp Numarası</Label>
-              <Input
-                id="whatsappNumber"
-                {...form.register("whatsappNumber")}
-                placeholder="0555 123 45 67"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              İptal
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting 
-                ? (personnel ? "Güncelleniyor..." : "Ekleniyor...") 
-                : (personnel ? "Güncelle" : "Ekle")
-              }
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }

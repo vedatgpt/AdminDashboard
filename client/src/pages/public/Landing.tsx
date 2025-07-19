@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/logo_1752808818099.png";

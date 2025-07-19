@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { User, Key, ChevronRight, Mail, LogOut, Phone, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";

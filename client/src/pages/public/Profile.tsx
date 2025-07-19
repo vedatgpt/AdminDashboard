@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Mail, Calendar, Building } from "lucide-react";
 import { getQueryFn } from "@/lib/queryClient";
 import type { User as UserType } from "@shared/schema";

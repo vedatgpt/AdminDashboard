@@ -1,5 +1,4 @@
 import { ArrowUpDown, Plus, Tags } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/PageHeader";
 import DataTable from "@/components/DataTable";
 import EmptyState from "@/components/EmptyState";
