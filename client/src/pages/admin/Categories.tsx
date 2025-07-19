@@ -189,34 +189,9 @@ export default function Categories() {
         </div>
       )}
 
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-        <button
-          onClick={() => setLocation('/admin/categories')}
-          className={`hover:text-[#EC7830] transition-colors ${
-            !currentParentId ? 'text-[#EC7830] font-medium' : ''
-          }`}
-        >
-          Ana Kategoriler
-        </button>
-        {breadcrumbs.map((crumb, index) => (
-          <div key={crumb.id} className="flex items-center space-x-2">
-            <span className="text-gray-400">/</span>
-            <button
-              onClick={() => setLocation(`/admin/categories/${crumb.id}`)}
-              className={`hover:text-[#EC7830] transition-colors ${
-                index === breadcrumbs.length - 1 ? 'text-[#EC7830] font-medium' : ''
-              }`}
-            >
-              {crumb.name}
-            </button>
-          </div>
-        ))}
-      </div>
-
       <PageHeader
-        title={currentParent ? `${currentParent.name}` : "Ana Kategoriler"}
-        subtitle={currentParent ? `${currentParent.name} alt kategorileri` : `${filteredCategories.length} ana kategori`}
+        title="Kategori Yönetimi"
+        subtitle={`${filteredCategories.length} kategori`}
         actions={
           <div className="flex items-center gap-2">
             {currentParent && (
@@ -240,14 +215,34 @@ export default function Categories() {
         }
       />
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6">
-        {/* Left Panel - Category Tree */}
-        <div className="w-full lg:w-2/3 bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+      <div className="flex-1 flex flex-col">
+        {/* Category List */}
+        <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <FolderTree className="w-5 h-5 mr-2 text-[#EC7830]" />
-              {currentParent ? currentParent.name : "Ana Kategoriler"}
-            </h2>
+            {/* Breadcrumb Navigation */}
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <button
+                onClick={() => setLocation('/admin/categories')}
+                className={`hover:text-[#EC7830] transition-colors ${
+                  !currentParentId ? 'text-[#EC7830] font-medium' : ''
+                }`}
+              >
+                Ana Kategoriler
+              </button>
+              {breadcrumbs.map((crumb, index) => (
+                <div key={crumb.id} className="flex items-center space-x-2">
+                  <span className="text-gray-400">/</span>
+                  <button
+                    onClick={() => setLocation(`/admin/categories/${crumb.id}`)}
+                    className={`hover:text-[#EC7830] transition-colors ${
+                      index === breadcrumbs.length - 1 ? 'text-[#EC7830] font-medium' : ''
+                    }`}
+                  >
+                    {crumb.name}
+                  </button>
+                </div>
+              ))}
+            </div>
             
             {/* Search */}
             <div className="relative w-full sm:w-auto">
@@ -286,53 +281,55 @@ export default function Categories() {
                   return (
                     <div
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition-colors duration-200 cursor-pointer group"
+                      className="p-4 hover:bg-gray-50 transition-all duration-150 cursor-pointer group relative"
                       draggable
                       onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', JSON.stringify({
-                          id: category.id,
-                          index: index
-                        }));
+                        e.dataTransfer.setData('text/plain', index.toString());
                         e.dataTransfer.effectAllowed = 'move';
+                        e.currentTarget.classList.add('opacity-50');
+                      }}
+                      onDragEnd={(e) => {
+                        e.currentTarget.classList.remove('opacity-50');
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
+                        e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
+                      }}
+                      onDragLeave={(e) => {
+                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                       }}
                       onDrop={(e) => {
                         e.preventDefault();
-                        const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
-                        const draggedIndex = dragData.index;
+                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                         
-                        if (draggedIndex !== index) {
-                          // Create new array with reordered categories
-                          const newCategories = [...filteredCategories];
-                          const [removed] = newCategories.splice(draggedIndex, 1);
-                          newCategories.splice(index, 0, removed);
+                        const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        if (draggedIndex !== index && !isNaN(draggedIndex)) {
+                          const draggedCategory = filteredCategories[draggedIndex];
+                          const targetCategory = filteredCategories[index];
                           
-                          // Update sort orders - batch update
-                          const updates = newCategories.map((cat, idx) => ({
-                            id: cat.id,
-                            sortOrder: idx + 1
-                          })).filter(update => {
-                            const originalCat = filteredCategories.find(c => c.id === update.id);
-                            return originalCat && originalCat.sortOrder !== update.sortOrder;
+                          // Immediate visual update
+                          const newOrder = draggedIndex < index ? index + 1 : index;
+                          
+                          updateMutation.mutate({ 
+                            id: draggedCategory.id, 
+                            data: { sortOrder: newOrder } 
                           });
-
-                          // Execute batch updates
-                          updates.forEach(update => {
+                          
+                          // Update target category sort order if needed
+                          if (targetCategory.sortOrder <= newOrder) {
                             updateMutation.mutate({ 
-                              id: update.id, 
-                              data: { sortOrder: update.sortOrder } 
+                              id: targetCategory.id, 
+                              data: { sortOrder: targetCategory.sortOrder + 1 } 
                             });
-                          });
+                          }
                         }
                       }}
                       onClick={() => handleCategoryClick(category)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1">
-                          <GripVertical className="w-4 h-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <GripVertical className="w-4 h-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
                           <div className="flex-1">
                             <div className="flex items-center">
                               <h3 className="font-medium text-gray-900">
@@ -388,56 +385,7 @@ export default function Categories() {
           </div>
         </div>
 
-        {/* Right Panel - Breadcrumb and Info */}
-        <div className="w-full lg:w-1/3 bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategori Bilgileri</h2>
-          
-          {/* Breadcrumb */}
-          {currentParent && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mevcut Konum</label>
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="text-sm text-gray-600">
-                  Ana Kategoriler → {currentParent.name}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {currentParent.description || 'Açıklama yok'}
-                </div>
-              </div>
-            </div>
-          )}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Toplam Kategori</label>
-              <p className="text-2xl font-bold text-[#EC7830]">{filteredCategories.length}</p>
-              <p className="text-xs text-gray-500">
-                {currentParent ? 'Alt kategori sayısı' : 'Ana kategori sayısı'}
-              </p>
-            </div>
-
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Hızlı İşlemler</h3>
-              <div className="space-y-2">
-                <button
-                  onClick={handleAddRootCategory}
-                  disabled={isAnyMutationLoading}
-                  className="w-full text-left px-3 py-2 text-sm bg-[#EC7830] text-white rounded hover:bg-[#d6691a] disabled:opacity-50"
-                >
-                  + {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
-                </button>
-                {currentParent && (
-                  <button
-                    onClick={handleBackClick}
-                    className="w-full text-left px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                  >
-                    ← Bir üst seviyeye dön
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Category Form Modal */}
