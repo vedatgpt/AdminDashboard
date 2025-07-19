@@ -200,9 +200,9 @@ export default function CustomFieldManager({ categoryId, categoryName }: CustomF
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
             {categoryName} - Özel Alanlar
@@ -221,7 +221,8 @@ export default function CustomFieldManager({ categoryId, categoryName }: CustomF
       </div>
 
       {/* Custom Fields List */}
-      {customFields.length > 0 ? (
+      <div className="mt-6">
+        {customFields.length > 0 ? (
         <div className="space-y-3">
           {customFields.map((field) => {
             const fieldTypeOption = fieldTypeOptions.find(opt => opt.value === field.fieldType);
@@ -289,6 +290,7 @@ export default function CustomFieldManager({ categoryId, categoryName }: CustomF
           <p className="text-sm">Bu kategoriye özel form alanları ekleyebilirsiniz</p>
         </div>
       )}
+      </div>
 
       {/* Form Modal */}
       {showForm && (

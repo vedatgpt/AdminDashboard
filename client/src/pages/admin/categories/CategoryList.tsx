@@ -100,7 +100,7 @@ function SortableCategoryItem({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onViewSubcategories(category)}
+            onClick={() => onViewSubcategories(category.id)}
             className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
             title="Alt kategorileri görüntüle"
           >

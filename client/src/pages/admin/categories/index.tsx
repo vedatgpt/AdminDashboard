@@ -105,29 +105,28 @@ export default function Categories() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Tags className="w-6 h-6 text-[#EC7830]" />
+    <div>
+      {/* Page Header - consistent with other admin pages */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Kategori Yönetimi</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Kategoriler</h1>
             <p className="text-gray-600 text-sm mt-1">
               {parentId 
-                ? "Alt kategorileri yönetin ve özelleştirin" 
-                : "Ana kategorileri yönetin ve özelleştirin"
+                ? "Alt kategorileri yönetin ve düzenleyin" 
+                : "Kategorileri yönetin ve düzenleyin"
               }
             </p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] transition-colors flex items-center gap-2"
+            disabled={deleteMutation.isPending}
+          >
+            <Plus className="w-4 h-4" />
+            {parentId ? "Alt Kategori Ekle" : "Yeni Kategori"}
+          </button>
         </div>
-        <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] text-sm flex items-center gap-2 transition-colors"
-          disabled={deleteMutation.isPending}
-        >
-          <Plus className="w-4 h-4" />
-          {parentId ? "Alt Kategori Ekle" : "Ana Kategori Ekle"}
-        </button>
       </div>
 
       {/* Breadcrumb Navigation */}
