@@ -11,7 +11,7 @@ import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { FormControl, InputLabel, NativeSelect } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 export default function Register() {
   const [, navigate] = useLocation();
@@ -80,33 +80,32 @@ export default function Register() {
         <CardContent>
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
             <div className="space-y-2">
-              <FormControl fullWidth>
-                <InputLabel variant="standard" htmlFor="role-select">
-                  Hesap Türü
-                </InputLabel>
-                <NativeSelect
-                  {...registerForm.register("role")}
-                  inputProps={{
-                    name: 'role',
-                    id: 'role-select',
-                  }}
-                  sx={{ 
-                    minHeight: '2.5rem',
-                    '&:before': {
-                      borderBottomColor: '#d1d5db',
-                    },
-                    '&:hover:not(.Mui-disabled):before': {
-                      borderBottomColor: '#EC7830',
-                    },
-                    '&.Mui-focused:after': {
-                      borderBottomColor: '#EC7830',
-                    }
-                  }}
-                >
-                  <option value="individual">Bireysel</option>
-                  <option value="corporate">Kurumsal</option>
-                </NativeSelect>
-              </FormControl>
+              <Box sx={{ minWidth: 120 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="role-select-label">Hesap Türü</InputLabel>
+                  <Select
+                    labelId="role-select-label"
+                    id="role-select"
+                    value={registerForm.watch("role")}
+                    label="Hesap Türü"
+                    native
+                    {...registerForm.register("role")}
+                    sx={{ 
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#EC7830',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#EC7830',
+                        },
+                      },
+                    }}
+                  >
+                    <option value="individual">Bireysel</option>
+                    <option value="corporate">Kurumsal</option>
+                  </Select>
+                </FormControl>
+              </Box>
               {registerForm.formState.errors.role && (
                 <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
               )}
