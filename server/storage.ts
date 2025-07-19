@@ -1,6 +1,6 @@
-import { users, authorizedPersonnel, categories, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory } from "@shared/schema";
+import { users, authorizedPersonnel, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, asc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -29,14 +29,6 @@ export interface IStorage {
   updateAuthorizedPersonnel(id: number, updates: Partial<Omit<AuthorizedPersonnel, 'id' | 'companyUserId' | 'createdAt' | 'updatedAt'>>): Promise<AuthorizedPersonnel>;
   deleteAuthorizedPersonnel(id: number): Promise<void>;
   authenticateAuthorizedPersonnel(email: string, password: string): Promise<{ personnel: AuthorizedPersonnel; company: User } | null>;
-  
-  // Category methods
-  getCategories(parentId?: number): Promise<Category[]>;
-  getCategoryById(id: number): Promise<Category | undefined>;
-  createCategory(data: InsertCategory): Promise<Category>;
-  updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category>;
-  deleteCategory(id: number): Promise<void>;
-  getCategoryPath(id: number): Promise<Category[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -199,60 +191,6 @@ export class DatabaseStorage implements IStorage {
     }
 
     return { personnel, company };
-  }
-
-  // Category methods implementation
-  async getCategories(parentId?: number): Promise<Category[]> {
-    const whereCondition = parentId === undefined 
-      ? isNull(categories.parentId) 
-      : eq(categories.parentId, parentId);
-    
-    return await db
-      .select()
-      .from(categories)
-      .where(whereCondition)
-      .orderBy(asc(categories.sortOrder), asc(categories.name));
-  }
-
-  async getCategoryById(id: number): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.id, id));
-    return category || undefined;
-  }
-
-  async createCategory(data: InsertCategory): Promise<Category> {
-    const [category] = await db.insert(categories).values(data).returning();
-    return category;
-  }
-
-  async updateCategory(id: number, updates: Partial<Omit<Category, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Category> {
-    const [category] = await db
-      .update(categories)
-      .set({
-        ...updates,
-        updatedAt: new Date(),
-      })
-      .where(eq(categories.id, id))
-      .returning();
-    return category;
-  }
-
-  async deleteCategory(id: number): Promise<void> {
-    await db.delete(categories).where(eq(categories.id, id));
-  }
-
-  async getCategoryPath(id: number): Promise<Category[]> {
-    const path: Category[] = [];
-    let currentId: number | null = id;
-    
-    while (currentId) {
-      const category = await this.getCategoryById(currentId);
-      if (!category) break;
-      
-      path.unshift(category);
-      currentId = category.parentId;
-    }
-    
-    return path;
   }
 }
 
