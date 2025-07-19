@@ -1,9 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -67,127 +63,150 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          
-          <CardTitle className="text-2xl font-bold text-center">
-            Kayıt Ol
-          </CardTitle>
-          
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Hesap Türü</Label>
-              <select 
-                id="role"
-                {...registerForm.register("role")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="individual">Bireysel</option>
-                <option value="corporate">Kurumsal</option>
-              </select>
-              {registerForm.formState.errors.role && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.role.message}</p>
-              )}
-            </div>
-            
-            {registerForm.watch("role") === "corporate" && (
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Firma Adı</Label>
-                <Input
-                  id="companyName"
-                  {...registerForm.register("companyName")}
-                  placeholder="Firma adınızı giriniz"
+    <div className="h-full">
+      <div className="dark:bg-slate-900 bg-gray-100 flex h-full items-center py-16">
+        <div className="w-full max-w-md mx-auto p-6">
+          <div className="mt-7 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <div className="p-4 sm:p-7">
+              <div className="text-center">
+                <img 
+                  src={logoPath} 
+                  alt="Logo" 
+                  className="w-32 h-auto mx-auto mb-6"
                 />
-                {registerForm.formState.errors.companyName && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.companyName.message}</p>
-                )}
+                <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">Kayıt Ol</h1>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  Hesabınız var mı?
+                  <Link href="/login" className="text-blue-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 ml-1">
+                    Giriş yapın
+                  </Link>
+                </p>
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Ad</Label>
-              <Input
-                id="firstName"
-                {...registerForm.register("firstName")}
-                placeholder="Adınızı giriniz"
-              />
-              {registerForm.formState.errors.firstName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.firstName.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Soyad</Label>
-              <Input
-                id="lastName"
-                {...registerForm.register("lastName")}
-                placeholder="Soyadınızı giriniz"
-              />
-              {registerForm.formState.errors.lastName && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.lastName.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
-              <Input
-                id="email"
-                type="email"
-                {...registerForm.register("email")}
-                placeholder="E-posta adresinizi giriniz"
-              />
-              {registerForm.formState.errors.email && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  {...registerForm.register("password")}
-                  placeholder="Şifrenizi giriniz"
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
+
+              <div className="mt-5">
+                <form onSubmit={registerForm.handleSubmit(handleRegister)}>
+                  <div className="grid gap-y-4">
+                    <div>
+                      <label htmlFor="role" className="block text-sm mb-2 dark:text-white">Hesap Türü</label>
+                      <select 
+                        id="role"
+                        {...registerForm.register("role")}
+                        className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                      >
+                        <option value="individual">Bireysel</option>
+                        <option value="corporate">Kurumsal</option>
+                      </select>
+                      {registerForm.formState.errors.role && (
+                        <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.role.message}</p>
+                      )}
+                    </div>
+                    
+                    {registerForm.watch("role") === "corporate" && (
+                      <div>
+                        <label htmlFor="companyName" className="block text-sm mb-2 dark:text-white">Firma Adı</label>
+                        <input
+                          type="text"
+                          id="companyName"
+                          {...registerForm.register("companyName")}
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                          placeholder="Firma adınızı giriniz"
+                        />
+                        {registerForm.formState.errors.companyName && (
+                          <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.companyName.message}</p>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm mb-2 dark:text-white">Ad</label>
+                      <input
+                        type="text"
+                        id="firstName"
+                        {...registerForm.register("firstName")}
+                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                        placeholder="Adınızı giriniz"
+                      />
+                      {registerForm.formState.errors.firstName && (
+                        <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.firstName.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm mb-2 dark:text-white">Soyad</label>
+                      <input
+                        type="text"
+                        id="lastName"
+                        {...registerForm.register("lastName")}
+                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                        placeholder="Soyadınızı giriniz"
+                      />
+                      {registerForm.formState.errors.lastName && (
+                        <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.lastName.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm mb-2 dark:text-white">E-posta</label>
+                      <input
+                        type="email"
+                        id="email"
+                        {...registerForm.register("email")}
+                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                        placeholder="E-posta adresinizi giriniz"
+                      />
+                      {registerForm.formState.errors.email && (
+                        <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="password" className="block text-sm mb-2 dark:text-white">Şifre</label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          id="password"
+                          {...registerForm.register("password")}
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
+                          placeholder="Şifrenizi giriniz"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 end-0 flex items-center z-20 px-3 cursor-pointer text-gray-400 rounded-e-md focus:outline-none focus:text-blue-600 dark:text-gray-600 dark:focus:text-blue-500"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                      {registerForm.formState.errors.password && (
+                        <p className="text-xs text-red-600 mt-2">{registerForm.formState.errors.password.message}</p>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={registerLoading}
+                      className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    >
+                      {registerLoading ? (
+                        <>
+                          <span className="animate-spin inline-block w-4 h-4 border-[3px] border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
+                          Kayıt yapılıyor...
+                        </>
+                      ) : (
+                        "Kayıt Ol"
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
-              {registerForm.formState.errors.password && (
-                <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
-              )}
             </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={registerLoading}
-            >
-              {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <Link href="/login">
-              <Button variant="ghost" className="text-sm">
-                Hesabınız var mı? Giriş yapın
-              </Button>
-            </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
