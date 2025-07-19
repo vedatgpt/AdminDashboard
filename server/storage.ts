@@ -323,6 +323,29 @@ export class DatabaseStorage implements IStorage {
     const categoryMap = new Map<number, CategoryWithChildren>();
     const rootCategories: CategoryWithChildren[] = [];
 
+    // First pass: create all categories with empty children arrays
+    categories.forEach(category => {
+      categoryMap.set(category.id, { ...category, children: [] });
+    });
+
+    // Second pass: build the tree structure
+    categories.forEach(category => {
+      const categoryWithChildren = categoryMap.get(category.id)!;
+      
+      if (category.parentId === null || category.parentId === undefined) {
+        // Root category
+        rootCategories.push(categoryWithChildren);
+      } else {
+        // Child category - add to parent
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+          parent.children!.push(categoryWithChildren);
+        }
+      }
+    });
+
+    return rootCategories;
+
     // Create map of all categories
     categories.forEach(category => {
       categoryMap.set(category.id, { ...category, children: [] });
