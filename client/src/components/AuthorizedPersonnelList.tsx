@@ -15,7 +15,7 @@ import { Edit, Power, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthorizedPersonnel } from "@shared/schema";
-import { EmptyState } from "@/components/EmptyState";
+import EmptyState from "@/components/EmptyState";
 
 interface AuthorizedPersonnelListProps {
   personnel: AuthorizedPersonnel[];

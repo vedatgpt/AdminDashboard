@@ -250,3 +250,21 @@ Authentication features:
 - Role-based routing: admin → admin panel, personnel → personnel dashboard, others → landing page
 - Authentication endpoints fully tested and operational for all user types
 - Fixed session data handling to prevent data leakage between user types
+
+### Code Modularization and Organization (July 19, 2025)
+- AuthorizedPersonnel system completely refactored into modular components
+- Created useAuthorizedPersonnel.ts custom hook for API operations and state management
+- Separated AuthorizedPersonnelForm.tsx for all form operations (add/edit)
+- Isolated AuthorizedPersonnelList.tsx for personnel listing and actions
+- Reduced main AuthorizedPersonnel.tsx from 600+ lines to 109 lines
+- Improved code reusability, testability, and maintainability
+
+### Pages Directory Organization (July 19, 2025)
+- Reorganized pages directory with logical folder structure:
+  - `/auth/` - Login.tsx, Register.tsx (authentication pages)
+  - `/public/` - Landing.tsx, Profile.tsx, not-found.tsx (public pages)
+  - `/dashboard/` - PersonnelDashboard.tsx (dashboard pages)
+  - `/account/` - Account management pages (existing structure maintained)
+  - `/admin/` - Admin panel pages (existing structure maintained)
+- Updated App.tsx imports to reflect new directory structure
+- Improved project navigation and file organization

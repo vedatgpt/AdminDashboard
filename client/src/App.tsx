@@ -8,18 +8,18 @@ import Users from "@/pages/admin/Users";
 import Ads from "@/pages/admin/Ads";
 import Categories from "@/pages/admin/Categories";
 import Locations from "@/pages/admin/Locations";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Landing from "@/pages/Landing";
-import PersonnelDashboard from "@/pages/PersonnelDashboard";
-import UserProfile from "@/pages/Profile";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import Landing from "@/pages/public/Landing";
+import PersonnelDashboard from "@/pages/dashboard/PersonnelDashboard";
+import UserProfile from "@/pages/public/Profile";
 import Account from "@/pages/account/Account";
 import Profile from "@/pages/account/Profile";
 import Contact from "./pages/account/Contact";
 import AuthorizedPersonnel from "./pages/account/AuthorizedPersonnel";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
-import NotFound from "@/pages/not-found";
+import NotFound from "@/pages/public/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
