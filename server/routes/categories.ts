@@ -1,8 +1,24 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
-import { requireAuth, requireAdmin } from "../middleware/auth";
 import { categoryFormSchema, customFieldFormSchema } from "@shared/schema";
 import type { Category, InsertCategory, InsertCustomField, InsertFilter } from "@shared/schema";
+
+// Middleware to check if user is authenticated
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.session?.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  req.session.userId = req.session.user.id;
+  next();
+};
+
+// Middleware to check if user is admin
+const requireAdmin = (req: any, res: any, next: any) => {
+  if (!req.session?.user || req.session.user.role !== 'admin') {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
 
 const router = Router();
 
