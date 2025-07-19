@@ -226,7 +226,7 @@ export default function Profile() {
                     <div className="flex items-center space-x-2">
                       <button
                         type="button"
-                        onClick={triggerFileInput}
+                        onClick={triggerFileinput}
                         disabled={uploadProfileImageMutation.isPending}
                         className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       >
