@@ -62,11 +62,11 @@ The application follows a monorepo structure with clear separation between clien
 ## External Dependencies
 
 ### Key Libraries
-- **UI**: @radix-ui components, lucide-react icons
+- **UI**: @radix-ui components, @mui/material (Material UI), lucide-react icons
 - **Forms**: react-hook-form with @hookform/resolvers
 - **Database**: drizzle-orm, @neondatabase/serverless
 - **Build Tools**: vite, esbuild, tsx
-- **Styling**: tailwindcss, class-variance-authority, clsx
+- **Styling**: tailwindcss, @emotion/react, @emotion/styled, class-variance-authority, clsx
 
 ### Development Tools
 - **Runtime**: Node.js with ES modules
@@ -268,3 +268,11 @@ Authentication features:
   - `/admin/` - Admin panel pages (existing structure maintained)
 - Updated App.tsx imports to reflect new directory structure
 - Improved project navigation and file organization
+
+### Material UI Integration (July 19, 2025)
+- Successfully installed Material UI core dependencies: @mui/material, @emotion/react, @emotion/styled
+- Clean installation with no conflicts with existing Radix UI components
+- Both UI libraries can coexist - Radix UI for existing components, Material UI for new components
+- Created test component demonstrating proper Material UI functionality
+- All dependencies properly resolved and application running successfully
+- Material UI v7.2.0 with Emotion styling engine for consistent theming
