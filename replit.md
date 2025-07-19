@@ -287,3 +287,7 @@ Authentication features:
 - Both pages now use Material UI Button with custom styling and brand colors
 - Maintained all form validation, error handling, and react-hook-form integration
 - Consistent user experience across both authentication forms
+- Completely removed all shadcn components from authentication pages
+- Fixed button text capitalization with textTransform: 'none'
+- Removed all shadow effects from buttons and cards for clean design
+- Material UI Card components with no shadow and clean borders

@@ -1,17 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { registerSchema, type RegisterData } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import logoPath from "@assets/logo_1752808818099.png";
-import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment, OutlinedInput, Button as MuiButton, Grid } from '@mui/material';
+import { Box, FormControl, InputLabel, MenuItem, Select, TextField, IconButton, InputAdornment, OutlinedInput, Button as MuiButton, Grid, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 export default function Register() {
@@ -70,13 +65,14 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          
-          <CardTitle className="text-2xl font-bold text-center">
+      <Card sx={{ width: '100%', maxWidth: 448, boxShadow: 'none', border: '1px solid #e5e7eb' }}>
+        <CardHeader sx={{ textAlign: 'center', pb: 1 }}>
+          <div className="flex justify-center mb-4">
+            <img src={logoPath} alt="Logo" className="h-12 w-auto" />
+          </div>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontSize: '1.5rem' }}>
             Kayıt Ol
-          </CardTitle>
-          
+          </Typography>
         </CardHeader>
         <CardContent>
           <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
@@ -254,6 +250,7 @@ export default function Register() {
                 backgroundColor: '#EC7830',
                 '&:hover': {
                   backgroundColor: '#d9661a',
+                  boxShadow: 'none',
                 },
                 '&:disabled': {
                   backgroundColor: '#f3f4f6',
@@ -261,6 +258,8 @@ export default function Register() {
                 py: 1.5,
                 fontSize: '1rem',
                 fontWeight: 600,
+                textTransform: 'none',
+                boxShadow: 'none',
               }}
             >
               {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
@@ -269,9 +268,20 @@ export default function Register() {
           
           <div className="mt-6 text-center">
             <Link href="/login">
-              <Button variant="ghost" className="text-sm">
+              <MuiButton 
+                variant="text" 
+                sx={{ 
+                  fontSize: '0.875rem',
+                  textTransform: 'none',
+                  color: '#6b7280',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    color: '#EC7830',
+                  },
+                }}
+              >
                 Hesabınız var mı? Giriş yapın
-              </Button>
+              </MuiButton>
             </Link>
           </div>
         </CardContent>
