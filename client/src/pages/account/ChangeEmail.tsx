@@ -53,9 +53,9 @@ export default function ChangeEmail() {
       });
       // Update form with new email
       emailForm.reset({ email: data.email });
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      // Force a refetch of user data
+      // Update the cached user data immediately
+      queryClient.setQueryData(["/api/auth/me"], data);
+      // Force a refetch to ensure sync
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {

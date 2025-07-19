@@ -116,12 +116,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", (req, res) => {
-    const user = req.session?.user;
-    if (!user) {
+  app.get("/api/auth/me", async (req, res) => {
+    const sessionUser = req.session?.user;
+    if (!sessionUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    res.json(user);
+    
+    try {
+      // Get fresh user data from database instead of session
+      const freshUser = await storage.getUserById(sessionUser.id);
+      if (freshUser) {
+        // Update session with fresh data
+        req.session.user = freshUser;
+        res.json(freshUser);
+      } else {
+        res.status(401).json({ error: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Server error" });
+    }
   });
 
   // Protected admin routes
@@ -187,6 +200,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...(currentUser.role === "corporate" && username && { username }),
       });
 
+      // Update session with fresh user data
+      req.session.user = updatedUser;
+
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -250,8 +266,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.updateUser(userId, { email });
-      const { password, ...userWithoutPassword } = updatedUser;
       
+      // Update session with fresh user data
+      req.session.user = updatedUser;
+      
+      const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ error: "E-posta güncellenirken hata oluştu" });

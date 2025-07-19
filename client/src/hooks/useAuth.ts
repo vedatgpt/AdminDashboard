@@ -9,11 +9,11 @@ export function useAuth() {
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Always consider data fresh, will be invalidated manually
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchOnReconnect: false,
-    gcTime: 5 * 60 * 1000,
+    refetchOnReconnect: true,
+    gcTime: 0, // Don't cache old data
   });
 
   const loginMutation = useMutation({
@@ -46,8 +46,9 @@ export function useAuth() {
     },
   });
 
-  const refreshUser = () => {
+  const refreshUser = async () => {
     queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    await queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
   };
 
   return {

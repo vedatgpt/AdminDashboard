@@ -59,6 +59,8 @@ export default function PasswordChange() {
         description: "Şifreniz başarıyla değiştirildi",
       });
       passwordForm.reset();
+      // Force user data refresh to ensure any session updates are reflected
+      refreshUser();
     },
     onError: (error: any) => {
       toast({

@@ -61,15 +61,15 @@ export default function Profile() {
         description: "Profil bilgileriniz güncellendi",
       });
       // Update form with new data
-      form.reset({
+      profileForm.reset({
         firstName: data.firstName,
         lastName: data.lastName,
         companyName: data.companyName || "",
         username: data.username,
       });
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      // Force a refetch of user data
+      // Update the cached user data immediately
+      queryClient.setQueryData(["/api/auth/me"], data);
+      // Force a refetch to ensure sync
       queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
@@ -104,8 +104,10 @@ export default function Profile() {
         description: "Profil resminiz güncellendi",
       });
       setProfileImagePreview(data.profileImage);
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      // Update the cached user data immediately
+      queryClient.setQueryData(["/api/auth/me"], data);
+      // Force a refetch to ensure sync
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
       toast({
@@ -135,8 +137,13 @@ export default function Profile() {
         description: "Profil resminiz silindi",
       });
       setProfileImagePreview(null);
-      refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      // Update the cached user data immediately
+      const currentUser = queryClient.getQueryData(["/api/auth/me"]) as any;
+      if (currentUser) {
+        queryClient.setQueryData(["/api/auth/me"], { ...currentUser, profileImage: null });
+      }
+      // Force a refetch to ensure sync
+      queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
     },
     onError: (error: any) => {
       toast({
