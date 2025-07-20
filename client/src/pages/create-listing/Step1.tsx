@@ -85,13 +85,7 @@ export default function CreateListingStep1() {
     }
   };
 
-  // Handle continue to next step
-  const handleContinue = () => {
-    if (state.selectedCategory) {
-      dispatch({ type: 'SET_STEP', payload: 2 });
-      navigate('/create-listing/step-2');
-    }
-  };
+  // Handle continue to next step - removed as per user request
 
   if (isLoading) {
     return (
@@ -117,31 +111,27 @@ export default function CreateListingStep1() {
           onCategoryClick={handleBreadcrumbClick}
         />
 
-        {/* Categories Grid - Sahibinden style */}
+        {/* Categories Layout - Sahibinden multi-column style */}
         {currentCategories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 gap-4 space-y-2">
             {currentCategories.map(category => (
               <div
                 key={category.id}
                 onClick={() => handleCategorySelect(category)}
-                className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 cursor-pointer transition-colors"
+                className="break-inside-avoid mb-2 block"
               >
-                <div className="space-y-2">
+                <div className="flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors rounded">
                   {category.icon && (
-                    <div className="flex justify-center">
-                      <img 
-                        src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
-                        alt={category.name}
-                        className="w-8 h-8 object-contain"
-                      />
-                    </div>
+                    <img 
+                      src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                      alt={category.name}
+                      className="w-6 h-6 object-contain flex-shrink-0"
+                    />
                   )}
                   
-                  <div className="text-center">
-                    <h3 className="text-sm font-medium text-gray-900 leading-tight">
-                      {category.name}
-                    </h3>
-                  </div>
+                  <span className="text-sm text-gray-700 hover:text-blue-600 transition-colors">
+                    {category.name}
+                  </span>
                 </div>
               </div>
             ))}
@@ -149,18 +139,6 @@ export default function CreateListingStep1() {
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500 text-sm">Bu kategoride alt kategori bulunmuyor</p>
-          </div>
-        )}
-
-        {/* Navigation Button - Only show when category is selected */}
-        {state.selectedCategory && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleContinue}
-              className="px-8 py-3 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] transition-all duration-200 font-medium"
-            >
-              Devam Et
-            </button>
           </div>
         )}
       </div>
