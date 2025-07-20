@@ -216,7 +216,16 @@ export default function PostAd() {
             placeholder={field.placeholder || ""}
             value={displayValue}
             onChange={(e) => {
-              const processedValue = e.target.value.replace(/\D/g, '');
+              let processedValue = e.target.value.replace(/\D/g, '');
+              
+              // Apply min/max validation
+              if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue) {
+                processedValue = fieldData.minValue.toString();
+              }
+              if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
+                processedValue = fieldData.maxValue.toString();
+              }
+              
               if (fieldData.hasUnits) {
                 handleValueWithUnitChange(field.fieldName, processedValue);
               } else {

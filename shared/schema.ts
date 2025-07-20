@@ -118,6 +118,9 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   hasUnits: boolean("has_units").notNull().default(false),
   unitOptions: text("unit_options"), // JSON array of unit options like ["km", "mil"] or ["m²", "ft²"]
   defaultUnit: text("default_unit"), // Default selected unit
+  // Min/Max values for number fields
+  minValue: integer("min_value"), // Minimum allowed value for number fields
+  maxValue: integer("max_value"), // Maximum allowed value for number fields
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

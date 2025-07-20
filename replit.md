@@ -346,3 +346,12 @@ Authentication features:
 - All field types support optional unit system - flexible and universal implementation
 - Admin interface shows unit information in field listings with default unit display
 - Smart unit dropdown: disabled (gray) when only 1 unit option exists - perfect for fields like motor power (300 hp)
+
+### Number Field Min/Max Value Limits (July 20, 2025)
+- Added minValue and maxValue fields to custom fields database schema for number type fields
+- CustomFieldsModal updated with "Değer Sınırları" section showing min/max input fields (2-column grid)
+- Real-time validation: max value must be greater than min value
+- PostAd page enforces min/max limits during input - auto-corrects out-of-range values
+- Admin interface displays value limits in field listings (Min: X, Max: Y)
+- Perfect for fields like motor volume (max 9999cc), horsepower limits, year ranges
+- Min/Max validation is optional - fields work normally when limits not set

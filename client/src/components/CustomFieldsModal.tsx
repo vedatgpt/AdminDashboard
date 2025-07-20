@@ -26,6 +26,9 @@ interface CustomFieldFormData {
   hasUnits: boolean;
   unitOptions: string;
   defaultUnit: string;
+  // Min/Max values for number fields
+  minValue: string;
+  maxValue: string;
 }
 
 const FIELD_TYPES = [
@@ -55,6 +58,8 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
     hasUnits: false,
     unitOptions: "",
     defaultUnit: "",
+    minValue: "",
+    maxValue: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
@@ -91,6 +96,8 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
         hasUnits: (editingField as any).hasUnits || false,
         unitOptions: (editingField as any).unitOptions || "",
         defaultUnit: (editingField as any).defaultUnit || "",
+        minValue: (editingField as any).minValue?.toString() || "",
+        maxValue: (editingField as any).maxValue?.toString() || "",
       });
     } else {
       resetForm();
@@ -114,6 +121,8 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       hasUnits: false,
       unitOptions: "",
       defaultUnit: "",
+      minValue: "",
+      maxValue: "",
     });
   };
 
@@ -168,6 +177,23 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       }
     }
 
+    // Validate min/max values for number fields
+    if (formData.fieldType === "number") {
+      if (formData.minValue.trim() && isNaN(parseInt(formData.minValue))) {
+        newErrors.minValue = "Geçerli bir sayı giriniz";
+      }
+      if (formData.maxValue.trim() && isNaN(parseInt(formData.maxValue))) {
+        newErrors.maxValue = "Geçerli bir sayı giriniz";
+      }
+      if (formData.minValue.trim() && formData.maxValue.trim()) {
+        const min = parseInt(formData.minValue);
+        const max = parseInt(formData.maxValue);
+        if (min >= max) {
+          newErrors.maxValue = "Maksimum değer minimum değerden büyük olmalıdır";
+        }
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -192,6 +218,8 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       hasUnits: formData.hasUnits,
       unitOptions: formData.unitOptions.trim() || null,
       defaultUnit: formData.defaultUnit.trim() || null,
+      minValue: formData.minValue.trim() ? parseInt(formData.minValue) : null,
+      maxValue: formData.maxValue.trim() ? parseInt(formData.maxValue) : null,
     };
 
     try {
@@ -335,6 +363,13 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                               <div>
                                 <strong>Birimler:</strong> {(field as any).unitOptions} 
                                 <span className="text-gray-400 ml-1">(varsayılan: {(field as any).defaultUnit})</span>
+                              </div>
+                            )}
+                            {field.fieldType === "number" && ((field as any).minValue !== null || (field as any).maxValue !== null) && (
+                              <div>
+                                <strong>Değer Sınırı:</strong> 
+                                {(field as any).minValue !== null && <span> Min: {(field as any).minValue}</span>}
+                                {(field as any).maxValue !== null && <span> Max: {(field as any).maxValue}</span>}
                               </div>
                             )}
                           </div>
@@ -654,6 +689,55 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                       )}
                     </div>
                   </div>
+
+                  {/* Min/Max values for number fields */}
+                  {formData.fieldType === "number" && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Değer Sınırları</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Minimum Değer
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.minValue}
+                            onChange={(e) => setFormData(prev => ({ ...prev, minValue: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            placeholder="0"
+                          />
+                          {errors.minValue && (
+                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              {errors.minValue}
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Maksimum Değer
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.maxValue}
+                            onChange={(e) => setFormData(prev => ({ ...prev, maxValue: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            placeholder="9999"
+                          />
+                          {errors.maxValue && (
+                            <p className="text-red-500 text-sm mt-1 flex items-center">
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              {errors.maxValue}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Kullanıcının girebileceği minimum ve maksimum değerleri belirler (isteğe bağlı)
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Form Actions */}
