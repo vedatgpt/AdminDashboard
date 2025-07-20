@@ -176,9 +176,19 @@ export default function CreateListingStep1() {
       <div className="lg:hidden">
         <NavbarMobile />
       </div>
+
+      {/* Mobile/Tablet Fixed Breadcrumb Navigation */}
+      {categoryPath.length > 0 && (
+        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
+          <BreadcrumbNav 
+            categoryPath={categoryPath}
+            onCategoryClick={handleBreadcrumbClick}
+          />
+        </div>
+      )}
       
       {/* Main content */}
-      <div className="py-3">
+      <div className={`py-3 ${categoryPath.length > 0 ? 'lg:pt-3 pt-20' : 'lg:pt-3 pt-16'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           
           {/* Page Title - Only show on desktop */}
@@ -186,9 +196,9 @@ export default function CreateListingStep1() {
             <h1 className="text-1xl font-semibold text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
-          {/* Breadcrumb Navigation */}
+          {/* Desktop Breadcrumb Navigation */}
           {categoryPath.length > 0 && (
-            <div className="mb-6">
+            <div className="hidden lg:block mb-6">
               <BreadcrumbNav 
                 categoryPath={categoryPath}
                 onCategoryClick={handleBreadcrumbClick}

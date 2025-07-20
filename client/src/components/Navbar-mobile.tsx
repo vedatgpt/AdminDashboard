@@ -13,14 +13,14 @@ const NavbarMobile: React.FC = () => {
   };
 
   return (
-    <div className="sticky top-0 w-full bg-white border-b border-gray-300 z-50">
+    <div className="fixed top-0 w-full bg-white border-b border-gray-300 z-50">
       <header className="flex items-center justify-center w-full h-[56px]">
         <div className="flex items-center justify-between w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-8">
           {/* Left side - Back arrow */}
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={handleBackClick}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
               aria-label="Geri git"
             >
               <ChevronLeftIcon className="w-6 h-6" />
@@ -38,7 +38,7 @@ const NavbarMobile: React.FC = () => {
           <div className="flex items-center flex-shrink-0">
             <button
               onClick={handleCloseClick}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
               aria-label="Kapat"
             >
               <XIcon className="w-6 h-6" />
