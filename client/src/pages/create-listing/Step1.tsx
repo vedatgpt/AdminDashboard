@@ -53,7 +53,18 @@ export default function CreateListingStep1() {
 
   // Handle category selection
   const handleCategorySelect = (category: Category) => {
-    const newPath = [...categoryPath, category];
+    // Check if this category is already selected (prevent duplicates)
+    const existingIndex = categoryPath.findIndex(c => c.id === category.id);
+    let newPath;
+    
+    if (existingIndex >= 0) {
+      // If category exists in path, truncate to that point
+      newPath = categoryPath.slice(0, existingIndex + 1);
+    } else {
+      // Add new category to path
+      newPath = [...categoryPath, category];
+    }
+    
     setCategoryPath(newPath);
 
     // If this is a leaf category (no children), set as final selection
@@ -131,17 +142,13 @@ export default function CreateListingStep1() {
       {/* Match navbar padding: px-4 sm:px-6 lg:px-8 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* Breadcrumb Navigation */}
-        <BreadcrumbNav 
-          categoryPath={categoryPath}
-          onCategoryClick={handleBreadcrumbClick}
-        />
+
 
         {/* Sahibinden style horizontal category boxes */}
         <div className="flex gap-4 overflow-x-auto pb-4">
           {categoryLevels.map((levelCategories, levelIndex) => (
-            <div key={levelIndex} className="flex-shrink-0 w-64 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-              <div className="p-2 max-h-64 overflow-y-auto">
+            <div key={levelIndex} className="flex-shrink-0 w-60 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="p-2 max-h-80 overflow-y-auto">
                 {levelCategories.map(category => (
                   <div
                     key={category.id}
