@@ -209,7 +209,7 @@ export default function CreateListingStep1() {
       )}
       
       {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[100px]' : 'lg:pt-6 pt-[56px]'}`}>
+      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[100px]' : 'lg:pt-6 pt-[100px]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Page Title - Only show on desktop */}
