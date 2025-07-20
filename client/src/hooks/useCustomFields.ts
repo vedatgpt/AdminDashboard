@@ -75,3 +75,6 @@ export function useDeleteCustomField(categoryId: number) {
     },
   });
 }
+
+// Alias for backward compatibility
+export const useCustomFields = useCategoryCustomFields;

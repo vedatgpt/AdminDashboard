@@ -18,6 +18,7 @@ import AuthorizedPersonnel from "./pages/account/AuthorizedPersonnel";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/public/not-found";
+import PostAd from "@/pages/PostAd";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -60,6 +61,7 @@ function Router() {
       ) : (
         <Switch>
           <Route path="/" component={Landing} />
+          <Route path="/post-ad" component={PostAd} />
           <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>
