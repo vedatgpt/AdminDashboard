@@ -339,15 +339,15 @@ export default function CreateListingStep1() {
                   className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                 >
                   <div className="flex items-center space-x-4 min-h-[24px]">
-                    <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                      {category.icon && (
+                    {category.icon && (
+                      <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
                         <img 
                           src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
                           alt={category.name}
                           className="w-6 h-6 object-contain"
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-900 text-base">
                         {category.name}
