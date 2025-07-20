@@ -627,6 +627,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Draft Listings routes
+  app.get("/api/draft-listings", requireAuth, async (req, res) => {
+    try {
+      const drafts = await storage.getDraftListingsByUser(req.session.user.id);
+      res.json(drafts);
+    } catch (error) {
+      console.error("Get draft listings error:", error);
+      res.status(500).json({ error: "Draft'lar alınamadı" });
+    }
+  });
+
+  app.get("/api/draft-listings/:id", requireAuth, async (req, res) => {
+    try {
+      const draft = await storage.getDraftListing(req.params.id);
+      if (!draft) {
+        return res.status(404).json({ error: "Draft bulunamadı" });
+      }
+      
+      // Check if the draft belongs to the current user
+      if (draft.userId !== req.session.user.id) {
+        return res.status(403).json({ error: "Bu draft'a erişim yetkiniz yok" });
+      }
+      
+      res.json(draft);
+    } catch (error) {
+      console.error("Get draft listing error:", error);
+      res.status(500).json({ error: "Draft alınamadı" });
+    }
+  });
+
+  app.post("/api/draft-listings", requireAuth, async (req, res) => {
+    try {
+      const draftData = {
+        ...req.body,
+        userId: req.session.user.id,
+      };
+      
+      const draft = await storage.createDraftListing(draftData);
+      res.json(draft);
+    } catch (error) {
+      console.error("Create draft listing error:", error);
+      res.status(500).json({ error: "Draft oluşturulamadı" });
+    }
+  });
+
+  app.patch("/api/draft-listings/:id", requireAuth, async (req, res) => {
+    try {
+      // Check if the draft exists and belongs to the user
+      const existingDraft = await storage.getDraftListing(req.params.id);
+      if (!existingDraft) {
+        return res.status(404).json({ error: "Draft bulunamadı" });
+      }
+      
+      if (existingDraft.userId !== req.session.user.id) {
+        return res.status(403).json({ error: "Bu draft'a erişim yetkiniz yok" });
+      }
+      
+      const draft = await storage.updateDraftListing(req.params.id, req.body);
+      res.json(draft);
+    } catch (error) {
+      console.error("Update draft listing error:", error);
+      res.status(500).json({ error: "Draft güncellenemedi" });
+    }
+  });
+
+  app.delete("/api/draft-listings/:id", requireAuth, async (req, res) => {
+    try {
+      // Check if the draft exists and belongs to the user
+      const existingDraft = await storage.getDraftListing(req.params.id);
+      if (!existingDraft) {
+        return res.status(404).json({ error: "Draft bulunamadı" });
+      }
+      
+      if (existingDraft.userId !== req.session.user.id) {
+        return res.status(403).json({ error: "Bu draft'a erişim yetkiniz yok" });
+      }
+      
+      await storage.deleteDraftListing(req.params.id);
+      res.json({ message: "Draft silindi" });
+    } catch (error) {
+      console.error("Delete draft listing error:", error);
+      res.status(500).json({ error: "Draft silinemedi" });
+    }
+  });
+
   // Mount categories routes
   app.use('/api/categories', categoriesRouter);
 

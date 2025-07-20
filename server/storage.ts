@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, draftListings, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type DraftListing, type InsertDraftListing, type UpdateDraftListing } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -48,6 +48,13 @@ export interface IStorage {
   createCustomField(data: InsertCustomField): Promise<CategoryCustomField>;
   updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField>;
   deleteCustomField(id: number): Promise<void>;
+  
+  // Draft Listings methods
+  getDraftListing(id: string): Promise<DraftListing | undefined>;
+  getDraftListingsByUser(userId: number): Promise<DraftListing[]>;
+  createDraftListing(data: InsertDraftListing): Promise<DraftListing>;
+  updateDraftListing(id: string, updates: UpdateDraftListing): Promise<DraftListing>;
+  deleteDraftListing(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -386,6 +393,42 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCustomField(id: number): Promise<void> {
     await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
+  }
+
+  // Draft Listings methods
+  async getDraftListing(id: string): Promise<DraftListing | undefined> {
+    const [draft] = await db.select().from(draftListings).where(eq(draftListings.id, id));
+    return draft || undefined;
+  }
+
+  async getDraftListingsByUser(userId: number): Promise<DraftListing[]> {
+    return await db.select().from(draftListings)
+      .where(eq(draftListings.userId, userId))
+      .orderBy(desc(draftListings.updatedAt));
+  }
+
+  async createDraftListing(data: InsertDraftListing): Promise<DraftListing> {
+    const [draft] = await db.insert(draftListings).values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return draft;
+  }
+
+  async updateDraftListing(id: string, updates: UpdateDraftListing): Promise<DraftListing> {
+    const [draft] = await db.update(draftListings)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(draftListings.id, id))
+      .returning();
+    return draft;
+  }
+
+  async deleteDraftListing(id: string): Promise<void> {
+    await db.delete(draftListings).where(eq(draftListings.id, id));
   }
 }
 

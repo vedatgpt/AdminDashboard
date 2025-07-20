@@ -3,6 +3,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
 import { Category } from '@shared/schema';
+import { useCreateDraftListing, useDraftListing } from '@/hooks/useDraftListings';
+import { useQuery } from '@tanstack/react-query';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
@@ -14,6 +16,7 @@ export default function CreateListingStep1() {
   const [, navigate] = useLocation();
   const { state, dispatch } = useListing();
   const { data: allCategories = [], isLoading } = useCategories();
+  const createDraftMutation = useCreateDraftListing();
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
@@ -89,12 +92,41 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), set as final selection
+    // If this is a leaf category (no children), create draft and navigate
     if (!hasChildren(category)) {
+      handleFinalCategorySelection(category, newPath);
+    }
+  };
+
+  // Handle final category selection and draft creation
+  const handleFinalCategorySelection = async (category: Category, path: Category[]) => {
+    try {
+      // Create draft listing
+      const draft = await createDraftMutation.mutateAsync({
+        categoryId: category.id,
+        currentStep: 1,
+        formData: {
+          selectedCategory: category,
+          categoryPath: path
+        }
+      });
+
+      // Update context
       dispatch({
         type: 'SET_CATEGORY',
-        payload: { category, path: newPath }
+        payload: { category, path }
       });
+      
+      // Navigate to step-2 with draftId
+      navigate(`/create-listing/step-2?draftId=${draft.id}`);
+    } catch (error) {
+      console.error('Draft creation failed:', error);
+      // Fallback: still navigate but without draft
+      dispatch({
+        type: 'SET_CATEGORY', 
+        payload: { category, path }
+      });
+      navigate('/create-listing/step-2');
     }
   };
 
@@ -316,13 +348,15 @@ export default function CreateListingStep1() {
                         </p>
                         <button
                           onClick={() => {
-                            dispatch({ type: 'SET_STEP', payload: 2 });
-                            navigate('/create-listing/step-2');
-                            console.log('Navigating to step 2...');
+                            const lastCategory = categoryPath[categoryPath.length - 1];
+                            if (lastCategory) {
+                              handleFinalCategorySelection(lastCategory, categoryPath);
+                            }
                           }}
                           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                          disabled={createDraftMutation.isPending}
                         >
-                          Devam Et
+                          {createDraftMutation.isPending ? 'Hazırlanıyor...' : 'Devam Et'}
                         </button>
                       </div>
                     </div>

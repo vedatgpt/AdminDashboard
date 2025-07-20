@@ -1,3 +1,4 @@
+import React from 'react';
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
 import { useQuery } from '@tanstack/react-query';
@@ -7,10 +8,21 @@ import '../../styles/quill-custom.css';
 import ModernNavbar from '@/components/Navbar';
 import NavbarMobile from '@/components/Navbar-mobile';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
+import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListings';
+import { useLocation } from 'wouter';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData } = state;
+  const [location] = useLocation();
+  const updateDraftMutation = useUpdateDraftListing();
+  
+  // URL'den draftId'yi al
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const draftId = urlParams.get('draftId');
+  
+  // Draft'ı yükle
+  const { data: draftData, isLoading: isDraftLoading } = useDraftListing(draftId || undefined);
   
   // Kullanıcı bilgilerini al
   const { data: user } = useQuery({
@@ -19,8 +31,50 @@ export default function Step2() {
     gcTime: 10 * 60 * 1000, // 10 dakika (TanStack Query v5)
   });
   
+  // Draft'tan form verilerini yükle
+  React.useEffect(() => {
+    if (draftData?.formData && !isDraftLoading) {
+      const formData = draftData.formData as any;
+      
+      // Draft'tan kategori ve form verilerini context'e yükle
+      if (formData?.selectedCategory && formData?.categoryPath) {
+        dispatch({
+          type: 'SET_CATEGORY',
+          payload: {
+            category: formData.selectedCategory,
+            path: formData.categoryPath
+          }
+        });
+      }
+      
+      // Form verilerini yükle
+      if (formData?.customFields) {
+        dispatch({
+          type: 'SET_CUSTOM_FIELDS',
+          payload: formData.customFields
+        });
+      }
+    }
+  }, [draftData, isDraftLoading, dispatch]);
+
   const updateFormData = (newData: any) => {
-    dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
+    const updatedData = { ...formData.customFields, ...newData };
+    dispatch({ type: 'SET_CUSTOM_FIELDS', payload: updatedData });
+    
+    // Draft'ı güncelle
+    if (draftId) {
+      updateDraftMutation.mutate({
+        id: draftId,
+        updates: {
+          currentStep: 2,
+          formData: {
+            selectedCategory: selectedCategory,
+            categoryPath: state.categoryPath,
+            customFields: updatedData
+          }
+        }
+      });
+    }
   };
   
   const nextStep = () => {
@@ -28,7 +82,7 @@ export default function Step2() {
   };
   const { data: customFields, isLoading } = useCustomFields(selectedCategory?.id || 0);
 
-  if (isLoading) {
+  if (isLoading || isDraftLoading) {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-2xl mx-auto">
