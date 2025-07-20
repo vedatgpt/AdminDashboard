@@ -55,12 +55,6 @@ export default function Step2() {
             maxLength={64}
             className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
           />
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">İlanınızın dikkat çekici bir başlığını yazın</p>
-            <span className="text-sm text-gray-400">
-              {(formData.customFields.title || '').length}/64
-            </span>
-          </div>
         </div>
 
         {/* Açıklama Input - Tüm kategoriler için geçerli */}
