@@ -86,19 +86,39 @@ export default function CategoryForm({
         labelKey: "",
       });
       
-      // Load existing metadata for this category
-      fetch(`/api/categories/${category.id}/path`)
-        .then(response => response.json())
-        .then(path => {
-          if (path && path.length > 0) {
-            // Find current category in path and get its label
-            const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
-            if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-              setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
-            }
+      // Load existing metadata for this category with cache optimization
+      const cacheKey = `category-metadata-${category.id}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        // Use cached metadata if available
+        try {
+          const path = JSON.parse(cachedData);
+          const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
+          if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+            setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
           }
-        })
-        .catch(error => console.error('Error loading category metadata:', error));
+        } catch (error) {
+          console.error('Error parsing cached metadata:', error);
+        }
+      } else {
+        // Fetch from API and cache result
+        fetch(`/api/categories/${category.id}/path`)
+          .then(response => response.json())
+          .then(path => {
+            // Cache the result for 5 minutes
+            sessionStorage.setItem(cacheKey, JSON.stringify(path));
+            setTimeout(() => sessionStorage.removeItem(cacheKey), 5 * 60 * 1000);
+            
+            if (path && path.length > 0) {
+              const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
+              if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+                setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
+              }
+            }
+          })
+          .catch(error => console.error('Error loading category metadata:', error));
+      }
     } else if (parentCategory) {
       // Add child mode
       setFormData({

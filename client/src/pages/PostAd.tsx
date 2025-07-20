@@ -22,7 +22,10 @@ export default function PostAd() {
   const { data: categoryPath = [] } = useQuery({
     queryKey: ['/api/categories', finalCategory?.id, 'path'],
     enabled: !!finalCategory?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    gcTime: 10 * 60 * 1000, // 10 minutes in memory
   });
 
   // Flatten nested categories to a flat array

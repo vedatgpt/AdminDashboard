@@ -1,6 +1,6 @@
 import { users, authorizedPersonnel, categories, categoryCustomFields, categoryMetadata, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type CategoryMetadata } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -340,13 +340,25 @@ export class DatabaseStorage implements IStorage {
 
   async getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>> {
     const breadcrumbs = await this.getCategoryBreadcrumbs(id);
-    const pathWithLabels = [];
+    
+    // Get all metadata for the categories in the path in a single query
+    const categoryIds = breadcrumbs.map(cat => cat.id);
+    const metadataResults = await db
+      .select()
+      .from(categoryMetadata)
+      .where(inArray(categoryMetadata.categoryId, categoryIds));
+    
+    // Create a map for quick lookup
+    const metadataMap = new Map<number, string>();
+    metadataResults.forEach(meta => {
+      metadataMap.set(meta.categoryId, meta.labelKey);
+    });
 
-    for (const category of breadcrumbs) {
-      const metadata = await this.getCategoryMetadata(category.id);
-      const label = metadata?.labelKey || "Category";
-      pathWithLabels.push({ category, label });
-    }
+    // Build path with labels
+    const pathWithLabels = breadcrumbs.map(category => ({
+      category,
+      label: metadataMap.get(category.id) || "Category"
+    }));
 
     return pathWithLabels;
   }

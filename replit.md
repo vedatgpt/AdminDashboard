@@ -376,3 +376,13 @@ Authentication features:
 - API returns hierarchical path: [{category: Category, label: string}]
 - Full integration between frontend, backend, and database for flexible category labeling
 - System automatically supports new hierarchical structures through admin interface
+
+### Performance Optimizations (July 20, 2025)
+- Frontend cache optimizations: All React Query hooks configured with appropriate staleTime (3-5 minutes)
+- Disabled unnecessary refetching: refetchOnWindowFocus, refetchOnMount set to false
+- Backend query optimization: Replaced N+1 queries in getCategoryPath with single query using inArray
+- Smart cache invalidation: Specific cache clearing instead of full invalidation on mutations
+- Session storage caching for category metadata to reduce API calls
+- Custom field and category queries optimized with 10-minute garbage collection time
+- Optimized useAuth hook with 5-minute staleTime to reduce authentication checks
+- Reduced API calls by using selective cache updates instead of complete invalidation
