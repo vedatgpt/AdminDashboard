@@ -119,7 +119,10 @@ export default function Categories() {
       setEditingCategory(null);
       setParentCategory(null);
     } catch (error: any) {
-      showAlertMessage('error', error.message || 'Bir hata oluştu');
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Bir hata oluştu';
+      showAlertMessage('error', errorMessage);
     }
   };
 
@@ -146,7 +149,10 @@ export default function Categories() {
       await deleteMutation.mutateAsync(category.id);
       showAlertMessage('success', 'Kategori başarıyla silindi');
     } catch (error: any) {
-      showAlertMessage('error', error.message || 'Kategori silinirken bir hata oluştu');
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Kategori silinirken bir hata oluştu';
+      showAlertMessage('error', errorMessage);
     }
   };
 

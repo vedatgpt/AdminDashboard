@@ -34,8 +34,11 @@ export function useCreateCategory() {
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to create category');
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to create category`);
+        }
         return res.json();
       }),
     onSuccess: () => {
@@ -53,8 +56,11 @@ export function useUpdateCategory() {
         method: "PATCH",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to update category');
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to update category`);
+        }
         return res.json();
       }),
     onSuccess: () => {
@@ -70,8 +76,11 @@ export function useDeleteCategory() {
     mutationFn: (id: number) =>
       fetch(`/api/categories/${id}`, {
         method: "DELETE",
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to delete category');
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to delete category`);
+        }
         return res.ok;
       }),
     onSuccess: () => {
