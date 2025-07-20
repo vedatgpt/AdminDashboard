@@ -1,4 +1,5 @@
 import { Category } from '@shared/schema';
+import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbNavProps {
   categoryPath: Category[];
@@ -17,12 +18,12 @@ export default function BreadcrumbNav({ categoryPath, onCategoryClick }: Breadcr
           onClick={() => onCategoryClick(null, -1)}
           className="hover:underline"
         >
-          Vasıta
+          Kategoriler
         </button>
         
         {categoryPath.map((category, index) => (
           <div key={category.id} className="flex items-center space-x-1">
-            <span className="text-gray-400">&gt;</span>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
             
             {index === categoryPath.length - 1 ? (
               <span className="text-gray-700 font-medium">{category.name}</span>

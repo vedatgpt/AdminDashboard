@@ -141,12 +141,7 @@ export default function CreateListingStep1() {
         <div className="flex gap-4 overflow-x-auto pb-4">
           {categoryLevels.map((levelCategories, levelIndex) => (
             <div key={levelIndex} className="flex-shrink-0 w-64 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-100 p-3 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900 text-sm">
-                  {levelIndex === 0 ? 'Kategoriler' : categoryPath[levelIndex - 1]?.name}
-                </h3>
-              </div>
-              <div className="p-2 max-h-96 overflow-y-auto">
+              <div className="p-2 max-h-64 overflow-y-auto">
                 {levelCategories.map(category => (
                   <div
                     key={category.id}
