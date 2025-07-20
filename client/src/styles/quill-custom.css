@@ -1,12 +1,12 @@
-/* ReactQuill özelleştirmesi */
-.quill-editor-wrapper .ql-toolbar {
+/* ReactQuill özelleştirmesi - fiyat inputu ile aynı çerçeve rengi */
+.ql-toolbar.ql-snow {
   border: 1px solid #d1d5db !important;
   border-bottom: none !important;
   border-radius: 8px 8px 0 0 !important;
   background-color: #f9fafb !important;
 }
 
-.quill-editor-wrapper .ql-container {
+.ql-container.ql-snow {
   border: 1px solid #d1d5db !important;
   border-radius: 0 0 8px 8px !important;
   font-family: inherit !important;
@@ -15,17 +15,17 @@
   max-height: none !important;
 }
 
-.quill-editor-wrapper .ql-snow {
-  border: 1px solid #d1d5db !important;
+/* Global ReactQuill overrides - fiyat inputu border-gray-200 ile aynı */
+.ql-snow {
+  border: none !important;
 }
 
-.quill-editor-wrapper .ql-snow .ql-toolbar {
-  border: 1px solid #d1d5db !important;
-  border-bottom: none !important;
+.ql-toolbar.ql-snow {
+  border-color: #e5e7eb !important; /* border-gray-200 */
 }
 
-.quill-editor-wrapper .ql-snow .ql-container {
-  border: 1px solid #d1d5db !important;
+.ql-container.ql-snow {
+  border-color: #e5e7eb !important; /* border-gray-200 */
 }
 
 .quill-editor-wrapper .ql-editor {

@@ -49,8 +49,9 @@ export default function Step2() {
               onChange={(value) => handleInputChange('description', value)}
               placeholder="Ürününüzün detaylı açıklamasını yazınız..."
               onFocus={() => {
-                // Placeholder'ı temizle
-                if (!formData.customFields.description || formData.customFields.description === '') {
+                // Boş içerik varsa temizle - ReactQuill placeholder mantığı
+                const currentValue = formData.customFields.description || '';
+                if (currentValue === '<p><br></p>' || currentValue === '' || !currentValue.replace(/<[^>]*>/g, '').trim()) {
                   handleInputChange('description', '');
                 }
               }}
