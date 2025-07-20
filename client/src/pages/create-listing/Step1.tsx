@@ -168,15 +168,15 @@ export default function CreateListingStep1() {
               <div
                 key={category.id}
                 onClick={() => handleCategorySelect(category)}
-                className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group"
+                className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
               >
                 <div className="flex flex-col items-center space-y-3">
                   {category.icon && (
-                    <div className="w-16 h-16 flex items-center justify-center bg-gray-50 rounded-full group-hover:bg-gray-100 transition-colors">
+                    <div className="w-12 h-12 flex items-center justify-center">
                       <img 
                         src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
                         alt={category.name}
-                        className="w-10 h-10 object-contain"
+                        className="w-8 h-8 object-contain"
                       />
                     </div>
                   )}
@@ -184,11 +184,6 @@ export default function CreateListingStep1() {
                     <h3 className="font-medium text-gray-900 text-sm leading-tight">
                       {category.name}
                     </h3>
-                    {category.children && category.children.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {category.children.length} kategori
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>
@@ -197,36 +192,41 @@ export default function CreateListingStep1() {
         ) : (
           /* Sub-categories - Box layout */
           <div className="flex gap-4 overflow-x-auto pb-4 category-boxes-container">
-            {categoryLevels.map((levelCategories, levelIndex) => (
-              <div key={levelIndex} className="flex-shrink-0 w-60 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                <div className="p-2 max-h-80 overflow-y-auto">
-                  {levelCategories.map(category => {
-                    const isCurrentLevelSelected = levelIndex < categoryPath.length && categoryPath[levelIndex]?.id === category.id;
-                    
-                    return (
-                      <div
-                        key={category.id}
-                        onClick={() => handleCategorySelect(category)}
-                        className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
-                          isCurrentLevelSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        {category.icon && (
-                          <img 
-                            src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
-                            alt={category.name}
-                            className="w-4 h-4 object-contain flex-shrink-0"
-                          />
-                        )}
-                        <span className="hover:text-blue-600 transition-colors">
-                          {category.name}
-                        </span>
-                      </div>
-                    );
-                  })}
+            {categoryLevels.slice(1).map((levelCategories, levelIndex) => {
+              const actualLevelIndex = levelIndex + 1; // Adjust index since we're skipping first level
+              return (
+                <div key={actualLevelIndex} className={`flex-shrink-0 w-60 border border-gray-200 rounded-lg overflow-hidden ${
+                  actualLevelIndex < categoryPath.length ? 'bg-gray-50' : 'bg-blue-50'
+                }`}>
+                  <div className="p-2 max-h-80 overflow-y-auto">
+                    {levelCategories.map(category => {
+                      const isCurrentLevelSelected = actualLevelIndex < categoryPath.length && categoryPath[actualLevelIndex]?.id === category.id;
+                      
+                      return (
+                        <div
+                          key={category.id}
+                          onClick={() => handleCategorySelect(category)}
+                          className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
+                            isCurrentLevelSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          {category.icon && (
+                            <img 
+                              src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                              alt={category.name}
+                              className="w-4 h-4 object-contain flex-shrink-0"
+                            />
+                          )}
+                          <span className="hover:text-blue-600 transition-colors">
+                            {category.name}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
