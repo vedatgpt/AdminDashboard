@@ -154,7 +154,10 @@ export default function CreateListingStep1() {
 
   // Get current level categories for mobile view
   const getCurrentLevelCategories = () => {
-    if (categoryPath.length === 0) return [];
+    if (categoryPath.length === 0) {
+      // Return root categories for mobile when no category is selected
+      return allCategories.filter(cat => !cat.parentId);
+    }
     
     const currentParent = categoryPath[categoryPath.length - 1];
     return allCategories.filter(cat => cat.parentId === currentParent.id);
@@ -168,8 +171,8 @@ export default function CreateListingStep1() {
       <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           
-          {/* Page Title */}
-          <div className="mb-6 text-left">
+          {/* Page Title - Only show on desktop */}
+          <div className="hidden lg:block mb-6 text-left">
             <h1 className="text-1xl font-semibold text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
