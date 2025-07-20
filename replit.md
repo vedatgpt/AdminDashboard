@@ -378,10 +378,14 @@ Authentication features:
 - Added test custom fields for category #4 with units system and min/max validation
 - Smart input prevention: blocks characters that would exceed limits instead of auto-correcting
 
-### Preline UI Integration for Unit Fields (July 20, 2025)
-- Implemented Preline UI inline select design for all fields with units enabled
-- Input field with integrated unit dropdown on the right side (similar to price/currency design)
-- Unified design for text, number, and select fields when units are enabled
-- Unit dropdown positioned absolutely within input container using pe-20 and pe-px classes
-- Maintains all existing functionality: disabled state for single units, min/max validation
-- Clean, professional appearance matching Preline UI standards
+### Step 2 Simplification and UI Fixes (July 20, 2025)
+- Completely rewrote Step 2 from 450+ lines to 120 clean lines
+- Removed complex floating label patterns causing mobile display issues
+- Implemented simple, functional form inputs with standard Tailwind CSS
+- Fixed unit selector overlay and chevron positioning issues
+- Removed broken Preline UI inline select patterns
+- Basic field types supported: text, number, select, checkbox, boolean
+- Clean label positioning above inputs for better readability
+- Proper placeholder text display from database fields
+- Maintained all form data handling and validation logic
+- Focused on functionality over complex UI patterns
