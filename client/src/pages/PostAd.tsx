@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useCategories } from "@/hooks/useCategories";
 import { useCustomFields } from "@/hooks/useCustomFields";
 import { Link } from "wouter";
@@ -17,20 +17,43 @@ export default function PostAd() {
   const { data: allCategories = [] } = useCategories();
   const { data: customFields = [] } = useCustomFields(finalCategory?.id);
 
+  // Flatten nested categories to a flat array
+  const flatCategories = React.useMemo(() => {
+    const flatten = (categories: Category[]): Category[] => {
+      const result: Category[] = [];
+      for (const category of categories) {
+        result.push(category);
+        if (category.children && category.children.length > 0) {
+          result.push(...flatten(category.children));
+        }
+      }
+      return result;
+    };
+    return flatten(allCategories);
+  }, [allCategories]);
+
+  // Debug: Log categories data
+  useEffect(() => {
+    console.log("All categories:", allCategories);
+    console.log("Flat categories:", flatCategories);
+    console.log("Selected path:", selectedPath);
+    console.log("Current level categories:", getCurrentLevelCategories());
+  }, [allCategories, selectedPath, flatCategories]);
+
   // Get current level categories
   const getCurrentLevelCategories = (): Category[] => {
     if (selectedPath.length === 0) {
       // Root level categories
-      return allCategories.filter(cat => !cat.parentId);
+      return flatCategories.filter(cat => !cat.parentId);
     }
     
     const currentParent = selectedPath[selectedPath.length - 1].category;
-    return allCategories.filter(cat => cat.parentId === currentParent.id);
+    return flatCategories.filter(cat => cat.parentId === currentParent.id);
   };
 
   // Check if category has children
   const hasChildren = (categoryId: number): boolean => {
-    return allCategories.some(cat => cat.parentId === categoryId);
+    return flatCategories.some(cat => cat.parentId === categoryId);
   };
 
   // Handle category selection
