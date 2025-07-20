@@ -18,8 +18,22 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (loginData: LoginData) => {
-      const response = await apiRequest("POST", "/api/auth/login", loginData);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/auth/login", loginData);
+        return response.json();
+      } catch (error: any) {
+        // Parse server error response
+        if (error.message && error.message.includes(":")) {
+          const errorText = error.message.split(": ")[1];
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || "Giriş başarısız");
+          } catch {
+            throw new Error(errorText || "Giriş başarısız");
+          }
+        }
+        throw new Error("Giriş başarısız");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -28,8 +42,22 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (registerData: RegisterData) => {
-      const response = await apiRequest("POST", "/api/auth/register", registerData);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", "/api/auth/register", registerData);
+        return response.json();
+      } catch (error: any) {
+        // Parse server error response
+        if (error.message && error.message.includes(":")) {
+          const errorText = error.message.split(": ")[1];
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || "Kayıt başarısız");
+          } catch {
+            throw new Error(errorText || "Kayıt başarısız");
+          }
+        }
+        throw new Error("Kayıt başarısız");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });

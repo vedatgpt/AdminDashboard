@@ -54,9 +54,17 @@ export default function Register() {
         description: "Kayıt başarılı",
       });
     } catch (error: any) {
+      // Error'u string'e çevir
+      let errorMessage = 'Kayıt başarısız';
+      if (error && typeof error.message === 'string') {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Hata",
-        description: error.message || "Kayıt başarısız",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -114,6 +122,27 @@ export default function Register() {
                 )}
               </div>
             )}
+
+            <div className="relative">
+              <input
+                id="username"
+                type="text"
+                className="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
+                placeholder="Kullanıcı adınızı girin"
+                {...registerForm.register("username")}
+              />
+              <label 
+                htmlFor="username"
+                className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-gray-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-gray-500 text-gray-500"
+              >
+                Kullanıcı Adı
+              </label>
+              {registerForm.formState.errors.username && (
+                <p className="text-sm text-red-500 mt-1">
+                  {registerForm.formState.errors.username.message}
+                </p>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
