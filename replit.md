@@ -389,3 +389,15 @@ Authentication features:
 - Proper placeholder text display from database fields
 - Maintained all form data handling and validation logic
 - Focused on functionality over complex UI patterns
+
+### Universal Price Input Implementation (July 20, 2025)
+- Added universal price input field above custom fields section
+- Price input available for all categories (not dependent on custom fields)
+- Preline UI inline select pattern with currency selection: TL, USD, EUR, GBP
+- Automatic thousand separator formatting for price values
+- Numeric keyboard support with inputMode="numeric"
+- Only numeric input allowed with proper validation
+- Orange-themed styling with bg-orange-50 and border-orange-200
+- Price data stored as {value, unit} object structure in formData.customFields.price
+- Single unit display for fields with one option, dropdown for multiple currencies
+- Smart unit handling: Motor Gücü shows "hp" as text, KM shows km/mil dropdown

@@ -52,6 +52,53 @@ export default function Step2() {
           <p className="text-gray-600">{selectedCategory?.name} kategorisi için gerekli bilgileri doldurun</p>
         </div>
 
+        {/* Fiyat Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+          <label className="block text-sm font-medium text-gray-700">
+            Fiyat
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={(() => {
+                const priceValue = formData.customFields.price || '';
+                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
+                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+              })()}
+              onChange={(e) => {
+                let processedValue = e.target.value.replace(/\D/g, '');
+                const currentPrice = formData.customFields.price || {};
+                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
+              }}
+              placeholder="Fiyat giriniz"
+              inputMode="numeric"
+              className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+            />
+            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+              <select
+                value={(() => {
+                  const currentPrice = formData.customFields.price || {};
+                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                })()}
+                onChange={(e) => {
+                  const currentPrice = formData.customFields.price || {};
+                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
+                  handleInputChange('price', { value, unit: e.target.value });
+                }}
+                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="TL">TL</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500">Lütfen ürününüzün satış fiyatını giriniz</p>
+        </div>
+
         <div className="space-y-6">
           {customFields.map((field) => {
             const currentValue = formData.customFields[field.fieldName] || '';
