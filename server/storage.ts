@@ -1,8 +1,7 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, categoryMetadata, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type CategoryMetadata } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc, and, or, inArray, limit, offset } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { cache } from "./cache";
 
 // Generate unique username like "velikara4678"
 function generateUniqueUsername(firstName: string, lastName: string): string {
@@ -42,13 +41,6 @@ export interface IStorage {
   deleteCategory(id: number): Promise<void>;
   moveCategoryToParent(id: number, newParentId: number | null): Promise<Category>;
   getCategoryBreadcrumbs(id: number): Promise<Category[]>;
-  getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>>;
-  
-  // Category Metadata methods
-  getCategoryMetadata(categoryId: number): Promise<CategoryMetadata | undefined>;
-  setCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata>;
-  updateCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata>;
-  deleteCategoryMetadata(categoryId: number): Promise<void>;
   
   // Custom Fields methods
   getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
@@ -222,13 +214,7 @@ export class DatabaseStorage implements IStorage {
 
   // Category methods implementation
   async getCategories(): Promise<Category[]> {
-    const cacheKey = cache.keys.categories;
-    const cached = cache.get<Category[]>(cacheKey);
-    if (cached) return cached;
-
-    const result = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
-    cache.set(cacheKey, result, 5 * 60 * 1000); // 5 minutes cache
-    return result;
+    return await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
   }
 
   async getCategoriesTree(): Promise<Category[]> {
@@ -281,19 +267,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChildCategories(parentId: number | null): Promise<Category[]> {
-    const cacheKey = cache.keys.categoryChildren(parentId);
-    const cached = cache.get<Category[]>(cacheKey);
-    if (cached) return cached;
-
-    let result: Category[];
     if (parentId === null) {
-      result = await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
-    } else {
-      result = await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+      return await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
     }
-    
-    cache.set(cacheKey, result, 3 * 60 * 1000); // 3 minutes cache
-    return result;
+    return await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
   }
 
   async createCategory(data: InsertCategory): Promise<Category> {
@@ -302,14 +279,6 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
-    
-    // Invalidate relevant caches
-    cache.delete('categories');
-    cache.delete('categories_tree');
-    if (data.parentId) {
-      cache.delete(`category_children_${data.parentId}`);
-    }
-    
     return category;
   }
 
@@ -321,15 +290,6 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(categories.id, id))
       .returning();
-    
-    // Invalidate relevant caches
-    cache.delete('categories');
-    cache.delete('categories_tree');
-    cache.delete(`category_path_${id}`);
-    if (category.parentId) {
-      cache.delete(`category_children_${category.parentId}`);
-    }
-    
     return category;
   }
 
@@ -371,88 +331,6 @@ export class DatabaseStorage implements IStorage {
     return breadcrumbs;
   }
 
-  async getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>> {
-    const cacheKey = `category:${id}:path`;
-    const cached = cache.get<Array<{category: Category, label: string}>>(cacheKey);
-    if (cached) return cached;
-
-    const breadcrumbs = await this.getCategoryBreadcrumbs(id);
-    
-    // Get all metadata for the categories in the path in a single query
-    const categoryIds = breadcrumbs.map(cat => cat.id);
-    let metadataResults = [];
-    if (categoryIds.length > 0) {
-      metadataResults = await db
-        .select()
-        .from(categoryMetadata)
-        .where(inArray(categoryMetadata.categoryId, categoryIds));
-    }
-    
-    // Create a map for quick lookup
-    const metadataMap = new Map<number, string>();
-    metadataResults.forEach(meta => {
-      metadataMap.set(meta.categoryId, meta.labelKey);
-    });
-
-    // Build path with labels
-    const pathWithLabels = breadcrumbs.map(category => ({
-      category,
-      label: metadataMap.get(category.id) || "Category"
-    }));
-
-    cache.set(cacheKey, pathWithLabels, 5 * 60 * 1000); // 5 minutes cache
-    return pathWithLabels;
-  }
-
-  // Category Metadata methods
-  async getCategoryMetadata(categoryId: number): Promise<CategoryMetadata | undefined> {
-    const result = await db
-      .select()
-      .from(categoryMetadata)
-      .where(eq(categoryMetadata.categoryId, categoryId))
-      .limit(1);
-
-    return result[0];
-  }
-
-  async setCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata> {
-    const existing = await this.getCategoryMetadata(categoryId);
-    
-    if (existing) {
-      return await this.updateCategoryMetadata(categoryId, labelKey);
-    }
-
-    const result = await db
-      .insert(categoryMetadata)
-      .values({
-        categoryId,
-        labelKey,
-      })
-      .returning();
-
-    return result[0];
-  }
-
-  async updateCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata> {
-    const result = await db
-      .update(categoryMetadata)
-      .set({ labelKey })
-      .where(eq(categoryMetadata.categoryId, categoryId))
-      .returning();
-
-    if (result.length === 0) {
-      throw new Error("Category metadata not found");
-    }
-
-    return result[0];
-  }
-
-  async deleteCategoryMetadata(categoryId: number): Promise<void> {
-    await db
-      .delete(categoryMetadata)
-      .where(eq(categoryMetadata.categoryId, categoryId));
-  }
-
   // Custom Fields methods
   async getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]> {
     return await db.select().from(categoryCustomFields)
@@ -461,10 +339,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
-    const cacheKey = cache.keys.customFields(categoryId);
-    const cached = cache.get<CategoryCustomField[]>(cacheKey);
-    if (cached) return cached;
-
     // Get the category breadcrumbs (current category and all parents)
     const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
     const allFields: CategoryCustomField[] = [];
@@ -486,15 +360,12 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Sort by sortOrder and then by label
-    const result = allFields.sort((a, b) => {
+    return allFields.sort((a, b) => {
       if (a.sortOrder !== b.sortOrder) {
         return (a.sortOrder || 0) - (b.sortOrder || 0);
       }
       return a.label.localeCompare(b.label);
     });
-
-    cache.set(cacheKey, result, 3 * 60 * 1000); // 3 minutes cache
-    return result;
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
@@ -502,10 +373,6 @@ export class DatabaseStorage implements IStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
-    
-    // Invalidate custom fields cache for this category and its children
-    cache.delete(cache.keys.customFields(data.categoryId));
-    
     return field;
   }
 
@@ -514,22 +381,11 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(categoryCustomFields.id, id))
       .returning();
-    
-    // Invalidate custom fields cache for this category
-    cache.delete(cache.keys.customFields(field.categoryId));
-    
     return field;
   }
 
   async deleteCustomField(id: number): Promise<void> {
-    // Get field before deletion to get categoryId for cache invalidation
-    const [field] = await db.select().from(categoryCustomFields).where(eq(categoryCustomFields.id, id));
-    
     await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
-    
-    if (field) {
-      cache.delete(cache.keys.customFields(field.categoryId));
-    }
   }
 }
 

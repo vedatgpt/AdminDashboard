@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Save, AlertCircle } from "lucide-react";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
-
-// Helper function to update category metadata
-// This function is now handled in the form submit handler
 
 interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: InsertCategory | UpdateCategory, labelKey?: string) => void;
+  onSubmit: (data: InsertCategory | UpdateCategory) => void;
   category?: Category;
   parentCategory?: Category;
   categories: Category[];
@@ -54,62 +50,14 @@ export default function CategoryForm({
     icon: null as string | null,
     sortOrder: 0,
     isActive: true,
-    labelKey: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [iconFile, setIconFile] = useState<File | null>(null);
-  
-  const queryClient = useQueryClient();
-
-  // Preload metadata for editing category using React Query
-  const { data: categoryMetadata } = useQuery({
-    queryKey: ['/api/categories', category?.id, 'path'],
-    enabled: !!category?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchOnWindowFocus: false,
-    gcTime: 10 * 60 * 1000,
-  });
 
   useEffect(() => {
     if (category) {
-      // Try to get cached metadata immediately for instant loading
-      let labelKey = "";
-      
-      // First check React Query cache for instant loading
-      const queryKey = ['/api/categories', category.id, 'path'];
-      const cachedMetadata = queryClient.getQueryData(queryKey);
-      
-      if (cachedMetadata) {
-        try {
-          const path = cachedMetadata as any[];
-          const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
-          if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-            labelKey = currentCategoryInPath.label;
-          }
-        } catch (error) {
-          // Clear invalid cached metadata
-          sessionStorage.removeItem(cacheKey);
-        }
-      } else {
-        // Fallback to session storage
-        const cacheKey = `category-metadata-${category.id}`;
-        const sessionData = sessionStorage.getItem(cacheKey);
-        
-        if (sessionData) {
-          try {
-            const path = JSON.parse(sessionData);
-            const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
-            if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-              labelKey = currentCategoryInPath.label;
-            }
-          } catch (error) {
-            console.error('Error parsing session cached metadata:', error);
-          }
-        }
-      }
-      
-      // Edit mode - load existing metadata with instant cache lookup
+      // Edit mode
       setFormData({
         name: category.name,
         slug: category.slug,
@@ -117,7 +65,6 @@ export default function CategoryForm({
         icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
-        labelKey: labelKey, // Use cached value immediately
       });
     } else if (parentCategory) {
       // Add child mode
@@ -128,7 +75,6 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
-        labelKey: "",
       });
     } else {
       // Add root category mode
@@ -139,26 +85,11 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
-        labelKey: "",
       });
     }
     setErrors({});
     setIconFile(null); // Clear file input state when form opens
   }, [category, parentCategory, isOpen]);
-
-  // Separate effect to update labelKey when fresh metadata is loaded (fallback)
-  useEffect(() => {
-    if (categoryMetadata && category && formData.labelKey === "") {
-      const currentCategoryInPath = categoryMetadata.find((item: any) => item.category.id === category.id);
-      if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-        setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
-        
-        // Update session storage cache for next time
-        const cacheKey = `category-metadata-${category.id}`;
-        sessionStorage.setItem(cacheKey, JSON.stringify(categoryMetadata));
-      }
-    }
-  }, [categoryMetadata, category, formData.labelKey]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -231,7 +162,7 @@ export default function CategoryForm({
           iconPath = result.filename;
         }
       } catch (error) {
-        // Icon upload failed - continue with form submission without icon
+        console.error('Icon upload failed:', error);
       }
     }
     
@@ -248,8 +179,7 @@ export default function CategoryForm({
       delete submitData.icon;
     }
     
-    // Pass all data to parent component for handling - including metadata
-    onSubmit(submitData, formData.labelKey?.trim() || undefined);
+    onSubmit(submitData);
   };
 
   if (!isOpen) return null;
@@ -324,23 +254,6 @@ export default function CategoryForm({
                 {errors.slug}
               </p>
             )}
-          </div>
-
-          {/* Category Label */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Kategori Etiketi
-            </label>
-            <input
-              type="text"
-              value={formData.labelKey}
-              onChange={(e) => setFormData(prev => ({ ...prev, labelKey: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-              placeholder="Örn: Ana Kategori, Marka, Seri, Model"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Bu kategori hiyerarşisinde hangi etikete sahip? (Boş bırakılırsa "Category" kullanılır)
-            </p>
           </div>
 
 

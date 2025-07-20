@@ -28,9 +28,6 @@ export default function Categories() {
   const createMutation = useCreateCategory();
   const updateMutation = useUpdateCategory();
   const deleteMutation = useDeleteCategory();
-  
-  // Check if any mutation is loading
-  const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   // Get categories to display based on current parent
   const currentCategories = useMemo(() => {
@@ -108,43 +105,17 @@ export default function Categories() {
   };
 
   // Handle form submission
-  const handleFormSubmit = async (data: InsertCategory | UpdateCategory, labelKey?: string) => {
+  const handleFormSubmit = async (data: InsertCategory | UpdateCategory) => {
     try {
-      let categoryId: number;
-      
       if (editingCategory) {
         await updateMutation.mutateAsync({ 
           id: editingCategory.id, 
           data: data as UpdateCategory 
         });
-        categoryId = editingCategory.id;
         showAlertMessage('success', 'Kategori başarıyla güncellendi');
       } else {
-        const newCategory = await createMutation.mutateAsync(data as InsertCategory);
-        categoryId = newCategory.id;
+        await createMutation.mutateAsync(data as InsertCategory);
         showAlertMessage('success', 'Kategori başarıyla oluşturuldu');
-      }
-      
-      // Update category metadata if labelKey is provided  
-      if (labelKey && labelKey.trim()) {
-        try {
-          const response = await fetch(`/api/categories/${categoryId}/metadata`, {
-            method: 'PUT',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ labelKey: labelKey.trim() }),
-          });
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Metadata update failed:', response.status, errorText);
-          }
-        } catch (metaError) {
-          console.error('Error updating category metadata:', metaError);
-        }
       }
       
       setIsFormOpen(false);
@@ -153,7 +124,7 @@ export default function Categories() {
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 
                           typeof error === 'string' ? error : 
-                          'İşlem sırasında bir hata oluştu';
+                          'Bir hata oluştu';
       showAlertMessage('error', errorMessage);
     }
   };
@@ -214,6 +185,8 @@ export default function Categories() {
     setCustomFieldsCategory(category);
     setIsCustomFieldsOpen(true);
   };
+
+  const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <div className="h-full flex flex-col">
@@ -323,84 +296,51 @@ export default function Categories() {
                   return (
                     <div
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition-all duration-150 group relative border border-transparent"
-                      draggable={!isAnyMutationLoading}
+                      className="p-4 hover:bg-gray-50 transition-all duration-150 cursor-pointer group relative"
+                      draggable
                       onDragStart={(e) => {
-                        if (isAnyMutationLoading) {
-                          e.preventDefault();
-                          return;
-                        }
-                        e.dataTransfer.setData('text/plain', category.id.toString());
+                        e.dataTransfer.setData('text/plain', index.toString());
                         e.dataTransfer.effectAllowed = 'move';
-                        e.currentTarget.style.opacity = '0.5';
+                        e.currentTarget.classList.add('opacity-50');
                       }}
                       onDragEnd={(e) => {
-                        e.currentTarget.style.opacity = '1';
-                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+                        e.currentTarget.classList.remove('opacity-50');
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
-                        if (!e.currentTarget.classList.contains('bg-blue-50')) {
-                          e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
-                        }
+                        e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
                       }}
                       onDragLeave={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = e.clientX;
-                        const y = e.clientY;
-                        
-                        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-                          e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
-                        }
+                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                       }}
-                      onDrop={async (e) => {
+                      onDrop={(e) => {
                         e.preventDefault();
-                        e.stopPropagation();
                         e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                         
-                        if (isAnyMutationLoading) return;
-                        
-                        const draggedCategoryId = parseInt(e.dataTransfer.getData('text/plain'));
-                        const targetCategory = category;
-                        
-                        if (draggedCategoryId === targetCategory.id || isNaN(draggedCategoryId)) return;
-                        
-                        const draggedCategory = filteredCategories.find(cat => cat.id === draggedCategoryId);
-                        if (!draggedCategory) return;
-                        
-                        try {
-                          // Swap sort orders between dragged and target categories
-                          const tempOrder = Date.now(); // Temporary unique sort order
+                        const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        if (draggedIndex !== index && !isNaN(draggedIndex)) {
+                          const draggedCategory = filteredCategories[draggedIndex];
+                          const targetCategory = filteredCategories[index];
                           
-                          // First, set dragged category to temp order
-                          await updateMutation.mutateAsync({ 
+                          // Immediate visual update
+                          const newOrder = draggedIndex < index ? index + 1 : index;
+                          
+                          updateMutation.mutate({ 
                             id: draggedCategory.id, 
-                            data: { sortOrder: tempOrder } 
+                            data: { sortOrder: newOrder } 
                           });
                           
-                          // Then set target to dragged's original order
-                          await updateMutation.mutateAsync({ 
-                            id: targetCategory.id, 
-                            data: { sortOrder: draggedCategory.sortOrder } 
-                          });
-                          
-                          // Finally set dragged to target's original order
-                          await updateMutation.mutateAsync({ 
-                            id: draggedCategory.id, 
-                            data: { sortOrder: targetCategory.sortOrder } 
-                          });
-                          
-                          showAlertMessage('success', 'Kategori sıralaması güncellendi');
-                        } catch (error) {
-                          showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
+                          // Update target category sort order if needed
+                          if (targetCategory.sortOrder <= newOrder) {
+                            updateMutation.mutate({ 
+                              id: targetCategory.id, 
+                              data: { sortOrder: targetCategory.sortOrder + 1 } 
+                            });
+                          }
                         }
                       }}
-                      onClick={(e) => {
-                        // Don't navigate if drag handle is clicked
-                        if ((e.target as HTMLElement).closest('.opacity-0')) return;
-                        handleCategoryClick(category);
-                      }}
+                      onClick={() => handleCategoryClick(category)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1">

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useCategories } from "@/hooks/useCategories";
 import { useCustomFields } from "@/hooks/useCustomFields";
 import { Link } from "wouter";
@@ -17,16 +16,6 @@ export default function PostAd() {
 
   const { data: allCategories = [] } = useCategories();
   const { data: customFields = [] } = useCustomFields(finalCategory?.id);
-  
-  // Fetch category path with labels for final category
-  const { data: categoryPath = [] } = useQuery({
-    queryKey: ['/api/categories', finalCategory?.id, 'path'],
-    enabled: !!finalCategory?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    gcTime: 10 * 60 * 1000, // 10 minutes in memory
-  });
 
   // Flatten nested categories to a flat array
   const flatCategories = React.useMemo(() => {
@@ -45,15 +34,10 @@ export default function PostAd() {
 
   // Debug: Log categories data
   useEffect(() => {
-    // Debug information for development
-    if (process.env.NODE_ENV === 'development') {
-      console.debug('Category selection state:', {
-        allCategories: allCategories?.length,
-        flatCategories: flatCategories?.length,
-        selectedPath: selectedPath?.length,
-        currentLevel: getCurrentLevelCategories()?.length
-      });
-    }
+    console.log("All categories:", allCategories);
+    console.log("Flat categories:", flatCategories);
+    console.log("Selected path:", selectedPath);
+    console.log("Current level categories:", getCurrentLevelCategories());
   }, [allCategories, selectedPath, flatCategories]);
 
   // Get current level categories

@@ -1,94 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "../lib/queryClient";
 import type { CategoryCustomField, InsertCustomField } from "@shared/schema";
 
-// Optimized hook for custom fields with inheritance
-export function useCustomFields(categoryId: number | null) {
-  return useQuery({
-    queryKey: ['/api/categories', categoryId, 'custom-fields'],
-    enabled: !!categoryId,
-    staleTime: 3 * 60 * 1000, // 3 minutes cache
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-// Hook for category-specific custom fields (no inheritance)
-export function useCategoryCustomFields(categoryId: number | null) {
-  return useQuery({
-    queryKey: ['/api/custom-fields', categoryId],
-    enabled: !!categoryId,
-    staleTime: 3 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-// Mutation hooks for custom fields
-export function useCreateCustomField() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (data: InsertCustomField) => apiRequest(`/api/custom-fields`, {
-      method: 'POST',
-      body: JSON.stringify(data),
+export function useCategoryCustomFields(categoryId: number) {
+  return useQuery<CategoryCustomField[]>({
+    queryKey: ["/api/categories", categoryId, "custom-fields"],
+    queryFn: () => fetch(`/api/categories/${categoryId}/custom-fields`).then(res => {
+      if (!res.ok) throw new Error('Failed to fetch custom fields');
+      return res.json();
     }),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories', variables.categoryId, 'custom-fields'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/custom-fields', variables.categoryId] });
-    },
+    enabled: !!categoryId,
   });
 }
 
-export function useUpdateCustomField() {
+export function useCreateCustomField(categoryId: number) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertCustomField> }) => 
-      apiRequest(`/api/custom-fields/${id}`, {
-        method: 'PATCH',
+    mutationFn: (data: Omit<InsertCustomField, 'categoryId'>) => 
+      fetch(`/api/categories/${categoryId}/custom-fields`, {
+        method: "POST",
         body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to create custom field`);
+        }
+        return res.json();
       }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories', data.categoryId, 'custom-fields'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/custom-fields', data.categoryId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories", categoryId, "custom-fields"] });
     },
   });
 }
 
-export function useDeleteCustomField() {
+export function useUpdateCustomField(categoryId: number) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/custom-fields/${id}`, {
-      method: 'DELETE',
-    }),
-    onSuccess: (_, variables) => {
-      // Invalidate all custom fields caches since we don't know the category ID
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/custom-fields'] });
+    mutationFn: ({ fieldId, data }: { fieldId: number; data: Partial<InsertCustomField> }) =>
+      fetch(`/api/categories/custom-fields/${fieldId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to update custom field`);
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories", categoryId, "custom-fields"] });
     },
   });
 }
 
-// Cache invalidation helper for custom fields
-export function useCustomFieldsCache() {
+export function useDeleteCustomField(categoryId: number) {
   const queryClient = useQueryClient();
-
-  const invalidateCustomFields = (categoryId: number) => {
-    queryClient.invalidateQueries({ queryKey: ['/api/categories', categoryId, 'custom-fields'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/custom-fields', categoryId] });
-  };
-
-  const invalidateAllCustomFields = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/custom-fields'] });
-  };
-
-  return {
-    invalidateCustomFields,
-    invalidateAllCustomFields,
-  };
+  
+  return useMutation({
+    mutationFn: (fieldId: number) =>
+      fetch(`/api/categories/custom-fields/${fieldId}`, {
+        method: "DELETE",
+      }).then(async res => {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${res.status}: Failed to delete custom field`);
+        }
+        return res.ok;
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/categories", categoryId, "custom-fields"] });
+    },
+  });
 }
+
+// Alias for backward compatibility
+export const useCustomFields = useCategoryCustomFields;

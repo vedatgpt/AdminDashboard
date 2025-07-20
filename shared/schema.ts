@@ -1,19 +1,3 @@
-/**
- * Database Schema Definitions
- * 
- * Complete database schema using Drizzle ORM with PostgreSQL.
- * Includes all tables, relationships, indexes, and TypeScript types.
- * 
- * Features:
- * - Type-safe database operations with Drizzle ORM
- * - Zod validation schemas for data integrity
- * - Performance-optimized indexes for queries
- * - Comprehensive relationship definitions
- * 
- * @author Development Team
- * @version 1.0.0
- */
-
 import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -140,14 +124,6 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Category metadata for hierarchical labels
-export const categoryMetadata = pgTable("category_metadata", {
-  id: serial("id").primaryKey(),
-  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
-  labelKey: text("label_key").notNull(), // e.g., "Ana Kategori", "Marka", "Seri", "Model"
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
 // Schema for creating categories
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
@@ -177,7 +153,6 @@ export type User = typeof users.$inferSelect;
 export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type CategoryCustomField = typeof categoryCustomFields.$inferSelect;
-export type CategoryMetadata = typeof categoryMetadata.$inferSelect;
 export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type UpdateCategory = z.infer<typeof updateCategorySchema>;

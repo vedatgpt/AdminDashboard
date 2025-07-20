@@ -144,7 +144,7 @@ export default function Login() {
 
             {loginError && (
               <p className="text-sm text-red-500 text-center">
-                {typeof loginError === 'string' ? loginError : 'Giriş başarısız'}
+                {loginError}
               </p>
             )}
           </form>
