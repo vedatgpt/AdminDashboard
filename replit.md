@@ -430,3 +430,10 @@ Authentication features:
 - Integrated with user authentication system to fetch user role
 - TanStack Query v5 compatibility with gcTime instead of cacheTime
 - Completely independent from category custom fields system
+
+### Session Persistence Improvement (July 20, 2025)
+- Enhanced Express session configuration to prevent logout on server restart
+- Changed resave to true for better session persistence
+- Added rolling: true to refresh session on each request
+- Extended session duration to 7 days (was 24 hours)
+- Improved session stability for development environment
