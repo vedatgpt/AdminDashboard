@@ -64,38 +64,165 @@ export default function Step2() {
                 </label>
                 
                 {field.fieldType === 'text' && (
-                  <input
-                    type="text"
-                    value={currentValue}
-                    onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                    placeholder={field.placeholder || ''}
-                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                  />
+                  field.hasUnits && field.unitOptions ? (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
+                        onChange={(e) => {
+                          const unitOptions = JSON.parse(field.unitOptions || '[]');
+                          const selectedUnit = typeof currentValue === 'object' 
+                            ? currentValue.unit || field.defaultUnit || unitOptions[0]
+                            : field.defaultUnit || unitOptions[0];
+                          handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
+                        }}
+                        placeholder={field.placeholder || ''}
+                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      />
+                      <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                        <select
+                          value={typeof currentValue === 'object' ? currentValue.unit || field.defaultUnit : field.defaultUnit}
+                          onChange={(e) => {
+                            const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
+                            handleInputChange(field.fieldName, { value, unit: e.target.value });
+                          }}
+                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          {JSON.parse(field.unitOptions || '[]').map((unit: string, index: number) => (
+                            <option key={index} value={unit}>{unit}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={currentValue}
+                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                      placeholder={field.placeholder || ''}
+                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  )
                 )}
 
                 {field.fieldType === 'number' && (
-                  <input
-                    type="number"
-                    value={currentValue}
-                    onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                    placeholder={field.placeholder || ''}
-                    min={field.minValue || undefined}
-                    max={field.maxValue || undefined}
-                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                  />
+                  field.hasUnits && field.unitOptions ? (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={(() => {
+                          const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
+                          return field.useThousandSeparator ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
+                        })()}
+                        onChange={(e) => {
+                          let processedValue = e.target.value.replace(/\D/g, '');
+                          
+                          if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                            return;
+                          }
+                          if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                            return;
+                          }
+                          
+                          const unitOptions = JSON.parse(field.unitOptions || '[]');
+                          const selectedUnit = typeof currentValue === 'object' 
+                            ? currentValue.unit || field.defaultUnit || unitOptions[0]
+                            : field.defaultUnit || unitOptions[0];
+                          handleInputChange(field.fieldName, { value: processedValue, unit: selectedUnit });
+                        }}
+                        placeholder={field.placeholder || ''}
+                        inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
+                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      />
+                      <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                        <select
+                          value={typeof currentValue === 'object' ? currentValue.unit || field.defaultUnit : field.defaultUnit}
+                          onChange={(e) => {
+                            const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
+                            handleInputChange(field.fieldName, { value, unit: e.target.value });
+                          }}
+                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          {JSON.parse(field.unitOptions || '[]').map((unit: string, index: number) => (
+                            <option key={index} value={unit}>{unit}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={(() => {
+                        const value = currentValue || '';
+                        return field.useThousandSeparator ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
+                      })()}
+                      onChange={(e) => {
+                        let processedValue = e.target.value.replace(/\D/g, '');
+                        
+                        if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                          return;
+                        }
+                        if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                          return;
+                        }
+                        
+                        handleInputChange(field.fieldName, processedValue);
+                      }}
+                      placeholder={field.placeholder || ''}
+                      inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
+                      min={field.minValue || undefined}
+                      max={field.maxValue || undefined}
+                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  )
                 )}
 
                 {field.fieldType === 'select' && (
-                  <select
-                    value={currentValue}
-                    onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                    className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                  >
-                    <option value="">{field.placeholder || "Seçiniz"}</option>
-                    {field.options && JSON.parse(field.options).map((option: string, index: number) => (
-                      <option key={index} value={option}>{option}</option>
-                    ))}
-                  </select>
+                  field.hasUnits && field.unitOptions ? (
+                    <div className="relative">
+                      <select
+                        value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
+                        onChange={(e) => {
+                          const unitOptions = JSON.parse(field.unitOptions || '[]');
+                          const selectedUnit = typeof currentValue === 'object' 
+                            ? currentValue.unit || field.defaultUnit || unitOptions[0]
+                            : field.defaultUnit || unitOptions[0];
+                          handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
+                        }}
+                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      >
+                        <option value="">{field.placeholder || "Seçiniz"}</option>
+                        {field.options && JSON.parse(field.options).map((option: string, index: number) => (
+                          <option key={index} value={option}>{option}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                        <select
+                          value={typeof currentValue === 'object' ? currentValue.unit || field.defaultUnit : field.defaultUnit}
+                          onChange={(e) => {
+                            const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
+                            handleInputChange(field.fieldName, { value, unit: e.target.value });
+                          }}
+                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          {JSON.parse(field.unitOptions || '[]').map((unit: string, index: number) => (
+                            <option key={index} value={unit}>{unit}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ) : (
+                    <select
+                      value={currentValue}
+                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                      className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                    >
+                      <option value="">{field.placeholder || "Seçiniz"}</option>
+                      {field.options && JSON.parse(field.options).map((option: string, index: number) => (
+                        <option key={index} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  )
                 )}
 
                 {field.fieldType === 'checkbox' && field.options && (
