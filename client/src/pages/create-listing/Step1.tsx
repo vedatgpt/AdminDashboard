@@ -159,12 +159,15 @@ export default function CreateListingStep1() {
       const newPath = categoryPath.slice(0, -1);
       setCategoryPath(newPath);
       
-      // Update listing state
-      if (newPath.length > 0) {
-        dispatch({ type: 'SET_CATEGORY', payload: newPath[newPath.length - 1] });
-      } else {
-        dispatch({ type: 'SET_CATEGORY', payload: null });
-      }
+      // Update listing state - fix null reference error
+      const selectedCategory = newPath.length > 0 ? newPath[newPath.length - 1] : null;
+      dispatch({ 
+        type: 'SET_CATEGORY_WITH_PATH', 
+        payload: { 
+          category: selectedCategory, 
+          path: newPath 
+        } 
+      });
     }
   };
 
@@ -197,7 +200,7 @@ export default function CreateListingStep1() {
 
       {/* Mobile/Tablet Fixed Breadcrumb Navigation */}
       {categoryPath.length > 0 && (
-        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 min-h-[52px] flex items-center">
+        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
           <BreadcrumbNav 
             categoryPath={categoryPath}
             onCategoryClick={handleBreadcrumbClick}
@@ -205,8 +208,8 @@ export default function CreateListingStep1() {
         </div>
       )}
       
-      {/* Main content */}
-      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[56px]'}`}>
+      {/* Main content with dynamic padding based on breadcrumb presence */}
+      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[100px]' : 'lg:pt-6 pt-[56px]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Page Title - Only show on desktop */}

@@ -25,6 +25,7 @@ export interface ListingState {
 type ListingAction = 
   | { type: 'SET_STEP'; payload: number }
   | { type: 'SET_CATEGORY'; payload: { category: Category; path: Category[] } }
+  | { type: 'SET_CATEGORY_WITH_PATH'; payload: { category: Category | null; path: Category[] } }
   | { type: 'SET_CUSTOM_FIELDS'; payload: Record<string, any> }
   | { type: 'RESET_LISTING' };
 
@@ -50,6 +51,12 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
     case 'SET_STEP':
       return { ...state, currentStep: action.payload };
     case 'SET_CATEGORY':
+      return {
+        ...state,
+        selectedCategory: action.payload.category,
+        categoryPath: action.payload.path,
+      };
+    case 'SET_CATEGORY_WITH_PATH':
       return {
         ...state,
         selectedCategory: action.payload.category,
