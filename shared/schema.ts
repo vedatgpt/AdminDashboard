@@ -1,3 +1,19 @@
+/**
+ * Database Schema Definitions
+ * 
+ * Complete database schema using Drizzle ORM with PostgreSQL.
+ * Includes all tables, relationships, indexes, and TypeScript types.
+ * 
+ * Features:
+ * - Type-safe database operations with Drizzle ORM
+ * - Zod validation schemas for data integrity
+ * - Performance-optimized indexes for queries
+ * - Comprehensive relationship definitions
+ * 
+ * @author Development Team
+ * @version 1.0.0
+ */
+
 import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";

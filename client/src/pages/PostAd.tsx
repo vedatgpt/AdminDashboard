@@ -45,10 +45,15 @@ export default function PostAd() {
 
   // Debug: Log categories data
   useEffect(() => {
-    console.log("All categories:", allCategories);
-    console.log("Flat categories:", flatCategories);
-    console.log("Selected path:", selectedPath);
-    console.log("Current level categories:", getCurrentLevelCategories());
+    // Debug information for development
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('Category selection state:', {
+        allCategories: allCategories?.length,
+        flatCategories: flatCategories?.length,
+        selectedPath: selectedPath?.length,
+        currentLevel: getCurrentLevelCategories()?.length
+      });
+    }
   }, [allCategories, selectedPath, flatCategories]);
 
   // Get current level categories

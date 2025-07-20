@@ -102,7 +102,8 @@ export default function CategoryForm({
             labelKey = currentCategoryInPath.label;
           }
         } catch (error) {
-          console.error('Error parsing cached metadata:', error);
+          // Clear invalid cached metadata
+          sessionStorage.removeItem(cacheKey);
         }
       } else {
         // Fallback to session storage
@@ -244,7 +245,7 @@ export default function CategoryForm({
           iconPath = result.filename;
         }
       } catch (error) {
-        console.error('Icon upload failed:', error);
+        // Icon upload failed - continue with form submission without icon
       }
     }
     

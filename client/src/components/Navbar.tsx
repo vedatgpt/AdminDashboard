@@ -190,11 +190,11 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
       if (onSearch) {
         onSearch(searchTerm.trim());
       } else {
-        // Default search behavior
-        console.log('Arama yapılıyor:', searchTerm.trim());
+        // Search functionality to be implemented
+        // Will handle search with: searchTerm.trim()
       }
     } catch (error) {
-      console.error('Arama hatası:', error);
+      // Search functionality not implemented yet
     } finally {
       setIsSearching(false);
     }
