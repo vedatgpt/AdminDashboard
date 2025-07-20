@@ -320,9 +320,8 @@ export default function CreateListingStep1() {
 
               {/* Mobile/Tablet: List layout for current level categories only */}
               <div className="lg:hidden">
-                {getCurrentLevelCategories().length > 0 || categoryPath.length === 0 ? (
-                  <div className="space-y-3">
-                    {getCurrentLevelCategories().map(category => (
+                <div className="space-y-3">
+                  {getCurrentLevelCategories().map(category => (
                       <div
                         key={category.id}
                         onClick={() => handleCategorySelect(category)}
@@ -351,10 +350,10 @@ export default function CreateListingStep1() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  /* Mobile Completion - Show when final category is selected */
-                  categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
+                </div>
+                
+                {/* Mobile Completion - Show when final category is selected */}
+                {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
                     <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center space-y-4">
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                         <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,8 +372,7 @@ export default function CreateListingStep1() {
                       >
                         Devam Et
                       </button>
-                    </div>
-                  )
+                  </div>
                 )}
               </div>
             </>
