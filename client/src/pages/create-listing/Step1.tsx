@@ -157,11 +157,11 @@ export default function CreateListingStep1() {
       <ModernNavbar onSearch={handleSearch} />
       
       {/* Main content */}
-      <div className={`${categoryPath.length === 0 ? 'flex flex-col justify-center min-h-[calc(100vh-80px)]' : 'py-6'}`}>
+      <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           
           {/* Page Title */}
-          <div className={`mb-8 ${categoryPath.length === 0 ? 'text-left' : 'text-center'}`}>
+          <div className="mb-8 text-left">
             <h1 className="text-3xl font-bold text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
