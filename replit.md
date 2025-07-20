@@ -445,3 +445,12 @@ Authentication features:
 - Fixed navbar positioning: lg:hidden for mobile, hidden lg:block for desktop
 - Proper content padding to prevent overlap with fixed elements
 - Breadcrumb shows selected category from Step-1 context
+
+### Persistent Navigation Layout System (July 20, 2025)
+- Created ListingLayout component for shared navbar/breadcrumb functionality
+- Prevents navbar reloading between Step-1 and Step-2 navigation
+- Single navbar instance persists across listing creation steps
+- ListingLayout props: showBreadcrumb (boolean) for step-specific breadcrumb display
+- Step-1 uses showBreadcrumb=false with custom breadcrumb logic
+- Step-2 uses showBreadcrumb=true with automatic selected category display
+- Improved SPA performance by eliminating navbar re-renders
