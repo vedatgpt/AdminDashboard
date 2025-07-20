@@ -218,7 +218,7 @@ export default function CreateListingStep1() {
           
           {/* Page Title - Only show on desktop */}
           <div className="hidden lg:block mb-6 text-left">
-            <h1 className="text-1xl font-semibold text-gray-900">Adım Adım Kategori Seçimi</h1>
+            <h1 className="text-1xl font-medium text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
           {/* Desktop Breadcrumb Navigation */}
