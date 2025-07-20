@@ -19,6 +19,8 @@ import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/public/not-found";
 import PostAd from "@/pages/PostAd";
+import CreateListingStep1 from "@/pages/create-listing/Step1";
+import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -62,6 +64,7 @@ function Router() {
         <Switch>
           <Route path="/" component={Landing} />
           <Route path="/post-ad" component={PostAd} />
+          <Route path="/create-listing/step-1" component={CreateListingStep1} />
           <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>
@@ -73,7 +76,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
+      <ListingProvider>
+        <Router />
+      </ListingProvider>
     </QueryClientProvider>
   );
 }

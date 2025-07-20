@@ -42,7 +42,7 @@ export default function Landing() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/post-ad">
+            <Link href="/create-listing/step-1">
               <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition-colors">
                 İlan Ver
               </button>
