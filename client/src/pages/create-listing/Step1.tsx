@@ -156,12 +156,12 @@ export default function CreateListingStep1() {
     <div className="min-h-screen bg-white">
       <ModernNavbar onSearch={handleSearch} />
       
-      {/* Main content - centered vertically */}
-      <div className="flex flex-col justify-center min-h-[calc(100vh-80px)]">
+      {/* Main content */}
+      <div className={`${categoryPath.length === 0 ? 'flex flex-col justify-center min-h-[calc(100vh-80px)]' : 'py-6'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           
           {/* Page Title */}
-          <div className="text-center mb-8">
+          <div className={`mb-8 ${categoryPath.length === 0 ? 'text-left' : 'text-center'}`}>
             <h1 className="text-3xl font-bold text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
@@ -177,9 +177,9 @@ export default function CreateListingStep1() {
 
           {/* Category Selection */}
           {categoryPath.length === 0 ? (
-          /* Root categories - Card layout */
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {allCategories.filter(cat => !cat.parentId).map(category => (
+            /* Root categories - Card layout */
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {allCategories.filter(cat => !cat.parentId).map(category => (
               <div
                 key={category.id}
                 onClick={() => handleCategorySelect(category)}
