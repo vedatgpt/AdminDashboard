@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical } from "lucide-react";
+import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
+import CustomFieldsModal from "@/components/CustomFieldsModal";
 import { useCategoriesTree, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
@@ -13,6 +14,8 @@ export default function Categories() {
   const [parentCategory, setParentCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
+  const [customFieldsCategory, setCustomFieldsCategory] = useState<Category | null>(null);
 
   // Extract current parent ID from URL
   const currentParentId = useMemo(() => {
@@ -175,6 +178,12 @@ export default function Categories() {
     setEditingCategory(category);
     setParentCategory(null);
     setIsFormOpen(true);
+  };
+
+  // Handle custom fields
+  const handleCustomFields = (category: Category) => {
+    setCustomFieldsCategory(category);
+    setIsCustomFieldsOpen(true);
   };
 
   const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
@@ -370,6 +379,16 @@ export default function Categories() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleCustomFields(category);
+                            }}
+                            className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Özel alanlar"
+                          >
+                            <Settings className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleEdit(category);
                             }}
                             className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
@@ -415,6 +434,18 @@ export default function Categories() {
         categories={categories}
         isLoading={isAnyMutationLoading}
       />
+
+      {/* Custom Fields Modal */}
+      {customFieldsCategory && (
+        <CustomFieldsModal
+          isOpen={isCustomFieldsOpen}
+          onClose={() => {
+            setIsCustomFieldsOpen(false);
+            setCustomFieldsCategory(null);
+          }}
+          category={customFieldsCategory}
+        />
+      )}
     </div>
   );
 }

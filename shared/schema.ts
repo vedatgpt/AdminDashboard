@@ -103,7 +103,7 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   id: serial("id").primaryKey(),
   categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
   fieldName: text("field_name").notNull(),
-  fieldType: text("field_type").notNull(), // text, select, checkbox, radio, number, date
+  fieldType: text("field_type").notNull(), // text, select, checkbox, number_range, boolean
   label: text("label").notNull(),
   placeholder: text("placeholder"),
   isRequired: boolean("is_required").notNull().default(false),
@@ -134,7 +134,7 @@ export const insertCustomFieldSchema = createInsertSchema(categoryCustomFields).
   createdAt: true,
 }).extend({
   fieldName: z.string().min(1, "Alan adı gereklidir"),
-  fieldType: z.enum(["text", "select", "checkbox", "radio", "number", "date"]),
+  fieldType: z.enum(["text", "select", "checkbox", "number_range", "boolean"]),
   label: z.string().min(1, "Etiket gereklidir"),
 });
 

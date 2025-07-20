@@ -1,0 +1,504 @@
+import { useState, useEffect } from "react";
+import { X, Plus, Edit, Trash2, AlertCircle } from "lucide-react";
+import { useCategoryCustomFields, useCreateCustomField, useUpdateCustomField, useDeleteCustomField } from "@/hooks/useCustomFields";
+import type { Category, CategoryCustomField, InsertCustomField } from "@shared/schema";
+
+interface CustomFieldsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  category: Category;
+}
+
+interface CustomFieldFormData {
+  fieldName: string;
+  fieldType: "text" | "select" | "checkbox" | "number_range" | "boolean";
+  label: string;
+  placeholder: string;
+  isRequired: boolean;
+  options: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+const FIELD_TYPES = [
+  { value: "text", label: "Metin" },
+  { value: "select", label: "Seçenekli Liste" },
+  { value: "checkbox", label: "Çoklu Seçim" },
+  { value: "number_range", label: "Sayı Aralığı" },
+  { value: "boolean", label: "Evet/Hayır" },
+];
+
+export default function CustomFieldsModal({ isOpen, onClose, category }: CustomFieldsModalProps) {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingField, setEditingField] = useState<CategoryCustomField | null>(null);
+  const [formData, setFormData] = useState<CustomFieldFormData>({
+    fieldName: "",
+    fieldType: "text",
+    label: "",
+    placeholder: "",
+    isRequired: false,
+    options: "",
+    sortOrder: 0,
+    isActive: true,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
+
+  const { data: customFields = [], isLoading } = useCategoryCustomFields(category.id);
+  const createMutation = useCreateCustomField(category.id);
+  const updateMutation = useUpdateCustomField(category.id);
+  const deleteMutation = useDeleteCustomField(category.id);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsFormOpen(false);
+      setEditingField(null);
+      resetForm();
+    }
+  }, [isOpen]);
+
+  // Reset form when editing changes
+  useEffect(() => {
+    if (editingField) {
+      setFormData({
+        fieldName: editingField.fieldName,
+        fieldType: editingField.fieldType as any,
+        label: editingField.label,
+        placeholder: editingField.placeholder || "",
+        isRequired: editingField.isRequired,
+        options: editingField.options || "",
+        sortOrder: editingField.sortOrder,
+        isActive: editingField.isActive,
+      });
+    } else {
+      resetForm();
+    }
+    setErrors({});
+  }, [editingField, isFormOpen]);
+
+  const resetForm = () => {
+    setFormData({
+      fieldName: "",
+      fieldType: "text",
+      label: "",
+      placeholder: "",
+      isRequired: false,
+      options: "",
+      sortOrder: customFields.length,
+      isActive: true,
+    });
+  };
+
+  const showAlertMessage = (type: 'success' | 'error' | 'info', message: string) => {
+    setShowAlert({ type, message });
+    setTimeout(() => setShowAlert(null), 3000);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fieldName.trim()) {
+      newErrors.fieldName = "Alan adı gereklidir";
+    }
+    if (!formData.label.trim()) {
+      newErrors.label = "Etiket gereklidir";
+    }
+
+    // Validate options for select and checkbox types
+    if ((formData.fieldType === "select" || formData.fieldType === "checkbox") && !formData.options.trim()) {
+      newErrors.options = "Bu alan türü için seçenekler gereklidir";
+    }
+
+    if (formData.options.trim()) {
+      try {
+        const parsed = JSON.parse(formData.options);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          newErrors.options = "Seçenekler boş olmayan bir dizi olmalıdır";
+        }
+      } catch (error) {
+        newErrors.options = "Geçerli bir JSON dizisi giriniz (örn: [\"Seçenek 1\", \"Seçenek 2\"])";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    const submitData: Omit<InsertCustomField, 'categoryId'> = {
+      fieldName: formData.fieldName.trim(),
+      fieldType: formData.fieldType,
+      label: formData.label.trim(),
+      placeholder: formData.placeholder.trim() || null,
+      isRequired: formData.isRequired,
+      options: formData.options.trim() || null,
+      sortOrder: formData.sortOrder,
+      isActive: formData.isActive,
+    };
+
+    try {
+      if (editingField) {
+        await updateMutation.mutateAsync({ fieldId: editingField.id, data: submitData });
+        showAlertMessage('success', 'Özel alan güncellendi');
+      } else {
+        await createMutation.mutateAsync(submitData);
+        showAlertMessage('success', 'Özel alan oluşturuldu');
+      }
+      
+      setIsFormOpen(false);
+      setEditingField(null);
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Bir hata oluştu';
+      showAlertMessage('error', errorMessage);
+    }
+  };
+
+  const handleEdit = (field: CategoryCustomField) => {
+    setEditingField(field);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (field: CategoryCustomField) => {
+    if (!confirm(`"${field.label}" alanını silmek istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      await deleteMutation.mutateAsync(field.id);
+      showAlertMessage('success', 'Özel alan silindi');
+    } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Silme işlemi başarısız';
+      showAlertMessage('error', errorMessage);
+    }
+  };
+
+  const handleAddNew = () => {
+    setEditingField(null);
+    setIsFormOpen(true);
+  };
+
+  const needsOptions = formData.fieldType === "select" || formData.fieldType === "checkbox";
+
+  if (!isOpen) return null;
+
+  const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            "{category.name}" - Özel Alanlar
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Alert */}
+        {showAlert && (
+          <div className={`mx-6 mt-4 p-4 rounded-lg flex items-center ${
+            showAlert.type === 'success' ? 'bg-green-50 text-green-800' :
+            showAlert.type === 'error' ? 'bg-red-50 text-red-800' :
+            'bg-blue-50 text-blue-800'
+          }`}>
+            <AlertCircle className="w-5 h-5 mr-2" />
+            {showAlert.message}
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          {!isFormOpen ? (
+            // List View
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">Özel Alanlar</h3>
+                <button
+                  onClick={handleAddNew}
+                  disabled={isAnyMutationLoading}
+                  className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4" />
+                  Yeni Alan Ekle
+                </button>
+              </div>
+
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#EC7830]"></div>
+                  <p className="mt-2 text-gray-500">Yükleniyor...</p>
+                </div>
+              ) : customFields.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg mb-4">Bu kategoride henüz özel alan tanımlanmamış.</p>
+                  <button
+                    onClick={handleAddNew}
+                    className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a]"
+                  >
+                    <Plus className="w-4 h-4" />
+                    İlk Özel Alanı Ekle
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {customFields.map((field) => (
+                    <div key={field.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="font-medium text-gray-900">{field.label}</h4>
+                            <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                              {FIELD_TYPES.find(t => t.value === field.fieldType)?.label || field.fieldType}
+                            </span>
+                            {field.isRequired && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">
+                                Zorunlu
+                              </span>
+                            )}
+                            {!field.isActive && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                Pasif
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            <strong>Alan Adı:</strong> {field.fieldName}
+                          </p>
+                          {field.placeholder && (
+                            <p className="text-sm text-gray-600 mb-1">
+                              <strong>Placeholder:</strong> {field.placeholder}
+                            </p>
+                          )}
+                          {field.options && (
+                            <p className="text-sm text-gray-600">
+                              <strong>Seçenekler:</strong> {field.options}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 ml-4">
+                          <button
+                            onClick={() => handleEdit(field)}
+                            disabled={isAnyMutationLoading}
+                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Düzenle"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(field)}
+                            disabled={isAnyMutationLoading}
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Form View
+            <div className="p-6 overflow-y-auto max-h-full">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {editingField ? "Özel Alan Düzenle" : "Yeni Özel Alan"}
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsFormOpen(false);
+                    setEditingField(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Field Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Alan Adı *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.fieldName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fieldName: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      placeholder="marka, model, yakit_turu"
+                    />
+                    {errors.fieldName && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-1" />
+                        {errors.fieldName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Field Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Alan Türü *
+                    </label>
+                    <select
+                      value={formData.fieldType}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fieldType: e.target.value as any }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                    >
+                      {FIELD_TYPES.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Label */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Etiket *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.label}
+                      onChange={(e) => setFormData(prev => ({ ...prev, label: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      placeholder="Marka, Model, Yakıt Türü"
+                    />
+                    {errors.label && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-1" />
+                        {errors.label}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Placeholder */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Placeholder
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.placeholder}
+                      onChange={(e) => setFormData(prev => ({ ...prev, placeholder: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      placeholder="Marka seçiniz..."
+                    />
+                  </div>
+
+                  {/* Sort Order */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sıralama
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.sortOrder}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: parseInt(e.target.value) || 0 }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Options */}
+                {needsOptions && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Seçenekler * (JSON format)
+                    </label>
+                    <textarea
+                      value={formData.options}
+                      onChange={(e) => setFormData(prev => ({ ...prev, options: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      rows={4}
+                      placeholder='["Benzin", "Dizel", "Elektrik", "Hybrid"]'
+                    />
+                    {errors.options && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <AlertCircle className="w-4 h-4 mr-1" />
+                        {errors.options}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      JSON dizisi formatında seçenekleri giriniz. Örnek: ["Seçenek 1", "Seçenek 2"]
+                    </p>
+                  </div>
+                )}
+
+                {/* Checkboxes */}
+                <div className="flex flex-wrap gap-6">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isRequired"
+                      checked={formData.isRequired}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isRequired: e.target.checked }))}
+                      className="h-4 w-4 text-[#EC7830] focus:ring-[#EC7830] border-gray-300 rounded"
+                    />
+                    <label htmlFor="isRequired" className="ml-2 text-sm text-gray-700">
+                      Zorunlu alan
+                    </label>
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                      className="h-4 w-4 text-[#EC7830] focus:ring-[#EC7830] border-gray-300 rounded"
+                    />
+                    <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
+                      Aktif
+                    </label>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-6 border-t">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFormOpen(false);
+                      setEditingField(null);
+                    }}
+                    className="py-2 px-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isAnyMutationLoading}
+                    className="py-2 px-4 text-sm font-medium text-white bg-[#EC7830] border border-transparent rounded-lg hover:bg-[#d6691a] focus:outline-none focus:ring-2 focus:ring-[#EC7830] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isAnyMutationLoading ? 'Kaydediliyor...' : (editingField ? 'Güncelle' : 'Oluştur')}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

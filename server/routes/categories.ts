@@ -117,6 +117,88 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Custom Fields Routes (admin only)
+
+// GET /api/categories/:id/custom-fields - Get custom fields for a category  
+router.get('/:id/custom-fields', requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: 'Invalid category ID' });
+    }
+
+    const customFields = await storage.getCategoryCustomFields(categoryId);
+    res.json(customFields);
+  } catch (error) {
+    console.error('Get custom fields error:', error);
+    res.status(500).json({ error: 'Failed to get custom fields' });
+  }
+});
+
+// POST /api/categories/:id/custom-fields - Create custom field for a category
+router.post('/:id/custom-fields', requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: 'Invalid category ID' });
+    }
+
+    const validation = insertCustomFieldSchema.safeParse({ ...req.body, categoryId });
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validation.error.issues 
+      });
+    }
+
+    const customField = await storage.createCustomField(validation.data);
+    res.status(201).json(customField);
+  } catch (error) {
+    console.error('Create custom field error:', error);
+    res.status(500).json({ error: 'Failed to create custom field' });
+  }
+});
+
+// PATCH /api/categories/custom-fields/:fieldId - Update custom field
+router.patch('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
+  try {
+    const fieldId = parseInt(req.params.fieldId);
+    if (isNaN(fieldId)) {
+      return res.status(400).json({ error: 'Invalid field ID' });
+    }
+
+    const validation = insertCustomFieldSchema.partial().safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validation.error.issues 
+      });
+    }
+
+    const updatedField = await storage.updateCustomField(fieldId, validation.data);
+    res.json(updatedField);
+  } catch (error) {
+    console.error('Update custom field error:', error);
+    res.status(500).json({ error: 'Failed to update custom field' });
+  }
+});
+
+// DELETE /api/categories/custom-fields/:fieldId - Delete custom field
+router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
+  try {
+    const fieldId = parseInt(req.params.fieldId);
+    if (isNaN(fieldId)) {
+      return res.status(400).json({ error: 'Invalid field ID' });
+    }
+
+    await storage.deleteCustomField(fieldId);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Delete custom field error:', error);
+    res.status(500).json({ error: 'Failed to delete custom field' });
+  }
+});
+
 // Admin only routes below
 router.use(requireAuth);
 router.use(requireAdmin);
