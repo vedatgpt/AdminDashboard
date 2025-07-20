@@ -7,6 +7,7 @@ import { Category } from '@shared/schema';
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
+import ModernNavbar from '@/components/Navbar';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -147,21 +148,35 @@ export default function CreateListingStep1() {
 
   const categoryLevels = getCategoryLevels();
 
+  const handleSearch = (searchTerm: string) => {
+    console.log('Step1 sayfasında arama:', searchTerm);
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Match navbar padding: px-4 sm:px-6 lg:px-8 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
-        {/* Breadcrumb Navigation */}
-        {categoryPath.length > 0 && (
-          <BreadcrumbNav 
-            categoryPath={categoryPath}
-            onCategoryClick={handleBreadcrumbClick}
-          />
-        )}
+      <ModernNavbar onSearch={handleSearch} />
+      
+      {/* Main content - centered vertically */}
+      <div className="flex flex-col justify-center min-h-[calc(100vh-80px)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          
+          {/* Page Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Adım Adım Kategori Seçimi</h1>
+          </div>
 
-        {/* Category Selection */}
-        {categoryPath.length === 0 ? (
+          {/* Breadcrumb Navigation */}
+          {categoryPath.length > 0 && (
+            <div className="mb-6">
+              <BreadcrumbNav 
+                categoryPath={categoryPath}
+                onCategoryClick={handleBreadcrumbClick}
+              />
+            </div>
+          )}
+
+          {/* Category Selection */}
+          {categoryPath.length === 0 ? (
           /* Root categories - Card layout */
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {allCategories.filter(cat => !cat.parentId).map(category => (
@@ -255,6 +270,7 @@ export default function CreateListingStep1() {
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
