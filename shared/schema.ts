@@ -110,6 +110,10 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   options: text("options"), // JSON string for select/radio options
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  // Numeric field options
+  isNumericOnly: boolean("is_numeric_only").notNull().default(false), // Only allow numbers
+  useThousandSeparator: boolean("use_thousand_separator").notNull().default(false), // Add thousand separators (150.000)
+  useMobileNumericKeyboard: boolean("use_mobile_numeric_keyboard").notNull().default(false), // Show numeric keyboard on mobile
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
