@@ -20,6 +20,7 @@ import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/public/not-found";
 import PostAd from "@/pages/PostAd";
 import CreateListingStep1 from "@/pages/create-listing/Step1";
+import CreateListingStep2 from "@/pages/create-listing/Step2";
 import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/post-ad" component={PostAd} />
           <Route path="/create-listing/step-1" component={CreateListingStep1} />
+          <Route path="/create-listing/step-2" component={CreateListingStep2} />
           <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>
