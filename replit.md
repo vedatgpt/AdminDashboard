@@ -393,11 +393,21 @@ Authentication features:
 ### Universal Price Input Implementation (July 20, 2025)
 - Added universal price input field above custom fields section
 - Price input available for all categories (not dependent on custom fields)
-- Preline UI inline select pattern with currency selection: TL, USD, EUR, GBP
+- Preline UI inline select pattern with currency selection: TL, GBP, EUR, USD
 - Automatic thousand separator formatting for price values
 - Numeric keyboard support with inputMode="numeric"
 - Only numeric input allowed with proper validation
-- Orange-themed styling with bg-orange-50 and border-orange-200
 - Price data stored as {value, unit} object structure in formData.customFields.price
 - Single unit display for fields with one option, dropdown for multiple currencies
 - Smart unit handling: Motor Gücü shows "hp" as text, KM shows km/mil dropdown
+
+### ReactQuill Rich Text Editor Integration (July 20, 2025)
+- Added ReactQuill rich text editor for description field
+- Description input positioned above price input (universal for all categories)
+- Custom toolbar with essential formatting: bold, italic, underline, lists, colors, links
+- Orange-themed styling matching project design (focus states, hover effects)
+- Custom CSS styling for better integration with Tailwind design
+- Editor height set to 200px with proper padding and spacing
+- Placeholder text: "Ürününüzün detaylı açıklamasını yazınız..."
+- Data stored in formData.customFields.description
+- Completely independent from category custom fields system

@@ -1,5 +1,8 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import '../../styles/quill-custom.css';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
@@ -33,6 +36,32 @@ export default function Step2() {
   return (
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto">
+        {/* Açıklama Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-8">
+          <label className="block text-sm font-medium text-gray-700">
+            Açıklama
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="quill-editor-wrapper">
+            <ReactQuill
+              theme="snow"
+              value={formData.customFields.description || ''}
+              onChange={(value) => handleInputChange('description', value)}
+              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  ['link'],
+                  ['clean']
+                ],
+              }}
+              style={{ height: '200px' }}
+            />
+          </div>
+        </div>
+
         {/* Fiyat Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-8">
           <label className="block text-sm font-medium text-gray-700">
