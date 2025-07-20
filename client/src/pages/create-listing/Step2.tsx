@@ -44,7 +44,7 @@ export default function Step2() {
   // Kimden değerini kullanıcı tipine göre belirle
   const getKimdenValue = () => {
     if (!user) return '';
-    return user.role === 'corporate' ? 'Galeriden' : 'Sahibinden';
+    return (user as any).role === 'corporate' ? 'Galeriden' : 'Sahibinden';
   };
 
   return (
@@ -438,7 +438,7 @@ export default function Step2() {
         )}
 
         {/* Kimden Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-6 mt-8">
           <label className="block text-sm font-medium text-gray-700">
             Kimden
             <span className="text-red-500 ml-1">*</span>
@@ -447,7 +447,7 @@ export default function Step2() {
             type="text"
             value={getKimdenValue()}
             readOnly
-            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed focus:outline-none focus:ring-0 focus:border-gray-200"
           />
         </div>
 
