@@ -162,15 +162,17 @@ export default function CreateListingStep2() {
                       value={value}
                       onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
                       placeholder={field.placeholder || ''}
-                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                     />
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <label htmlFor={`unit-${fieldId}`} className="sr-only">Unit</label>
                       <select
+                        id={`unit-${fieldId}`}
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
                         className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
-                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
                         {unitOptions.map((unit: string, index: number) => (
@@ -212,16 +214,18 @@ export default function CreateListingStep2() {
                         handleValueWithUnitChange(fieldId, processedValue);
                       }}
                       placeholder={field.placeholder || ''}
-                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                       {...numericInputProps}
                     />
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <label htmlFor={`unit-${fieldId}`} className="sr-only">Unit</label>
                       <select
+                        id={`unit-${fieldId}`}
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
                         className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
-                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
                         {unitOptions.map((unit: string, index: number) => (
@@ -266,7 +270,7 @@ export default function CreateListingStep2() {
                 return (
                   <div className="relative">
                     <select
-                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                       value={value}
                       onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
                     >
@@ -276,12 +280,14 @@ export default function CreateListingStep2() {
                       ))}
                     </select>
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <label htmlFor={`unit-${fieldId}`} className="sr-only">Unit</label>
                       <select
+                        id={`unit-${fieldId}`}
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
                         className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
-                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
                         {unitOptions.map((unit: string, index: number) => (
