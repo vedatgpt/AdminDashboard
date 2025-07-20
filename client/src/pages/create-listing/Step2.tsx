@@ -33,7 +33,7 @@ export default function CreateListingStep2() {
       // Set default values for fields if not already set
       customFields.forEach(field => {
         if (!(field.id.toString() in initialData)) {
-          if (field.defaultUnit && field.unitOptions?.length > 0) {
+          if (field.defaultUnit && Array.isArray(field.unitOptions) && field.unitOptions?.length > 0) {
             initialData[field.id.toString()] = {
               value: '',
               unit: field.defaultUnit
@@ -86,7 +86,7 @@ export default function CreateListingStep2() {
               {field.isRequired && <span className="text-red-500 ml-1">*</span>}
             </label>
             
-            {field.hasUnits && field.unitOptions?.length > 0 ? (
+            {field.hasUnits && Array.isArray(field.unitOptions) && field.unitOptions?.length > 0 ? (
               <div className="relative">
                 <input
                   type="text"
@@ -136,7 +136,7 @@ export default function CreateListingStep2() {
               {field.isRequired && <span className="text-red-500 ml-1">*</span>}
             </label>
             
-            {field.hasUnits && field.unitOptions?.length > 0 ? (
+            {field.hasUnits && Array.isArray(field.unitOptions) && field.unitOptions?.length > 0 ? (
               <div className="relative">
                 <input
                   type="number"
@@ -224,7 +224,7 @@ export default function CreateListingStep2() {
               className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="">Seçiniz...</option>
-              {field.selectOptions?.map((option: string) => (
+              {Array.isArray(field.selectOptions) && field.selectOptions?.map((option: string) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
@@ -244,7 +244,7 @@ export default function CreateListingStep2() {
             </label>
             
             <div className="space-y-2">
-              {field.selectOptions?.map((option: string) => (
+              {Array.isArray(field.selectOptions) && field.selectOptions?.map((option: string) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="checkbox"
