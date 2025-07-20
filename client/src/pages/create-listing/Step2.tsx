@@ -301,50 +301,21 @@ export default function CreateListingStep2() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar />
-      </div>
-      
-      {/* Mobile Navbar */}
-      <div className="lg:hidden">
-        <NavbarMobile 
-          title="İlan Detayları" 
-          showBack={true}
-          onBackClick={handleBack}
-        />
-      </div>
-
-      {/* Progress Bar */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <ProgressBar currentStep={2} totalSteps={7} />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <BreadcrumbNav 
-            categoryPath={state.categoryPath}
-            onCategoryClick={() => {}} // Read-only in step 2
-          />
-        </div>
-
-        {/* Page Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            İlan Detayları
-          </h1>
-          <p className="text-gray-600">
-            {state.selectedCategory.name} kategorisi için gerekli bilgileri doldurun.
-          </p>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Step 2 - Custom Fields</h1>
+        
+        {/* Debug Info */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
+          <p><strong>Selected Category:</strong> {state.selectedCategory?.name || 'None'}</p>
+          <p><strong>Category ID:</strong> {state.selectedCategory?.id || 'None'}</p>
+          <p><strong>Loading:</strong> {isLoading ? 'Yes' : 'No'}</p>
+          <p><strong>Custom Fields Count:</strong> {customFields.length}</p>
+          <p><strong>API Query URL:</strong> /api/categories/{state.selectedCategory?.id || 0}/custom-fields</p>
         </div>
 
         {/* Custom Fields Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
@@ -355,38 +326,26 @@ export default function CreateListingStep2() {
               <p className="text-gray-500 mb-4">
                 Bu kategori için özel alan bulunmuyor.
               </p>
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
-              >
-                Sonraki Adıma Geç
-              </button>
             </div>
           ) : (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                Kategori Bilgileri
+                Custom Fields ({customFields.length})
               </h2>
               
               {/* Render all custom fields */}
-              {customFields.map(field => renderField(field))}
-              
-              {/* Navigation Buttons */}
-              <div className="pt-6 border-t border-gray-200 flex justify-between">
-                <button
-                  onClick={handleBack}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-                >
-                  Geri Dön
-                </button>
-                
-                <button
-                  onClick={handleNext}
-                  className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
-                >
-                  Devam Et
-                </button>
-              </div>
+              {customFields.map(field => (
+                <div key={field.id} className="border border-gray-100 p-4 rounded">
+                  <p><strong>Field:</strong> {field.displayName}</p>
+                  <p><strong>Type:</strong> {field.fieldType}</p>
+                  <p><strong>Required:</strong> {field.isRequired ? 'Yes' : 'No'}</p>
+                  <p><strong>Has Units:</strong> {field.hasUnits ? 'Yes' : 'No'}</p>
+                  <p><strong>Unit Options:</strong> {JSON.stringify(field.unitOptions)}</p>
+                  <p><strong>Select Options:</strong> {JSON.stringify(field.selectOptions)}</p>
+                  <hr className="my-2" />
+                  {renderField(field)}
+                </div>
+              ))}
             </div>
           )}
         </div>
