@@ -117,10 +117,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Custom Fields Routes (admin only)
-
-// GET /api/categories/:id/custom-fields - Get custom fields for a category  
-router.get('/:id/custom-fields', requireAdmin, async (req, res) => {
+// GET /api/categories/:id/custom-fields - Get custom fields for a category (public endpoint)
+router.get('/:id/custom-fields', async (req, res) => {
   try {
     const categoryId = parseInt(req.params.id);
     if (isNaN(categoryId)) {
@@ -134,6 +132,8 @@ router.get('/:id/custom-fields', requireAdmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to get custom fields' });
   }
 });
+
+// Custom Fields Routes (admin only)
 
 // POST /api/categories/:id/custom-fields - Create custom field for a category
 router.post('/:id/custom-fields', requireAdmin, async (req, res) => {
