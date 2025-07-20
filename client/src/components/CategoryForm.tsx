@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { X, Save, AlertCircle } from "lucide-react";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
@@ -73,6 +74,15 @@ export default function CategoryForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [iconFile, setIconFile] = useState<File | null>(null);
 
+  // Preload metadata for editing category using React Query
+  const { data: categoryMetadata } = useQuery({
+    queryKey: ['/api/categories', category?.id, 'path'],
+    enabled: !!category?.id && isOpen,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false,
+    gcTime: 10 * 60 * 1000,
+  });
+
   useEffect(() => {
     if (category) {
       // Edit mode - load existing metadata
@@ -85,40 +95,6 @@ export default function CategoryForm({
         isActive: category.isActive,
         labelKey: "",
       });
-      
-      // Load existing metadata for this category with cache optimization
-      const cacheKey = `category-metadata-${category.id}`;
-      const cachedData = sessionStorage.getItem(cacheKey);
-      
-      if (cachedData) {
-        // Use cached metadata if available
-        try {
-          const path = JSON.parse(cachedData);
-          const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
-          if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-            setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
-          }
-        } catch (error) {
-          console.error('Error parsing cached metadata:', error);
-        }
-      } else {
-        // Fetch from API and cache result
-        fetch(`/api/categories/${category.id}/path`)
-          .then(response => response.json())
-          .then(path => {
-            // Cache the result for 5 minutes
-            sessionStorage.setItem(cacheKey, JSON.stringify(path));
-            setTimeout(() => sessionStorage.removeItem(cacheKey), 5 * 60 * 1000);
-            
-            if (path && path.length > 0) {
-              const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
-              if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
-                setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
-              }
-            }
-          })
-          .catch(error => console.error('Error loading category metadata:', error));
-      }
     } else if (parentCategory) {
       // Add child mode
       setFormData({
@@ -145,6 +121,16 @@ export default function CategoryForm({
     setErrors({});
     setIconFile(null); // Clear file input state when form opens
   }, [category, parentCategory, isOpen]);
+
+  // Separate effect to update labelKey when metadata is loaded
+  useEffect(() => {
+    if (categoryMetadata && category) {
+      const currentCategoryInPath = categoryMetadata.find((item: any) => item.category.id === category.id);
+      if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+        setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
+      }
+    }
+  }, [categoryMetadata, category]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
