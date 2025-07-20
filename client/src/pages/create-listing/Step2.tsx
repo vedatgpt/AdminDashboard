@@ -24,21 +24,7 @@ export default function Step2() {
     );
   }
 
-  if (!customFields || customFields.length === 0) {
-    return (
-      <div className="min-h-screen bg-white p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center py-8">Bu kategori için özel alan bulunmuyor.</div>
-          <button
-            onClick={nextStep}
-            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Sonraki Adım
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Custom fields yoksa da fiyat inputu gösterilmeli
 
   const handleInputChange = (fieldName: string, value: any) => {
     updateFormData({ [fieldName]: value });
@@ -47,13 +33,8 @@ export default function Step2() {
   return (
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">İlan Detayları</h1>
-          <p className="text-gray-600">{selectedCategory?.name} kategorisi için gerekli bilgileri doldurun</p>
-        </div>
-
         {/* Fiyat Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="space-y-2 mb-8">
           <label className="block text-sm font-medium text-gray-700">
             Fiyat
             <span className="text-red-500 ml-1">*</span>
@@ -90,17 +71,17 @@ export default function Step2() {
                 className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
               >
                 <option value="TL">TL</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
                 <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
               </select>
             </div>
           </div>
-          <p className="text-sm text-gray-500">Lütfen ürününüzün satış fiyatını giriniz</p>
         </div>
 
-        <div className="space-y-6">
-          {customFields.map((field) => {
+        {customFields && customFields.length > 0 && (
+          <div className="space-y-6">
+            {customFields.map((field) => {
             const currentValue = formData.customFields[field.fieldName] || '';
             
             return (
@@ -379,8 +360,9 @@ export default function Step2() {
                 )}
               </div>
             );
-          })}
-        </div>
+            })}
+          </div>
+        )}
 
         <div className="mt-8">
           <button
