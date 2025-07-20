@@ -122,7 +122,7 @@ export default function Categories() {
         showAlertMessage('success', 'Kategori başarıyla oluşturuldu');
       }
       
-      // Update category metadata if labelKey is provided
+      // Update category metadata if labelKey is provided  
       if (labelKey) {
         try {
           const response = await fetch(`/api/categories/${categoryId}/metadata`, {

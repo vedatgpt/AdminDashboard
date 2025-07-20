@@ -368,7 +368,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>> {
-    const cacheKey = cache.keys.categoryPath(id);
+    const cacheKey = `category:${id}:path`;
     const cached = cache.get<Array<{category: Category, label: string}>>(cacheKey);
     if (cached) return cached;
 
@@ -376,10 +376,13 @@ export class DatabaseStorage implements IStorage {
     
     // Get all metadata for the categories in the path in a single query
     const categoryIds = breadcrumbs.map(cat => cat.id);
-    const metadataResults = await db
-      .select()
-      .from(categoryMetadata)
-      .where(inArray(categoryMetadata.categoryId, categoryIds));
+    let metadataResults = [];
+    if (categoryIds.length > 0) {
+      metadataResults = await db
+        .select()
+        .from(categoryMetadata)
+        .where(inArray(categoryMetadata.categoryId, categoryIds));
+    }
     
     // Create a map for quick lookup
     const metadataMap = new Map<number, string>();
