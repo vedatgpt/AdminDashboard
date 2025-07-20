@@ -72,228 +72,213 @@ export default function CreateListingStep2() {
     navigate('/create-listing/step-1');
   };
 
-  // Render form field based on type
+  // Render form field based on type (using PostAd.tsx working implementation)
   const renderField = (field: any) => {
     const fieldId = field.id.toString();
     const currentValue = formData[fieldId];
 
-    switch (field.fieldType) {
-      case 'text':
-        return (
-          <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.displayName}
-              {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            
-            {field.hasUnits && Array.isArray(field.unitOptions) && field.unitOptions?.length > 0 ? (
-              <div className="relative">
+    // Parse JSON fields like PostAd.tsx does
+    const unitOptions = field.unitOptions ? JSON.parse(field.unitOptions) : [];
+    const selectOptions = field.selectOptions ? JSON.parse(field.selectOptions) : [];
+
+    return (
+      <div key={field.id} className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          {field.displayName || field.fieldName}
+          {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        
+        {(() => {
+          switch (field.fieldType) {
+            case 'text':
+              if (field.hasUnits && unitOptions.length > 0) {
+                return (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={currentValue?.value || ''}
+                      onChange={(e) => handleInputChange(fieldId, {
+                        ...currentValue,
+                        value: e.target.value
+                      })}
+                      placeholder={field.placeholder || ''}
+                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                    />
+                    <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <select
+                        value={currentValue?.unit || field.defaultUnit || ''}
+                        onChange={(e) => handleInputChange(fieldId, {
+                          ...currentValue,
+                          unit: e.target.value
+                        })}
+                        disabled={unitOptions.length <= 1}
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                        }`}
+                      >
+                        {unitOptions.map((unit: string, index: number) => (
+                          <option key={index} value={unit}>{unit}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                );
+              }
+              return (
                 <input
                   type="text"
-                  value={currentValue?.value || ''}
-                  onChange={(e) => handleInputChange(fieldId, {
-                    ...currentValue,
-                    value: e.target.value
-                  })}
+                  value={currentValue || ''}
+                  onChange={(e) => handleInputChange(fieldId, e.target.value)}
                   placeholder={field.placeholder || ''}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 pe-20"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
                 />
-                <select
-                  value={currentValue?.unit || field.defaultUnit || ''}
-                  onChange={(e) => handleInputChange(fieldId, {
-                    ...currentValue,
-                    unit: e.target.value
-                  })}
-                  disabled={field.unitOptions.length === 1}
-                  className="absolute inset-y-0 right-0 w-32 px-2 py-2 bg-white border-l border-gray-300 text-sm focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:text-gray-500"
-                >
-                  {field.unitOptions.map((unit: string) => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <input
-                type="text"
-                value={currentValue || ''}
-                onChange={(e) => handleInputChange(fieldId, e.target.value)}
-                placeholder={field.placeholder || ''}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
-              />
-            )}
-            
-            {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
-            )}
-          </div>
-        );
+              );
 
-      case 'number':
-        return (
-          <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.displayName}
-              {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            
-            {field.hasUnits && Array.isArray(field.unitOptions) && field.unitOptions?.length > 0 ? (
-              <div className="relative">
+            case 'number':
+              if (field.hasUnits && unitOptions.length > 0) {
+                return (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={currentValue?.value || ''}
+                      onChange={(e) => {
+                        let processedValue = e.target.value.replace(/\D/g, '');
+                        
+                        // Apply min/max validation - prevent exceeding limits
+                        if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                          return; // Don't allow input beyond max value
+                        }
+                        if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                          return; // Don't allow input below min value once reaching min digits
+                        }
+                        
+                        handleInputChange(fieldId, {
+                          ...currentValue,
+                          value: processedValue
+                        });
+                      }}
+                      placeholder={field.placeholder || ''}
+                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                    />
+                    <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <select
+                        value={currentValue?.unit || field.defaultUnit || ''}
+                        onChange={(e) => handleInputChange(fieldId, {
+                          ...currentValue,
+                          unit: e.target.value
+                        })}
+                        disabled={unitOptions.length <= 1}
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                        }`}
+                      >
+                        {unitOptions.map((unit: string, index: number) => (
+                          <option key={index} value={unit}>{unit}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                );
+              }
+              return (
                 <input
-                  type="number"
-                  value={currentValue?.value || ''}
+                  type="text"
+                  value={currentValue || ''}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    const numValue = parseFloat(value);
+                    let processedValue = e.target.value.replace(/\D/g, '');
                     
-                    // Check min/max limits
-                    if (field.minValue !== null && numValue < field.minValue) return;
-                    if (field.maxValue !== null && numValue > field.maxValue) return;
+                    // Apply min/max validation - prevent exceeding limits
+                    if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                      return; // Don't allow input beyond max value
+                    }
+                    if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                      return; // Don't allow input below min value once reaching min digits
+                    }
                     
-                    handleInputChange(fieldId, {
-                      ...currentValue,
-                      value: value
-                    });
+                    handleInputChange(fieldId, processedValue);
                   }}
-                  min={field.minValue || undefined}
-                  max={field.maxValue || undefined}
                   placeholder={field.placeholder || ''}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 pe-20"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
                 />
+              );
+
+            case 'select':
+              return (
                 <select
-                  value={currentValue?.unit || field.defaultUnit || ''}
-                  onChange={(e) => handleInputChange(fieldId, {
-                    ...currentValue,
-                    unit: e.target.value
-                  })}
-                  disabled={field.unitOptions.length === 1}
-                  className="absolute inset-y-0 right-0 w-32 px-2 py-2 bg-white border-l border-gray-300 text-sm focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:text-gray-500"
+                  value={currentValue || ''}
+                  onChange={(e) => handleInputChange(fieldId, e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
                 >
-                  {field.unitOptions.map((unit: string) => (
-                    <option key={unit} value={unit}>{unit}</option>
+                  <option value="">{field.placeholder || "Seçiniz"}</option>
+                  {selectOptions.map((option: string, index: number) => (
+                    <option key={index} value={option}>{option}</option>
                   ))}
                 </select>
-              </div>
-            ) : (
-              <input
-                type="number"
-                value={currentValue || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const numValue = parseFloat(value);
-                  
-                  // Check min/max limits
-                  if (field.minValue !== null && numValue < field.minValue) return;
-                  if (field.maxValue !== null && numValue > field.maxValue) return;
-                  
-                  handleInputChange(fieldId, value);
-                }}
-                min={field.minValue || undefined}
-                max={field.maxValue || undefined}
-                placeholder={field.placeholder || ''}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
-              />
-            )}
-            
-            {(field.minValue !== null || field.maxValue !== null) && (
-              <p className="text-sm text-gray-500">
-                {field.minValue !== null && field.maxValue !== null
-                  ? `${field.minValue} - ${field.maxValue} arasında`
-                  : field.minValue !== null
-                  ? `Minimum: ${field.minValue}`
-                  : `Maksimum: ${field.maxValue}`}
-              </p>
-            )}
-            
-            {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
-            )}
-          </div>
-        );
+              );
 
-      case 'select':
-        return (
-          <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.displayName}
-              {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            
-            <select
-              value={currentValue || ''}
-              onChange={(e) => handleInputChange(fieldId, e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
-            >
-              <option value="">Seçiniz...</option>
-              {Array.isArray(field.selectOptions) && field.selectOptions?.map((option: string) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-            
-            {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
-            )}
-          </div>
-        );
+            case 'checkbox':
+              return (
+                <div className="space-y-2">
+                  {selectOptions.map((option: string, index: number) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`${fieldId}-${index}`}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                        checked={(currentValue || []).includes(option)}
+                        onChange={(e) => {
+                          const currentValues = currentValue || [];
+                          const newValues = e.target.checked
+                            ? [...currentValues, option]
+                            : currentValues.filter((v: string) => v !== option);
+                          handleInputChange(fieldId, newValues);
+                        }}
+                      />
+                      <label htmlFor={`${fieldId}-${index}`} className="text-sm font-medium">
+                        {option}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              );
 
-      case 'checkbox':
-        return (
-          <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.displayName}
-              {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            
-            <div className="space-y-2">
-              {Array.isArray(field.selectOptions) && field.selectOptions?.map((option: string) => (
-                <label key={option} className="flex items-center">
+            case 'boolean':
+              return (
+                <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={(currentValue || []).includes(option)}
-                    onChange={(e) => {
-                      const currentArray = currentValue || [];
-                      const newArray = e.target.checked
-                        ? [...currentArray, option]
-                        : currentArray.filter((item: string) => item !== option);
-                      handleInputChange(fieldId, newArray);
-                    }}
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    id={fieldId}
+                    checked={currentValue || false}
+                    onChange={(e) => handleInputChange(fieldId, e.target.checked)}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
-                  <span className="ml-2 text-sm text-gray-700">{option}</span>
-                </label>
-              ))}
-            </div>
-            
-            {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
-            )}
-          </div>
-        );
+                  <label htmlFor={fieldId} className="text-sm font-medium">
+                    {field.displayName || field.fieldName}
+                  </label>
+                </div>
+              );
 
-      case 'boolean':
-        return (
-          <div key={field.id} className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={currentValue || false}
-                onChange={(e) => handleInputChange(fieldId, e.target.checked)}
-                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                {field.displayName}
-                {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-              </span>
-            </label>
-            
-            {field.description && (
-              <p className="text-sm text-gray-500">{field.description}</p>
-            )}
-          </div>
-        );
-
-      default:
-        return null;
-    }
+            default:
+              return <p className="text-red-500">Desteklenmeyen field türü: {field.fieldType}</p>;
+          }
+        })()}
+        
+        {field.description && (
+          <p className="text-sm text-gray-500">{field.description}</p>
+        )}
+        
+        {/* Min/Max info for number fields */}
+        {field.fieldType === 'number' && (field.minValue !== null || field.maxValue !== null) && (
+          <p className="text-sm text-gray-500">
+            {field.minValue !== null && field.maxValue !== null
+              ? `${field.minValue} - ${field.maxValue} arasında`
+              : field.minValue !== null
+              ? `Minimum: ${field.minValue}`
+              : `Maksimum: ${field.maxValue}`}
+          </p>
+        )}
+      </div>
+    );
   };
 
   if (!state.selectedCategory) {
@@ -304,15 +289,6 @@ export default function CreateListingStep2() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">Step 2 - Custom Fields</h1>
-        
-        {/* Debug Info */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
-          <p><strong>Selected Category:</strong> {state.selectedCategory?.name || 'None'}</p>
-          <p><strong>Category ID:</strong> {state.selectedCategory?.id || 'None'}</p>
-          <p><strong>Loading:</strong> {isLoading ? 'Yes' : 'No'}</p>
-          <p><strong>Custom Fields Count:</strong> {customFields.length}</p>
-          <p><strong>API Query URL:</strong> /api/categories/{state.selectedCategory?.id || 0}/custom-fields</p>
-        </div>
 
         {/* Custom Fields Form */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -330,22 +306,11 @@ export default function CreateListingStep2() {
           ) : (
             <div className="space-y-6">
               <h2 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                Custom Fields ({customFields.length})
+                {state.selectedCategory?.name} - Kategori Bilgileri
               </h2>
               
               {/* Render all custom fields */}
-              {customFields.map(field => (
-                <div key={field.id} className="border border-gray-100 p-4 rounded">
-                  <p><strong>Field:</strong> {field.displayName}</p>
-                  <p><strong>Type:</strong> {field.fieldType}</p>
-                  <p><strong>Required:</strong> {field.isRequired ? 'Yes' : 'No'}</p>
-                  <p><strong>Has Units:</strong> {field.hasUnits ? 'Yes' : 'No'}</p>
-                  <p><strong>Unit Options:</strong> {JSON.stringify(field.unitOptions)}</p>
-                  <p><strong>Select Options:</strong> {JSON.stringify(field.selectOptions)}</p>
-                  <hr className="my-2" />
-                  {renderField(field)}
-                </div>
-              ))}
+              {customFields.map(field => renderField(field))}
             </div>
           )}
         </div>
