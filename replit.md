@@ -417,8 +417,16 @@ Authentication features:
 - Title input available for all categories (not dependent on custom fields)
 - Maximum 64 character limit with real-time character counter
 - Input validation prevents exceeding character limit
-- Character counter displays current/maximum (e.g., "25/64")
 - Placeholder text: "İlanınız için başlık yazınız"
-- Helper text: "İlanınızın dikkat çekici bir başlığını yazın"
 - Data stored in formData.customFields.title
+- Completely independent from category custom fields system
+
+### Universal "Kimden" (From Whom) Input Implementation (July 20, 2025)
+- Added universal "Kimden" input field below custom fields section (universal for all categories)
+- Input value automatically determined based on user membership type
+- Individual users: displays "Sahibinden" (From Owner)
+- Corporate users: displays "Galeriden" (From Gallery/Dealer)
+- Read-only input with disabled styling (gray background, not editable)
+- Integrated with user authentication system to fetch user role
+- TanStack Query v5 compatibility with gcTime instead of cacheTime
 - Completely independent from category custom fields system

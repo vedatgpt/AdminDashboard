@@ -1,5 +1,6 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
+import { useQuery } from '@tanstack/react-query';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
@@ -7,6 +8,13 @@ import '../../styles/quill-custom.css';
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData } = state;
+  
+  // Kullanıcı bilgilerini al
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/me'],
+    staleTime: 5 * 60 * 1000, // 5 dakika
+    gcTime: 10 * 60 * 1000, // 10 dakika (TanStack Query v5)
+  });
   
   const updateFormData = (newData: any) => {
     dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
@@ -31,6 +39,12 @@ export default function Step2() {
 
   const handleInputChange = (fieldName: string, value: any) => {
     updateFormData({ [fieldName]: value });
+  };
+
+  // Kimden değerini kullanıcı tipine göre belirle
+  const getKimdenValue = () => {
+    if (!user) return '';
+    return user.role === 'corporate' ? 'Galeriden' : 'Sahibinden';
   };
 
   return (
@@ -422,6 +436,20 @@ export default function Step2() {
             })}
           </div>
         )}
+
+        {/* Kimden Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            Kimden
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            value={getKimdenValue()}
+            readOnly
+            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+          />
+        </div>
 
         <div className="mt-8">
           <button
