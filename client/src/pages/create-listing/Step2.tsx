@@ -159,14 +159,14 @@ export default function CreateListingStep2() {
                       type="text"
                       value={value}
                       onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
-                      placeholder={field.placeholder || field.displayName || field.fieldName}
+                      placeholder={field.placeholder || field.label || field.fieldName}
                       className="peer p-4 pe-20 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
                     />
                     <label 
                       htmlFor={`text-unit-${fieldId}`}
                       className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
                     >
-                      {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                      {field.label || field.fieldName}{field.isRequired && ' *'}
                     </label>
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                       <label htmlFor={`unit-${fieldId}`} className="sr-only">Unit</label>
@@ -175,7 +175,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 h-full py-2.5 px-2 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
@@ -194,14 +194,14 @@ export default function CreateListingStep2() {
                     type="text"
                     value={value}
                     onChange={(e) => handleInputChange(fieldId, e.target.value)}
-                    placeholder={field.placeholder || field.displayName || field.fieldName}
+                    placeholder={field.placeholder || field.label || field.fieldName}
                     className="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
                   />
                   <label 
                     htmlFor={fieldId}
                     className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
                   >
-                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                    {field.label || field.fieldName}{field.isRequired && ' *'}
                   </label>
                 </>
               );
@@ -237,7 +237,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 h-full py-2.5 px-2 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
@@ -273,7 +273,7 @@ export default function CreateListingStep2() {
                       
                       handleInputChange(fieldId, processedValue);
                     }}
-                    placeholder={field.placeholder || field.displayName || field.fieldName}
+                    placeholder={field.placeholder || field.label || field.fieldName}
                     className="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
                     {...numericInputProps}
                   />
@@ -281,7 +281,7 @@ export default function CreateListingStep2() {
                     htmlFor={`num-${fieldId}`}
                     className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
                   >
-                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                    {field.label || field.fieldName}{field.isRequired && ' *'}
                   </label>
                 </>
               );
@@ -308,7 +308,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 h-full py-2.5 px-2 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'bg-white'
                         }`}
                       >
@@ -339,7 +339,7 @@ export default function CreateListingStep2() {
                     htmlFor={`sel-${fieldId}`}
                     className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[&:not(:placeholder-shown)]:scale-90 peer-[&:not(:placeholder-shown)]:translate-x-0.5 peer-[&:not(:placeholder-shown)]:-translate-y-1.5 peer-[&:not(:placeholder-shown)]:text-orange-500 text-gray-500"
                   >
-                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                    {field.label || field.fieldName}{field.isRequired && ' *'}
                   </label>
                 </>
               );
@@ -382,7 +382,7 @@ export default function CreateListingStep2() {
                     className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
                   <label htmlFor={fieldId} className="text-sm font-medium">
-                    {field.displayName || field.fieldName}
+                    {field.label || field.fieldName}
                   </label>
                 </div>
               );
