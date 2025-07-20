@@ -3,30 +3,19 @@ import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
 import { Category } from '@shared/schema';
-import { useCreateDraftListing, useDraftListing } from '@/hooks/useDraftListings';
-import { useQuery } from '@tanstack/react-query';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
-import ModernNavbar from '@/components/Navbar';
-import NavbarMobile from '@/components/Navbar-mobile';
+import ListingLayout from '@/components/ListingLayout';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
   const { state, dispatch } = useListing();
   const { data: allCategories = [], isLoading } = useCategories();
-  const createDraftMutation = useCreateDraftListing();
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
-
-  // Mevcut seçili kategoriyi context'ten yükle
-  React.useEffect(() => {
-    if (state.selectedCategory && state.categoryPath && state.categoryPath.length > 0) {
-      setCategoryPath(state.categoryPath);
-    }
-  }, [state.selectedCategory, state.categoryPath]);
 
   // Build flat categories array for easy lookup  
   const flatCategories = React.useMemo(() => {
@@ -99,49 +88,12 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), set as final selection but don't auto-navigate
+    // If this is a leaf category (no children), set as final selection
     if (!hasChildren(category)) {
       dispatch({
         type: 'SET_CATEGORY',
         payload: { category, path: newPath }
       });
-    }
-  };
-
-  // Handle final category selection and draft creation
-  const handleFinalCategorySelection = async (category: Category, path: Category[]) => {
-    try {
-      console.log('Creating draft for category:', category.name);
-      
-      // Create draft listing
-      const draft = await createDraftMutation.mutateAsync({
-        categoryId: category.id,
-        currentStep: 1,
-        formData: {
-          selectedCategory: category,
-          categoryPath: path
-        }
-      });
-
-      console.log('Draft created successfully:', draft.id);
-
-      // Update context
-      dispatch({
-        type: 'SET_CATEGORY',
-        payload: { category, path }
-      });
-      
-      // Navigate to step-2 with draftId
-      navigate(`/create-listing/step-2?draftId=${draft.id}`);
-    } catch (error) {
-      console.error('Draft creation failed:', error);
-      alert('Oturum sonlandırılmış. Lütfen giriş yapınız.');
-      // Fallback: still navigate but without draft
-      dispatch({
-        type: 'SET_CATEGORY', 
-        payload: { category, path }
-      });
-      navigate('/create-listing/step-2');
     }
   };
 
@@ -231,21 +183,8 @@ export default function CreateListingStep1() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Desktop Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar onSearch={handleSearch} />
-      </div>
-      
-      {/* Mobile/Tablet Navbar */}
-      <div className="lg:hidden">
-        <NavbarMobile 
-          showBackButton={categoryPath.length > 0} 
-          onBackClick={handleMobileBack}
-        />
-      </div>
-
-      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
+    <ListingLayout showBreadcrumb={false}>
+      {/* Mobile/Tablet Fixed Header/Breadcrumb - Custom for Step1 */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
         {categoryPath.length > 0 ? (
           <BreadcrumbNav 
@@ -260,7 +199,7 @@ export default function CreateListingStep1() {
       </div>
       
       {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[108px]'}`}>
+      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[108px]'} -mt-[88px]`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Page Title - Only show on desktop */}
@@ -363,15 +302,13 @@ export default function CreateListingStep1() {
                         </p>
                         <button
                           onClick={() => {
-                            const lastCategory = categoryPath[categoryPath.length - 1];
-                            if (lastCategory) {
-                              handleFinalCategorySelection(lastCategory, categoryPath);
-                            }
+                            dispatch({ type: 'SET_STEP', payload: 2 });
+                            navigate('/create-listing/step-2');
+                            console.log('Navigating to step 2...');
                           }}
                           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                          disabled={createDraftMutation.isPending}
                         >
-                          {createDraftMutation.isPending ? 'Hazırlanıyor...' : 'Devam Et'}
+                          Devam Et
                         </button>
                       </div>
                     </div>
@@ -439,6 +376,6 @@ export default function CreateListingStep1() {
           </>
         </div>
       </div>
-    </div>
+    </ListingLayout>
   );
 }

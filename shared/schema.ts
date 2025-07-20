@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -163,31 +163,3 @@ export type UpdateCategory = z.infer<typeof updateCategorySchema>;
 export type InsertCustomField = z.infer<typeof insertCustomFieldSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
-
-// Draft Listings Table - for saving incomplete listings
-export const draftListings = pgTable("draft_listings", {
-  id: text("id").primaryKey(), // UUID string
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  categoryId: integer("category_id").references(() => categories.id),
-  formData: json("form_data"), // All form data as JSON
-  currentStep: integer("current_step").notNull().default(1),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// Draft Listings schemas
-export const insertDraftListingSchema = createInsertSchema(draftListings).omit({
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const updateDraftListingSchema = createInsertSchema(draftListings).omit({
-  id: true,
-  userId: true,
-  createdAt: true,
-  updatedAt: true,
-}).partial();
-
-export type DraftListing = typeof draftListings.$inferSelect;
-export type InsertDraftListing = z.infer<typeof insertDraftListingSchema>;
-export type UpdateDraftListing = z.infer<typeof updateDraftListingSchema>;

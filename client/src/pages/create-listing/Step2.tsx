@@ -1,28 +1,14 @@
-import React from 'react';
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
 import { useQuery } from '@tanstack/react-query';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
-import ModernNavbar from '@/components/Navbar';
-import NavbarMobile from '@/components/Navbar-mobile';
-import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
-import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListings';
-import { useLocation } from 'wouter';
+import ListingLayout from '@/components/ListingLayout';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData } = state;
-  const [location] = useLocation();
-  const updateDraftMutation = useUpdateDraftListing();
-  
-  // URL'den draftId'yi al
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
-  const draftId = urlParams.get('draftId');
-  
-  // Draft'ı yükle
-  const { data: draftData, isLoading: isDraftLoading } = useDraftListing(draftId || undefined);
   
   // Kullanıcı bilgilerini al
   const { data: user } = useQuery({
@@ -31,50 +17,8 @@ export default function Step2() {
     gcTime: 10 * 60 * 1000, // 10 dakika (TanStack Query v5)
   });
   
-  // Draft'tan form verilerini yükle
-  React.useEffect(() => {
-    if (draftData?.formData && !isDraftLoading) {
-      const formData = draftData.formData as any;
-      
-      // Draft'tan kategori ve form verilerini context'e yükle
-      if (formData?.selectedCategory && formData?.categoryPath) {
-        dispatch({
-          type: 'SET_CATEGORY',
-          payload: {
-            category: formData.selectedCategory,
-            path: formData.categoryPath
-          }
-        });
-      }
-      
-      // Form verilerini yükle
-      if (formData?.customFields) {
-        dispatch({
-          type: 'SET_CUSTOM_FIELDS',
-          payload: formData.customFields
-        });
-      }
-    }
-  }, [draftData, isDraftLoading, dispatch]);
-
   const updateFormData = (newData: any) => {
-    const updatedData = { ...formData.customFields, ...newData };
-    dispatch({ type: 'SET_CUSTOM_FIELDS', payload: updatedData });
-    
-    // Draft'ı güncelle
-    if (draftId) {
-      updateDraftMutation.mutate({
-        id: draftId,
-        updates: {
-          currentStep: 2,
-          formData: {
-            selectedCategory: selectedCategory,
-            categoryPath: state.categoryPath,
-            customFields: updatedData
-          }
-        }
-      });
-    }
+    dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
   };
   
   const nextStep = () => {
@@ -82,7 +26,7 @@ export default function Step2() {
   };
   const { data: customFields, isLoading } = useCustomFields(selectedCategory?.id || 0);
 
-  if (isLoading || isDraftLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-2xl mx-auto">
@@ -104,51 +48,9 @@ export default function Step2() {
     return (user as any).role === 'corporate' ? 'Galeriden' : 'Sahibinden';
   };
 
-  // Navbar'lar için dummy search handler
-  const handleSearch = (query: string) => {
-    console.log('Search query:', query);
-  };
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Desktop Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar onSearch={handleSearch} />
-      </div>
-      
-      {/* Mobile/Tablet Navbar */}
-      <div className="lg:hidden">
-        <NavbarMobile 
-          showBackButton={true}
-          onBackClick={() => window.history.back()}
-        />
-      </div>
-
-      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
-      <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
-        {selectedCategory && (
-          <BreadcrumbNav 
-            categoryPath={[selectedCategory]}
-            onCategoryClick={() => {}}
-          />
-        )}
-      </div>
-      
-      {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className="lg:pt-6 pt-[108px]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
-          
-          {/* Desktop Breadcrumb Navigation */}
-          {selectedCategory && (
-            <div className="hidden lg:block mb-6">
-              <BreadcrumbNav 
-                categoryPath={[selectedCategory]}
-                onCategoryClick={() => {}}
-              />
-            </div>
-          )}
-
-          <div className="max-w-2xl mx-auto">
+    <ListingLayout showBreadcrumb={true}>
+      <div className="max-w-2xl mx-auto">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -558,9 +460,7 @@ export default function Step2() {
             Sonraki Adım
           </button>
         </div>
-          </div>
-        </div>
       </div>
-    </div>
+    </ListingLayout>
   );
 }
