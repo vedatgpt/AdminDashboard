@@ -58,18 +58,21 @@ export default function CreateListingStep1() {
     
     let newPath;
     
-    if (isRootCategory && categoryPath.length > 0) {
-      // If selecting a different root category, reset path
+    if (isRootCategory) {
+      // If selecting a root category, reset path completely
       newPath = [category];
     } else {
-      // Check if this category is already selected (prevent duplicates)
-      const existingIndex = categoryPath.findIndex(c => c.id === category.id);
+      // Find which level this category belongs to
+      const currentLevel = getCategoryLevels().findIndex(levelCategories => 
+        levelCategories.some(c => c.id === category.id)
+      );
       
-      if (existingIndex >= 0) {
-        // If category exists in path, truncate to that point
-        newPath = categoryPath.slice(0, existingIndex + 1);
+      if (currentLevel >= 0) {
+        // Replace selection at this level and remove all subsequent levels
+        newPath = categoryPath.slice(0, currentLevel);
+        newPath.push(category);
       } else {
-        // Add new category to path
+        // Fallback: add to end of path
         newPath = [...categoryPath, category];
       }
     }
@@ -172,26 +175,31 @@ export default function CreateListingStep1() {
           {categoryLevels.map((levelCategories, levelIndex) => (
             <div key={levelIndex} className="flex-shrink-0 w-60 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
               <div className="p-2 max-h-80 overflow-y-auto">
-                {levelCategories.map(category => (
-                  <div
-                    key={category.id}
-                    onClick={() => handleCategorySelect(category)}
-                    className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
-                      categoryPath.some(c => c.id === category.id) ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                    }`}
-                  >
-                    {category.icon && (
-                      <img 
-                        src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
-                        alt={category.name}
-                        className="w-4 h-4 object-contain flex-shrink-0"
-                      />
-                    )}
-                    <span className="hover:text-blue-600 transition-colors">
-                      {category.name}
-                    </span>
-                  </div>
-                ))}
+                {levelCategories.map(category => {
+                  const isSelected = categoryPath.some(c => c.id === category.id);
+                  const isCurrentLevelSelected = levelIndex < categoryPath.length && categoryPath[levelIndex]?.id === category.id;
+                  
+                  return (
+                    <div
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category)}
+                      className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
+                        isCurrentLevelSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                      }`}
+                    >
+                      {category.icon && (
+                        <img 
+                          src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                          alt={category.name}
+                          className="w-4 h-4 object-contain flex-shrink-0"
+                        />
+                      )}
+                      <span className="hover:text-blue-600 transition-colors">
+                        {category.name}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
