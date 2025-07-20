@@ -198,15 +198,19 @@ export default function CreateListingStep1() {
         />
       </div>
 
-      {/* Mobile/Tablet Fixed Breadcrumb Navigation */}
-      {categoryPath.length > 0 && (
-        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
+      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
+      <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
+        {categoryPath.length > 0 ? (
           <BreadcrumbNav 
             categoryPath={categoryPath}
             onCategoryClick={handleBreadcrumbClick}
           />
-        </div>
-      )}
+        ) : (
+          <div className="text-sm font-medium text-gray-800">
+            Adım Adım Kategori Seçimi
+          </div>
+        )}
+      </div>
       
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[100px]' : 'lg:pt-6 pt-[100px]'}`}>
