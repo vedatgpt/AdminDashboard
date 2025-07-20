@@ -169,7 +169,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                         }`}
                       >
@@ -187,7 +187,7 @@ export default function CreateListingStep2() {
                   value={value}
                   onChange={(e) => handleInputChange(fieldId, e.target.value)}
                   placeholder={field.placeholder || ''}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                 />
               );
 
@@ -220,7 +220,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                         }`}
                       >
@@ -255,7 +255,7 @@ export default function CreateListingStep2() {
                     handleInputChange(fieldId, processedValue);
                   }}
                   placeholder={field.placeholder || ''}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                   {...numericInputProps}
                 />
               );
@@ -280,7 +280,7 @@ export default function CreateListingStep2() {
                         value={selectedUnit}
                         onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
-                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-gray-500 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
                         }`}
                       >
@@ -298,7 +298,7 @@ export default function CreateListingStep2() {
                 <select
                   value={value}
                   onChange={(e) => handleInputChange(fieldId, e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <option value="">{field.placeholder || "Seçiniz"}</option>
                   {options.map((option: string, index: number) => (
