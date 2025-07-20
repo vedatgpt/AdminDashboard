@@ -335,29 +335,37 @@ export default function Categories() {
                       onDragLeave={(e) => {
                         e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                       }}
-                      onDrop={(e) => {
+                      onDrop={async (e) => {
                         e.preventDefault();
                         e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                         
                         const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                        if (draggedIndex !== index && !isNaN(draggedIndex)) {
+                        if (draggedIndex !== index && !isNaN(draggedIndex) && draggedIndex < filteredCategories.length && index < filteredCategories.length) {
                           const draggedCategory = filteredCategories[draggedIndex];
                           const targetCategory = filteredCategories[index];
                           
-                          // Immediate visual update
-                          const newOrder = draggedIndex < index ? index + 1 : index;
-                          
-                          updateMutation.mutate({ 
-                            id: draggedCategory.id, 
-                            data: { sortOrder: newOrder } 
-                          });
-                          
-                          // Update target category sort order if needed
-                          if (targetCategory.sortOrder <= newOrder) {
-                            updateMutation.mutate({ 
-                              id: targetCategory.id, 
-                              data: { sortOrder: targetCategory.sortOrder + 1 } 
-                            });
+                          if (draggedCategory && targetCategory) {
+                            // Calculate new sort orders
+                            const draggedOriginalOrder = draggedCategory.sortOrder;
+                            const targetOriginalOrder = targetCategory.sortOrder;
+                            
+                            try {
+                              // Update dragged category to target position
+                              await updateMutation.mutateAsync({ 
+                                id: draggedCategory.id, 
+                                data: { sortOrder: targetOriginalOrder } 
+                              });
+                              
+                              // Update target category to dragged position
+                              await updateMutation.mutateAsync({ 
+                                id: targetCategory.id, 
+                                data: { sortOrder: draggedOriginalOrder } 
+                              });
+                              
+                              showAlertMessage('success', 'Kategori sıralaması güncellendi');
+                            } catch (error) {
+                              showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
+                            }
                           }
                         }
                       }}

@@ -4,21 +4,7 @@ import { X, Save, AlertCircle } from "lucide-react";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
 // Helper function to update category metadata
-const updateCategoryMetadata = async (categoryId: number, labelKey: string) => {
-  try {
-    const response = await fetch(`/api/categories/${categoryId}/metadata`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ labelKey }),
-    });
-    
-    if (!response.ok) {
-      console.error('Failed to update category metadata');
-    }
-  } catch (error) {
-    console.error('Error updating category metadata:', error);
-  }
-};
+// This function is now handled in the form submit handler
 
 interface CategoryFormProps {
   isOpen: boolean;
@@ -264,7 +250,19 @@ export default function CategoryForm({
     
     // Save metadata separately if category exists and labelKey is provided
     if (category && formData.labelKey.trim()) {
-      await updateCategoryMetadata(category.id, formData.labelKey.trim());
+      try {
+        const response = await fetch(`/api/categories/${category.id}/metadata`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ labelKey: formData.labelKey.trim() }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Metadata update failed');
+        }
+      } catch (error) {
+        // Metadata update failed but continue with form submission
+      }
     }
     
     // Pass labelKey to parent component for handling
