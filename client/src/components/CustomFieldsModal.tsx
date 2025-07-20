@@ -332,13 +332,16 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   {customFields.map((field) => (
-                    <div key={field.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
+                    <div key={field.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
+                          <div className="flex items-center space-x-2">
                             <h4 className="font-medium text-gray-900">{field.label}</h4>
+                            <span className="text-xs text-gray-500">
+                              ({FIELD_TYPES.find(t => t.value === field.fieldType)?.label})
+                            </span>
                             {field.isRequired && (
                               <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                                 Zorunlu
@@ -349,32 +352,32 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                                 Pasif
                               </span>
                             )}
-                          </div>
-                          <div className="text-sm text-gray-500 space-y-1">
-                            <div><strong>Alan Adı:</strong> {field.fieldName}</div>
-                            <div><strong>Tür:</strong> {FIELD_TYPES.find(t => t.value === field.fieldType)?.label}</div>
-                            {field.placeholder && (
-                              <div><strong>Placeholder:</strong> {field.placeholder}</div>
-                            )}
-                            {field.options && (
-                              <div><strong>Seçenekler:</strong> {field.options}</div>
-                            )}
                             {(field as any).hasUnits && (
-                              <div>
-                                <strong>Birimler:</strong> {(field as any).unitOptions} 
-                                <span className="text-gray-400 ml-1">(varsayılan: {(field as any).defaultUnit})</span>
-                              </div>
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                Birimli
+                              </span>
                             )}
                             {field.fieldType === "number" && ((field as any).minValue !== null || (field as any).maxValue !== null) && (
-                              <div>
-                                <strong>Değer Sınırı:</strong> 
+                              <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                                Sınırlı
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            {field.fieldName}
+                            {(field as any).hasUnits && (
+                              <span className="ml-2">• Birimler: {(field as any).unitOptions}</span>
+                            )}
+                            {field.fieldType === "number" && ((field as any).minValue !== null || (field as any).maxValue !== null) && (
+                              <span className="ml-2">
+                                • Sınır: 
                                 {(field as any).minValue !== null && <span> Min: {(field as any).minValue}</span>}
                                 {(field as any).maxValue !== null && <span> Max: {(field as any).maxValue}</span>}
-                              </div>
+                              </span>
                             )}
                           </div>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1">
                           <button
                             onClick={() => handleEdit(field)}
                             className="p-2 text-gray-400 hover:text-[#EC7830]"
@@ -401,7 +404,7 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
               {/* Form Header */}
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {editingField ? 'Özel Alan Düzenle' : 'Yeni Özel Alan'}
+                  {editingField ? 'Özel Alan Tercihleri' : 'Yeni Özel Alan'}
                 </h3>
                 <button
                   onClick={() => {
@@ -563,7 +566,6 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                   {/* Numeric Field Options - Only for number field type */}
                   {formData.fieldType === "number" && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Sayı Alanı Özellikleri</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -574,17 +576,15 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                             onChange={(e) => setFormData(prev => ({ ...prev, useThousandSeparator: e.target.value === "yes" }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
                           >
-                            <option value="no">Kullanma</option>
-                            <option value="yes">Kullan (150.000)</option>
+                            <option value="no">Hayır</option>
+                            <option value="yes">Evet</option>
                           </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            150000 → 150.000 formatında görünüm
-                          </p>
+                          
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Mobil Klavye
+                            Klavye Türü
                           </label>
                           <select
                             value={formData.useMobileNumericKeyboard ? "numeric" : "default"}
@@ -592,11 +592,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
                           >
                             <option value="default">Varsayılan</option>
-                            <option value="numeric">Sayı Klavyesi</option>
+                            <option value="numeric">Numerik Klavye</option>
                           </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Mobil cihazlarda sayı klavyesi açılır
-                          </p>
+                          
                         </div>
 
                         <div>
@@ -611,9 +609,7 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                             <option value="mixed">Karışık</option>
                             <option value="numbers-only">Sadece Rakam</option>
                           </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Harf ve özel karakter engellenir
-                          </p>
+                          
                         </div>
                       </div>
                     </div>
@@ -621,7 +617,6 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
 
                   {/* Unit System - Available for all field types */}
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Birim Sistemi</h4>
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -632,8 +627,8 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                           onChange={(e) => setFormData(prev => ({ ...prev, hasUnits: e.target.value === "yes" }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
                         >
-                          <option value="no">Birim kullanma</option>
-                          <option value="yes">Birim kullan</option>
+                          <option value="no">Hayır</option>
+                          <option value="yes">Evet</option>
                         </select>
                         <p className="text-xs text-gray-500 mt-1">
                           Kullanıcının değer ile birlikte birim de seçebilmesini sağlar (örn: 52.000 km)
@@ -658,10 +653,7 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                                 <AlertCircle className="w-4 h-4 mr-1" />
                                 {errors.unitOptions}
                               </p>
-                            )}
-                            <p className="text-xs text-gray-500 mt-1">
-                              JSON dizisi formatında birimleri giriniz. Örnek: ["km", "mil", "metre"]
-                            </p>
+                            )}                           
                           </div>
 
                           <div>
@@ -681,9 +673,6 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                                 {errors.defaultUnit}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500 mt-1">
-                              Kullanıcı için önceden seçili olan birim
-                            </p>
                           </div>
                         </>
                       )}
@@ -693,7 +682,6 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                   {/* Min/Max values for number fields */}
                   {formData.fieldType === "number" && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Değer Sınırları</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -732,10 +720,7 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                             </p>
                           )}
                         </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Kullanıcının girebileceği minimum ve maksimum değerleri belirler (isteğe bağlı)
-                      </p>
+                      </div>                    
                     </div>
                   )}
                 </div>

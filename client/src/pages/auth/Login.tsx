@@ -56,9 +56,12 @@ export default function Login() {
         description: "Giriş yapıldı",
       });
     } catch (error: any) {
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          'Giriş başarısız';
       toast({
         title: "Hata",
-        description: error.message || "Giriş başarısız",
+        description: errorMessage,
         variant: "destructive",
       });
     }
