@@ -43,9 +43,13 @@ export default function PostAd() {
     const newPath = [...selectedPath, newStep];
     setSelectedPath(newPath);
 
-    // Always set as final category - we'll load custom fields for any selected category
-    // Custom fields will be inherited from parent categories if none exist for this category
-    setFinalCategory(category);
+    // Only set as final category if it has no children
+    // This way we continue navigation until we reach a leaf category
+    if (!hasChildren(category.id)) {
+      setFinalCategory(category);
+    } else {
+      setFinalCategory(null);
+    }
   };
 
   // Go back to previous level
@@ -243,23 +247,28 @@ export default function PostAd() {
           </div>
         </div>
 
-        {/* Custom Fields Display */}
+        {/* Progress Info */}
+        {selectedPath.length > 0 && !finalCategory && (
+          <div className="bg-white rounded-lg border shadow-sm max-w-4xl mx-auto mt-6">
+            <div className="p-6">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="font-medium text-blue-800 mb-2">Kategori Seçimi Devam Ediyor</h3>
+                <p className="text-blue-700 text-sm">
+                  Şu anda <strong>{selectedPath[selectedPath.length - 1].category.name}</strong> kategorisinin alt kategorilerini görüyorsunuz. 
+                  Devam etmek için bir alt kategori seçin.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Final Category Custom Fields Display */}
         {finalCategory && (
           <div className="bg-white rounded-lg border shadow-sm max-w-4xl mx-auto mt-6">
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">
-                {finalCategory.name} - Test Sonucu
+                {finalCategory.name} - Son Kategori Seçildi
               </h2>
-              
-              {/* Show that the category can be navigated further if it has children */}
-              {hasChildren(finalCategory.id) && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
-                  <h3 className="font-medium text-blue-800 mb-2">Alt Kategoriler Mevcut</h3>
-                  <p className="text-blue-700 text-sm">
-                    Bu kategorinin alt kategorileri var. Daha spesifik seçim için alt kategorilerden birini seçebilirsiniz.
-                  </p>
-                </div>
-              )}
 
               {customFields.length > 0 && (
                 <>
@@ -295,7 +304,6 @@ export default function PostAd() {
                     <h3 className="font-medium text-green-800 mb-2">Test Başarılı!</h3>
                     <p className="text-green-700 text-sm">
                       Kategori seçimi tamamlandı ve özel alanlar başarıyla yüklendi. 
-                      {hasChildren(finalCategory.id) ? " Alt kategorileri de seçebilir veya " : " "}
                       Yukarıdaki alanları test edebilirsiniz.
                     </p>
                   </div>
@@ -307,7 +315,7 @@ export default function PostAd() {
                   <h3 className="font-medium text-gray-800 mb-2">Özel Alan Bulunamadı</h3>
                   <p className="text-gray-700 text-sm">
                     Bu kategori ve üst kategorilerinde henüz özel alan tanımlanmamış. 
-                    {hasChildren(finalCategory.id) ? " Alt kategorilerden birini seçerek devam edebilirsiniz." : " Kategori seçimi başarıyla çalışıyor."}
+                    Kategori seçimi başarıyla çalışıyor.
                   </p>
                 </div>
               )}
