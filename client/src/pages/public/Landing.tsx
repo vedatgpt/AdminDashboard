@@ -65,39 +65,8 @@ export default function Landing() {
           </div>
         </div>
         
-        {/* Categories Preview Section */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Popüler Kategoriler
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {/* Placeholder category cards - will be populated with real data later */}
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">🚗</div>
-              <div className="text-sm font-medium">Vasıta</div>
-            </div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">🏠</div>
-              <div className="text-sm font-medium">Emlak</div>
-            </div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">📱</div>
-              <div className="text-sm font-medium">Teknoloji</div>
-            </div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">👕</div>
-              <div className="text-sm font-medium">Giyim</div>
-            </div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">🛋️</div>
-              <div className="text-sm font-medium">Ev & Yaşam</div>
-            </div>
-            <div className="bg-gray-100 p-4 rounded-lg text-center hover:bg-gray-200 transition-colors cursor-pointer">
-              <div className="text-2xl mb-2">⚽</div>
-              <div className="text-sm font-medium">Spor</div>
-            </div>
-          </div>
-        </div>
+     
+        
       </main>
     </div>
   );
