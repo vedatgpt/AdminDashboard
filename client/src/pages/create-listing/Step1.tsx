@@ -206,8 +206,8 @@ export default function CreateListingStep1() {
             onCategoryClick={handleBreadcrumbClick}
           />
         ) : (
-          <div className="text-sm font-medium text-gray-800">
-            Adım Adım Kategori Seçimi
+          <div className="flex items-center space-x-1 text-xs lg:text-sm flex-wrap">
+            <span className="text-gray-700">Adım Adım Kategori Seçimi</span>
           </div>
         )}
       </div>
