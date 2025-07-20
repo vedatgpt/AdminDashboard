@@ -317,59 +317,84 @@ export default function Categories() {
                   return (
                     <div
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition-all duration-150 cursor-pointer group relative"
-                      draggable
+                      className="p-4 hover:bg-gray-50 transition-all duration-150 group relative border border-transparent"
+                      draggable={!isAnyMutationLoading}
                       onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', index.toString());
+                        if (isAnyMutationLoading) {
+                          e.preventDefault();
+                          return;
+                        }
+                        e.dataTransfer.setData('text/plain', category.id.toString());
                         e.dataTransfer.effectAllowed = 'move';
-                        e.currentTarget.classList.add('opacity-50');
+                        e.currentTarget.style.opacity = '0.5';
                       }}
                       onDragEnd={(e) => {
-                        e.currentTarget.classList.remove('opacity-50');
+                        e.currentTarget.style.opacity = '1';
+                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
                         e.dataTransfer.dropEffect = 'move';
-                        e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
+                        if (!e.currentTarget.classList.contains('bg-blue-50')) {
+                          e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
+                        }
                       }}
                       onDragLeave={(e) => {
-                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX;
+                        const y = e.clientY;
+                        
+                        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                          e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
+                        }
                       }}
                       onDrop={async (e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
                         
-                        const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                        if (draggedIndex !== index && !isNaN(draggedIndex) && draggedIndex < filteredCategories.length && index < filteredCategories.length) {
-                          const draggedCategory = filteredCategories[draggedIndex];
-                          const targetCategory = filteredCategories[index];
+                        if (isAnyMutationLoading) return;
+                        
+                        const draggedCategoryId = parseInt(e.dataTransfer.getData('text/plain'));
+                        const targetCategory = category;
+                        
+                        if (draggedCategoryId === targetCategory.id || isNaN(draggedCategoryId)) return;
+                        
+                        const draggedCategory = filteredCategories.find(cat => cat.id === draggedCategoryId);
+                        if (!draggedCategory) return;
+                        
+                        try {
+                          // Swap sort orders between dragged and target categories
+                          const tempOrder = Date.now(); // Temporary unique sort order
                           
-                          if (draggedCategory && targetCategory) {
-                            // Calculate new sort orders
-                            const draggedOriginalOrder = draggedCategory.sortOrder;
-                            const targetOriginalOrder = targetCategory.sortOrder;
-                            
-                            try {
-                              // Update dragged category to target position
-                              await updateMutation.mutateAsync({ 
-                                id: draggedCategory.id, 
-                                data: { sortOrder: targetOriginalOrder } 
-                              });
-                              
-                              // Update target category to dragged position
-                              await updateMutation.mutateAsync({ 
-                                id: targetCategory.id, 
-                                data: { sortOrder: draggedOriginalOrder } 
-                              });
-                              
-                              showAlertMessage('success', 'Kategori sıralaması güncellendi');
-                            } catch (error) {
-                              showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
-                            }
-                          }
+                          // First, set dragged category to temp order
+                          await updateMutation.mutateAsync({ 
+                            id: draggedCategory.id, 
+                            data: { sortOrder: tempOrder } 
+                          });
+                          
+                          // Then set target to dragged's original order
+                          await updateMutation.mutateAsync({ 
+                            id: targetCategory.id, 
+                            data: { sortOrder: draggedCategory.sortOrder } 
+                          });
+                          
+                          // Finally set dragged to target's original order
+                          await updateMutation.mutateAsync({ 
+                            id: draggedCategory.id, 
+                            data: { sortOrder: targetCategory.sortOrder } 
+                          });
+                          
+                          showAlertMessage('success', 'Kategori sıralaması güncellendi');
+                        } catch (error) {
+                          showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
                         }
                       }}
-                      onClick={() => handleCategoryClick(category)}
+                      onClick={(e) => {
+                        // Don't navigate if drag handle is clicked
+                        if ((e.target as HTMLElement).closest('.opacity-0')) return;
+                        handleCategoryClick(category);
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center flex-1">

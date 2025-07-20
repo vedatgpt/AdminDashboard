@@ -248,24 +248,7 @@ export default function CategoryForm({
       delete submitData.icon;
     }
     
-    // Save metadata separately if category exists and labelKey is provided
-    if (category && formData.labelKey.trim()) {
-      try {
-        const response = await fetch(`/api/categories/${category.id}/metadata`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ labelKey: formData.labelKey.trim() }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Metadata update failed');
-        }
-      } catch (error) {
-        // Metadata update failed but continue with form submission
-      }
-    }
-    
-    // Pass labelKey to parent component for handling
+    // Pass all data to parent component for handling - including metadata
     onSubmit(submitData, formData.labelKey.trim() || undefined);
   };
 
