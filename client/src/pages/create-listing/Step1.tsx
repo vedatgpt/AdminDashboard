@@ -177,34 +177,70 @@ export default function CreateListingStep1() {
 
           {/* Category Selection */}
           {categoryPath.length === 0 ? (
-            /* Root categories - Card layout */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {allCategories.filter(cat => !cat.parentId).map(category => (
-              <div
-                key={category.id}
-                onClick={() => handleCategorySelect(category)}
-                className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
-              >
-                <div className="flex flex-col items-center space-y-3">
-                  {category.icon && (
-                    <div className="w-12 h-12 flex items-center justify-center">
-                      <img 
-                        src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
-                        alt={category.name}
-                        className="w-8 h-8 object-contain"
-                      />
+            /* Root categories - Desktop: Card layout, Mobile/Tablet: List layout */
+            <>
+              {/* Desktop Grid */}
+              <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {allCategories.filter(cat => !cat.parentId).map(category => (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category)}
+                    className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
+                  >
+                    <div className="flex flex-col items-center space-y-3">
+                      {category.icon && (
+                        <div className="w-12 h-12 flex items-center justify-center">
+                          <img 
+                            src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                            alt={category.name}
+                            className="w-8 h-8 object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className="text-center">
+                        <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                          {category.name}
+                        </h3>
+                      </div>
                     </div>
-                  )}
-                  <div className="text-center">
-                    <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                      {category.name}
-                    </h3>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
+
+              {/* Mobile/Tablet List */}
+              <div className="lg:hidden space-y-3">
+                {allCategories.filter(cat => !cat.parentId).map(category => (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category)}
+                    className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                  >
+                    <div className="flex items-center space-x-4">
+                      {category.icon && (
+                        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                            alt={category.name}
+                            className="w-6 h-6 object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 text-base">
+                          {category.name}
+                        </h3>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
           /* Sub-categories - Box layout */
           <div className="flex gap-4 overflow-x-auto pb-4 category-boxes-container">
             {categoryLevels.slice(1).map((levelCategories, levelIndex) => {
