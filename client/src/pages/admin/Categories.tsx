@@ -126,16 +126,21 @@ export default function Categories() {
       }
       
       // Update category metadata if labelKey is provided  
-      if (labelKey) {
+      if (labelKey && labelKey.trim()) {
         try {
           const response = await fetch(`/api/categories/${categoryId}/metadata`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ labelKey }),
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ labelKey: labelKey.trim() }),
           });
           
           if (!response.ok) {
-            console.error('Failed to update category metadata');
+            const errorText = await response.text();
+            console.error('Metadata update failed:', response.status, errorText);
           }
         } catch (metaError) {
           console.error('Error updating category metadata:', metaError);
@@ -148,7 +153,7 @@ export default function Categories() {
     } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : 
                           typeof error === 'string' ? error : 
-                          'Bir hata oluştu';
+                          'İşlem sırasında bir hata oluştu';
       showAlertMessage('error', errorMessage);
     }
   };

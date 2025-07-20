@@ -249,7 +249,7 @@ export default function CategoryForm({
     }
     
     // Pass all data to parent component for handling - including metadata
-    onSubmit(submitData, formData.labelKey.trim() || undefined);
+    onSubmit(submitData, formData.labelKey?.trim() || undefined);
   };
 
   if (!isOpen) return null;
