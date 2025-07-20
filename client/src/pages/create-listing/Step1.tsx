@@ -161,8 +161,8 @@ export default function CreateListingStep1() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           
           {/* Page Title */}
-          <div className="mb-8 text-left">
-            <h1 className="text-3xl font-bold text-gray-900">Adım Adım Kategori Seçimi</h1>
+          <div className="mb-6 text-left">
+            <h1 className="text-1xl font-semibold text-gray-900">Adım Adım Kategori Seçimi</h1>
           </div>
 
           {/* Breadcrumb Navigation */}
