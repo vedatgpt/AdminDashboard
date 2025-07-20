@@ -169,7 +169,10 @@ export default function PostAd() {
             <select
               value={selectedUnit}
               onChange={(e) => handleUnitChange(field.fieldName, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              disabled={unitOptions.length <= 1}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                unitOptions.length <= 1 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+              }`}
             >
               {unitOptions.map((unit: string, index: number) => (
                 <option key={index} value={unit}>

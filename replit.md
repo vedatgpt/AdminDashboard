@@ -345,3 +345,4 @@ Authentication features:
 - Complete form validation for unit options and default unit selection
 - All field types support optional unit system - flexible and universal implementation
 - Admin interface shows unit information in field listings with default unit display
+- Smart unit dropdown: disabled (gray) when only 1 unit option exists - perfect for fields like motor power (300 hp)
