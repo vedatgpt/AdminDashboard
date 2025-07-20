@@ -47,7 +47,7 @@ export default function Step2() {
               theme="snow"
               value={formData.customFields.description || ''}
               onChange={(value) => handleInputChange('description', value)}
-              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              placeholder="Açıklama girin..."
               onFocus={() => {
                 // Focus olduğunda placeholder'ı hemen temizle
                 const currentValue = formData.customFields.description || '';
