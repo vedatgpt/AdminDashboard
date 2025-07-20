@@ -43,6 +43,11 @@
   font-style: normal !important;
 }
 
+/* Focus olduğunda placeholder'ı gizle */
+.quill-editor-wrapper .ql-editor:focus.ql-blank::before {
+  display: none !important;
+}
+
 .quill-editor-wrapper .ql-toolbar .ql-stroke {
   stroke: #6b7280 !important;
 }

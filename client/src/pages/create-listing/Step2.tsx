@@ -49,10 +49,13 @@ export default function Step2() {
               onChange={(value) => handleInputChange('description', value)}
               placeholder="Ürününüzün detaylı açıklamasını yazınız..."
               onFocus={() => {
-                // Boş içerik varsa temizle - ReactQuill placeholder mantığı
+                // Focus olduğunda placeholder'ı hemen temizle
                 const currentValue = formData.customFields.description || '';
-                if (currentValue === '<p><br></p>' || currentValue === '' || !currentValue.replace(/<[^>]*>/g, '').trim()) {
-                  handleInputChange('description', '');
+                const hasContent = currentValue && currentValue.replace(/<[^>]*>/g, '').trim();
+                
+                if (!hasContent) {
+                  // Boş bir paragraf ile değiştir ki cursor görünsün
+                  handleInputChange('description', '<p><br></p>');
                 }
               }}
               modules={{
