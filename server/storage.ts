@@ -44,6 +44,7 @@ export interface IStorage {
   
   // Custom Fields methods
   getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
+  getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]>;
   createCustomField(data: InsertCustomField): Promise<CategoryCustomField>;
   updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField>;
   deleteCustomField(id: number): Promise<void>;
@@ -335,6 +336,36 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(categoryCustomFields)
       .where(eq(categoryCustomFields.categoryId, categoryId))
       .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
+  }
+
+  async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
+    // Get the category breadcrumbs (current category and all parents)
+    const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
+    const allFields: CategoryCustomField[] = [];
+    const fieldNamesSeen = new Set<string>();
+
+    // Start from the deepest (current) category and work backwards to parents
+    // This ensures child category fields override parent fields with same fieldName
+    for (let i = breadcrumbs.length - 1; i >= 0; i--) {
+      const category = breadcrumbs[i];
+      const fieldsForCategory = await this.getCategoryCustomFields(category.id);
+      
+      for (const field of fieldsForCategory) {
+        // Only add if we haven't seen this fieldName before (child overrides parent)
+        if (!fieldNamesSeen.has(field.fieldName)) {
+          allFields.push(field);
+          fieldNamesSeen.add(field.fieldName);
+        }
+      }
+    }
+
+    // Sort by sortOrder and then by label
+    return allFields.sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return (a.sortOrder || 0) - (b.sortOrder || 0);
+      }
+      return a.label.localeCompare(b.label);
+    });
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {

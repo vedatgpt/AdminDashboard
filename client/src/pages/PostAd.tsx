@@ -43,12 +43,9 @@ export default function PostAd() {
     const newPath = [...selectedPath, newStep];
     setSelectedPath(newPath);
 
-    // If this category has no children, it's the final category
-    if (!hasChildren(category.id)) {
-      setFinalCategory(category);
-    } else {
-      setFinalCategory(null);
-    }
+    // Always set as final category - we'll load custom fields for any selected category
+    // Custom fields will be inherited from parent categories if none exist for this category
+    setFinalCategory(category);
   };
 
   // Go back to previous level
@@ -247,63 +244,73 @@ export default function PostAd() {
         </div>
 
         {/* Custom Fields Display */}
-        {finalCategory && customFields.length > 0 && (
-          <div className="bg-white rounded-lg border shadow-sm max-w-4xl mx-auto mt-6">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                {finalCategory.name} - Özel Alanlar
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {customFields.map((field) => (
-                  <div key={field.id} className="border border-gray-200 rounded-md p-4">
-                    <div className="font-medium text-gray-900 mb-2">
-                      {field.label}
-                      {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      Tip: {field.fieldType}
-                    </div>
-                    {field.placeholder && (
-                      <div className="text-sm text-gray-500 mb-2">
-                        Placeholder: {field.placeholder}
-                      </div>
-                    )}
-                    {field.options && (
-                      <div className="text-sm text-gray-500">
-                        Seçenekler: {field.options}
-                      </div>
-                    )}
-                    {/* Demo input for testing */}
-                    <div className="mt-3">
-                      {renderCustomField(field)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                <h3 className="font-medium text-green-800 mb-2">Test Başarılı!</h3>
-                <p className="text-green-700 text-sm">
-                  Kategori seçimi tamamlandı ve özel alanlar başarıyla yüklendi. 
-                  Yukarıdaki alanları test edebilirsiniz.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {finalCategory && customFields.length === 0 && (
+        {finalCategory && (
           <div className="bg-white rounded-lg border shadow-sm max-w-4xl mx-auto mt-6">
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-4">
                 {finalCategory.name} - Test Sonucu
               </h2>
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
-                <h3 className="font-medium text-blue-800 mb-2">Kategori Seçimi Tamamlandı!</h3>
-                <p className="text-blue-700 text-sm">
-                  Bu kategoride henüz özel alan tanımlanmamış. 
-                  Kategori seçimi başarıyla çalışıyor.
-                </p>
-              </div>
+              
+              {/* Show that the category can be navigated further if it has children */}
+              {hasChildren(finalCategory.id) && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
+                  <h3 className="font-medium text-blue-800 mb-2">Alt Kategoriler Mevcut</h3>
+                  <p className="text-blue-700 text-sm">
+                    Bu kategorinin alt kategorileri var. Daha spesifik seçim için alt kategorilerden birini seçebilirsiniz.
+                  </p>
+                </div>
+              )}
+
+              {customFields.length > 0 && (
+                <>
+                  <h3 className="text-lg font-medium mb-4">Özel Alanlar</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {customFields.map((field) => (
+                      <div key={field.id} className="border border-gray-200 rounded-md p-4">
+                        <div className="font-medium text-gray-900 mb-2">
+                          {field.label}
+                          {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">
+                          Tip: {field.fieldType}
+                        </div>
+                        {field.placeholder && (
+                          <div className="text-sm text-gray-500 mb-2">
+                            Placeholder: {field.placeholder}
+                          </div>
+                        )}
+                        {field.options && (
+                          <div className="text-sm text-gray-500">
+                            Seçenekler: {field.options}
+                          </div>
+                        )}
+                        {/* Demo input for testing */}
+                        <div className="mt-3">
+                          {renderCustomField(field)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                    <h3 className="font-medium text-green-800 mb-2">Test Başarılı!</h3>
+                    <p className="text-green-700 text-sm">
+                      Kategori seçimi tamamlandı ve özel alanlar başarıyla yüklendi. 
+                      {hasChildren(finalCategory.id) ? " Alt kategorileri de seçebilir veya " : " "}
+                      Yukarıdaki alanları test edebilirsiniz.
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {customFields.length === 0 && (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
+                  <h3 className="font-medium text-gray-800 mb-2">Özel Alan Bulunamadı</h3>
+                  <p className="text-gray-700 text-sm">
+                    Bu kategori ve üst kategorilerinde henüz özel alan tanımlanmamış. 
+                    {hasChildren(finalCategory.id) ? " Alt kategorilerden birini seçerek devam edebilirsiniz." : " Kategori seçimi başarıyla çalışıyor."}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

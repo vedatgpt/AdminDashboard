@@ -125,7 +125,8 @@ router.get('/:id/custom-fields', async (req, res) => {
       return res.status(400).json({ error: 'Invalid category ID' });
     }
 
-    const customFields = await storage.getCategoryCustomFields(categoryId);
+    // Use inheritance to get custom fields from parent categories if none exist for this category
+    const customFields = await storage.getCategoryCustomFieldsWithInheritance(categoryId);
     res.json(customFields);
   } catch (error) {
     console.error('Get custom fields error:', error);
