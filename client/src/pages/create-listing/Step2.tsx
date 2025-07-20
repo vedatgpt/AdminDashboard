@@ -58,20 +58,43 @@ export default function Step2() {
   return (
     <div className="min-h-screen bg-white">
       {/* Desktop Navbar */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <ModernNavbar onSearch={handleSearch} />
       </div>
-
+      
       {/* Mobile/Tablet Navbar */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <NavbarMobile 
           showBackButton={true}
           onBackClick={() => window.history.back()}
         />
       </div>
 
-      <div className="p-4">
-        <div className="max-w-2xl mx-auto">
+      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
+      <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
+        {selectedCategory && (
+          <BreadcrumbNav 
+            categoryPath={[selectedCategory]}
+            onCategoryClick={() => {}}
+          />
+        )}
+      </div>
+      
+      {/* Main content with dynamic padding based on breadcrumb presence */}
+      <div className="lg:pt-6 pt-[108px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
+          
+          {/* Desktop Breadcrumb Navigation */}
+          {selectedCategory && (
+            <div className="hidden lg:block mb-6">
+              <BreadcrumbNav 
+                categoryPath={[selectedCategory]}
+                onCategoryClick={() => {}}
+              />
+            </div>
+          )}
+
+          <div className="max-w-2xl mx-auto">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -481,6 +504,7 @@ export default function Step2() {
             Sonraki Adım
           </button>
         </div>
+          </div>
         </div>
       </div>
     </div>
