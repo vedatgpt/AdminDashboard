@@ -13,7 +13,7 @@ const apiRequest = async (url: string, options?: RequestInit) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Request failed');
+    throw new Error(errorData.error || `Request failed with status ${response.status}`);
   }
 
   return response.json();

@@ -445,3 +445,15 @@ Authentication features:
 - Fixed navbar positioning: lg:hidden for mobile, hidden lg:block for desktop
 - Proper content padding to prevent overlap with fixed elements
 - Breadcrumb shows selected category from Step-1 context
+
+### Database-Driven Draft System Implementation (July 20, 2025)
+- Created draft_listings table with PostgreSQL for persistent state management
+- Implemented comprehensive draft API endpoints (GET, POST, PATCH, DELETE)
+- Added database storage interface with proper error handling and user validation
+- Step-1 now creates draft when final category is selected (manual button click required)
+- Step-2 loads draft data from database and auto-saves form changes
+- URL structure: /create-listing/step-2?draftId=uuid for state persistence
+- Fixed category selection persistence - Step-1 remembers previous selections
+- Removed auto-navigation after category selection - manual confirmation required
+- All form data stored as JSON in database with proper user ownership validation
+- Authentication-based access control for draft operations

@@ -21,6 +21,13 @@ export default function CreateListingStep1() {
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
 
+  // Mevcut seçili kategoriyi context'ten yükle
+  React.useEffect(() => {
+    if (state.selectedCategory && state.categoryPath && state.categoryPath.length > 0) {
+      setCategoryPath(state.categoryPath);
+    }
+  }, [state.selectedCategory, state.categoryPath]);
+
   // Build flat categories array for easy lookup  
   const flatCategories = React.useMemo(() => {
     const flatten = (categories: Category[]): Category[] => {
@@ -92,15 +99,20 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), create draft and navigate
+    // If this is a leaf category (no children), set as final selection but don't auto-navigate
     if (!hasChildren(category)) {
-      handleFinalCategorySelection(category, newPath);
+      dispatch({
+        type: 'SET_CATEGORY',
+        payload: { category, path: newPath }
+      });
     }
   };
 
   // Handle final category selection and draft creation
   const handleFinalCategorySelection = async (category: Category, path: Category[]) => {
     try {
+      console.log('Creating draft for category:', category.name);
+      
       // Create draft listing
       const draft = await createDraftMutation.mutateAsync({
         categoryId: category.id,
@@ -110,6 +122,8 @@ export default function CreateListingStep1() {
           categoryPath: path
         }
       });
+
+      console.log('Draft created successfully:', draft.id);
 
       // Update context
       dispatch({
@@ -121,6 +135,7 @@ export default function CreateListingStep1() {
       navigate(`/create-listing/step-2?draftId=${draft.id}`);
     } catch (error) {
       console.error('Draft creation failed:', error);
+      alert('Oturum sonlandırılmış. Lütfen giriş yapınız.');
       // Fallback: still navigate but without draft
       dispatch({
         type: 'SET_CATEGORY', 
