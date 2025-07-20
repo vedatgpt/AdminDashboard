@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, Save, AlertCircle } from "lucide-react";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
@@ -73,11 +73,13 @@ export default function CategoryForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [iconFile, setIconFile] = useState<File | null>(null);
+  
+  const queryClient = useQueryClient();
 
   // Preload metadata for editing category using React Query
   const { data: categoryMetadata } = useQuery({
     queryKey: ['/api/categories', category?.id, 'path'],
-    enabled: !!category?.id && isOpen,
+    enabled: !!category?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
     refetchOnWindowFocus: false,
     gcTime: 10 * 60 * 1000,
@@ -85,7 +87,42 @@ export default function CategoryForm({
 
   useEffect(() => {
     if (category) {
-      // Edit mode - load existing metadata
+      // Try to get cached metadata immediately for instant loading
+      let labelKey = "";
+      
+      // First check React Query cache for instant loading
+      const queryKey = ['/api/categories', category.id, 'path'];
+      const cachedMetadata = queryClient.getQueryData(queryKey);
+      
+      if (cachedMetadata) {
+        try {
+          const path = cachedMetadata as any[];
+          const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
+          if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+            labelKey = currentCategoryInPath.label;
+          }
+        } catch (error) {
+          console.error('Error parsing cached metadata:', error);
+        }
+      } else {
+        // Fallback to session storage
+        const cacheKey = `category-metadata-${category.id}`;
+        const sessionData = sessionStorage.getItem(cacheKey);
+        
+        if (sessionData) {
+          try {
+            const path = JSON.parse(sessionData);
+            const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
+            if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+              labelKey = currentCategoryInPath.label;
+            }
+          } catch (error) {
+            console.error('Error parsing session cached metadata:', error);
+          }
+        }
+      }
+      
+      // Edit mode - load existing metadata with instant cache lookup
       setFormData({
         name: category.name,
         slug: category.slug,
@@ -93,7 +130,7 @@ export default function CategoryForm({
         icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
-        labelKey: "",
+        labelKey: labelKey, // Use cached value immediately
       });
     } else if (parentCategory) {
       // Add child mode
@@ -122,15 +159,19 @@ export default function CategoryForm({
     setIconFile(null); // Clear file input state when form opens
   }, [category, parentCategory, isOpen]);
 
-  // Separate effect to update labelKey when metadata is loaded
+  // Separate effect to update labelKey when fresh metadata is loaded (fallback)
   useEffect(() => {
-    if (categoryMetadata && category) {
+    if (categoryMetadata && category && formData.labelKey === "") {
       const currentCategoryInPath = categoryMetadata.find((item: any) => item.category.id === category.id);
       if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
         setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
+        
+        // Update session storage cache for next time
+        const cacheKey = `category-metadata-${category.id}`;
+        sessionStorage.setItem(cacheKey, JSON.stringify(categoryMetadata));
       }
     }
-  }, [categoryMetadata, category]);
+  }, [categoryMetadata, category, formData.labelKey]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
