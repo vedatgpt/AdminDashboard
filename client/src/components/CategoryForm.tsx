@@ -261,6 +261,11 @@ export default function CategoryForm({
       delete submitData.icon;
     }
     
+    // Save metadata separately if category exists and labelKey is provided
+    if (category && formData.labelKey.trim()) {
+      await updateCategoryMetadata(category.id, formData.labelKey.trim());
+    }
+    
     // Pass labelKey to parent component for handling
     onSubmit(submitData, formData.labelKey.trim() || undefined);
   };
