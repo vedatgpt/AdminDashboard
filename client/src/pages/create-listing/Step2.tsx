@@ -72,14 +72,48 @@ export default function CreateListingStep2() {
     navigate('/create-listing/step-1');
   };
 
+  // Helper functions from PostAd.tsx
+  const formatWithThousands = (value: string): string => {
+    if (!value) return '';
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
   // Render form field based on type (using PostAd.tsx working implementation)
   const renderField = (field: any) => {
     const fieldId = field.id.toString();
     const currentValue = formData[fieldId];
+    const value = currentValue?.value || currentValue || '';
+    const selectedUnit = currentValue?.unit || field.defaultUnit || '';
 
-    // Parse JSON fields like PostAd.tsx does
-    const unitOptions = field.unitOptions ? JSON.parse(field.unitOptions) : [];
-    const selectOptions = field.selectOptions ? JSON.parse(field.selectOptions) : [];
+    // Get field data like PostAd.tsx - using field directly
+    const fieldData = field;
+
+    // Parse JSON fields like PostAd.tsx does - use correct field names
+    const unitOptions = fieldData.unitOptions ? JSON.parse(fieldData.unitOptions) : [];
+    const selectOptions = fieldData.selectOptions ? JSON.parse(fieldData.selectOptions) : [];
+    
+    // For select fields, also check field.options (PostAd uses this)
+    const options = field.options ? JSON.parse(field.options) : selectOptions;
+
+    // Numeric input props for mobile
+    const numericInputProps = {
+      inputMode: 'numeric' as const,
+      pattern: '[0-9]*',
+    };
+
+    // Handle value with unit change (for fields with units)
+    const handleValueWithUnitChange = (fieldName: string, newValue: any) => {
+      const currentData = formData[fieldName] || {};
+      const updatedData = { ...currentData, value: newValue };
+      handleInputChange(fieldName, updatedData);
+    };
+
+    // Handle unit change
+    const handleUnitChange = (fieldName: string, unit: string) => {
+      const currentData = formData[fieldName] || {};
+      const updatedData = { ...currentData, unit };
+      handleInputChange(fieldName, updatedData);
+    };
 
     return (
       <div key={field.id} className="space-y-2">
@@ -91,26 +125,20 @@ export default function CreateListingStep2() {
         {(() => {
           switch (field.fieldType) {
             case 'text':
-              if (field.hasUnits && unitOptions.length > 0) {
+              if (fieldData.hasUnits && unitOptions.length > 0) {
                 return (
                   <div className="relative">
                     <input
                       type="text"
-                      value={currentValue?.value || ''}
-                      onChange={(e) => handleInputChange(fieldId, {
-                        ...currentValue,
-                        value: e.target.value
-                      })}
+                      value={value}
+                      onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
                       placeholder={field.placeholder || ''}
                       className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
                     />
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                       <select
-                        value={currentValue?.unit || field.defaultUnit || ''}
-                        onChange={(e) => handleInputChange(fieldId, {
-                          ...currentValue,
-                          unit: e.target.value
-                        })}
+                        value={selectedUnit}
+                        onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
                         className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
@@ -127,7 +155,7 @@ export default function CreateListingStep2() {
               return (
                 <input
                   type="text"
-                  value={currentValue || ''}
+                  value={value}
                   onChange={(e) => handleInputChange(fieldId, e.target.value)}
                   placeholder={field.placeholder || ''}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
@@ -135,38 +163,33 @@ export default function CreateListingStep2() {
               );
 
             case 'number':
-              if (field.hasUnits && unitOptions.length > 0) {
+              if (fieldData.hasUnits && unitOptions.length > 0) {
                 return (
                   <div className="relative">
                     <input
                       type="text"
-                      value={currentValue?.value || ''}
+                      value={fieldData.useThousandSeparator ? formatWithThousands(value) : value}
                       onChange={(e) => {
                         let processedValue = e.target.value.replace(/\D/g, '');
                         
                         // Apply min/max validation - prevent exceeding limits
-                        if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                        if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
                           return; // Don't allow input beyond max value
                         }
-                        if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                        if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
                           return; // Don't allow input below min value once reaching min digits
                         }
                         
-                        handleInputChange(fieldId, {
-                          ...currentValue,
-                          value: processedValue
-                        });
+                        handleValueWithUnitChange(fieldId, processedValue);
                       }}
                       placeholder={field.placeholder || ''}
                       className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      {...numericInputProps}
                     />
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                       <select
-                        value={currentValue?.unit || field.defaultUnit || ''}
-                        onChange={(e) => handleInputChange(fieldId, {
-                          ...currentValue,
-                          unit: e.target.value
-                        })}
+                        value={selectedUnit}
+                        onChange={(e) => handleUnitChange(fieldId, e.target.value)}
                         disabled={unitOptions.length <= 1}
                         className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
                           unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
@@ -180,18 +203,23 @@ export default function CreateListingStep2() {
                   </div>
                 );
               }
+              // For number fields without units
+              const displayValue = fieldData.useThousandSeparator 
+                ? formatWithThousands(value) 
+                : value;
+
               return (
                 <input
                   type="text"
-                  value={currentValue || ''}
+                  value={displayValue}
                   onChange={(e) => {
                     let processedValue = e.target.value.replace(/\D/g, '');
                     
                     // Apply min/max validation - prevent exceeding limits
-                    if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
+                    if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
                       return; // Don't allow input beyond max value
                     }
-                    if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
+                    if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
                       return; // Don't allow input below min value once reaching min digits
                     }
                     
@@ -199,35 +227,70 @@ export default function CreateListingStep2() {
                   }}
                   placeholder={field.placeholder || ''}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
+                  {...numericInputProps}
                 />
               );
 
             case 'select':
+              // For select fields with units, use Preline inline design
+              if (fieldData.hasUnits && unitOptions.length > 0) {
+                return (
+                  <div className="relative">
+                    <select
+                      className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      value={value}
+                      onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
+                    >
+                      <option value="">{field.placeholder || "Seçiniz"}</option>
+                      {options.map((option: string, index: number) => (
+                        <option key={index} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                      <select
+                        value={selectedUnit}
+                        onChange={(e) => handleUnitChange(fieldId, e.target.value)}
+                        disabled={unitOptions.length <= 1}
+                        className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                          unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                        }`}
+                      >
+                        {unitOptions.map((unit: string, index: number) => (
+                          <option key={index} value={unit}>{unit}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                );
+              }
+              
+              // For select fields without units, use regular select
               return (
                 <select
-                  value={currentValue || ''}
+                  value={value}
                   onChange={(e) => handleInputChange(fieldId, e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500"
                 >
                   <option value="">{field.placeholder || "Seçiniz"}</option>
-                  {selectOptions.map((option: string, index: number) => (
+                  {options.map((option: string, index: number) => (
                     <option key={index} value={option}>{option}</option>
                   ))}
                 </select>
               );
 
             case 'checkbox':
+              const checkboxOptions = options; // Use the same options logic as select
               return (
                 <div className="space-y-2">
-                  {selectOptions.map((option: string, index: number) => (
+                  {checkboxOptions.map((option: string, index: number) => (
                     <div key={index} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         id={`${fieldId}-${index}`}
                         className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                        checked={(currentValue || []).includes(option)}
+                        checked={(value || []).includes(option)}
                         onChange={(e) => {
-                          const currentValues = currentValue || [];
+                          const currentValues = value || [];
                           const newValues = e.target.checked
                             ? [...currentValues, option]
                             : currentValues.filter((v: string) => v !== option);
@@ -248,7 +311,7 @@ export default function CreateListingStep2() {
                   <input
                     type="checkbox"
                     id={fieldId}
-                    checked={currentValue || false}
+                    checked={value || false}
                     onChange={(e) => handleInputChange(fieldId, e.target.checked)}
                     className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
