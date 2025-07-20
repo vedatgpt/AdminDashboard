@@ -96,19 +96,15 @@ export default function PostAd() {
     return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
-  // Handle numeric input
+  // Handle numeric input (for number field type)
   const handleNumericInput = (fieldName: string, value: string, field: CategoryCustomField) => {
     const fieldData = field as any;
-    let processedValue = value;
-
-    // If numeric only, remove non-numeric characters
-    if (fieldData.isNumericOnly) {
-      processedValue = value.replace(/\D/g, '');
-    }
+    
+    // Always remove non-numeric characters for number field type
+    const processedValue = value.replace(/\D/g, '');
 
     // Store raw numeric value in form data
-    const rawValue = processedValue.replace(/\./g, '');
-    handleCustomFieldChange(fieldName, rawValue);
+    handleCustomFieldChange(fieldName, processedValue);
   };
 
   // Render custom field input based on type
@@ -117,14 +113,25 @@ export default function PostAd() {
     const fieldData = field as any;
 
     // Prepare input attributes for numeric fields
-    const numericInputProps = {
+    const numericInputProps = field.fieldType === "number" ? {
       inputMode: fieldData.useMobileNumericKeyboard ? "numeric" as const : undefined,
       pattern: fieldData.useMobileNumericKeyboard ? "[0-9]*" : undefined,
-    };
+    } : {};
 
     switch (field.fieldType) {
       case "text":
-        const displayValue = fieldData.isNumericOnly && fieldData.useThousandSeparator 
+        return (
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder={field.placeholder || ""}
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.fieldName, e.target.value)}
+          />
+        );
+
+      case "number":
+        const displayValue = fieldData.useThousandSeparator 
           ? formatWithThousands(value) 
           : value;
 
@@ -134,14 +141,8 @@ export default function PostAd() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             placeholder={field.placeholder || ""}
             value={displayValue}
-            onChange={(e) => {
-              if (fieldData.isNumericOnly) {
-                handleNumericInput(field.fieldName, e.target.value, field);
-              } else {
-                handleCustomFieldChange(field.fieldName, e.target.value);
-              }
-            }}
-            {...(fieldData.isNumericOnly ? numericInputProps : {})}
+            onChange={(e) => handleNumericInput(field.fieldName, e.target.value, field)}
+            {...numericInputProps}
           />
         );
 

@@ -11,7 +11,7 @@ interface CustomFieldsModalProps {
 
 interface CustomFieldFormData {
   fieldName: string;
-  fieldType: "text" | "select" | "checkbox" | "number_range" | "boolean";
+  fieldType: "text" | "number" | "select" | "checkbox" | "number_range" | "boolean";
   label: string;
   placeholder: string;
   isRequired: boolean;
@@ -26,6 +26,7 @@ interface CustomFieldFormData {
 
 const FIELD_TYPES = [
   { value: "text", label: "Metin" },
+  { value: "number", label: "Sayı" },
   { value: "select", label: "Seçenekli Liste" },
   { value: "checkbox", label: "Çoklu Seçim" },
   { value: "number_range", label: "Sayı Aralığı" },
@@ -482,65 +483,64 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                     </div>
                   </div>
 
-                  {/* Numeric Field Options */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Sayısal Alan Özellikleri</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="flex items-start">
-                        <input
-                          type="checkbox"
-                          id="isNumericOnly"
-                          checked={formData.isNumericOnly}
-                          onChange={(e) => setFormData(prev => ({ ...prev, isNumericOnly: e.target.checked }))}
-                          className="h-4 w-4 text-[#EC7830] focus:ring-[#EC7830] border-gray-300 rounded mt-0.5"
-                        />
-                        <div className="ml-2">
-                          <label htmlFor="isNumericOnly" className="text-sm text-gray-700 font-medium">
-                            Sadece Rakam
-                          </label>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Harf ve özel karakter girişini engeller
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start">
-                        <input
-                          type="checkbox"
-                          id="useThousandSeparator"
-                          checked={formData.useThousandSeparator}
-                          onChange={(e) => setFormData(prev => ({ ...prev, useThousandSeparator: e.target.checked }))}
-                          className="h-4 w-4 text-[#EC7830] focus:ring-[#EC7830] border-gray-300 rounded mt-0.5"
-                        />
-                        <div className="ml-2">
-                          <label htmlFor="useThousandSeparator" className="text-sm text-gray-700 font-medium">
+                  {/* Numeric Field Options - Only for number field type */}
+                  {formData.fieldType === "number" && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Sayı Alanı Özellikleri</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             Binlik Ayraç
                           </label>
+                          <select
+                            value={formData.useThousandSeparator ? "yes" : "no"}
+                            onChange={(e) => setFormData(prev => ({ ...prev, useThousandSeparator: e.target.value === "yes" }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          >
+                            <option value="no">Kullanma</option>
+                            <option value="yes">Kullan (150.000)</option>
+                          </select>
                           <p className="text-xs text-gray-500 mt-1">
                             150000 → 150.000 formatında görünüm
                           </p>
                         </div>
-                      </div>
 
-                      <div className="flex items-start">
-                        <input
-                          type="checkbox"
-                          id="useMobileNumericKeyboard"
-                          checked={formData.useMobileNumericKeyboard}
-                          onChange={(e) => setFormData(prev => ({ ...prev, useMobileNumericKeyboard: e.target.checked }))}
-                          className="h-4 w-4 text-[#EC7830] focus:ring-[#EC7830] border-gray-300 rounded mt-0.5"
-                        />
-                        <div className="ml-2">
-                          <label htmlFor="useMobileNumericKeyboard" className="text-sm text-gray-700 font-medium">
-                            Mobil Sayı Klavyesi
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Mobil Klavye
                           </label>
+                          <select
+                            value={formData.useMobileNumericKeyboard ? "numeric" : "default"}
+                            onChange={(e) => setFormData(prev => ({ ...prev, useMobileNumericKeyboard: e.target.value === "numeric" }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          >
+                            <option value="default">Varsayılan</option>
+                            <option value="numeric">Sayı Klavyesi</option>
+                          </select>
                           <p className="text-xs text-gray-500 mt-1">
                             Mobil cihazlarda sayı klavyesi açılır
                           </p>
                         </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Giriş Kontrolü
+                          </label>
+                          <select
+                            value={formData.isNumericOnly ? "numbers-only" : "mixed"}
+                            onChange={(e) => setFormData(prev => ({ ...prev, isNumericOnly: e.target.value === "numbers-only" }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          >
+                            <option value="mixed">Karışık</option>
+                            <option value="numbers-only">Sadece Rakam</option>
+                          </select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Harf ve özel karakter engellenir
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Form Actions */}
