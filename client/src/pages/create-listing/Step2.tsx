@@ -48,6 +48,12 @@ export default function Step2() {
               value={formData.customFields.description || ''}
               onChange={(value) => handleInputChange('description', value)}
               placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              onFocus={() => {
+                // Placeholder'ı temizle
+                if (!formData.customFields.description || formData.customFields.description === '') {
+                  handleInputChange('description', '');
+                }
+              }}
               modules={{
                 toolbar: [
                   ['bold', 'italic', 'underline'],
