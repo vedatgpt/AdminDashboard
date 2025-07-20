@@ -145,11 +145,8 @@ export default function CreateListingStep2() {
     };
 
     return (
-      <div key={field.id} className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          {field.displayName || field.fieldName}
-          {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-        </label>
+      <div key={field.id} className="relative">
+        {/* Floating label pattern like Login/Register pages */}
         
         {(() => {
           switch (field.fieldType) {
@@ -158,12 +155,19 @@ export default function CreateListingStep2() {
                 return (
                   <div className="relative">
                     <input
+                      id={`text-unit-${fieldId}`}
                       type="text"
                       value={value}
                       onChange={(e) => handleValueWithUnitChange(fieldId, e.target.value)}
-                      placeholder={field.placeholder || ''}
-                      className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
+                      placeholder={field.placeholder || field.displayName || field.fieldName}
+                      className="peer p-4 pe-20 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
                     />
+                    <label 
+                      htmlFor={`text-unit-${fieldId}`}
+                      className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
+                    >
+                      {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                    </label>
                     <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                       <label htmlFor={`unit-${fieldId}`} className="sr-only">Unit</label>
                       <select
@@ -184,13 +188,22 @@ export default function CreateListingStep2() {
                 );
               }
               return (
-                <input
-                  type="text"
-                  value={value}
-                  onChange={(e) => handleInputChange(fieldId, e.target.value)}
-                  placeholder={field.placeholder || ''}
-                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
-                />
+                <>
+                  <input
+                    id={fieldId}
+                    type="text"
+                    value={value}
+                    onChange={(e) => handleInputChange(fieldId, e.target.value)}
+                    placeholder={field.placeholder || field.displayName || field.fieldName}
+                    className="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
+                  />
+                  <label 
+                    htmlFor={fieldId}
+                    className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
+                  >
+                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                  </label>
+                </>
               );
 
             case 'number':
@@ -242,26 +255,35 @@ export default function CreateListingStep2() {
                 : String(value);
 
               return (
-                <input
-                  type="text"
-                  value={displayValue}
-                  onChange={(e) => {
-                    let processedValue = e.target.value.replace(/\D/g, '');
-                    
-                    // Apply min/max validation - prevent exceeding limits
-                    if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
-                      return; // Don't allow input beyond max value
-                    }
-                    if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
-                      return; // Don't allow input below min value once reaching min digits
-                    }
-                    
-                    handleInputChange(fieldId, processedValue);
-                  }}
-                  placeholder={field.placeholder || ''}
-                  className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
-                  {...numericInputProps}
-                />
+                <>
+                  <input
+                    id={`num-${fieldId}`}
+                    type="text"
+                    value={displayValue}
+                    onChange={(e) => {
+                      let processedValue = e.target.value.replace(/\D/g, '');
+                      
+                      // Apply min/max validation - prevent exceeding limits
+                      if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
+                        return; // Don't allow input beyond max value
+                      }
+                      if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
+                        return; // Don't allow input below min value once reaching min digits
+                      }
+                      
+                      handleInputChange(fieldId, processedValue);
+                    }}
+                    placeholder={field.placeholder || field.displayName || field.fieldName}
+                    className="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
+                    {...numericInputProps}
+                  />
+                  <label 
+                    htmlFor={`num-${fieldId}`}
+                    className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[:not(:placeholder-shown)]:scale-90 peer-[:not(:placeholder-shown)]:translate-x-0.5 peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-orange-500 text-gray-500"
+                  >
+                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                  </label>
+                </>
               );
 
             case 'select':
@@ -299,18 +321,27 @@ export default function CreateListingStep2() {
                 );
               }
               
-              // For select fields without units, use regular select
+              // For select fields without units, use regular select with floating label
               return (
-                <select
-                  value={value}
-                  onChange={(e) => handleInputChange(fieldId, e.target.value)}
-                  className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  <option value="">{field.placeholder || "Seçiniz"}</option>
-                  {options.map((option: string, index: number) => (
-                    <option key={index} value={option}>{option}</option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    id={`sel-${fieldId}`}
+                    value={value}
+                    onChange={(e) => handleInputChange(fieldId, e.target.value)}
+                    className="peer p-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2"
+                  >
+                    <option value="" disabled hidden></option>
+                    {options.map((option: string, index: number) => (
+                      <option key={index} value={option}>{option}</option>
+                    ))}
+                  </select>
+                  <label 
+                    htmlFor={`sel-${fieldId}`}
+                    className="absolute top-0 start-0 p-4 h-full text-sm truncate pointer-events-none transition ease-in-out duration-100 border border-transparent origin-[0_0] peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:scale-90 peer-focus:translate-x-0.5 peer-focus:-translate-y-1.5 peer-focus:text-orange-500 peer-[&:not(:placeholder-shown)]:scale-90 peer-[&:not(:placeholder-shown)]:translate-x-0.5 peer-[&:not(:placeholder-shown)]:-translate-y-1.5 peer-[&:not(:placeholder-shown)]:text-orange-500 text-gray-500"
+                  >
+                    {field.displayName || field.fieldName}{field.isRequired && ' *'}
+                  </label>
+                </>
               );
 
             case 'checkbox':
@@ -362,12 +393,12 @@ export default function CreateListingStep2() {
         })()}
         
         {field.description && (
-          <p className="text-sm text-gray-500">{field.description}</p>
+          <p className="text-sm text-gray-500 mt-2">{field.description}</p>
         )}
         
         {/* Min/Max info for number fields */}
         {field.fieldType === 'number' && (field.minValue !== null || field.maxValue !== null) && (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 mt-2">
             {field.minValue !== null && field.maxValue !== null
               ? `${field.minValue} - ${field.maxValue} arasında`
               : field.minValue !== null
