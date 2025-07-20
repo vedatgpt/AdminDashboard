@@ -355,3 +355,12 @@ Authentication features:
 - Admin interface displays value limits in field listings (Min: X, Max: Y)
 - Perfect for fields like motor volume (max 9999cc), horsepower limits, year ranges
 - Min/Max validation is optional - fields work normally when limits not set
+- Smart input prevention: blocks characters that would exceed limits instead of auto-correcting
+
+### Preline UI Integration for Unit Fields (July 20, 2025)
+- Implemented Preline UI inline select design for all fields with units enabled
+- Input field with integrated unit dropdown on the right side (similar to price/currency design)
+- Unified design for text, number, and select fields when units are enabled
+- Unit dropdown positioned absolutely within input container using pe-20 and pe-px classes
+- Maintains all existing functionality: disabled state for single units, min/max validation
+- Clean, professional appearance matching Preline UI standards

@@ -154,24 +154,45 @@ export default function PostAd() {
       pattern: fieldData.useMobileNumericKeyboard ? "[0-9]*" : undefined,
     } : {};
 
-    // Render input with or without unit selector
-    const renderInputWithUnit = (inputElement: React.ReactNode) => {
+    // Render input with or without unit selector using Preline UI design
+    const renderInputWithUnit = (inputElement: React.ReactNode, isNumberField = false) => {
       if (!fieldData.hasUnits) return inputElement;
       
       const unitOptions = fieldData.unitOptions ? JSON.parse(fieldData.unitOptions) : [];
       
       return (
-        <div className="flex space-x-2">
-          <div className="flex-1">
-            {inputElement}
-          </div>
-          <div className="w-32">
+        <div className="relative">
+          <input
+            type="text"
+            className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500 disabled:opacity-50 disabled:pointer-events-none"
+            placeholder={field.placeholder || ""}
+            value={isNumberField ? (fieldData.useThousandSeparator ? formatWithThousands(value) : value) : value}
+            onChange={(e) => {
+              if (isNumberField) {
+                let processedValue = e.target.value.replace(/\D/g, '');
+                
+                // Apply min/max validation - prevent exceeding limits
+                if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
+                  return; // Don't allow input beyond max value
+                }
+                if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
+                  return; // Don't allow input below min value once reaching min digits
+                }
+                
+                handleValueWithUnitChange(field.fieldName, processedValue);
+              } else {
+                handleValueWithUnitChange(field.fieldName, e.target.value);
+              }
+            }}
+            {...(isNumberField ? numericInputProps : {})}
+          />
+          <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
             <select
               value={selectedUnit}
               onChange={(e) => handleUnitChange(field.fieldName, e.target.value)}
               disabled={unitOptions.length <= 1}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                unitOptions.length <= 1 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+              className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
               }`}
             >
               {unitOptions.map((unit: string, index: number) => (
@@ -187,29 +208,34 @@ export default function PostAd() {
 
     switch (field.fieldType) {
       case "text":
-        const textInput = (
+        // For text fields with units, use Preline inline design
+        if (fieldData.hasUnits) {
+          return renderInputWithUnit(null, false);
+        }
+        
+        // For text fields without units, use regular input
+        return (
           <input
             type="text"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             placeholder={field.placeholder || ""}
             value={value}
-            onChange={(e) => {
-              if (fieldData.hasUnits) {
-                handleValueWithUnitChange(field.fieldName, e.target.value);
-              } else {
-                handleCustomFieldChange(field.fieldName, e.target.value);
-              }
-            }}
+            onChange={(e) => handleCustomFieldChange(field.fieldName, e.target.value)}
           />
         );
-        return renderInputWithUnit(textInput);
 
       case "number":
+        // For number fields with units, use the integrated Preline design
+        if (fieldData.hasUnits) {
+          return renderInputWithUnit(null, true);
+        }
+        
+        // For number fields without units, use regular input
         const displayValue = fieldData.useThousandSeparator 
           ? formatWithThousands(value) 
           : value;
 
-        const numberInput = (
+        return (
           <input
             type="text"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -218,38 +244,67 @@ export default function PostAd() {
             onChange={(e) => {
               let processedValue = e.target.value.replace(/\D/g, '');
               
-              // Apply min/max validation
-              if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue) {
-                processedValue = fieldData.minValue.toString();
-              }
+              // Apply min/max validation - prevent exceeding limits
               if (processedValue && fieldData.maxValue !== null && parseInt(processedValue) > fieldData.maxValue) {
-                processedValue = fieldData.maxValue.toString();
+                return; // Don't allow input beyond max value
+              }
+              if (processedValue && fieldData.minValue !== null && parseInt(processedValue) < fieldData.minValue && processedValue.length >= fieldData.minValue.toString().length) {
+                return; // Don't allow input below min value once reaching min digits
               }
               
-              if (fieldData.hasUnits) {
-                handleValueWithUnitChange(field.fieldName, processedValue);
-              } else {
-                handleCustomFieldChange(field.fieldName, processedValue);
-              }
+              handleCustomFieldChange(field.fieldName, processedValue);
             }}
             {...numericInputProps}
           />
         );
-        return renderInputWithUnit(numberInput);
 
       case "select":
         const options = field.options ? JSON.parse(field.options) : [];
-        const selectInput = (
+        
+        // For select fields with units, use Preline inline design
+        if (fieldData.hasUnits) {
+          const unitOptions = fieldData.unitOptions ? JSON.parse(fieldData.unitOptions) : [];
+          
+          return (
+            <div className="relative">
+              <select
+                className="py-2.5 px-4 pe-20 block w-full border-gray-200 rounded-lg text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                value={value}
+                onChange={(e) => handleValueWithUnitChange(field.fieldName, e.target.value)}
+              >
+                <option value="">{field.placeholder || "Seçiniz"}</option>
+                {options.map((option: string, index: number) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                <select
+                  value={selectedUnit}
+                  onChange={(e) => handleUnitChange(field.fieldName, e.target.value)}
+                  disabled={unitOptions.length <= 1}
+                  className={`block w-full border-transparent rounded-lg focus:ring-orange-600 focus:border-orange-600 text-gray-500 ${
+                    unitOptions.length <= 1 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                  }`}
+                >
+                  {unitOptions.map((unit: string, index: number) => (
+                    <option key={index} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          );
+        }
+        
+        // For select fields without units, use regular select
+        return (
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             value={value}
-            onChange={(e) => {
-              if (fieldData.hasUnits) {
-                handleValueWithUnitChange(field.fieldName, e.target.value);
-              } else {
-                handleCustomFieldChange(field.fieldName, e.target.value);
-              }
-            }}
+            onChange={(e) => handleCustomFieldChange(field.fieldName, e.target.value)}
           >
             <option value="">{field.placeholder || "Seçiniz"}</option>
             {options.map((option: string, index: number) => (
@@ -259,7 +314,6 @@ export default function PostAd() {
             ))}
           </select>
         );
-        return renderInputWithUnit(selectInput);
 
       case "number_range":
         return (
