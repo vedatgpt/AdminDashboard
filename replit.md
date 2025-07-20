@@ -370,9 +370,12 @@ Authentication features:
 - Fixed React "Objects are not valid as React child" error in Login/Register forms
 - Enhanced error handling in authentication mutations with proper string conversion
 - Fixed Custom Fields Modal layout - changed from side-by-side grid to compact vertical list
-- Added username field to Register form (was missing from UI but required by schema)
+- Removed username field from Register form - username is auto-generated for all users
+- Username editing available only for corporate users via account profile page
+- Individual users cannot change usernames (auto-generated permanently)
 - Database integrity verified: 8 users, 21 categories, 4 custom fields, 3 authorized personnel
 - All API endpoints responding correctly, file uploads working, authentication system stable
+- Added test custom fields for category #4 with units system and min/max validation
 - Smart input prevention: blocks characters that would exceed limits instead of auto-correcting
 
 ### Preline UI Integration for Unit Fields (July 20, 2025)
