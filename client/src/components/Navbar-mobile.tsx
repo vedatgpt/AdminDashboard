@@ -1,15 +1,25 @@
 import React from 'react';
 import { ChevronLeftIcon, XIcon } from 'lucide-react';
+import { useLocation } from 'wouter';
 
-const NavbarMobile: React.FC = () => {
+interface NavbarMobileProps {
+  showBackButton?: boolean;
+  onBackClick?: () => void;
+}
+
+const NavbarMobile: React.FC<NavbarMobileProps> = ({ showBackButton = true, onBackClick }) => {
+  const [, navigate] = useLocation();
+
   const handleBackClick = () => {
-    // Navigate back or to previous page
-    window.history.back();
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      window.history.back();
+    }
   };
 
   const handleCloseClick = () => {
-    // Navigate to home page or close
-    window.location.href = '/';
+    navigate('/');
   };
 
   return (
@@ -18,13 +28,17 @@ const NavbarMobile: React.FC = () => {
         <div className="flex items-center justify-between w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-8">
           {/* Left side - Back arrow */}
           <div className="flex items-center flex-shrink-0">
-            <button
-              onClick={handleBackClick}
-              className="text-gray-600 hover:text-gray-800 transition-colors"
-              aria-label="Geri git"
-            >
-              <ChevronLeftIcon className="w-6 h-6" />
-            </button>
+            {showBackButton ? (
+              <button
+                onClick={handleBackClick}
+                className="text-gray-600 hover:text-gray-800 transition-colors"
+                aria-label="Geri git"
+              >
+                <ChevronLeftIcon className="w-6 h-6" />
+              </button>
+            ) : (
+              <div className="w-6 h-6"></div>
+            )}
           </div>
 
           {/* Center - İlan Ver title */}

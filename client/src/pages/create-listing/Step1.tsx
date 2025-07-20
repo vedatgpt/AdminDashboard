@@ -153,6 +153,21 @@ export default function CreateListingStep1() {
     console.log('Step1 sayfasında arama:', searchTerm);
   };
 
+  // Handle mobile back navigation
+  const handleMobileBack = () => {
+    if (categoryPath.length > 0) {
+      const newPath = categoryPath.slice(0, -1);
+      setCategoryPath(newPath);
+      
+      // Update listing state
+      if (newPath.length > 0) {
+        dispatch({ type: 'SET_CATEGORY', payload: newPath[newPath.length - 1] });
+      } else {
+        dispatch({ type: 'SET_CATEGORY', payload: null });
+      }
+    }
+  };
+
   // Get current level categories for mobile view
   const getCurrentLevelCategories = () => {
     if (categoryPath.length === 0) {
@@ -174,12 +189,15 @@ export default function CreateListingStep1() {
       
       {/* Mobile/Tablet Navbar */}
       <div className="lg:hidden">
-        <NavbarMobile />
+        <NavbarMobile 
+          showBackButton={categoryPath.length > 0} 
+          onBackClick={handleMobileBack}
+        />
       </div>
 
       {/* Mobile/Tablet Fixed Breadcrumb Navigation */}
       {categoryPath.length > 0 && (
-        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
+        <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 min-h-[52px] flex items-center">
           <BreadcrumbNav 
             categoryPath={categoryPath}
             onCategoryClick={handleBreadcrumbClick}
@@ -188,8 +206,8 @@ export default function CreateListingStep1() {
       )}
       
       {/* Main content */}
-      <div className={`py-3 ${categoryPath.length > 0 ? 'lg:pt-3 pt-20' : 'lg:pt-3 pt-16'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[56px]'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Page Title - Only show on desktop */}
           <div className="hidden lg:block mb-6 text-left">
