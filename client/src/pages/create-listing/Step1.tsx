@@ -111,28 +111,56 @@ export default function CreateListingStep1() {
           onCategoryClick={handleBreadcrumbClick}
         />
 
-        {/* Categories Layout - Sahibinden multi-column style */}
+        {/* Categories Layout - Sahibinden style boxes */}
         {currentCategories.length > 0 ? (
-          <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 gap-4 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {currentCategories.map(category => (
-              <div
-                key={category.id}
-                onClick={() => handleCategorySelect(category)}
-                className="break-inside-avoid mb-2 block"
-              >
-                <div className="flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors rounded">
-                  {category.icon && (
-                    <img 
-                      src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
-                      alt={category.name}
-                      className="w-6 h-6 object-contain flex-shrink-0"
-                    />
-                  )}
-                  
-                  <span className="text-sm text-gray-700 hover:text-blue-600 transition-colors">
-                    {category.name}
-                  </span>
+              <div key={category.id} className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+                {/* Category Header */}
+                <div 
+                  onClick={() => handleCategorySelect(category)}
+                  className="p-4 bg-gray-100 border-b border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors"
+                >
+                  <div className="flex items-center space-x-2">
+                    {category.icon && (
+                      <img 
+                        src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
+                        alt={category.name}
+                        className="w-5 h-5 object-contain flex-shrink-0"
+                      />
+                    )}
+                    <h3 className="font-medium text-gray-900 text-sm">{category.name}</h3>
+                  </div>
                 </div>
+                
+                {/* Sub-categories list */}
+                {category.children && category.children.length > 0 && (
+                  <div className="p-2">
+                    {category.children.slice(0, 10).map(subCategory => (
+                      <div
+                        key={subCategory.id}
+                        onClick={() => handleCategorySelect(subCategory)}
+                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-xs"
+                      >
+                        {subCategory.icon && (
+                          <img 
+                            src={`${window.location.origin}/uploads/category-icons/${subCategory.icon}`}
+                            alt={subCategory.name}
+                            className="w-4 h-4 object-contain flex-shrink-0"
+                          />
+                        )}
+                        <span className="text-gray-700 hover:text-blue-600 transition-colors">
+                          {subCategory.name}
+                        </span>
+                      </div>
+                    ))}
+                    {category.children.length > 10 && (
+                      <div className="p-2 text-xs text-gray-500 text-center">
+                        +{category.children.length - 10} daha...
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
