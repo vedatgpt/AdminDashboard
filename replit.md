@@ -351,10 +351,20 @@ Authentication features:
 - Added minValue and maxValue fields to custom fields database schema for number type fields
 - CustomFieldsModal updated with "Değer Sınırları" section showing min/max input fields (2-column grid)
 - Real-time validation: max value must be greater than min value
-- PostAd page enforces min/max limits during input - auto-corrects out-of-range values
+- PostAd page enforces min/max limits during input - prevents exceeding limits instead of auto-correction
 - Admin interface displays value limits in field listings (Min: X, Max: Y)
 - Perfect for fields like motor volume (max 9999cc), horsepower limits, year ranges
 - Min/Max validation is optional - fields work normally when limits not set
+- Enhanced Preline UI input design for unit fields with inline select dropdowns
+
+### Manual Category Type System (July 20, 2025)
+- Added categoryType field to categories database schema for flexible category labeling
+- Admin CategoryForm updated with manual categoryType text input field
+- Supports any custom category type: "Marka", "Seri", "Model", "Ana Kategori", "İkinci El", etc.
+- PostAd page displays category path with type-based labels instead of breadcrumbs
+- Format: "Marka: BMW", "Seri: 3 Serisi", "Model: 320d" for better user experience
+- Backward compatible - NULL categoryType shows as "Seviye X" fallback
+- Manual system allows different category structures across various product types
 - Smart input prevention: blocks characters that would exceed limits instead of auto-correcting
 
 ### Preline UI Integration for Unit Fields (July 20, 2025)

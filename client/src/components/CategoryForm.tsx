@@ -50,6 +50,7 @@ export default function CategoryForm({
     icon: null as string | null,
     sortOrder: 0,
     isActive: true,
+    categoryType: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,6 +66,7 @@ export default function CategoryForm({
         icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
+        categoryType: (category as any).categoryType || "",
       });
     } else if (parentCategory) {
       // Add child mode
@@ -75,6 +77,7 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
+        categoryType: "",
       });
     } else {
       // Add root category mode
@@ -85,6 +88,7 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
+        categoryType: "",
       });
     }
     setErrors({});
@@ -256,7 +260,22 @@ export default function CategoryForm({
             )}
           </div>
 
-
+          {/* Category Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategori Türü
+            </label>
+            <input
+              type="text"
+              value={formData.categoryType}
+              onChange={(e) => setFormData(prev => ({ ...prev, categoryType: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+              placeholder="Örn: Marka, Seri, Model, Ana Kategori..."
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Kullanıcı arayüzünde nasıl gösterileceğini belirler (örn: "Marka: BMW", "Seri: 3 Serisi")
+            </p>
+          </div>
 
           {/* Category Icon */}
           <div>

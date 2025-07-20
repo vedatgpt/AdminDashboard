@@ -91,6 +91,7 @@ export const categories = pgTable("categories", {
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   adCount: integer("ad_count").notNull().default(0), // Number of ads in this category
+  categoryType: text("category_type"), // Manual category type like "Marka", "Seri", "Model", etc.
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
@@ -134,6 +135,7 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   name: z.string().min(2, "Kategori adı en az 2 karakter olmalıdır"),
   slug: z.string().min(2, "Slug en az 2 karakter olmalıdır").regex(/^[a-z0-9-]+$/, "Slug sadece küçük harf, rakam ve tire içerebilir"),
   icon: z.string().optional().nullable(),
+  categoryType: z.string().optional().nullable(),
 });
 
 // Schema for updating categories

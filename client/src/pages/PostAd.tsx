@@ -421,21 +421,23 @@ export default function PostAd() {
           <div className="p-6">
             <h2 className="text-xl font-semibold mb-4">Kategori Seçimi</h2>
             {selectedPath.length > 0 && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
-                <span>Seçilen:</span>
-                {selectedPath.map((step, index) => (
-                  <div key={index} className="flex items-center">
-                    <button
-                      onClick={() => goBackToLevel(index)}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {step.category.name}
-                    </button>
-                    {index < selectedPath.length - 1 && (
-                      <span className="mx-1">→</span>
-                    )}
-                  </div>
-                ))}
+              <div className="space-y-2 mb-4">
+                {selectedPath.map((step, index) => {
+                  const categoryType = (step.category as any).categoryType;
+                  const displayLabel = categoryType || `Seviye ${index + 1}`;
+                  
+                  return (
+                    <div key={index} className="flex items-center space-x-2 text-sm">
+                      <span className="font-medium text-gray-700 min-w-0">{displayLabel}:</span>
+                      <button
+                        onClick={() => goBackToLevel(index)}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {step.category.name}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
