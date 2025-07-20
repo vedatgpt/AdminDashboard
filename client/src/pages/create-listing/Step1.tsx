@@ -7,7 +7,8 @@ import { Category } from '@shared/schema';
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
-import ListingLayout from '@/components/ListingLayout';
+import ModernNavbar from '@/components/Navbar';
+import NavbarMobile from '@/components/Navbar-mobile';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -183,8 +184,21 @@ export default function CreateListingStep1() {
   };
 
   return (
-    <ListingLayout showBreadcrumb={false}>
-      {/* Mobile/Tablet Fixed Header/Breadcrumb - Custom for Step1 */}
+    <div className="min-h-screen bg-white">
+      {/* Desktop Navbar */}
+      <div className="hidden lg:block">
+        <ModernNavbar onSearch={handleSearch} />
+      </div>
+      
+      {/* Mobile/Tablet Navbar */}
+      <div className="lg:hidden">
+        <NavbarMobile 
+          showBackButton={categoryPath.length > 0} 
+          onBackClick={handleMobileBack}
+        />
+      </div>
+
+      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
         {categoryPath.length > 0 ? (
           <BreadcrumbNav 
@@ -199,7 +213,7 @@ export default function CreateListingStep1() {
       </div>
       
       {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[108px]'} -mt-[88px]`}>
+      <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[108px]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Page Title - Only show on desktop */}
@@ -376,6 +390,6 @@ export default function CreateListingStep1() {
           </>
         </div>
       </div>
-    </ListingLayout>
+    </div>
   );
 }
