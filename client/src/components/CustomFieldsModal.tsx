@@ -22,6 +22,10 @@ interface CustomFieldFormData {
   isNumericOnly: boolean;
   useThousandSeparator: boolean;
   useMobileNumericKeyboard: boolean;
+  // Unit system
+  hasUnits: boolean;
+  unitOptions: string;
+  defaultUnit: string;
 }
 
 const FIELD_TYPES = [
@@ -48,6 +52,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
     isNumericOnly: false,
     useThousandSeparator: false,
     useMobileNumericKeyboard: false,
+    hasUnits: false,
+    unitOptions: "",
+    defaultUnit: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
@@ -81,6 +88,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
         isNumericOnly: (editingField as any).isNumericOnly || false,
         useThousandSeparator: (editingField as any).useThousandSeparator || false,
         useMobileNumericKeyboard: (editingField as any).useMobileNumericKeyboard || false,
+        hasUnits: (editingField as any).hasUnits || false,
+        unitOptions: (editingField as any).unitOptions || "",
+        defaultUnit: (editingField as any).defaultUnit || "",
       });
     } else {
       resetForm();
@@ -101,6 +111,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       isNumericOnly: false,
       useThousandSeparator: false,
       useMobileNumericKeyboard: false,
+      hasUnits: false,
+      unitOptions: "",
+      defaultUnit: "",
     });
   };
 
@@ -135,6 +148,26 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       }
     }
 
+    // Validate unit options if hasUnits is enabled
+    if (formData.hasUnits) {
+      if (!formData.unitOptions.trim()) {
+        newErrors.unitOptions = "Birim seçenekleri gereklidir";
+      } else {
+        try {
+          const parsed = JSON.parse(formData.unitOptions);
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            newErrors.unitOptions = "Birim seçenekleri boş olmayan bir dizi olmalıdır";
+          }
+        } catch (error) {
+          newErrors.unitOptions = "Geçerli bir JSON dizisi giriniz (örn: [\"km\", \"mil\"])";
+        }
+      }
+
+      if (!formData.defaultUnit.trim()) {
+        newErrors.defaultUnit = "Varsayılan birim seçiniz";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -156,6 +189,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
       isNumericOnly: formData.isNumericOnly,
       useThousandSeparator: formData.useThousandSeparator,
       useMobileNumericKeyboard: formData.useMobileNumericKeyboard,
+      hasUnits: formData.hasUnits,
+      unitOptions: formData.unitOptions.trim() || null,
+      defaultUnit: formData.defaultUnit.trim() || null,
     };
 
     try {
@@ -294,6 +330,12 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                             )}
                             {field.options && (
                               <div><strong>Seçenekler:</strong> {field.options}</div>
+                            )}
+                            {(field as any).hasUnits && (
+                              <div>
+                                <strong>Birimler:</strong> {(field as any).unitOptions} 
+                                <span className="text-gray-400 ml-1">(varsayılan: {(field as any).defaultUnit})</span>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -541,6 +583,77 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
                       </div>
                     </div>
                   )}
+
+                  {/* Unit System - Available for all field types */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Birim Sistemi</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Birim Kullanımı
+                        </label>
+                        <select
+                          value={formData.hasUnits ? "yes" : "no"}
+                          onChange={(e) => setFormData(prev => ({ ...prev, hasUnits: e.target.value === "yes" }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                        >
+                          <option value="no">Birim kullanma</option>
+                          <option value="yes">Birim kullan</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Kullanıcının değer ile birlikte birim de seçebilmesini sağlar (örn: 52.000 km)
+                        </p>
+                      </div>
+
+                      {formData.hasUnits && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Birim Seçenekleri *
+                            </label>
+                            <textarea
+                              value={formData.unitOptions}
+                              onChange={(e) => setFormData(prev => ({ ...prev, unitOptions: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                              rows={3}
+                              placeholder='["km", "mil", "metre"]'
+                            />
+                            {errors.unitOptions && (
+                              <p className="text-red-500 text-sm mt-1 flex items-center">
+                                <AlertCircle className="w-4 h-4 mr-1" />
+                                {errors.unitOptions}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                              JSON dizisi formatında birimleri giriniz. Örnek: ["km", "mil", "metre"]
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Varsayılan Birim *
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.defaultUnit}
+                              onChange={(e) => setFormData(prev => ({ ...prev, defaultUnit: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                              placeholder="km"
+                            />
+                            {errors.defaultUnit && (
+                              <p className="text-red-500 text-sm mt-1 flex items-center">
+                                <AlertCircle className="w-4 h-4 mr-1" />
+                                {errors.defaultUnit}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                              Kullanıcı için önceden seçili olan birim
+                            </p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Form Actions */}

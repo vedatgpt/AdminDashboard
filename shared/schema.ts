@@ -114,6 +114,10 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   isNumericOnly: boolean("is_numeric_only").notNull().default(false), // Only allow numbers
   useThousandSeparator: boolean("use_thousand_separator").notNull().default(false), // Add thousand separators (150.000)
   useMobileNumericKeyboard: boolean("use_mobile_numeric_keyboard").notNull().default(false), // Show numeric keyboard on mobile
+  // Unit system
+  hasUnits: boolean("has_units").notNull().default(false),
+  unitOptions: text("unit_options"), // JSON array of unit options like ["km", "mil"] or ["m²", "ft²"]
+  defaultUnit: text("default_unit"), // Default selected unit
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

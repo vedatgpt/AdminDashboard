@@ -90,6 +90,26 @@ export default function PostAd() {
     }));
   };
 
+  // Handle unit selection for fields with units
+  const handleUnitChange = (fieldName: string, unit: string) => {
+    const currentValue = formData[fieldName] || {};
+    const newValue = typeof currentValue === 'object' && currentValue !== null 
+      ? { ...currentValue, unit } 
+      : { value: currentValue || '', unit };
+    
+    handleCustomFieldChange(fieldName, newValue);
+  };
+
+  // Handle value change for fields with units
+  const handleValueWithUnitChange = (fieldName: string, value: string) => {
+    const currentData = formData[fieldName] || {};
+    const newValue = typeof currentData === 'object' && currentData !== null
+      ? { ...currentData, value }
+      : { value, unit: currentData.unit || '' };
+    
+    handleCustomFieldChange(fieldName, newValue);
+  };
+
   // Format number with thousand separators
   const formatWithThousands = (num: string): string => {
     const cleaned = num.replace(/\D/g, '');
@@ -109,8 +129,24 @@ export default function PostAd() {
 
   // Render custom field input based on type
   const renderCustomField = (field: CategoryCustomField) => {
-    const value = formData[field.fieldName] || "";
     const fieldData = field as any;
+    const rawValue = formData[field.fieldName] || "";
+    
+    // Handle unit fields - value might be object with {value, unit} structure
+    let value = rawValue;
+    let selectedUnit = "";
+    
+    if (fieldData.hasUnits && typeof rawValue === 'object' && rawValue !== null) {
+      value = rawValue.value || "";
+      selectedUnit = rawValue.unit || fieldData.defaultUnit || "";
+    } else if (fieldData.hasUnits) {
+      // Initialize unit data for existing fields
+      selectedUnit = fieldData.defaultUnit || "";
+      if (rawValue) {
+        value = rawValue;
+        handleCustomFieldChange(field.fieldName, { value: rawValue, unit: selectedUnit });
+      }
+    }
 
     // Prepare input attributes for numeric fields
     const numericInputProps = field.fieldType === "number" ? {
@@ -118,41 +154,90 @@ export default function PostAd() {
       pattern: fieldData.useMobileNumericKeyboard ? "[0-9]*" : undefined,
     } : {};
 
+    // Render input with or without unit selector
+    const renderInputWithUnit = (inputElement: React.ReactNode) => {
+      if (!fieldData.hasUnits) return inputElement;
+      
+      const unitOptions = fieldData.unitOptions ? JSON.parse(fieldData.unitOptions) : [];
+      
+      return (
+        <div className="flex space-x-2">
+          <div className="flex-1">
+            {inputElement}
+          </div>
+          <div className="w-32">
+            <select
+              value={selectedUnit}
+              onChange={(e) => handleUnitChange(field.fieldName, e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              {unitOptions.map((unit: string, index: number) => (
+                <option key={index} value={unit}>
+                  {unit}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      );
+    };
+
     switch (field.fieldType) {
       case "text":
-        return (
+        const textInput = (
           <input
             type="text"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             placeholder={field.placeholder || ""}
             value={value}
-            onChange={(e) => handleCustomFieldChange(field.fieldName, e.target.value)}
+            onChange={(e) => {
+              if (fieldData.hasUnits) {
+                handleValueWithUnitChange(field.fieldName, e.target.value);
+              } else {
+                handleCustomFieldChange(field.fieldName, e.target.value);
+              }
+            }}
           />
         );
+        return renderInputWithUnit(textInput);
 
       case "number":
         const displayValue = fieldData.useThousandSeparator 
           ? formatWithThousands(value) 
           : value;
 
-        return (
+        const numberInput = (
           <input
             type="text"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             placeholder={field.placeholder || ""}
             value={displayValue}
-            onChange={(e) => handleNumericInput(field.fieldName, e.target.value, field)}
+            onChange={(e) => {
+              const processedValue = e.target.value.replace(/\D/g, '');
+              if (fieldData.hasUnits) {
+                handleValueWithUnitChange(field.fieldName, processedValue);
+              } else {
+                handleCustomFieldChange(field.fieldName, processedValue);
+              }
+            }}
             {...numericInputProps}
           />
         );
+        return renderInputWithUnit(numberInput);
 
       case "select":
         const options = field.options ? JSON.parse(field.options) : [];
-        return (
+        const selectInput = (
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             value={value}
-            onChange={(e) => handleCustomFieldChange(field.fieldName, e.target.value)}
+            onChange={(e) => {
+              if (fieldData.hasUnits) {
+                handleValueWithUnitChange(field.fieldName, e.target.value);
+              } else {
+                handleCustomFieldChange(field.fieldName, e.target.value);
+              }
+            }}
           >
             <option value="">{field.placeholder || "Seçiniz"}</option>
             {options.map((option: string, index: number) => (
@@ -162,6 +247,7 @@ export default function PostAd() {
             ))}
           </select>
         );
+        return renderInputWithUnit(selectInput);
 
       case "number_range":
         return (

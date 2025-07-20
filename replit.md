@@ -325,10 +325,23 @@ Authentication features:
 - Implemented step-by-step category selection with hierarchical navigation
 - Added breadcrumb navigation showing selected category path with ability to go back to any level
 - Custom fields automatically load when final category (leaf node) is selected
-- Support for all custom field types: text, select, number_range, checkbox, boolean
+- Support for all custom field types: text, number, select, number_range, checkbox, boolean
 - Visual feedback shows field type, placeholder, options, and required status
 - Made custom fields API endpoint public (removed requireAdmin middleware)
 - Added "İlan Ver" button to landing page for easy access
 - Removed form submission - page focuses purely on testing category/custom field functionality
 - Clean UI with success/completion messages when category selection is finished
 - Test page clearly marked as temporary for category and custom fields validation
+
+### Comprehensive Unit System Implementation (July 20, 2025)
+- Added complete unit system to custom fields for all field types (text, number, select, checkbox, number_range, boolean)
+- Database schema extended with hasUnits, unitOptions (JSON array), and defaultUnit fields
+- CustomFieldsModal updated with "Birim Sistemi" section for unit configuration
+- Unit options stored as JSON arrays (e.g., ["km", "mil", "metre"]) with validation
+- PostAd page renders input + unit dropdown for fields with units enabled
+- Value and unit stored separately in database: {value: "52000", unit: "km"}
+- Unit dropdown positioned to the right of input field with 32px width (w-32)
+- Default unit pre-selected from field configuration
+- Complete form validation for unit options and default unit selection
+- All field types support optional unit system - flexible and universal implementation
+- Admin interface shows unit information in field listings with default unit display
