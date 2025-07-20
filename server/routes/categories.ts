@@ -217,8 +217,12 @@ router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
   }
 });
 
+// Admin only routes below this point
+router.use(requireAuth);
+router.use(requireAdmin);
+
 // Update category metadata (label) - admin only
-router.put("/:id/metadata", requireAdmin, async (req, res) => {
+router.put("/:id/metadata", async (req, res) => {
   try {
     const categoryId = parseInt(req.params.id);
     const { labelKey } = req.body;
@@ -238,10 +242,6 @@ router.put("/:id/metadata", requireAdmin, async (req, res) => {
     res.status(500).json({ error: "Sunucu hatası" });
   }
 });
-
-// Admin only routes below
-router.use(requireAuth);
-router.use(requireAdmin);
 
 // Create new category (admin only)
 router.post("/", async (req, res) => {

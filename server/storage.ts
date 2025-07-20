@@ -304,9 +304,11 @@ export class DatabaseStorage implements IStorage {
     }).returning();
     
     // Invalidate relevant caches
-    cache.delete(cache.keys.categories);
-    cache.delete(cache.keys.categoriesTree);
-    cache.delete(cache.keys.categoryChildren(data.parentId));
+    cache.delete('categories');
+    cache.delete('categories_tree');
+    if (data.parentId) {
+      cache.delete(`category_children_${data.parentId}`);
+    }
     
     return category;
   }
@@ -321,10 +323,12 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     // Invalidate relevant caches
-    cache.delete(cache.keys.categories);
-    cache.delete(cache.keys.categoriesTree);
-    cache.delete(cache.keys.categoryPath(id));
-    cache.delete(cache.keys.categoryChildren(category.parentId));
+    cache.delete('categories');
+    cache.delete('categories_tree');
+    cache.delete(`category_path_${id}`);
+    if (category.parentId) {
+      cache.delete(`category_children_${category.parentId}`);
+    }
     
     return category;
   }

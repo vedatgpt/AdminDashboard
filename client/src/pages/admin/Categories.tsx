@@ -28,6 +28,9 @@ export default function Categories() {
   const createMutation = useCreateCategory();
   const updateMutation = useUpdateCategory();
   const deleteMutation = useDeleteCategory();
+  
+  // Check if any mutation is loading
+  const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   // Get categories to display based on current parent
   const currentCategories = useMemo(() => {
@@ -206,8 +209,6 @@ export default function Categories() {
     setCustomFieldsCategory(category);
     setIsCustomFieldsOpen(true);
   };
-
-  const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
     <div className="h-full flex flex-col">
