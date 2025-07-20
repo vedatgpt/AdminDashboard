@@ -153,7 +153,9 @@ export const insertCustomFieldSchema = createInsertSchema(categoryCustomFields).
 
 export type User = typeof users.$inferSelect;
 export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
-export type Category = typeof categories.$inferSelect;
+export type Category = typeof categories.$inferSelect & {
+  children?: Category[];
+};
 export type CategoryCustomField = typeof categoryCustomFields.$inferSelect;
 export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
