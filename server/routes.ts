@@ -627,6 +627,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mount categories routes
+  // Lazy loading endpoint for category children (must be before general router)
+  app.get("/api/categories/children", async (req, res) => {
+    try {
+      const parentId = req.query.parentId ? parseInt(req.query.parentId as string) : null;
+      const children = await storage.getChildCategories(parentId);
+      res.json(children);
+    } catch (error) {
+      console.error("Error fetching category children:", error);
+      res.status(500).json({ error: "Failed to fetch category children" });
+    }
+  });
+
   app.use('/api/categories', categoriesRouter);
 
   const httpServer = createServer(app);

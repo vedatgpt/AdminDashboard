@@ -1,60 +1,64 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "../lib/queryClient";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
+// Optimized hook for categories with caching
 export function useCategories() {
-  return useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+  return useQuery({
+    queryKey: ['/api/categories'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    gcTime: 10 * 60 * 1000, // 10 minutes in memory
   });
 }
 
-export function useCategoriesTree() {
-  return useQuery<Category[]>({
-    queryKey: ["/api/categories", "tree"],
-    queryFn: () => fetch("/api/categories").then(res => {
-      if (!res.ok) throw new Error('Failed to fetch categories');
-      return res.json();
-    }),
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    gcTime: 10 * 60 * 1000, // 10 minutes in memory
-  });
-}
-
-export function useCategory(id: number) {
-  return useQuery<Category & { customFields?: any[] }>({
-    queryKey: ["/api/categories", id],
-    enabled: !!id,
+// Hook for lazy loading category children
+export function useCategoryChildren(parentId: number | null, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['/api/categories/children', parentId],
+    enabled: enabled,
     staleTime: 3 * 60 * 1000, // 3 minutes cache
-    refetchOnWindowFocus: false,
     gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }
 
+// Hook for category path with optimized caching
+export function useCategoryPath(categoryId: number | null) {
+  return useQuery({
+    queryKey: ['/api/categories', categoryId, 'path'],
+    enabled: !!categoryId,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+// Hook for categories tree data
+export function useCategoriesTree() {
+  return useQuery({
+    queryKey: ['/api/categories'],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+// Mutation hooks for categories
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: InsertCategory) => 
-      fetch("/api/categories", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }).then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${res.status}: Failed to create category`);
-        }
-        return res.json();
-      }),
+    mutationFn: (data: InsertCategory) => apiRequest(`/api/categories`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
     onSuccess: () => {
-      // Use selective invalidation instead of all categories
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
     },
   });
 }
@@ -63,24 +67,13 @@ export function useUpdateCategory() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCategory }) =>
-      fetch(`/api/categories/${id}`, {
-        method: "PATCH",
+    mutationFn: ({ id, data }: { id: number; data: UpdateCategory }) => 
+      apiRequest(`/api/categories/${id}`, {
+        method: 'PATCH',
         body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }).then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${res.status}: Failed to update category`);
-        }
-        return res.json();
       }),
-    onSuccess: (updatedCategory, { id }) => {
-      // Clear specific category path cache for updated category
-      queryClient.removeQueries({ queryKey: ["/api/categories", id, "path"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"], exact: false });
-      // Clear session storage cache for this category
-      sessionStorage.removeItem(`category-metadata-${id}`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
     },
   });
 }
@@ -89,43 +82,39 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) =>
-      fetch(`/api/categories/${id}`, {
-        method: "DELETE",
-      }).then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${res.status}: Failed to delete category`);
-        }
-        return res.ok;
-      }),
-    onSuccess: (_, deletedId) => {
-      // Clean up specific cache entries for deleted category
-      queryClient.removeQueries({ queryKey: ["/api/categories", deletedId] });
-      queryClient.removeQueries({ queryKey: ["/api/categories", deletedId, "path"] });
-      queryClient.removeQueries({ queryKey: ["/api/categories", deletedId, "custom-fields"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"], exact: false });
-      // Clear session storage cache
-      sessionStorage.removeItem(`category-metadata-${deletedId}`);
+    mutationFn: (id: number) => apiRequest(`/api/categories/${id}`, {
+      method: 'DELETE',
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
     },
   });
 }
 
-export function useMoveCategory() {
+// Cache invalidation helper
+export function useCategoriesCache() {
   const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, newParentId }: { id: number; newParentId: number | null }) =>
-      fetch(`/api/categories/${id}/move`, {
-        method: "PATCH",
-        body: JSON.stringify({ newParentId }),
-        headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to move category');
-        return res.json();
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-    },
-  });
+
+  const invalidateCategories = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+  };
+
+  const invalidateCategoryChildren = (parentId: number | null) => {
+    queryClient.invalidateQueries({ queryKey: ['/api/categories/children', parentId] });
+  };
+
+  const invalidateCategoryPath = (categoryId: number) => {
+    queryClient.invalidateQueries({ queryKey: ['/api/categories', categoryId, 'path'] });
+  };
+
+  const invalidateAllCategories = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+  };
+
+  return {
+    invalidateCategories,
+    invalidateCategoryChildren,
+    invalidateCategoryPath,
+    invalidateAllCategories,
+  };
 }

@@ -65,9 +65,9 @@ export default function CustomFieldsModal({ isOpen, onClose, category }: CustomF
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
 
   const { data: customFields = [], isLoading } = useCategoryCustomFields(category.id);
-  const createMutation = useCreateCustomField(category.id);
-  const updateMutation = useUpdateCustomField(category.id);
-  const deleteMutation = useDeleteCustomField(category.id);
+  const createMutation = useCreateCustomField();
+  const updateMutation = useUpdateCustomField();
+  const deleteMutation = useDeleteCustomField();
 
   // Reset form when modal opens/closes
   useEffect(() => {

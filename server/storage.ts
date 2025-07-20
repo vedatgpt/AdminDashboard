@@ -1,7 +1,8 @@
 import { users, authorizedPersonnel, categories, categoryCustomFields, categoryMetadata, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type CategoryMetadata } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc, and, or, inArray } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or, inArray, limit, offset } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { cache } from "./cache";
 
 // Generate unique username like "velikara4678"
 function generateUniqueUsername(firstName: string, lastName: string): string {
@@ -221,7 +222,13 @@ export class DatabaseStorage implements IStorage {
 
   // Category methods implementation
   async getCategories(): Promise<Category[]> {
-    return await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+    const cacheKey = cache.keys.categories;
+    const cached = cache.get<Category[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+    cache.set(cacheKey, result, 5 * 60 * 1000); // 5 minutes cache
+    return result;
   }
 
   async getCategoriesTree(): Promise<Category[]> {
@@ -274,10 +281,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChildCategories(parentId: number | null): Promise<Category[]> {
+    const cacheKey = cache.keys.categoryChildren(parentId);
+    const cached = cache.get<Category[]>(cacheKey);
+    if (cached) return cached;
+
+    let result: Category[];
     if (parentId === null) {
-      return await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+      result = await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    } else {
+      result = await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
     }
-    return await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    
+    cache.set(cacheKey, result, 3 * 60 * 1000); // 3 minutes cache
+    return result;
   }
 
   async createCategory(data: InsertCategory): Promise<Category> {
@@ -286,6 +302,12 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
+    
+    // Invalidate relevant caches
+    cache.delete(cache.keys.categories);
+    cache.delete(cache.keys.categoriesTree);
+    cache.delete(cache.keys.categoryChildren(data.parentId));
+    
     return category;
   }
 
@@ -297,6 +319,13 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(categories.id, id))
       .returning();
+    
+    // Invalidate relevant caches
+    cache.delete(cache.keys.categories);
+    cache.delete(cache.keys.categoriesTree);
+    cache.delete(cache.keys.categoryPath(id));
+    cache.delete(cache.keys.categoryChildren(category.parentId));
+    
     return category;
   }
 
@@ -339,6 +368,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>> {
+    const cacheKey = cache.keys.categoryPath(id);
+    const cached = cache.get<Array<{category: Category, label: string}>>(cacheKey);
+    if (cached) return cached;
+
     const breadcrumbs = await this.getCategoryBreadcrumbs(id);
     
     // Get all metadata for the categories in the path in a single query
@@ -360,6 +393,7 @@ export class DatabaseStorage implements IStorage {
       label: metadataMap.get(category.id) || "Category"
     }));
 
+    cache.set(cacheKey, pathWithLabels, 5 * 60 * 1000); // 5 minutes cache
     return pathWithLabels;
   }
 
@@ -420,6 +454,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
+    const cacheKey = cache.keys.customFields(categoryId);
+    const cached = cache.get<CategoryCustomField[]>(cacheKey);
+    if (cached) return cached;
+
     // Get the category breadcrumbs (current category and all parents)
     const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
     const allFields: CategoryCustomField[] = [];
@@ -441,12 +479,15 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Sort by sortOrder and then by label
-    return allFields.sort((a, b) => {
+    const result = allFields.sort((a, b) => {
       if (a.sortOrder !== b.sortOrder) {
         return (a.sortOrder || 0) - (b.sortOrder || 0);
       }
       return a.label.localeCompare(b.label);
     });
+
+    cache.set(cacheKey, result, 3 * 60 * 1000); // 3 minutes cache
+    return result;
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
@@ -454,6 +495,10 @@ export class DatabaseStorage implements IStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    // Invalidate custom fields cache for this category and its children
+    cache.delete(cache.keys.customFields(data.categoryId));
+    
     return field;
   }
 
@@ -462,11 +507,22 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(categoryCustomFields.id, id))
       .returning();
+    
+    // Invalidate custom fields cache for this category
+    cache.delete(cache.keys.customFields(field.categoryId));
+    
     return field;
   }
 
   async deleteCustomField(id: number): Promise<void> {
+    // Get field before deletion to get categoryId for cache invalidation
+    const [field] = await db.select().from(categoryCustomFields).where(eq(categoryCustomFields.id, id));
+    
     await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
+    
+    if (field) {
+      cache.delete(cache.keys.customFields(field.categoryId));
+    }
   }
 }
 
