@@ -1,17 +1,52 @@
 import React from 'react';
+import { ChevronLeftIcon, XIcon } from 'lucide-react';
 
 const NavbarMobile: React.FC = () => {
+  const handleBackClick = () => {
+    // Navigate back or to previous page
+    window.history.back();
+  };
+
+  const handleCloseClick = () => {
+    // Navigate to home page or close
+    window.location.href = '/';
+  };
+
   return (
-    <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full bg-white border-b border-gray-200 dark:bg-neutral-800 dark:border-neutral-700">
-      <nav className="relative max-w-[85rem] w-full mx-auto px-4 md:flex md:items-center md:justify-between md:px-6 lg:px-8 xl:px-0" aria-label="Global">
-        {/* Mobile navbar - only show "İlan Ver" in center */}
-        <div className="flex items-center justify-center w-full py-3">
-          <span className="text-lg font-semibold text-gray-800 dark:text-white">
-            İlan Ver
-          </span>
+    <div className="sticky top-0 w-full bg-white border-b border-gray-300 z-50">
+      <header className="flex items-center justify-center w-full h-[56px]">
+        <div className="flex items-center justify-between w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-8">
+          {/* Left side - Back arrow */}
+          <div className="flex items-center flex-shrink-0">
+            <button
+              onClick={handleBackClick}
+              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              aria-label="Geri git"
+            >
+              <ChevronLeftIcon className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Center - İlan Ver title */}
+          <div className="flex items-center justify-center flex-1">
+            <span className="text-lg font-semibold text-gray-800">
+              İlan Ver
+            </span>
+          </div>
+
+          {/* Right side - Close X */}
+          <div className="flex items-center flex-shrink-0">
+            <button
+              onClick={handleCloseClick}
+              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              aria-label="Kapat"
+            >
+              <XIcon className="w-6 h-6" />
+            </button>
+          </div>
         </div>
-      </nav>
-    </header>
+      </header>
+    </div>
   );
 };
 
