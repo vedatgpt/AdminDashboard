@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
+import ModernNavbar from '@/components/Navbar';
+import NavbarMobile from '@/components/Navbar-mobile';
+import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
@@ -47,9 +50,28 @@ export default function Step2() {
     return (user as any).role === 'corporate' ? 'Galeriden' : 'Sahibinden';
   };
 
+  // Navbar'lar için dummy search handler
+  const handleSearch = (query: string) => {
+    console.log('Search query:', query);
+  };
+
   return (
-    <div className="min-h-screen bg-white p-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white">
+      {/* Desktop Navbar */}
+      <div className="hidden md:block">
+        <ModernNavbar onSearch={handleSearch} />
+      </div>
+
+      {/* Mobile/Tablet Navbar */}
+      <div className="md:hidden">
+        <NavbarMobile 
+          showBackButton={true}
+          onBackClick={() => window.history.back()}
+        />
+      </div>
+
+      <div className="p-4">
+        <div className="max-w-2xl mx-auto">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -458,6 +480,7 @@ export default function Step2() {
           >
             Sonraki Adım
           </button>
+        </div>
         </div>
       </div>
     </div>
