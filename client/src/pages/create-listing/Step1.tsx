@@ -154,13 +154,20 @@ export default function CreateListingStep1() {
 
   // Get current level categories for mobile view
   const getCurrentLevelCategories = () => {
+    console.log('getCurrentLevelCategories called, categoryPath:', categoryPath);
+    console.log('allCategories length:', allCategories.length);
+    
     if (categoryPath.length === 0) {
       // Return root categories for mobile when no category is selected
-      return allCategories.filter(cat => !cat.parentId);
+      const rootCategories = allCategories.filter(cat => !cat.parentId);
+      console.log('Root categories found:', rootCategories.length);
+      return rootCategories;
     }
     
     const currentParent = categoryPath[categoryPath.length - 1];
-    return allCategories.filter(cat => cat.parentId === currentParent.id);
+    const children = allCategories.filter(cat => cat.parentId === currentParent.id);
+    console.log('Children categories found for', currentParent.name, ':', children.length);
+    return children;
   };
 
   return (
@@ -320,7 +327,7 @@ export default function CreateListingStep1() {
 
               {/* Mobile/Tablet: List layout for current level categories only */}
               <div className="lg:hidden">
-                {getCurrentLevelCategories().length > 0 ? (
+                {getCurrentLevelCategories().length > 0 || categoryPath.length === 0 ? (
                   <div className="space-y-3">
                     {getCurrentLevelCategories().map(category => (
                       <div
