@@ -100,6 +100,32 @@ export default function CreateListingStep1() {
     );
   }
 
+  // Build category levels for horizontal boxes
+  const getCategoryLevels = () => {
+    const levels = [];
+    
+    // First level: Root categories
+    const rootCategories = allCategories.filter(cat => !cat.parentId);
+    if (rootCategories.length > 0) {
+      levels.push(rootCategories);
+    }
+    
+    // Add subsequent levels based on category path
+    let currentLevelCategories = rootCategories;
+    for (let i = 0; i < categoryPath.length; i++) {
+      const selectedCategory = categoryPath[i];
+      const nextLevelCategories = selectedCategory.children || [];
+      if (nextLevelCategories.length > 0) {
+        levels.push(nextLevelCategories);
+        currentLevelCategories = nextLevelCategories;
+      }
+    }
+    
+    return levels;
+  };
+
+  const categoryLevels = getCategoryLevels();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Match navbar padding: px-4 sm:px-6 lg:px-8 */}
@@ -111,64 +137,40 @@ export default function CreateListingStep1() {
           onCategoryClick={handleBreadcrumbClick}
         />
 
-        {/* Categories Layout - Sahibinden style boxes */}
-        {currentCategories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {currentCategories.map(category => (
-              <div key={category.id} className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                {/* Category Header */}
-                <div 
-                  onClick={() => handleCategorySelect(category)}
-                  className="p-4 bg-gray-100 border-b border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors"
-                >
-                  <div className="flex items-center space-x-2">
+        {/* Sahibinden style horizontal category boxes */}
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {categoryLevels.map((levelCategories, levelIndex) => (
+            <div key={levelIndex} className="flex-shrink-0 w-64 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-100 p-3 border-b border-gray-200">
+                <h3 className="font-medium text-gray-900 text-sm">
+                  {levelIndex === 0 ? 'Kategoriler' : categoryPath[levelIndex - 1]?.name}
+                </h3>
+              </div>
+              <div className="p-2 max-h-96 overflow-y-auto">
+                {levelCategories.map(category => (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category)}
+                    className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
+                      categoryPath.some(c => c.id === category.id) ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    }`}
+                  >
                     {category.icon && (
                       <img 
                         src={`${window.location.origin}/uploads/category-icons/${category.icon}`}
                         alt={category.name}
-                        className="w-5 h-5 object-contain flex-shrink-0"
+                        className="w-4 h-4 object-contain flex-shrink-0"
                       />
                     )}
-                    <h3 className="font-medium text-gray-900 text-sm">{category.name}</h3>
+                    <span className="hover:text-blue-600 transition-colors">
+                      {category.name}
+                    </span>
                   </div>
-                </div>
-                
-                {/* Sub-categories list */}
-                {category.children && category.children.length > 0 && (
-                  <div className="p-2">
-                    {category.children.slice(0, 10).map(subCategory => (
-                      <div
-                        key={subCategory.id}
-                        onClick={() => handleCategorySelect(subCategory)}
-                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-xs"
-                      >
-                        {subCategory.icon && (
-                          <img 
-                            src={`${window.location.origin}/uploads/category-icons/${subCategory.icon}`}
-                            alt={subCategory.name}
-                            className="w-4 h-4 object-contain flex-shrink-0"
-                          />
-                        )}
-                        <span className="text-gray-700 hover:text-blue-600 transition-colors">
-                          {subCategory.name}
-                        </span>
-                      </div>
-                    ))}
-                    {category.children.length > 10 && (
-                      <div className="p-2 text-xs text-gray-500 text-center">
-                        +{category.children.length - 10} daha...
-                      </div>
-                    )}
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-sm">Bu kategoride alt kategori bulunmuyor</p>
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
