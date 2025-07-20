@@ -154,21 +154,14 @@ export default function CreateListingStep1() {
 
   // Get current level categories for mobile view
   const getCurrentLevelCategories = () => {
-    console.log('Mobile getCurrentLevelCategories called');
-    console.log('categoryPath.length:', categoryPath.length);
-    console.log('allCategories:', allCategories.length);
-    
     if (categoryPath.length === 0) {
       // Return root categories for mobile when no category is selected
-      const rootCategories = allCategories.filter(cat => !cat.parentId);
-      console.log('Returning root categories:', rootCategories.length);
-      return rootCategories;
+      return allCategories.filter(cat => !cat.parentId);
     }
     
+    // For mobile, show children of the last selected category
     const currentParent = categoryPath[categoryPath.length - 1];
-    const childCategories = allCategories.filter(cat => cat.parentId === currentParent.id);
-    console.log('Returning child categories for parent', currentParent.id, ':', childCategories.length);
-    return childCategories;
+    return currentParent.children || [];
   };
 
   return (
