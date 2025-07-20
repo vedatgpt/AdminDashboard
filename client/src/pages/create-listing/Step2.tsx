@@ -73,8 +73,8 @@ export default function CreateListingStep2() {
   };
 
   // Helper functions from PostAd.tsx
-  const formatWithThousands = (value: string): string => {
-    if (!value) return '';
+  const formatWithThousands = (value: any): string => {
+    if (!value || typeof value !== 'string') return '';
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
@@ -82,8 +82,23 @@ export default function CreateListingStep2() {
   const renderField = (field: any) => {
     const fieldId = field.id.toString();
     const currentValue = formData[fieldId];
-    const value = currentValue?.value || currentValue || '';
-    const selectedUnit = currentValue?.unit || field.defaultUnit || '';
+    
+    // Handle different value types properly
+    let value = '';
+    let selectedUnit = '';
+    
+    if (typeof currentValue === 'object' && currentValue !== null && !Array.isArray(currentValue)) {
+      // Object with value/unit structure
+      value = currentValue.value || '';
+      selectedUnit = currentValue.unit || field.defaultUnit || '';
+    } else if (Array.isArray(currentValue)) {
+      // Array for checkbox fields
+      value = currentValue;
+    } else {
+      // Simple string/number value
+      value = currentValue || '';
+      selectedUnit = field.defaultUnit || '';
+    }
 
     // Get field data like PostAd.tsx - using field directly
     const fieldData = field;
@@ -103,15 +118,29 @@ export default function CreateListingStep2() {
 
     // Handle value with unit change (for fields with units)
     const handleValueWithUnitChange = (fieldName: string, newValue: any) => {
-      const currentData = formData[fieldName] || {};
-      const updatedData = { ...currentData, value: newValue };
+      const currentData = formData[fieldName];
+      let updatedData;
+      
+      if (typeof currentData === 'object' && currentData !== null && !Array.isArray(currentData)) {
+        updatedData = { ...currentData, value: newValue };
+      } else {
+        updatedData = { value: newValue, unit: selectedUnit };
+      }
+      
       handleInputChange(fieldName, updatedData);
     };
 
     // Handle unit change
     const handleUnitChange = (fieldName: string, unit: string) => {
-      const currentData = formData[fieldName] || {};
-      const updatedData = { ...currentData, unit };
+      const currentData = formData[fieldName];
+      let updatedData;
+      
+      if (typeof currentData === 'object' && currentData !== null && !Array.isArray(currentData)) {
+        updatedData = { ...currentData, unit };
+      } else {
+        updatedData = { value: currentData || '', unit };
+      }
+      
       handleInputChange(fieldName, updatedData);
     };
 
@@ -168,7 +197,7 @@ export default function CreateListingStep2() {
                   <div className="relative">
                     <input
                       type="text"
-                      value={fieldData.useThousandSeparator ? formatWithThousands(value) : value}
+                      value={fieldData.useThousandSeparator ? formatWithThousands(String(value)) : String(value)}
                       onChange={(e) => {
                         let processedValue = e.target.value.replace(/\D/g, '');
                         
@@ -205,8 +234,8 @@ export default function CreateListingStep2() {
               }
               // For number fields without units
               const displayValue = fieldData.useThousandSeparator 
-                ? formatWithThousands(value) 
-                : value;
+                ? formatWithThousands(String(value)) 
+                : String(value);
 
               return (
                 <input
@@ -288,9 +317,9 @@ export default function CreateListingStep2() {
                         type="checkbox"
                         id={`${fieldId}-${index}`}
                         className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                        checked={(value || []).includes(option)}
+                        checked={Array.isArray(value) ? value.includes(option) : false}
                         onChange={(e) => {
-                          const currentValues = value || [];
+                          const currentValues = Array.isArray(value) ? value : [];
                           const newValues = e.target.checked
                             ? [...currentValues, option]
                             : currentValues.filter((v: string) => v !== option);
@@ -311,7 +340,7 @@ export default function CreateListingStep2() {
                   <input
                     type="checkbox"
                     id={fieldId}
-                    checked={value || false}
+                    checked={Boolean(value)}
                     onChange={(e) => handleInputChange(fieldId, e.target.checked)}
                     className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                   />
