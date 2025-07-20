@@ -75,7 +75,7 @@ export default function CategoryForm({
 
   useEffect(() => {
     if (category) {
-      // Edit mode
+      // Edit mode - load existing metadata
       setFormData({
         name: category.name,
         slug: category.slug,
@@ -83,8 +83,22 @@ export default function CategoryForm({
         icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
-        labelKey: "", // Will be loaded separately via API
+        labelKey: "",
       });
+      
+      // Load existing metadata for this category
+      fetch(`/api/categories/${category.id}/path`)
+        .then(response => response.json())
+        .then(path => {
+          if (path && path.length > 0) {
+            // Find current category in path and get its label
+            const currentCategoryInPath = path.find((item: any) => item.category.id === category.id);
+            if (currentCategoryInPath && currentCategoryInPath.label !== "Category") {
+              setFormData(prev => ({ ...prev, labelKey: currentCategoryInPath.label }));
+            }
+          }
+        })
+        .catch(error => console.error('Error loading category metadata:', error));
     } else if (parentCategory) {
       // Add child mode
       setFormData({
