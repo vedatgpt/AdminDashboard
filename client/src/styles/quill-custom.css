@@ -1,8 +1,4 @@
 /* ReactQuill özelleştirmesi */
-.quill-editor-wrapper {
-  margin-bottom: 50px;
-}
-
 .quill-editor-wrapper .ql-toolbar {
   border: 1px solid #d1d5db !important;
   border-bottom: none !important;
@@ -15,13 +11,18 @@
   border-radius: 0 0 8px 8px !important;
   font-family: inherit !important;
   font-size: 14px !important;
-  min-height: 150px !important;
+  min-height: 100px !important;
+  max-height: none !important;
 }
 
 .quill-editor-wrapper .ql-editor {
   padding: 12px 16px !important;
   line-height: 1.5 !important;
   color: #374151 !important;
+  resize: vertical !important;
+  overflow-y: auto !important;
+  min-height: 100px !important;
+  max-height: 400px !important;
 }
 
 .quill-editor-wrapper .ql-editor.ql-blank::before {
@@ -53,7 +54,13 @@
   fill: #f97316 !important;
 }
 
+/* Focus efektini kaldır */
 .quill-editor-wrapper .ql-editor:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2) !important;
+  box-shadow: none !important;
+}
+
+.quill-editor-wrapper .ql-container.ql-snow:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }

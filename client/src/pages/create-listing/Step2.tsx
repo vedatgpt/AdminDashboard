@@ -37,7 +37,7 @@ export default function Step2() {
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto">
         {/* Açıklama Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-8">
+        <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
             Açıklama
             <span className="text-red-500 ml-1">*</span>
@@ -57,13 +57,12 @@ export default function Step2() {
                   ['clean']
                 ],
               }}
-              style={{ height: '200px' }}
             />
           </div>
         </div>
 
         {/* Fiyat Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-8">
+        <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
             Fiyat
             <span className="text-red-500 ml-1">*</span>
