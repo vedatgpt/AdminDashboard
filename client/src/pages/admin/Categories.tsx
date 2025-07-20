@@ -105,17 +105,38 @@ export default function Categories() {
   };
 
   // Handle form submission
-  const handleFormSubmit = async (data: InsertCategory | UpdateCategory) => {
+  const handleFormSubmit = async (data: InsertCategory | UpdateCategory, labelKey?: string) => {
     try {
+      let categoryId: number;
+      
       if (editingCategory) {
         await updateMutation.mutateAsync({ 
           id: editingCategory.id, 
           data: data as UpdateCategory 
         });
+        categoryId = editingCategory.id;
         showAlertMessage('success', 'Kategori başarıyla güncellendi');
       } else {
-        await createMutation.mutateAsync(data as InsertCategory);
+        const newCategory = await createMutation.mutateAsync(data as InsertCategory);
+        categoryId = newCategory.id;
         showAlertMessage('success', 'Kategori başarıyla oluşturuldu');
+      }
+      
+      // Update category metadata if labelKey is provided
+      if (labelKey) {
+        try {
+          const response = await fetch(`/api/categories/${categoryId}/metadata`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ labelKey }),
+          });
+          
+          if (!response.ok) {
+            console.error('Failed to update category metadata');
+          }
+        } catch (metaError) {
+          console.error('Error updating category metadata:', metaError);
+        }
       }
       
       setIsFormOpen(false);

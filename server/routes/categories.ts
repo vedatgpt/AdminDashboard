@@ -134,6 +134,23 @@ router.get('/:id/custom-fields', async (req, res) => {
   }
 });
 
+// Get category path with labels (public endpoint)
+router.get("/:id/path", async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    const path = await storage.getCategoryPath(categoryId);
+    res.json(path);
+  } catch (error) {
+    console.error("Error fetching category path:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
+  }
+});
+
 // Custom Fields Routes (admin only)
 
 // POST /api/categories/:id/custom-fields - Create custom field for a category
@@ -197,6 +214,28 @@ router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Delete custom field error:', error);
     res.status(500).json({ error: 'Failed to delete custom field' });
+  }
+});
+
+// Update category metadata (label) - admin only
+router.put("/:id/metadata", requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    const { labelKey } = req.body;
+    
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    if (!labelKey || typeof labelKey !== 'string') {
+      return res.status(400).json({ error: "Label key is required" });
+    }
+
+    const metadata = await storage.setCategoryMetadata(categoryId, labelKey.trim());
+    res.json(metadata);
+  } catch (error) {
+    console.error("Error updating category metadata:", error);
+    res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 

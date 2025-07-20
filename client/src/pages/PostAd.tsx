@@ -16,6 +16,13 @@ export default function PostAd() {
 
   const { data: allCategories = [] } = useCategories();
   const { data: customFields = [] } = useCustomFields(finalCategory?.id);
+  
+  // Fetch category path with labels for final category
+  const { data: categoryPath = [] } = useQuery({
+    queryKey: ['/api/categories', finalCategory?.id, 'path'],
+    enabled: !!finalCategory?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   // Flatten nested categories to a flat array
   const flatCategories = React.useMemo(() => {

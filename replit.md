@@ -364,3 +364,15 @@ Authentication features:
 - Unit dropdown positioned absolutely within input container using pe-20 and pe-px classes
 - Maintains all existing functionality: disabled state for single units, min/max validation
 - Clean, professional appearance matching Preline UI standards
+
+### Category Metadata System Implementation (July 20, 2025)
+- Added complete category metadata system with database table category_metadata (id, category_id, label_key)
+- Created API endpoints: GET /api/categories/:id/path and PUT /api/categories/:id/metadata
+- CategoryForm updated with label input field for hierarchy labels (Ana Kategori, Marka, Seri, Model)
+- PostAd page displays category path with custom labels using new API
+- Database storage methods: getCategoryPath, getCategoryMetadata, setCategoryMetadata
+- Admin interface allows setting custom labels when creating/editing categories
+- Default "Category" label used when no custom label is set
+- API returns hierarchical path: [{category: Category, label: string}]
+- Full integration between frontend, backend, and database for flexible category labeling
+- System automatically supports new hierarchical structures through admin interface

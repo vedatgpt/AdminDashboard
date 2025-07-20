@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, categoryMetadata, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type CategoryMetadata } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -41,6 +41,13 @@ export interface IStorage {
   deleteCategory(id: number): Promise<void>;
   moveCategoryToParent(id: number, newParentId: number | null): Promise<Category>;
   getCategoryBreadcrumbs(id: number): Promise<Category[]>;
+  getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>>;
+  
+  // Category Metadata methods
+  getCategoryMetadata(categoryId: number): Promise<CategoryMetadata | undefined>;
+  setCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata>;
+  updateCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata>;
+  deleteCategoryMetadata(categoryId: number): Promise<void>;
   
   // Custom Fields methods
   getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]>;
@@ -329,6 +336,68 @@ export class DatabaseStorage implements IStorage {
     }
     
     return breadcrumbs;
+  }
+
+  async getCategoryPath(id: number): Promise<Array<{category: Category, label: string}>> {
+    const breadcrumbs = await this.getCategoryBreadcrumbs(id);
+    const pathWithLabels = [];
+
+    for (const category of breadcrumbs) {
+      const metadata = await this.getCategoryMetadata(category.id);
+      const label = metadata?.labelKey || "Category";
+      pathWithLabels.push({ category, label });
+    }
+
+    return pathWithLabels;
+  }
+
+  // Category Metadata methods
+  async getCategoryMetadata(categoryId: number): Promise<CategoryMetadata | undefined> {
+    const result = await db
+      .select()
+      .from(categoryMetadata)
+      .where(eq(categoryMetadata.categoryId, categoryId))
+      .limit(1);
+
+    return result[0];
+  }
+
+  async setCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata> {
+    const existing = await this.getCategoryMetadata(categoryId);
+    
+    if (existing) {
+      return await this.updateCategoryMetadata(categoryId, labelKey);
+    }
+
+    const result = await db
+      .insert(categoryMetadata)
+      .values({
+        categoryId,
+        labelKey,
+      })
+      .returning();
+
+    return result[0];
+  }
+
+  async updateCategoryMetadata(categoryId: number, labelKey: string): Promise<CategoryMetadata> {
+    const result = await db
+      .update(categoryMetadata)
+      .set({ labelKey })
+      .where(eq(categoryMetadata.categoryId, categoryId))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Category metadata not found");
+    }
+
+    return result[0];
+  }
+
+  async deleteCategoryMetadata(categoryId: number): Promise<void> {
+    await db
+      .delete(categoryMetadata)
+      .where(eq(categoryMetadata.categoryId, categoryId));
   }
 
   // Custom Fields methods

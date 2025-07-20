@@ -124,6 +124,14 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Category metadata for hierarchical labels
+export const categoryMetadata = pgTable("category_metadata", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  labelKey: text("label_key").notNull(), // e.g., "Ana Kategori", "Marka", "Seri", "Model"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Schema for creating categories
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
@@ -153,6 +161,7 @@ export type User = typeof users.$inferSelect;
 export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type CategoryCustomField = typeof categoryCustomFields.$inferSelect;
+export type CategoryMetadata = typeof categoryMetadata.$inferSelect;
 export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type UpdateCategory = z.infer<typeof updateCategorySchema>;

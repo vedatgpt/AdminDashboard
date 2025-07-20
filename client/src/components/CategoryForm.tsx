@@ -2,10 +2,27 @@ import { useState, useEffect } from "react";
 import { X, Save, AlertCircle } from "lucide-react";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
+// Helper function to update category metadata
+const updateCategoryMetadata = async (categoryId: number, labelKey: string) => {
+  try {
+    const response = await fetch(`/api/categories/${categoryId}/metadata`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ labelKey }),
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to update category metadata');
+    }
+  } catch (error) {
+    console.error('Error updating category metadata:', error);
+  }
+};
+
 interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: InsertCategory | UpdateCategory) => void;
+  onSubmit: (data: InsertCategory | UpdateCategory, labelKey?: string) => void;
   category?: Category;
   parentCategory?: Category;
   categories: Category[];
@@ -50,6 +67,7 @@ export default function CategoryForm({
     icon: null as string | null,
     sortOrder: 0,
     isActive: true,
+    labelKey: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -65,6 +83,7 @@ export default function CategoryForm({
         icon: category.icon || null,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
+        labelKey: "", // Will be loaded separately via API
       });
     } else if (parentCategory) {
       // Add child mode
@@ -75,6 +94,7 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
+        labelKey: "",
       });
     } else {
       // Add root category mode
@@ -85,6 +105,7 @@ export default function CategoryForm({
         icon: null,
         sortOrder: 0,
         isActive: true,
+        labelKey: "",
       });
     }
     setErrors({});
@@ -179,7 +200,8 @@ export default function CategoryForm({
       delete submitData.icon;
     }
     
-    onSubmit(submitData);
+    // Pass labelKey to parent component for handling
+    onSubmit(submitData, formData.labelKey.trim() || undefined);
   };
 
   if (!isOpen) return null;
@@ -254,6 +276,23 @@ export default function CategoryForm({
                 {errors.slug}
               </p>
             )}
+          </div>
+
+          {/* Category Label */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategori Etiketi
+            </label>
+            <input
+              type="text"
+              value={formData.labelKey}
+              onChange={(e) => setFormData(prev => ({ ...prev, labelKey: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+              placeholder="Örn: Ana Kategori, Marka, Seri, Model"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Bu kategori hiyerarşisinde hangi etikete sahip? (Boş bırakılırsa "Category" kullanılır)
+            </p>
           </div>
 
 
