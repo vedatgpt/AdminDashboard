@@ -227,6 +227,32 @@ export default function CreateListingStep1() {
                 </div>
               );
             })}
+            
+            {/* Completion box - Show when final category is selected */}
+            {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
+              <div className="flex-shrink-0 w-60 bg-green-50 border-2 border-green-200 rounded-lg overflow-hidden">
+                <div className="p-4 flex flex-col items-center justify-center h-80 text-center space-y-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-green-800">
+                    Kategori Seçimi Tamamlanmıştır.
+                  </p>
+                  <button
+                    onClick={() => {
+                      dispatch({ type: 'SET_STEP', payload: 2 });
+                      // Navigate to next step (will be implemented)
+                      console.log('Navigating to step 2...');
+                    }}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    Devam Et
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
