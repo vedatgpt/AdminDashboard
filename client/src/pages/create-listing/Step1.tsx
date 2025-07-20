@@ -317,6 +317,7 @@ export default function CreateListingStep1() {
                         <button
                           onClick={() => {
                             dispatch({ type: 'SET_STEP', payload: 2 });
+                            navigate('/create-listing/step-2');
                             console.log('Navigating to step 2...');
                           }}
                           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
@@ -376,6 +377,7 @@ export default function CreateListingStep1() {
                   <button
                     onClick={() => {
                       dispatch({ type: 'SET_STEP', payload: 2 });
+                      navigate('/create-listing/step-2');
                       console.log('Navigating to step 2...');
                     }}
                     className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-base font-medium"
