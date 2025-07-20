@@ -411,3 +411,14 @@ Authentication features:
 - Placeholder text: "Ürününüzün detaylı açıklamasını yazınız..."
 - Data stored in formData.customFields.description
 - Completely independent from category custom fields system
+
+### Universal Title Input Implementation (July 20, 2025)
+- Added universal title input field above description input (universal for all categories)
+- Title input available for all categories (not dependent on custom fields)
+- Maximum 64 character limit with real-time character counter
+- Input validation prevents exceeding character limit
+- Character counter displays current/maximum (e.g., "25/64")
+- Placeholder text: "İlanınız için başlık yazınız"
+- Helper text: "İlanınızın dikkat çekici bir başlığını yazın"
+- Data stored in formData.customFields.title
+- Completely independent from category custom fields system

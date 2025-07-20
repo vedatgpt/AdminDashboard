@@ -36,6 +36,33 @@ export default function Step2() {
   return (
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-2xl mx-auto">
+        {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            İlan Başlığı
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.customFields.title || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value.length <= 64) {
+                handleInputChange('title', value);
+              }
+            }}
+            placeholder="İlanınız için başlık yazınız"
+            maxLength={64}
+            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+          />
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">İlanınızın dikkat çekici bir başlığını yazın</p>
+            <span className="text-sm text-gray-400">
+              {(formData.customFields.title || '').length}/64
+            </span>
+          </div>
+        </div>
+
         {/* Açıklama Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
