@@ -123,13 +123,28 @@ export default function Contact() {
                   <label htmlFor="mobilePhone" className="block text-sm font-medium text-gray-700">
                     Cep Telefonu
                   </label>
-                  <input
-                    id="mobilePhone"
-                    type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="0555 123 4567"
-                    {...contactForm.register("mobilePhone")}
-                  />
+                  <div className="relative">
+                    <input
+                      id="mobilePhone" 
+                      type="tel"
+                      className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      placeholder="555 123 4567"
+                      {...contactForm.register("mobilePhone")}
+                    />
+                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
+                      <label htmlFor="mobilePhone-country" className="sr-only">Ülke</label>
+                      <select 
+                        id="mobilePhone-country" 
+                        name="mobilePhone-country" 
+                        className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                      >
+                        <option value="+90">🇹🇷 +90</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+49">🇩🇪 +49</option>
+                      </select>
+                    </div>
+                  </div>
                   {contactForm.formState.errors.mobilePhone && (
                     <p className="text-sm text-red-500">
                       {contactForm.formState.errors.mobilePhone.message}
@@ -141,13 +156,28 @@ export default function Contact() {
                   <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700">
                     WhatsApp Numarası
                   </label>
-                  <input
-                    id="whatsappNumber"
-                    type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="0555 123 4567"
-                    {...contactForm.register("whatsappNumber")}
-                  />
+                  <div className="relative">
+                    <input
+                      id="whatsappNumber"
+                      type="tel"
+                      className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      placeholder="555 123 4567"
+                      {...contactForm.register("whatsappNumber")}
+                    />
+                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
+                      <label htmlFor="whatsapp-country" className="sr-only">Ülke</label>
+                      <select 
+                        id="whatsapp-country" 
+                        name="whatsapp-country" 
+                        className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                      >
+                        <option value="+90">🇹🇷 +90</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+49">🇩🇪 +49</option>
+                      </select>
+                    </div>
+                  </div>
                   {contactForm.formState.errors.whatsappNumber && (
                     <p className="text-sm text-red-500">
                       {contactForm.formState.errors.whatsappNumber.message}
@@ -160,13 +190,28 @@ export default function Contact() {
                     <label htmlFor="businessPhone" className="block text-sm font-medium text-gray-700">
                       İş Telefonu
                     </label>
-                    <input
-                      id="businessPhone"
-                      type="tel"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="0212 345 6789"
-                      {...contactForm.register("businessPhone")}
-                    />
+                    <div className="relative">
+                      <input
+                        id="businessPhone"
+                        type="tel"
+                        className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                        placeholder="212 345 6789"
+                        {...contactForm.register("businessPhone")}
+                      />
+                      <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
+                        <label htmlFor="business-country" className="sr-only">Ülke</label>
+                        <select 
+                          id="business-country" 
+                          name="business-country" 
+                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                        >
+                          <option value="+90">🇹🇷 +90</option>
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+49">🇩🇪 +49</option>
+                        </select>
+                      </div>
+                    </div>
                     {contactForm.formState.errors.businessPhone && (
                       <p className="text-sm text-red-500">
                         {contactForm.formState.errors.businessPhone.message}
@@ -179,7 +224,7 @@ export default function Contact() {
               <button 
                 type="submit" 
                 disabled={updateContactMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
                 {updateContactMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
