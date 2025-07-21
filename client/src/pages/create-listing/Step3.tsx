@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
-
+import ModernNavbar from '@/components/Navbar';
+import NavbarMobile from '@/components/Navbar-mobile';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -108,6 +109,36 @@ export default function Step3() {
     onError: (error) => {
       console.error('Delete error:', error);
       alert(`Silme hatası: ${error.message}`);
+    }
+  });
+
+  // Rotate image mutation
+  const rotateImageMutation = useMutation({
+    mutationFn: async (imageId: string) => {
+      const response = await fetch(`/api/upload/images/${imageId}/rotate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Rotate failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data, imageId) => {
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { ...img, url: data.url, thumbnail: data.thumbnail }
+          : img
+      ));
+    },
+    onError: (error) => {
+      console.error('Rotate error:', error);
+      alert(`Döndürme hatası: ${error.message}`);
     }
   });
 
@@ -234,15 +265,23 @@ export default function Step3() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="pt-8">
+      {/* Navbar */}
+      <div className="hidden lg:block">
+        <ModernNavbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
+
+      <div className="pt-8 lg:pt-24">
         <div className="max-w-4xl mx-auto px-4 py-8">
 
           {/* Fotoğraf Yükleme Kutusu */}
           <div className="mb-6">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="w-full">
-                <h3 className="font-medium text-gray-900 text-lg leading-tight mb-6">
-                  Fotoğraf Yükleme
+                <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
+                  Fotoğraf
                 </h3>
                 
                 <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
@@ -276,14 +315,15 @@ export default function Step3() {
                 </span>
 
                 <div className="mt-4 flex flex-wrap justify-center text-sm/6 text-gray-600">
-                  <span className="pe-1 font-medium text-gray-800">
-                    Fotoğraflarınızı buraya bırakın veya
+                 
+                  <span className="pe-1 bg-white font-semibold text-orange-600 hover:text-orange-700 rounded-lg decoration-2 hover:underline focus-within:outline-hidden focus-within:ring-2 focus-within:ring-orange-600 focus-within:ring-offset-2">Fotoğraf Ekle</span>
+                  <span className="font-medium text-gray-800">
+                    veya sürükle bırak
                   </span>
-                  <span className="bg-white font-semibold text-orange-600 hover:text-orange-700 rounded-lg decoration-2 hover:underline focus-within:outline-hidden focus-within:ring-2 focus-within:ring-orange-600 focus-within:ring-offset-2">dosya seçin</span>
                 </div>
 
                 <p className="mt-1 text-xs text-gray-400">
-                  En fazla {MAX_IMAGES} fotoğraf, her biri maksimum 10MB
+                  En fazla {MAX_IMAGES} fotoğraf eklenebilir ve her biri maksimum 10MB olabilir.
                 </p>
               </div>
             </div>
@@ -301,13 +341,9 @@ export default function Step3() {
                 {images.length > 0 && (
                   <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5" />
-                  Fotoğraflar ({images.length}/{MAX_IMAGES})
+                <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                  Eklenen Fotoğraflar ({images.length}/{MAX_IMAGES})
                 </h3>
-                <div className="text-sm text-gray-500">
-                  Sürükleyerek sıralayabilirsiniz
-                </div>
               </div>
               
               <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -336,10 +372,8 @@ export default function Step3() {
                     {/* Rotate Button - Sağ alt */}
                     {!image.uploading && (
                       <button
-                        onClick={() => {
-                          // Rotate functionality placeholder
-                          alert('Döndürme özelliği yakında eklenecek');
-                        }}
+                        onClick={() => rotateImageMutation.mutate(image.id)}
+                        disabled={rotateImageMutation.isPending}
                         className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
                       >
                         <RotateCw className="w-3 h-3" />
