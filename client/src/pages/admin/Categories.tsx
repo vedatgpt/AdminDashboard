@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
 import { useLocation } from "wouter";
+import Sortable from "sortablejs";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
 import CustomFieldsModal from "@/components/CustomFieldsModal";
@@ -188,6 +189,46 @@ export default function Categories() {
 
   const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
+  // Initialize SortableJS for categories
+  useEffect(() => {
+    const sortableElement = document.querySelector("#hs-category-sortable");
+    if (sortableElement && filteredCategories.length > 1) {
+      // Destroy existing sortable instance if it exists
+      if ((sortableElement as any)._sortable) {
+        (sortableElement as any)._sortable.destroy();
+      }
+
+      const sortableInstance = new Sortable(sortableElement as HTMLElement, {
+        animation: 150,
+        dragClass: 'rounded-none!',
+        onEnd: function (evt) {
+          const oldIndex = evt.oldIndex;
+          const newIndex = evt.newIndex;
+          
+          if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+            const draggedCategory = filteredCategories[oldIndex];
+            
+            // Update sort order based on new position
+            updateMutation.mutate({ 
+              id: draggedCategory.id, 
+              data: { sortOrder: newIndex + 1 } 
+            });
+          }
+        }
+      });
+
+      // Store instance for cleanup
+      (sortableElement as any)._sortable = sortableInstance;
+    }
+
+    // Cleanup function
+    return () => {
+      if (sortableElement && (sortableElement as any)._sortable) {
+        (sortableElement as any)._sortable.destroy();
+      }
+    };
+  }, [filteredCategories, updateMutation]);
+
   return (
     <div className="h-full flex flex-col">
       {/* Alert */}
@@ -290,129 +331,86 @@ export default function Categories() {
                 <p className="text-sm mt-1">{currentParent ? 'Alt kategori eklemek için yukarıdaki butonu kullanın' : 'Başlamak için "Ana Kategori Ekle" butonunu kullanın'}</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <ul id="hs-category-sortable" className="flex flex-col">
                 {filteredCategories.map((category, index) => {
                   const childrenCount = (category as any).children ? (category as any).children.length : 0;
                   return (
-                    <div
+                    <li
                       key={category.id}
-                      className="p-4 hover:bg-gray-50 transition-all duration-150 cursor-pointer group relative"
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('text/plain', index.toString());
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.currentTarget.classList.add('opacity-50');
-                      }}
-                      onDragEnd={(e) => {
-                        e.currentTarget.classList.remove('opacity-50');
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = 'move';
-                        e.currentTarget.classList.add('bg-blue-50', 'border-blue-300');
-                      }}
-                      onDragLeave={(e) => {
-                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        e.currentTarget.classList.remove('bg-blue-50', 'border-blue-300');
-                        
-                        const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                        if (draggedIndex !== index && !isNaN(draggedIndex)) {
-                          const draggedCategory = filteredCategories[draggedIndex];
-                          const targetCategory = filteredCategories[index];
-                          
-                          // Immediate visual update
-                          const newOrder = draggedIndex < index ? index + 1 : index;
-                          
-                          updateMutation.mutate({ 
-                            id: draggedCategory.id, 
-                            data: { sortOrder: newOrder } 
-                          });
-                          
-                          // Update target category sort order if needed
-                          if (targetCategory.sortOrder <= newOrder) {
-                            updateMutation.mutate({ 
-                              id: targetCategory.id, 
-                              data: { sortOrder: targetCategory.sortOrder + 1 } 
-                            });
-                          }
-                        }
-                      }}
+                      data-category-id={category.id}
+                      className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative"
                       onClick={() => handleCategoryClick(category)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center flex-1">
-                          <GripVertical className="w-4 h-4 text-gray-400 mr-3 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
-                          <div className="flex-1">
-                            <div className="flex items-center">
-                              {category.icon && (
-                                <img
-                                  src={`/uploads/category-icons/${category.icon}`}
-                                  alt={`${category.name} icon`}
-                                  className="w-5 h-5 mr-2 object-contain"
-                                />
-                              )}
-                              <h3 className="font-medium text-gray-900">
-                                {category.name}
-                                {childrenCount > 0 && (
-                                  <span className="text-gray-500 ml-1">({childrenCount})</span>
-                                )}
-                              </h3>
-                              <ChevronRight className="w-4 h-4 ml-2 text-gray-400" />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2 ml-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddChild(category);
-                            }}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Alt kategori ekle"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCustomFields(category);
-                            }}
-                            className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Özel alanlar"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(category);
-                            }}
-                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Düzenle"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(category);
-                            }}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Sil"
-                            disabled={isAnyMutationLoading}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                      {/* Icon */}
+                      {category.icon ? (
+                        <img
+                          src={`/uploads/category-icons/${category.icon}`}
+                          alt={`${category.name} icon`}
+                          className="shrink-0 w-4 h-4 object-contain"
+                        />
+                      ) : (
+                        <FolderTree className="shrink-0 w-4 h-4 text-gray-400" />
+                      )}
+                      
+                      {/* Category Name */}
+                      <span className="flex-1 text-left">
+                        {category.name}
+                        {childrenCount > 0 && (
+                          <span className="text-gray-500 ml-1">({childrenCount})</span>
+                        )}
+                      </span>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddChild(category);
+                          }}
+                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                          title="Alt kategori ekle"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCustomFields(category);
+                          }}
+                          className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
+                          title="Özel alanlar"
+                        >
+                          <Settings className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(category);
+                          }}
+                          className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                          title="Düzenle"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(category);
+                          }}
+                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                          title="Sil"
+                          disabled={isAnyMutationLoading}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
-                    </div>
+                      
+                      {/* Drag Handle */}
+                      <GripVertical className="shrink-0 w-4 h-4 text-gray-400" />
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </div>
         </div>
@@ -429,8 +427,8 @@ export default function Categories() {
           setParentCategory(null);
         }}
         onSubmit={handleFormSubmit}
-        category={editingCategory}
-        parentCategory={parentCategory}
+        category={editingCategory || undefined}
+        parentCategory={parentCategory || undefined}
         categories={categories}
         isLoading={isAnyMutationLoading}
       />
