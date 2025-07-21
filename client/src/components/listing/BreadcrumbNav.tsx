@@ -14,7 +14,7 @@ export default function BreadcrumbNav({ categoryPath, onCategoryClick, disableFi
 
   return (
     <nav>
-      <div className="flex items-center space-x-1 text-xs lg:text-sm flex-wrap">
+      <div className="flex items-center space-x-1 text-xs lg:text-sm flex-wrap gap-y-2">
         {/* First category - conditional clickability */}
         {categoryPath.length > 0 && (
           <>

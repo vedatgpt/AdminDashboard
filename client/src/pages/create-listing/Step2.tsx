@@ -72,15 +72,8 @@ export default function Step2() {
         />
       </div>
 
-      {/* Mobile/Tablet Fixed Header - Boş bırakıldı, breadcrumb kutu içinde */}
-      <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
-        <div className="flex items-center space-x-1 text-xs lg:text-sm flex-wrap">
-          <span className="text-gray-700">İlan Detayları</span>
-        </div>
-      </div>
-      
-      {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className="lg:pt-6 pt-[108px]">
+      {/* Main content with dynamic padding */}
+      <div className="lg:pt-6 pt-[60px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
 

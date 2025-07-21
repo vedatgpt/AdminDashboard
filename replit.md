@@ -453,6 +453,7 @@ Authentication features:
 - Left side displays "Seçtiğiniz Araca Ait Bilgiler" text
 - Right side shows "Değiştir" button with underline hover effect that navigates back to Step-1
 - Breadcrumb moved inside the box (bottom left area) with first category click disabled
-- Mobile breadcrumb header simplified to "İlan Detayları"
+- Mobile fixed breadcrumb header completely removed
 - Desktop breadcrumb removed from separate section (now only in box)
-- Enhanced BreadcrumbNav component with disableFirstCategory prop
+- Enhanced BreadcrumbNav component with disableFirstCategory prop and improved line spacing (gap-y-2)
+- Mobile content padding reduced from pt-[108px] to pt-[60px] after removing fixed header
