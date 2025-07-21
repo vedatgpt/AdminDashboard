@@ -23,7 +23,7 @@ export default function LocationSettings() {
   // Fetch current settings
   const { data: locationSettings, isLoading } = useQuery({
     queryKey: ['/api/location-settings'],
-    queryFn: () => fetch('/api/location-settings').then(res => res.json()) as Promise<LocationSettings>,
+    queryFn: () => apiRequest('/api/location-settings') as Promise<LocationSettings>,
   });
 
   // Update local state when data is loaded
@@ -46,13 +46,22 @@ export default function LocationSettings() {
       setShowAlert({ type: 'success', message: 'Lokasyon görünürlük ayarları başarıyla güncellendi!' });
       setTimeout(() => setShowAlert(null), 3000);
     },
-    onError: () => {
-      setShowAlert({ type: 'error', message: 'Ayarlar güncellenirken hata oluştu. Lütfen tekrar deneyin.' });
+    onError: (error: any) => {
+      console.error('Location settings update error:', error);
+      const errorMessage = error?.message || 'Ayarlar güncellenirken hata oluştu. Lütfen tekrar deneyin.';
+      setShowAlert({ type: 'error', message: errorMessage });
       setTimeout(() => setShowAlert(null), 3000);
     },
   });
 
   const handleSave = () => {
+    console.log('Saving location settings:', {
+      showCountry: settings.showCountry,
+      showCity: settings.showCity,
+      showDistrict: settings.showDistrict,
+      showNeighborhood: settings.showNeighborhood,
+    });
+    
     updateMutation.mutate({
       showCountry: settings.showCountry,
       showCity: settings.showCity,

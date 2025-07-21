@@ -743,11 +743,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update location settings
   app.patch("/api/location-settings", requireAdmin, async (req, res) => {
     try {
+      console.log('Location settings update request:', req.body);
       const updates = req.body;
       const settings = await storage.updateLocationSettings(updates);
+      console.log('Location settings updated successfully:', settings);
       res.json(settings);
     } catch (error) {
-      res.status(500).json({ error: "Lokasyon ayarları güncellenirken hata oluştu" });
+      console.error('Location settings update error:', error);
+      res.status(500).json({ error: `Lokasyon ayarları güncellenirken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` });
     }
   });
 
