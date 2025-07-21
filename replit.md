@@ -464,7 +464,8 @@ Authentication features:
 ### Desktop Input Width Optimization (July 21, 2025)
 - Optimized desktop input widths for better user experience and select field visibility
 - Title and description inputs remain full width (w-full)
-- Price input, custom fields, and "Kimden" input set to 35% width on desktop (lg:w-[35%])
+- Price input, custom fields, and "Kimden" input set to 30% width on desktop (lg:w-[30%])
 - Mobile maintains full width (w-full) for all inputs for optimal touch interaction
 - Improved select dropdown visibility by reducing input width on desktop screens
 - Better visual balance between input fields and their associated unit/currency selectors
+- Perfect balance achieved at 30% width for maximum select field visibility
