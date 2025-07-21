@@ -8,11 +8,61 @@ import '../../styles/quill-custom.css';
 import ModernNavbar from '@/components/Navbar';
 import NavbarMobile from '@/components/Navbar-mobile';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
+import { useLocationsTree } from '@/hooks/useLocations';
+import { useState, useMemo } from 'react';
+import type { Location } from '@shared/schema';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath } = state;
   const [, navigate] = useLocation();
+  
+  // Location selection state
+  const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
+  const [selectedCity, setSelectedCity] = useState<Location | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
+  
+  // Fetch locations
+  const { data: locations = [] } = useLocationsTree();
+  
+  // Get available locations based on selection
+  const availableCountries = useMemo(() => {
+    return locations.filter(loc => loc.type === 'country');
+  }, [locations]);
+  
+  const availableCities = useMemo(() => {
+    if (!selectedCountry) return [];
+    const findChildren = (locs: any[], parentId: number): any[] => {
+      for (const loc of locs) {
+        if (loc.id === parentId) {
+          return loc.children || [];
+        }
+        if (loc.children) {
+          const found = findChildren(loc.children, parentId);
+          if (found.length > 0) return found;
+        }
+      }
+      return [];
+    };
+    return findChildren(locations, selectedCountry.id).filter((loc: any) => loc.type === 'city');
+  }, [locations, selectedCountry]);
+  
+  const availableDistricts = useMemo(() => {
+    if (!selectedCity) return [];
+    const findChildren = (locs: any[], parentId: number): any[] => {
+      for (const loc of locs) {
+        if (loc.id === parentId) {
+          return loc.children || [];
+        }
+        if (loc.children) {
+          const found = findChildren(loc.children, parentId);
+          if (found.length > 0) return found;
+        }
+      }
+      return [];
+    };
+    return findChildren(locations, selectedCity.id).filter((loc: any) => loc.type === 'district');
+  }, [locations, selectedCity]);
   
   // Kullanıcı bilgilerini al
   const { data: user } = useQuery({
@@ -514,6 +564,121 @@ export default function Step2() {
           />
         </div>
 
+              </div>
+            </div>
+          </div>
+
+          {/* Lokasyon Bilgileri Kutusu */}
+          <div className="mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+              <div className="w-full">
+                <h3 className="font-medium text-gray-900 text-sm leading-tight mb-6">
+                  Lokasyon Bilgileri
+                </h3>
+
+                {/* İl/Şehir Seçimi */}
+                <div className="space-y-2 mb-6">
+                  <label className="block text-sm font-medium text-gray-700">
+                    İl
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <select
+                    value={selectedCountry?.id || ''}
+                    onChange={(e) => {
+                      const countryId = parseInt(e.target.value);
+                      const country = availableCountries.find(c => c.id === countryId);
+                      setSelectedCountry(country || null);
+                      setSelectedCity(null);
+                      setSelectedDistrict(null);
+                      updateFormData({
+                        location: {
+                          country: country || null,
+                          city: null,
+                          district: null
+                        }
+                      });
+                    }}
+                    className="py-2.5 sm:py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                  >
+                    <option value="">İl seçiniz</option>
+                    {availableCountries.map((country) => (
+                      <option key={country.id} value={country.id}>
+                        {country.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* İlçe Seçimi */}
+                <div className="space-y-2 mb-6">
+                  <label className="block text-sm font-medium text-gray-700">
+                    İlçe
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <select
+                    value={selectedCity?.id || ''}
+                    onChange={(e) => {
+                      const cityId = parseInt(e.target.value);
+                      const city = availableCities.find(c => c.id === cityId);
+                      setSelectedCity(city || null);
+                      setSelectedDistrict(null);
+                      updateFormData({
+                        location: {
+                          country: selectedCountry,
+                          city: city || null,
+                          district: null
+                        }
+                      });
+                    }}
+                    disabled={!selectedCountry}
+                    className="py-2.5 sm:py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {selectedCountry ? "İlçe seçiniz" : "Önce il seçiniz"}
+                    </option>
+                    {availableCities.map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Mahalle Seçimi (opsiyonel) */}
+                {availableDistricts.length > 0 && (
+                  <div className="space-y-2 mb-6">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Mahalle
+                      <span className="text-gray-400 ml-1">(İsteğe bağlı)</span>
+                    </label>
+                    <select
+                      value={selectedDistrict?.id || ''}
+                      onChange={(e) => {
+                        const districtId = parseInt(e.target.value);
+                        const district = availableDistricts.find(d => d.id === districtId);
+                        setSelectedDistrict(district || null);
+                        updateFormData({
+                          location: {
+                            country: selectedCountry,
+                            city: selectedCity,
+                            district: district || null
+                          }
+                        });
+                      }}
+                      disabled={!selectedCity}
+                      className="py-2.5 sm:py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {selectedCity ? "Mahalle seçiniz" : "Önce ilçe seçiniz"}
+                      </option>
+                      {availableDistricts.map((district) => (
+                        <option key={district.id} value={district.id}>
+                          {district.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           </div>

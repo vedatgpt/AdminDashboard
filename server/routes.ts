@@ -633,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Locations API routes
   
   // Get all locations in tree structure
-  app.get("/api/locations", requireAdmin, async (req, res) => {
+  app.get("/api/locations", async (req, res) => {
     try {
       const locations = await storage.getLocationsTree();
       res.json(locations);
@@ -643,7 +643,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get child locations by parent ID
-  app.get("/api/locations/:parentId/children", requireAdmin, async (req, res) => {
+  app.get("/api/locations/:parentId/children", async (req, res) => {
     try {
       const parentId = parseInt(req.params.parentId);
       const locations = await storage.getChildLocations(parentId);
