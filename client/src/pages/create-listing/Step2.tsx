@@ -1,6 +1,7 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
@@ -11,6 +12,7 @@ import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath } = state;
+  const [, navigate] = useLocation();
   
   // Kullanıcı bilgilerini al
   const { data: user } = useQuery({
@@ -93,6 +95,25 @@ export default function Step2() {
               />
             </div>
           )}
+
+          {/* Kategori Bilgi Kutusu */}
+          <div className="mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                    Seçtiğiniz Araca Ait Bilgiler
+                  </h3>
+                </div>
+                <button
+                  onClick={() => navigate('/create-listing/step-1')}
+                  className="text-orange-500 text-sm font-medium hover:text-orange-600 transition-colors"
+                >
+                  Değiştir
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div className="max-w-2xl mx-auto">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}

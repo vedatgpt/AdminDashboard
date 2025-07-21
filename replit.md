@@ -446,3 +446,11 @@ Authentication features:
 - Proper content padding to prevent overlap with fixed elements
 - Breadcrumb shows full category path from Step-1 context (not just final category)
 - Mobile and desktop breadcrumb navigation displays complete hierarchy
+
+### Category Information Box (July 20, 2025)
+- Added category information box above form inputs in Step-2
+- Box design matches Step-1 main category card styling (white background, gray border, hover effects)
+- Left side displays "Seçtiğiniz Araca Ait Bilgiler" text
+- Right side shows "Değiştir" button that navigates back to Step-1
+- Positioned below breadcrumb and above form inputs
+- Maintains consistent spacing and responsive design
