@@ -69,8 +69,7 @@ export default function Sidebar() {
               const Icon = item.icon;
               const isActive = location === item.href || 
                                (location === "/" && item.href === "/admin/users") ||
-                               (item.href === "/admin/categories" && location.startsWith("/admin/categories")) ||
-                               (item.href === "/admin/locations" && location.startsWith("/admin/locations"));
+                               (item.href === "/admin/categories" && location.startsWith("/admin/categories"));
 
               return (
                 <li key={item.name}>
