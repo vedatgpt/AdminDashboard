@@ -38,7 +38,7 @@ export default function Sidebar() {
     <>
       {/* Mobile backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden ${isOpen ? "block" : "hidden"}`}
+        className={`fixed inset-0 z-[9998] bg-black bg-opacity-50 lg:hidden ${isOpen ? "block" : "hidden"}`}
         onClick={close}
       />
 
@@ -52,7 +52,7 @@ export default function Sidebar() {
         ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-all duration-300 transform
         h-full
         ${isOpen ? "block" : "hidden lg:block"}
-        fixed top-0 start-0 bottom-0 z-60
+        fixed top-0 start-0 bottom-0 z-[9999]
         bg-white border-e border-gray-200`}
         role="dialog" 
         tabIndex={-1} 
@@ -77,6 +77,7 @@ export default function Sidebar() {
                 type="button" 
                 className="flex justify-center items-center gap-x-3 size-6 bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 rounded-full focus:outline-none focus:bg-gray-100"
                 onClick={close}
+                data-hs-overlay="#hs-sidebar-collapsible-group"
               >
                 <X className="shrink-0 size-4" />
                 <span className="sr-only">Close</span>

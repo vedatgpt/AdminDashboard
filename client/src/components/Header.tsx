@@ -54,12 +54,15 @@ export default function Header() {
   }, []);
 
   return (
-    <div className="sticky top-0 z-40">
+    <div className="sticky top-0 z-30">
       <div className="flex items-center justify-between h-16 px-4 lg:px-8 border-b border-gray-200 bg-white">
         <div className="flex items-center">
           <button
             onClick={toggle}
             className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+            data-hs-overlay="#hs-sidebar-collapsible-group"
+            aria-controls="hs-sidebar-collapsible-group"
+            aria-label="Toggle navigation"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -85,7 +88,7 @@ export default function Header() {
             </button>
             
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg z-50 shadow-lg">
                 <div className="py-1">
                   <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                     <Settings className="w-4 h-4 mr-3" />
