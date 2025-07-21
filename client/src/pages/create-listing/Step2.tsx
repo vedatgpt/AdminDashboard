@@ -76,10 +76,7 @@ export default function Step2() {
       <div className="lg:pt-6 pt-[64px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
-          {/* Page Title - Only show on desktop */}
-          <div className="hidden lg:block mb-6 text-left">
-            <h1 className="text-1xl font-medium text-gray-900">İlan Detayları</h1>
-          </div>
+         
 
           {/* Kategori Bilgi Kutusu */}
           <div className="mb-6 lg:mt-0 mt-3">
@@ -87,7 +84,7 @@ export default function Step2() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                    Seçtiğiniz Araca Ait Bilgiler
+                    Seçtiğiniz Kategori Bilgileri
                   </h3>
                   {/* Breadcrumb kutunun içinde alt sol kısmında */}
                   <div className="mt-3">
@@ -110,12 +107,7 @@ export default function Step2() {
             </div>
           </div>
 
-          {/* İlan Detayları Başlığı - Kutular Arasında */}
-          <div className="mb-6">
-            <h3 className="font-medium text-gray-900 text-sm leading-tight">
-              İlan Detayları
-            </h3>
-          </div>
+   
 
           {/* İlan Detayları Kutusu */}
           <div className="mb-6">
@@ -183,7 +175,7 @@ export default function Step2() {
             Fiyat
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
+          <div className="relative lg:w-1/2 w-full">
             <input
               type="text"
               value={(() => {
@@ -245,7 +237,7 @@ export default function Step2() {
                       
                       if (unitOptions.length <= 1) {
                         return (
-                          <div className="relative">
+                          <div className="relative lg:w-1/2 w-full">
                             <input
                               type="text"
                               value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
@@ -263,7 +255,7 @@ export default function Step2() {
                       }
                       
                       return (
-                        <div className="relative">
+                        <div className="relative lg:w-1/2 w-full">
                           <input
                             type="text"
                             value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
@@ -296,7 +288,7 @@ export default function Step2() {
                       value={currentValue}
                       onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
                       placeholder={field.placeholder || ''}
-                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className="py-3 px-4 block lg:w-1/2 w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
                     />
                   )
                 )}
@@ -311,7 +303,7 @@ export default function Step2() {
                       
                       if (unitOptions.length <= 1) {
                         return (
-                          <div className="relative">
+                          <div className="relative lg:w-1/2 w-full">
                             <input
                               type="text"
                               value={(() => {
@@ -342,7 +334,7 @@ export default function Step2() {
                       }
                       
                       return (
-                        <div className="relative">
+                        <div className="relative lg:w-1/2 w-full">
                           <input
                             type="text"
                             value={(() => {
@@ -405,14 +397,14 @@ export default function Step2() {
                       inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
                       min={field.minValue || undefined}
                       max={field.maxValue || undefined}
-                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className="py-3 px-4 block lg:w-1/2 w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
                     />
                   )
                 )}
 
                 {field.fieldType === 'select' && (
                   field.hasUnits && field.unitOptions ? (
-                    <div className="relative">
+                    <div className="relative lg:w-1/2 w-full">
                       <select
                         value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
                         onChange={(e) => {
@@ -448,7 +440,7 @@ export default function Step2() {
                     <select
                       value={currentValue}
                       onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                      className="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className="py-3 px-4 pe-9 block lg:w-1/2 w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
                     >
                       <option value="">{field.placeholder || "Seçiniz"}</option>
                       {field.options && JSON.parse(field.options).map((option: string, index: number) => (
@@ -518,7 +510,7 @@ export default function Step2() {
             type="text"
             value={getKimdenValue()}
             readOnly
-            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed focus:outline-none focus:ring-0 focus:border-gray-200"
+            className="py-2.5 sm:py-3 px-4 block lg:w-1/2 w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed focus:outline-none focus:ring-0 focus:border-gray-200"
           />
         </div>
 
