@@ -44,8 +44,8 @@ export class ImageProcessor {
       const image = await Jimp.read(inputBuffer);
       
       // Get original dimensions
-      const originalWidth = image.getWidth();
-      const originalHeight = image.getHeight();
+      const originalWidth = image.bitmap.width;
+      const originalHeight = image.bitmap.height;
       
       // Resize if needed
       if (originalWidth > maxWidth || originalHeight > maxHeight) {
@@ -113,8 +113,8 @@ export class ImageProcessor {
       const thumbnail = image.clone();
       
       // Resize to thumbnail size maintaining aspect ratio
-      const width = thumbnail.getWidth();
-      const height = thumbnail.getHeight();
+      const width = thumbnail.bitmap.width;
+      const height = thumbnail.bitmap.height;
       
       if (width > height) {
         thumbnail.resize(thumbnailSize, Jimp.AUTO);
@@ -158,8 +158,8 @@ export class ImageProcessor {
       const stats = await fs.stat(imagePath);
       
       return {
-        width: image.getWidth(),
-        height: image.getHeight(),
+        width: image.bitmap.width,
+        height: image.bitmap.height,
         size: stats.size
       };
     } catch (error) {

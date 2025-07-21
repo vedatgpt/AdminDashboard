@@ -11,6 +11,17 @@ interface UploadedImage {
   thumbnail?: string;
   size: number;
   originalSize: number;
+  uploading?: boolean;
+  progress?: number;
+}
+
+interface PreviewImage {
+  id: string;
+  file: File;
+  preview: string;
+  uploading: boolean;
+  progress: number;
+  uploaded?: UploadedImage;
 }
 
 const MAX_IMAGES = 20;
@@ -19,20 +30,18 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export default function Step3() {
   const [, navigate] = useLocation();
   const [images, setImages] = useState<UploadedImage[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sortableRef = useRef<HTMLDivElement>(null);
 
   // Removed authentication check for development
 
-  const uploadMutation = useMutation({
-    mutationFn: async (files: FileList) => {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('images', file);
-      });
-      
+  const uploadSingleImage = async (previewImage: PreviewImage) => {
+    const formData = new FormData();
+    formData.append('images', previewImage.file);
+    
+    try {
       const response = await fetch('/api/upload/images', {
         method: 'POST',
         body: formData,
@@ -43,18 +52,29 @@ export default function Step3() {
         throw new Error(errorData.error || 'Upload failed');
       }
       
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setImages(prev => [...prev, ...data.images]);
-      setUploading(false);
-    },
-    onError: (error) => {
+      const data = await response.json();
+      
+      // Update preview image as uploaded
+      setPreviewImages(prev => prev.map(img => 
+        img.id === previewImage.id 
+          ? { ...img, uploading: false, progress: 100, uploaded: data.images[0] }
+          : img
+      ));
+      
+      // Add to uploaded images
+      setImages(prev => [...prev, data.images[0]]);
+      
+    } catch (error) {
       console.error('Upload error:', error);
-      alert(`Yükleme hatası: ${error.message}`);
-      setUploading(false);
+      // Mark as failed
+      setPreviewImages(prev => prev.map(img => 
+        img.id === previewImage.id 
+          ? { ...img, uploading: false, progress: 0 }
+          : img
+      ));
+      alert(`Yükleme hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
     }
-  });
+  };
 
   const deleteImageMutation = useMutation({
     mutationFn: async (imageId: string) => {
@@ -78,7 +98,7 @@ export default function Step3() {
     }
   });
 
-  // Initialize Sortable.js
+  // Initialize Sortable.js for uploaded images
   useEffect(() => {
     if (sortableRef.current && images.length > 0) {
       const sortable = Sortable.create(sortableRef.current, {
@@ -100,6 +120,19 @@ export default function Step3() {
     }
   }, [images.length]);
 
+  // Clean up preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      previewImages.forEach(img => {
+        if (img.preview && img.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(img.preview);
+        }
+      });
+    };
+  }, []);
+
+  const totalImages = images.length + previewImages.length;
+
   // Removed redirect for development
 
   const handleFileSelect = (files: FileList | null) => {
@@ -119,16 +152,41 @@ export default function Step3() {
       return true;
     });
 
-    if (images.length + validFiles.length > MAX_IMAGES) {
+    if (images.length + previewImages.length + validFiles.length > MAX_IMAGES) {
       alert(`En fazla ${MAX_IMAGES} resim yükleyebilirsiniz`);
       return;
     }
 
     if (validFiles.length > 0) {
-      setUploading(true);
-      const fileList = new DataTransfer();
-      validFiles.forEach(file => fileList.items.add(file));
-      uploadMutation.mutate(fileList.files);
+      // Create preview images
+      const newPreviews: PreviewImage[] = validFiles.map(file => ({
+        id: `preview-${Date.now()}-${Math.random()}`,
+        file,
+        preview: URL.createObjectURL(file),
+        uploading: true,
+        progress: 0
+      }));
+      
+      setPreviewImages(prev => [...prev, ...newPreviews]);
+      
+      // Start uploading each image
+      newPreviews.forEach(preview => {
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+          progress += 10;
+          if (progress <= 90) {
+            setPreviewImages(prev => prev.map(img => 
+              img.id === preview.id ? { ...img, progress } : img
+            ));
+          } else {
+            clearInterval(progressInterval);
+          }
+        }, 200);
+        
+        // Start actual upload
+        uploadSingleImage(preview);
+      });
     }
   };
 
@@ -148,6 +206,13 @@ export default function Step3() {
   };
 
   const handleNextStep = () => {
+    // Wait for all uploads to complete
+    const hasUploading = previewImages.some(img => img.uploading);
+    if (hasUploading) {
+      alert('Lütfen tüm fotoğrafların yüklenmesini bekleyin');
+      return;
+    }
+
     // For now, just store images in localStorage temporarily
     localStorage.setItem('listingImages', JSON.stringify(images.map(img => ({
       filename: img.filename,
@@ -188,10 +253,10 @@ export default function Step3() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              {uploading ? (
+              {previewImages.some(img => img.uploading) ? (
                 <div className="space-y-4">
                   <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto"></div>
-                  <p className="text-gray-600">Fotoğraflar yükleniyor...</p>
+                  <p className="text-gray-600">Fotoğraflar işleniyor...</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -231,13 +296,56 @@ export default function Step3() {
             />
           </div>
 
-          {/* Image Grid */}
+          {/* Preview Images */}
+          {previewImages.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <Upload className="w-5 h-5" />
+                Yükleniyor ({previewImages.length})
+              </h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {previewImages.map((preview) => (
+                  <div key={preview.id} className="relative bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="aspect-square bg-gray-100 overflow-hidden">
+                      <img
+                        src={preview.preview}
+                        alt="Önizleme"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    
+                    {/* Upload Progress */}
+                    {preview.uploading && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <div className="text-sm">{preview.progress}%</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Upload Success */}
+                    {preview.uploaded && (
+                      <div className="absolute top-2 left-2 p-1 bg-green-500 text-white rounded-full">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Uploaded Images Grid */}
           {images.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5" />
-                  Yüklenen Fotoğraflar ({images.length}/{MAX_IMAGES})
+                  Yüklenen Fotoğraflar ({totalImages}/{MAX_IMAGES})
                 </h3>
                 <div className="text-sm text-gray-500">
                   Sürükleyerek sıralayabilirsiniz
@@ -302,9 +410,9 @@ export default function Step3() {
             
             <button
               onClick={handleNextStep}
-              disabled={images.length === 0}
+              disabled={totalImages === 0}
               className={`px-6 py-3 rounded-lg flex items-center gap-2 ${
-                images.length > 0
+                totalImages > 0
                   ? 'bg-orange-500 hover:bg-orange-600 text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
