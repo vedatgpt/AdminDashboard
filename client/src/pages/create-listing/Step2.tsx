@@ -728,8 +728,8 @@ export default function Step2() {
                     </div>
                   )}
 
-                  {/* Mahalle Seçimi - Sadece aktifse göster ve ilçe seçilmişse */}
-                  {locationSettings?.showNeighborhood && availableNeighborhoods.length > 0 && (
+                  {/* Mahalle Seçimi - Sadece aktifse göster */}
+                  {locationSettings?.showNeighborhood && (
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
                         Mahalle
