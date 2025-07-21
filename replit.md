@@ -449,8 +449,10 @@ Authentication features:
 
 ### Category Information Box (July 20, 2025)
 - Added category information box above form inputs in Step-2
-- Box design matches Step-1 main category card styling (white background, gray border, hover effects)
+- Box design matches Step-1 main category card styling (white background, gray border, no hover effects)
 - Left side displays "Seçtiğiniz Araca Ait Bilgiler" text
-- Right side shows "Değiştir" button that navigates back to Step-1
-- Positioned below breadcrumb and above form inputs
-- Maintains consistent spacing and responsive design
+- Right side shows "Değiştir" button with underline hover effect that navigates back to Step-1
+- Breadcrumb moved inside the box (bottom left area) with first category click disabled
+- Mobile breadcrumb header simplified to "İlan Detayları"
+- Desktop breadcrumb removed from separate section (now only in box)
+- Enhanced BreadcrumbNav component with disableFirstCategory prop

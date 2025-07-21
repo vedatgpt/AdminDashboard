@@ -72,42 +72,41 @@ export default function Step2() {
         />
       </div>
 
-      {/* Mobile/Tablet Fixed Header/Breadcrumb */}
+      {/* Mobile/Tablet Fixed Header - Boş bırakıldı, breadcrumb kutu içinde */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
-        {categoryPath && categoryPath.length > 0 && (
-          <BreadcrumbNav 
-            categoryPath={categoryPath}
-            onCategoryClick={() => {}}
-          />
-        )}
+        <div className="flex items-center space-x-1 text-xs lg:text-sm flex-wrap">
+          <span className="text-gray-700">İlan Detayları</span>
+        </div>
       </div>
       
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[108px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
-          {/* Desktop Breadcrumb Navigation */}
-          {categoryPath && categoryPath.length > 0 && (
-            <div className="hidden lg:block mb-6">
-              <BreadcrumbNav 
-                categoryPath={categoryPath}
-                onCategoryClick={() => {}}
-              />
-            </div>
-          )}
+
 
           {/* Kategori Bilgi Kutusu */}
           <div className="mb-6">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 text-sm leading-tight">
                     Seçtiğiniz Araca Ait Bilgiler
                   </h3>
+                  {/* Breadcrumb kutunun içinde alt sol kısmında */}
+                  <div className="mt-3">
+                    {categoryPath && categoryPath.length > 0 && (
+                      <BreadcrumbNav 
+                        categoryPath={categoryPath}
+                        onCategoryClick={() => {}}
+                        disableFirstCategory={true}
+                      />
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => navigate('/create-listing/step-1')}
-                  className="text-orange-500 text-sm font-medium hover:text-orange-600 transition-colors"
+                  className="text-orange-500 text-sm font-medium hover:text-orange-600 hover:underline transition-colors"
                 >
                   Değiştir
                 </button>
