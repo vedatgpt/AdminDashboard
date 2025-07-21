@@ -29,15 +29,20 @@ export default function SidebarNew() {
 
   // Initialize Preline UI components when sidebar opens
   useEffect(() => {
-    if (isOpen && typeof window !== 'undefined') {
-      setTimeout(() => {
-        if ((window as any).HSAccordion) {
-          (window as any).HSAccordion.autoInit();
-        }
+    if (typeof window !== 'undefined') {
+      const initDropdown = () => {
         if ((window as any).HSDropdown) {
           (window as any).HSDropdown.autoInit();
         }
-      }, 100);
+      };
+      
+      // Initialize immediately
+      initDropdown();
+      
+      // Reinitialize when sidebar opens
+      if (isOpen) {
+        setTimeout(initDropdown, 50);
+      }
     }
   }, [isOpen]);
 
@@ -97,7 +102,7 @@ export default function SidebarNew() {
               <button 
                 id="hs-sidebar-header-dropdown" 
                 type="button" 
-                className="w-full inline-flex shrink-0 items-center gap-x-2 p-2 text-start text-sm text-gray-800 rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100" 
+                className="hs-dropdown-toggle w-full inline-flex shrink-0 items-center gap-x-2 p-2 text-start text-sm text-gray-800 rounded-md hover:bg-gray-100 focus:outline-none focus:bg-gray-100" 
                 aria-haspopup="menu" 
                 aria-expanded="false" 
                 aria-label="Admin Dropdown"
