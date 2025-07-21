@@ -244,47 +244,47 @@ export default function Step3() {
 
           {/* Upload Area */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-6 mb-6">
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragActive 
-                  ? 'border-orange-400 bg-orange-50' 
-                  : 'border-gray-300 hover:border-orange-400'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {images.some(img => img.uploading) ? (
-                <div className="space-y-4">
-                  <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto"></div>
-                  <p className="text-gray-600">Fotoğraflar işleniyor...</p>
+            <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
+                 onClick={() => fileInputRef.current?.click()}
+                 onDragOver={handleDragOver}
+                 onDragLeave={handleDragLeave}
+                 onDrop={handleDrop}>
+              <div className="text-center">
+                <span className="inline-flex justify-center items-center size-16">
+                  <svg className="shrink-0 w-16 h-auto text-orange-500" width="71" height="51" viewBox="0 0 71 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.55172 8.74547L17.7131 6.88524V40.7377L12.8018 41.7717C9.51306 42.464 6.29705 40.3203 5.67081 37.0184L1.64319 15.7818C1.01599 12.4748 3.23148 9.29884 6.55172 8.74547Z" stroke="currentColor" strokeWidth="2"></path>
+                    <path d="M64.4483 8.74547L53.2869 6.88524V40.7377L58.1982 41.7717C61.4869 42.464 64.703 40.3203 65.3292 37.0184L69.3568 15.7818C69.984 12.4748 67.7685 9.29884 64.4483 8.74547Z" stroke="currentColor" strokeWidth="2"></path>
+                    <g filter="url(#filter1)">
+                      <rect x="17.5656" y="1" width="35.8689" height="42.7541" rx="5" stroke="currentColor" strokeWidth="2" shapeRendering="crispEdges"></rect>
+                    </g>
+                    <path d="M39.4826 33.0893C40.2331 33.9529 41.5385 34.0028 42.3537 33.2426L42.5099 33.0796L47.7453 26.976L53.4347 33.0981V38.7544C53.4346 41.5156 51.1959 43.7542 48.4347 43.7544H22.5656C19.8043 43.7544 17.5657 41.5157 17.5656 38.7544V35.2934L29.9728 22.145L39.4826 33.0893Z" className="fill-orange-50" fill="currentColor" stroke="currentColor" strokeWidth="2"></path>
+                    <circle cx="40.0902" cy="14.3443" r="4.16393" className="fill-orange-50" fill="currentColor" stroke="currentColor" strokeWidth="2"></circle>
+                    <defs>
+                      <filter id="filter1" x="13.5656" y="0" width="43.8689" height="50.7541" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                        <feFlood floodOpacity="0" result="BackgroundImageFix"></feFlood>
+                        <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"></feColorMatrix>
+                        <feOffset dy="3"></feOffset>
+                        <feGaussianBlur stdDeviation="1.5"></feGaussianBlur>
+                        <feComposite in2="hardAlpha" operator="out"></feComposite>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0"></feColorMatrix>
+                        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1"></feBlend>
+                        <feBlend mode="normal" in="SourceGraphic" in2="effect1" result="shape"></feBlend>
+                      </filter>
+                    </defs>
+                  </svg>
+                </span>
+
+                <div className="mt-4 flex flex-wrap justify-center text-sm/6 text-gray-600">
+                  <span className="pe-1 font-medium text-gray-800">
+                    Fotoğraflarınızı buraya bırakın veya
+                  </span>
+                  <span className="bg-white font-semibold text-orange-600 hover:text-orange-700 rounded-lg decoration-2 hover:underline focus-within:outline-hidden focus-within:ring-2 focus-within:ring-orange-600 focus-within:ring-offset-2">dosya seçin</span>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <div className="p-4 bg-orange-100 rounded-full">
-                      <Upload className="w-8 h-8 text-orange-500" />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <p className="text-lg font-medium text-gray-900 mb-2">
-                      Fotoğrafları buraya sürükleyin veya tıklayın
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      JPG, PNG dosyaları kabul edilir. Maksimum 10MB.
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 mx-auto"
-                  >
-                    <Camera className="w-4 h-4" />
-                    Fotoğraf Seç
-                  </button>
-                </div>
-              )}
+
+                <p className="mt-1 text-xs text-gray-400">
+                  En fazla {MAX_IMAGES} fotoğraf, her biri maksimum 10MB
+                </p>
+              </div>
             </div>
             
             <input
