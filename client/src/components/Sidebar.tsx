@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Users, Megaphone, Tags, MapPin, LogOut, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, Users, Megaphone, Tags, MapPin, LogOut, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/use-sidebar";
 import logoPath from "@assets/logo_1752808818099.png";

@@ -12,6 +12,9 @@ if (typeof window !== 'undefined') {
     if ((window as any).HSOverlay) {
       (window as any).HSOverlay.autoInit();
     }
+    if ((window as any).HSDropdown) {
+      (window as any).HSDropdown.autoInit();
+    }
   }, 100);
 }
 
