@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -48,6 +48,16 @@ export interface IStorage {
   createCustomField(data: InsertCustomField): Promise<CategoryCustomField>;
   updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField>;
   deleteCustomField(id: number): Promise<void>;
+  
+  // Location methods
+  getLocations(): Promise<Location[]>;
+  getLocationsTree(): Promise<Location[]>;
+  getLocationById(id: number): Promise<Location | undefined>;
+  getChildLocations(parentId: number | null): Promise<Location[]>;
+  createLocation(data: InsertLocation): Promise<Location>;
+  updateLocation(id: number, updates: UpdateLocation): Promise<Location>;
+  deleteLocation(id: number): Promise<void>;
+  getLocationBreadcrumbs(id: number): Promise<Location[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -386,6 +396,95 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCustomField(id: number): Promise<void> {
     await db.delete(categoryCustomFields).where(eq(categoryCustomFields.id, id));
+  }
+
+  // Location methods implementation
+  async getLocations(): Promise<Location[]> {
+    return await db.select().from(locations).orderBy(asc(locations.sortOrder), asc(locations.name));
+  }
+
+  async getLocationsTree(): Promise<Location[]> {
+    const allLocations = await this.getLocations();
+    
+    // Build tree structure
+    const locationMap = new Map<number, Location & { children: Location[] }>();
+    const rootLocations: (Location & { children: Location[] })[] = [];
+
+    // Initialize locations with children array
+    allLocations.forEach(location => {
+      locationMap.set(location.id, { ...location, children: [] });
+    });
+
+    // Build tree structure
+    allLocations.forEach(location => {
+      const locationWithChildren = locationMap.get(location.id)!;
+      if (location.parentId === null) {
+        rootLocations.push(locationWithChildren);
+      } else {
+        const parent = locationMap.get(location.parentId);
+        if (parent) {
+          parent.children.push(locationWithChildren);
+        }
+      }
+    });
+
+    return rootLocations;
+  }
+
+  async getLocationById(id: number): Promise<Location | undefined> {
+    const [location] = await db.select().from(locations).where(eq(locations.id, id));
+    return location || undefined;
+  }
+
+  async getChildLocations(parentId: number | null): Promise<Location[]> {
+    if (parentId === null) {
+      return await db.select().from(locations)
+        .where(isNull(locations.parentId))
+        .orderBy(asc(locations.sortOrder), asc(locations.name));
+    } else {
+      return await db.select().from(locations)
+        .where(eq(locations.parentId, parentId))
+        .orderBy(asc(locations.sortOrder), asc(locations.name));
+    }
+  }
+
+  async createLocation(data: InsertLocation): Promise<Location> {
+    const [location] = await db.insert(locations).values({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return location;
+  }
+
+  async updateLocation(id: number, updates: UpdateLocation): Promise<Location> {
+    const [location] = await db.update(locations)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(locations.id, id))
+      .returning();
+    return location;
+  }
+
+  async deleteLocation(id: number): Promise<void> {
+    await db.delete(locations).where(eq(locations.id, id));
+  }
+
+  async getLocationBreadcrumbs(id: number): Promise<Location[]> {
+    const breadcrumbs: Location[] = [];
+    let currentId: number | null = id;
+
+    while (currentId !== null) {
+      const location = await this.getLocationById(currentId);
+      if (!location) break;
+      
+      breadcrumbs.unshift(location);
+      currentId = location.parentId;
+    }
+
+    return breadcrumbs;
   }
 }
 

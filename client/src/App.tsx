@@ -56,8 +56,9 @@ function Router() {
             <Route path="/admin/users" component={Users} />
             <Route path="/admin/listings" component={Ads} />
             <Route path="/admin/categories" component={Categories} />
-        <Route path="/admin/categories/:parentId" component={Categories} />
+            <Route path="/admin/categories/:parentId" component={Categories} />
             <Route path="/admin/locations" component={Locations} />
+            <Route path="/admin/locations/:parentId" component={Locations} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

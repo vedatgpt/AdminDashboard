@@ -630,6 +630,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount categories routes
   app.use('/api/categories', categoriesRouter);
 
+  // Locations API routes
+  
+  // Get all locations in tree structure
+  app.get("/api/locations", requireAdmin, async (req, res) => {
+    try {
+      const locations = await storage.getLocationsTree();
+      res.json(locations);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyonlar alınırken hata oluştu" });
+    }
+  });
+
+  // Get child locations by parent ID
+  app.get("/api/locations/:parentId/children", requireAdmin, async (req, res) => {
+    try {
+      const parentId = parseInt(req.params.parentId);
+      const locations = await storage.getChildLocations(parentId);
+      res.json(locations);
+    } catch (error) {
+      res.status(500).json({ error: "Alt lokasyonlar alınırken hata oluştu" });
+    }
+  });
+
+  // Get location by ID
+  app.get("/api/locations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getLocationById(id);
+      
+      if (!location) {
+        return res.status(404).json({ error: "Lokasyon bulunamadı" });
+      }
+      
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon alınırken hata oluştu" });
+    }
+  });
+
+  // Get location breadcrumbs
+  app.get("/api/locations/:id/breadcrumbs", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const breadcrumbs = await storage.getLocationBreadcrumbs(id);
+      res.json(breadcrumbs);
+    } catch (error) {
+      res.status(500).json({ error: "Breadcrumb alınırken hata oluştu" });
+    }
+  });
+
+  // Create location
+  app.post("/api/locations", requireAdmin, async (req, res) => {
+    try {
+      const { name, type, parentId, sortOrder } = req.body;
+      
+      if (!name || !type) {
+        return res.status(400).json({ error: "Lokasyon adı ve tipi gereklidir" });
+      }
+
+      const location = await storage.createLocation({
+        name,
+        type,
+        parentId: parentId || null,
+        sortOrder: sortOrder || 0,
+        isActive: true,
+      });
+
+      res.status(201).json(location);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Update location
+  app.patch("/api/locations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const location = await storage.updateLocation(id, updates);
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon güncellenirken hata oluştu" });
+    }
+  });
+
+  // Delete location
+  app.delete("/api/locations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      await storage.deleteLocation(id);
+      res.json({ message: "Lokasyon silindi" });
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon silinirken hata oluştu" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

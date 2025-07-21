@@ -125,6 +125,18 @@ export const categoryCustomFields = pgTable("category_custom_fields", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Locations table for hierarchical location structure (Country > City > District > Neighborhood)
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // country, city, district, neighborhood
+  parentId: integer("parent_id").references(() => locations.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Schema for creating categories
 export const insertCategorySchema = createInsertSchema(categories).omit({
   id: true,
@@ -141,6 +153,19 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 // Schema for updating categories
 export const updateCategorySchema = insertCategorySchema.partial();
 
+// Schema for creating locations
+export const insertLocationSchema = createInsertSchema(locations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(2, "Lokasyon adı en az 2 karakter olmalıdır"),
+  type: z.enum(["country", "city", "district", "neighborhood"]),
+});
+
+// Schema for updating locations
+export const updateLocationSchema = insertLocationSchema.partial();
+
 // Schema for creating custom fields
 export const insertCustomFieldSchema = createInsertSchema(categoryCustomFields).omit({
   id: true,
@@ -156,10 +181,15 @@ export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
 export type Category = typeof categories.$inferSelect & {
   children?: Category[];
 };
+export type Location = typeof locations.$inferSelect & {
+  children?: Location[];
+};
 export type CategoryCustomField = typeof categoryCustomFields.$inferSelect;
 export type InsertAuthorizedPersonnel = z.infer<typeof insertAuthorizedPersonnelSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type UpdateCategory = z.infer<typeof updateCategorySchema>;
+export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type UpdateLocation = z.infer<typeof updateLocationSchema>;
 export type InsertCustomField = z.infer<typeof insertCustomFieldSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
