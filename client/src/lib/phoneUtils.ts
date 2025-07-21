@@ -1,74 +1,61 @@
-// Phone utility functions and constants
+import { parsePhoneNumber, formatIncompletePhoneNumber, getCountries, getCountryCallingCode } from 'libphonenumber-js';
 
-export interface CountryCode {
+export interface CountryOption {
   code: string;
   country: string;
-  flag: string;
-  format: string;
+  name: string;
 }
 
-export const COUNTRY_CODES: CountryCode[] = [
-  { code: '+90', country: 'TR', flag: '🇹🇷', format: 'XXX XXX XX XX' },
-  { code: '+1', country: 'US', flag: '🇺🇸', format: 'XXX XXX XXXX' },
-  { code: '+44', country: 'GB', flag: '🇬🇧', format: 'XXXX XXX XXX' },
-  { code: '+49', country: 'DE', flag: '🇩🇪', format: 'XXX XXX XXXX' },
-  { code: '+33', country: 'FR', flag: '🇫🇷', format: 'X XX XX XX XX' },
-  { code: '+39', country: 'IT', flag: '🇮🇹', format: 'XXX XXX XXXX' },
-  { code: '+34', country: 'ES', flag: '🇪🇸', format: 'XXX XXX XXX' },
-  { code: '+31', country: 'NL', flag: '🇳🇱', format: 'X XXXX XXXX' },
-  { code: '+86', country: 'CN', flag: '🇨🇳', format: 'XXX XXXX XXXX' },
-  { code: '+81', country: 'JP', flag: '🇯🇵', format: 'XX XXXX XXXX' },
+// Popular countries for phone input
+export const POPULAR_COUNTRIES: CountryOption[] = [
+  { code: '+90', country: 'TR', name: 'Türkiye' },
+  { code: '+1', country: 'US', name: 'Amerika' },
+  { code: '+44', country: 'GB', name: 'İngiltere' },
+  { code: '+49', country: 'DE', name: 'Almanya' },
+  { code: '+33', country: 'FR', name: 'Fransa' },
+  { code: '+39', country: 'IT', name: 'İtalya' },
+  { code: '+34', country: 'ES', name: 'İspanya' },
+  { code: '+31', country: 'NL', name: 'Hollanda' },
 ];
 
-// Remove all non-numeric characters
-export const cleanPhoneNumber = (value: string): string => {
+// Format phone number as user types (WhatsApp style)
+export const formatPhoneAsYouType = (value: string, countryCode: string = 'TR'): string => {
+  // Remove all non-digits
+  const cleaned = value.replace(/\D/g, '');
+  
+  if (!cleaned) return '';
+  
+  try {
+    // Use libphonenumber's formatIncompletePhoneNumber for real-time formatting
+    const formatted = formatIncompletePhoneNumber(cleaned, countryCode as any);
+    return formatted || cleaned;
+  } catch (error) {
+    return cleaned;
+  }
+};
+
+// Validate phone number
+export const validatePhoneNumber = (value: string, countryCode: string = 'TR'): boolean => {
+  if (!value) return false;
+  
+  try {
+    const phoneNumber = parsePhoneNumber(value, countryCode as any);
+    return phoneNumber ? phoneNumber.isValid() : false;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Get country code from country string
+export const getCountryCode = (country: string): string => {
+  try {
+    return `+${getCountryCallingCode(country as any)}`;
+  } catch (error) {
+    return '+90'; // Default to Turkey
+  }
+};
+
+// Clean phone number input (only allow digits)
+export const cleanPhoneInput = (value: string): string => {
   return value.replace(/\D/g, '');
-};
-
-// Format phone number based on country code
-export const formatPhoneNumber = (value: string, countryCode: string = '+90'): string => {
-  const cleaned = cleanPhoneNumber(value);
-  const country = COUNTRY_CODES.find(c => c.code === countryCode);
-  
-  if (!country || !cleaned) return cleaned;
-
-  // Apply formatting based on country pattern
-  let formatted = '';
-  let cleanIndex = 0;
-  
-  for (let i = 0; i < country.format.length && cleanIndex < cleaned.length; i++) {
-    if (country.format[i] === 'X') {
-      formatted += cleaned[cleanIndex];
-      cleanIndex++;
-    } else {
-      formatted += country.format[i];
-    }
-  }
-  
-  // Add remaining digits if any
-  if (cleanIndex < cleaned.length) {
-    formatted += cleaned.substring(cleanIndex);
-  }
-  
-  return formatted;
-};
-
-// Validate phone number length based on country
-export const isValidPhoneLength = (value: string, countryCode: string = '+90'): boolean => {
-  const cleaned = cleanPhoneNumber(value);
-  const country = COUNTRY_CODES.find(c => c.code === countryCode);
-  
-  if (!country) return cleaned.length >= 10; // Default minimum length
-  
-  // Count X's in format to get expected length
-  const expectedLength = country.format.split('X').length - 1;
-  
-  // Allow some flexibility (+/- 2 digits)
-  return cleaned.length >= expectedLength - 2 && cleaned.length <= expectedLength + 2;
-};
-
-// Get placeholder based on country format
-export const getPhonePlaceholder = (countryCode: string = '+90'): string => {
-  const country = COUNTRY_CODES.find(c => c.code === countryCode);
-  return country ? country.format.replace(/X/g, '5') : '555 123 4567';
 };

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { Phone, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { POPULAR_COUNTRIES, formatPhoneAsYouType, cleanPhoneInput, validatePhoneNumber } from "@/lib/phoneUtils";
 
 const contactSchema = z.object({
   mobilePhone: z.string().optional(),
@@ -21,6 +22,11 @@ export default function Contact() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+  
+  // Country code states
+  const [mobileCountry, setMobileCountry] = useState('TR');
+  const [whatsappCountry, setWhatsappCountry] = useState('TR');
+  const [businessCountry, setBusinessCountry] = useState('TR');
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -127,21 +133,26 @@ export default function Contact() {
                     <input
                       id="mobilePhone" 
                       type="tel"
-                      className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                      placeholder="555 123 4567"
-                      {...contactForm.register("mobilePhone")}
+                      inputMode="numeric"
+                      className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      placeholder={formatPhoneAsYouType('5551234567', mobileCountry)}
+                      value={contactForm.watch("mobilePhone") ? formatPhoneAsYouType(contactForm.watch("mobilePhone"), mobileCountry) : ''}
+                      onChange={(e) => {
+                        const cleaned = cleanPhoneInput(e.target.value);
+                        contactForm.setValue("mobilePhone", cleaned);
+                      }}
                     />
-                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
-                      <label htmlFor="mobilePhone-country" className="sr-only">Ülke</label>
+                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-2">
                       <select 
-                        id="mobilePhone-country" 
-                        name="mobilePhone-country" 
-                        className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                        value={mobileCountry}
+                        onChange={(e) => setMobileCountry(e.target.value)}
+                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
                       >
-                        <option value="+90">🇹🇷 +90</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+49">🇩🇪 +49</option>
+                        {POPULAR_COUNTRIES.map((country) => (
+                          <option key={country.country} value={country.country}>
+                            {country.code}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -160,21 +171,26 @@ export default function Contact() {
                     <input
                       id="whatsappNumber"
                       type="tel"
-                      className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                      placeholder="555 123 4567"
-                      {...contactForm.register("whatsappNumber")}
+                      inputMode="numeric"
+                      className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                      placeholder={formatPhoneAsYouType('5551234567', whatsappCountry)}
+                      value={contactForm.watch("whatsappNumber") ? formatPhoneAsYouType(contactForm.watch("whatsappNumber"), whatsappCountry) : ''}
+                      onChange={(e) => {
+                        const cleaned = cleanPhoneInput(e.target.value);
+                        contactForm.setValue("whatsappNumber", cleaned);
+                      }}
                     />
-                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
-                      <label htmlFor="whatsapp-country" className="sr-only">Ülke</label>
+                    <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-2">
                       <select 
-                        id="whatsapp-country" 
-                        name="whatsapp-country" 
-                        className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                        value={whatsappCountry}
+                        onChange={(e) => setWhatsappCountry(e.target.value)}
+                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
                       >
-                        <option value="+90">🇹🇷 +90</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+49">🇩🇪 +49</option>
+                        {POPULAR_COUNTRIES.map((country) => (
+                          <option key={country.country} value={country.country}>
+                            {country.code}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -194,21 +210,26 @@ export default function Contact() {
                       <input
                         id="businessPhone"
                         type="tel"
-                        className="py-2.5 sm:py-3 px-4 ps-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                        placeholder="212 345 6789"
-                        {...contactForm.register("businessPhone")}
+                        inputMode="numeric"
+                        className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                        placeholder={formatPhoneAsYouType('2123456789', businessCountry)}
+                        value={contactForm.watch("businessPhone") ? formatPhoneAsYouType(contactForm.watch("businessPhone"), businessCountry) : ''}
+                        onChange={(e) => {
+                          const cleaned = cleanPhoneInput(e.target.value);
+                          contactForm.setValue("businessPhone", cleaned);
+                        }}
                       />
-                      <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-px">
-                        <label htmlFor="business-country" className="sr-only">Ülke</label>
+                      <div className="absolute inset-y-0 start-0 flex items-center text-gray-500 ps-2">
                         <select 
-                          id="business-country" 
-                          name="business-country" 
-                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 bg-transparent text-sm"
+                          value={businessCountry}
+                          onChange={(e) => setBusinessCountry(e.target.value)}
+                          className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
                         >
-                          <option value="+90">🇹🇷 +90</option>
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+44">🇬🇧 +44</option>
-                          <option value="+49">🇩🇪 +49</option>
+                          {POPULAR_COUNTRIES.map((country) => (
+                            <option key={country.country} value={country.country}>
+                              {country.code}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
