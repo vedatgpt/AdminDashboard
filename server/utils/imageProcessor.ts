@@ -108,7 +108,7 @@ export class ImageProcessor {
           fit: 'contain',
           background: { r: 255, g: 255, b: 255, alpha: 1 }
         })
-        .jpeg({ quality: 80 })
+        .jpeg({ quality: 90 })
         .toFile(thumbnailPath);
       
       return thumbnailPath;

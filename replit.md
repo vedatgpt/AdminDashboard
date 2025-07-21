@@ -494,8 +494,10 @@ Authentication features:
 - Allow duplicate photo uploads (removed duplicate prevention)
 - Thumbnail dimensions optimized to 200px width x 150px height with contain fit
 - Horizontal photo layout with custom orange scrollbar for better mobile experience
-- Real-time progress tracking using XMLHttpRequest for accurate upload percentages
+- Individual file upload progress tracking for accurate per-image percentages
+- Grid layout: 3 columns on mobile, 5 columns on desktop for better organization
 - Mobile-friendly button layout: order badge (top-left), delete button (top-right), drag handle (center)
 - Enlarged interactive elements for better mobile usability
 - Fixed image orientation issues with automatic EXIF rotation
 - Prevented page refresh during drag-and-drop operations
+- Enhanced thumbnail quality (90% JPEG quality) for better visual appearance

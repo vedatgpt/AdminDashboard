@@ -27,11 +27,9 @@ export default function Step3() {
 
   // Removed authentication check for development
 
-  const uploadImages = async (files: FileList, uploadingIds: string[]) => {
+  const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();
-    Array.from(files).forEach(file => {
-      formData.append('images', file);
-    });
+    formData.append('images', file);
     
     try {
       // Create XMLHttpRequest for real progress tracking
@@ -42,7 +40,7 @@ export default function Step3() {
           if (e.lengthComputable) {
             const percentComplete = Math.round((e.loaded / e.total) * 100);
             setImages(prev => prev.map(img => {
-              if (uploadingIds.includes(img.id) && img.uploading) {
+              if (img.id === uploadingId && img.uploading) {
                 return { ...img, progress: percentComplete };
               }
               return img;
@@ -54,20 +52,18 @@ export default function Step3() {
           if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
             
-            // Replace uploading images with actual uploaded ones
+            // Replace uploading image with actual uploaded one
             setImages(prev => {
               const newImages = [...prev];
-              uploadingIds.forEach((uploadingId, index) => {
-                const uploadingIndex = newImages.findIndex(img => img.id === uploadingId);
-                if (uploadingIndex !== -1 && data.images[index]) {
-                  // Clean up blob URL
-                  if (newImages[uploadingIndex].url.startsWith('blob:')) {
-                    URL.revokeObjectURL(newImages[uploadingIndex].url);
-                  }
-                  // Replace with uploaded image
-                  newImages[uploadingIndex] = { ...data.images[index], uploading: false };
+              const uploadingIndex = newImages.findIndex(img => img.id === uploadingId);
+              if (uploadingIndex !== -1 && data.images[0]) {
+                // Clean up blob URL
+                if (newImages[uploadingIndex].url.startsWith('blob:')) {
+                  URL.revokeObjectURL(newImages[uploadingIndex].url);
                 }
-              });
+                // Replace with uploaded image
+                newImages[uploadingIndex] = { ...data.images[0], uploading: false };
+              }
               return newImages;
             });
             resolve(data);
@@ -86,8 +82,8 @@ export default function Step3() {
       
     } catch (error) {
       console.error('Upload error:', error);
-      // Remove failed uploads
-      setImages(prev => prev.filter(img => !uploadingIds.includes(img.id)));
+      // Remove failed upload
+      setImages(prev => prev.filter(img => img.id !== uploadingId));
       alert(`Yükleme hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
     }
   };
@@ -173,10 +169,8 @@ export default function Step3() {
 
     if (validFiles.length > 0) {
       // Create preview images with uploading state
-      const uploadingIds: string[] = [];
       const newImages: UploadedImage[] = validFiles.map((file, index) => {
         const id = `uploading-${Date.now()}-${index}`;
-        uploadingIds.push(id);
         return {
           id,
           filename: file.name,
@@ -190,10 +184,10 @@ export default function Step3() {
       
       setImages(prev => [...prev, ...newImages]);
       
-      // Start upload with real progress tracking
-      const fileList = new DataTransfer();
-      validFiles.forEach(file => fileList.items.add(file));
-      await uploadImages(fileList.files, uploadingIds);
+      // Upload each image individually for separate progress tracking
+      newImages.forEach((newImage, index) => {
+        uploadSingleImage(validFiles[index], newImage.id);
+      });
     }
   };
 
@@ -316,9 +310,9 @@ export default function Step3() {
                 </div>
               </div>
               
-              <div ref={sortableRef} className="flex gap-4 overflow-x-scroll pb-4" style={{ scrollbarWidth: 'thin' }}>
+              <div ref={sortableRef} className="grid grid-cols-3 md:grid-cols-5 gap-4">
                 {images.map((image, index) => (
-                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '200px', height: '150px' }}>
+                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
                     {/* Image Order Badge - Sol üst */}
                     <div className="absolute top-2 left-2 bg-orange-500 text-white text-sm px-2 py-1 rounded-full font-medium z-10">
                       {index + 1}
