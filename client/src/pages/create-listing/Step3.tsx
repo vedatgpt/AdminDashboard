@@ -96,11 +96,6 @@ export default function Step3() {
   // Initialize Sortable.js for uploaded images
   useEffect(() => {
     if (sortableRef.current && images.length > 0) {
-      // Destroy existing sortable first
-      if (sortableRef.current.sortable) {
-        sortableRef.current.sortable.destroy();
-      }
-      
       const sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
@@ -119,16 +114,13 @@ export default function Step3() {
         }
       });
 
-      // Store reference for cleanup
-      sortableRef.current.sortable = sortable;
-
       return () => {
         if (sortable) {
           sortable.destroy();
         }
       };
     }
-  }, [images]);
+  }, [images.filter(img => !img.uploading).length]); // Only reinitialize when non-uploading images change
 
   // Removed redirect for development
 
