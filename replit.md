@@ -460,3 +460,11 @@ Authentication features:
 - Desktop layout maintains consistency with Step-1 structure
 - Added "İlan Detayları" page title on desktop matching Step-1 layout structure
 - Mobile category box positioned with mt-3 for optimal spacing from navbar
+
+### Desktop Input Width Optimization (July 21, 2025)
+- Optimized desktop input widths for better user experience and select field visibility
+- Title and description inputs remain full width (w-full)
+- Price input, custom fields, and "Kimden" input set to 35% width on desktop (lg:w-[35%])
+- Mobile maintains full width (w-full) for all inputs for optimal touch interaction
+- Improved select dropdown visibility by reducing input width on desktop screens
+- Better visual balance between input fields and their associated unit/currency selectors
