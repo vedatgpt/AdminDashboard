@@ -3,6 +3,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom scrollbar for photo gallery */
+.overflow-x-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.overflow-x-scroll::-webkit-scrollbar-thumb {
+  background: #EC7830;
+  border-radius: 4px;
+}
+
+.overflow-x-scroll::-webkit-scrollbar-thumb:hover {
+  background: #d96827;
+}
+
 /* Preline UI Opinionated Styles */
 @layer base {
   button:not(:disabled),

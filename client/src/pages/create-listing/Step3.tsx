@@ -304,9 +304,9 @@ export default function Step3() {
                 </div>
               </div>
               
-              <div ref={sortableRef} className="flex gap-4 overflow-x-auto pb-4">
+              <div ref={sortableRef} className="flex gap-4 overflow-x-scroll pb-4" style={{ scrollbarWidth: 'thin' }}>
                 {images.map((image, index) => (
-                  <div key={image.id} className={`relative group bg-white rounded-lg border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '100px', height: '75px' }}>
+                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '150px', height: '112px' }}>
                     {/* Drag Handle */}
                     {!image.uploading && (
                       <div className="drag-handle absolute top-1 left-1 p-0.5 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">

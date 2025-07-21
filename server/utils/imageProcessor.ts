@@ -91,8 +91,8 @@ export class ImageProcessor {
   // Watermark disabled for now due to API complexity
   
   private async generateThumbnail(inputBuffer: Buffer, originalPath: string): Promise<string> {
-    const thumbnailWidth = 100;
-    const thumbnailHeight = 75;
+    const thumbnailWidth = 150;
+    const thumbnailHeight = 112;
     const ext = path.extname(originalPath);
     const basename = path.basename(originalPath, ext);
     const dir = path.dirname(originalPath);
