@@ -159,7 +159,7 @@ export default function Step2() {
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                  <h3 className="font-medium text-gray-900 text-md leading-tight">
                     Seçtiğiniz Kategori Bilgileri
                   </h3>
                   {/* Breadcrumb kutunun içinde alt sol kısmında */}
@@ -189,6 +189,12 @@ export default function Step2() {
           <div className="mb-6">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="w-full">
+
+                <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
+                  İlan Detayları
+                </h3>
+
+                
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -586,8 +592,8 @@ export default function Step2() {
           <div className="mb-6">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="w-full">
-                <h3 className="font-medium text-gray-900 text-sm leading-tight mb-6">
-                  Lokasyon Bilgileri
+                <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
+                  Adres Bilgileri
                 </h3>
 
                 {/* Desktop'ta yan yana, mobile'da alt alta */}
