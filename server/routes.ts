@@ -630,6 +630,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount categories routes
   app.use('/api/categories', categoriesRouter);
 
+  // Location routes
+  // Get all locations
+  app.get("/api/locations", async (req, res) => {
+    try {
+      const locations = await storage.getLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Get locations error:", error);
+      res.status(500).json({ error: "Lokasyonlar getirilirken hata oluştu" });
+    }
+  });
+
+  // Get locations tree
+  app.get("/api/locations/tree", async (req, res) => {
+    try {
+      const locationsTree = await storage.getLocationsTree();
+      res.json(locationsTree);
+    } catch (error) {
+      console.error("Get locations tree error:", error);
+      res.status(500).json({ error: "Lokasyon ağacı getirilirken hata oluştu" });
+    }
+  });
+
+  // Get child locations
+  app.get("/api/locations/:parentId/children", async (req, res) => {
+    try {
+      const parentId = req.params.parentId === 'root' ? null : parseInt(req.params.parentId);
+      const childLocations = await storage.getChildLocations(parentId);
+      res.json(childLocations);
+    } catch (error) {
+      console.error("Get child locations error:", error);
+      res.status(500).json({ error: "Alt lokasyonlar getirilirken hata oluştu" });
+    }
+  });
+
+  // Get locations by type
+  app.get("/api/locations/type/:type", async (req, res) => {
+    try {
+      const { type } = req.params;
+      const locations = await storage.getLocationsByType(type);
+      res.json(locations);
+    } catch (error) {
+      console.error("Get locations by type error:", error);
+      res.status(500).json({ error: "Tip bazında lokasyonlar getirilirken hata oluştu" });
+    }
+  });
+
+  // Get location by ID
+  app.get("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getLocationById(id);
+      
+      if (!location) {
+        return res.status(404).json({ error: "Lokasyon bulunamadı" });
+      }
+      
+      res.json(location);
+    } catch (error) {
+      console.error("Get location error:", error);
+      res.status(500).json({ error: "Lokasyon getirilirken hata oluştu" });
+    }
+  });
+
+  // Get location breadcrumbs
+  app.get("/api/locations/:id/breadcrumbs", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const breadcrumbs = await storage.getLocationBreadcrumbs(id);
+      res.json(breadcrumbs);
+    } catch (error) {
+      console.error("Get location breadcrumbs error:", error);
+      res.status(500).json({ error: "Lokasyon breadcrumb'ları getirilirken hata oluştu" });
+    }
+  });
+
+  // Create location (admin only)
+  app.post("/api/locations", requireAdmin, async (req, res) => {
+    try {
+      const location = await storage.createLocation(req.body);
+      res.status(201).json(location);
+    } catch (error) {
+      console.error("Create location error:", error);
+      res.status(500).json({ error: "Lokasyon oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Update location (admin only)
+  app.patch("/api/locations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.updateLocation(id, req.body);
+      res.json(location);
+    } catch (error) {
+      console.error("Update location error:", error);
+      res.status(500).json({ error: "Lokasyon güncellenirken hata oluştu" });
+    }
+  });
+
+  // Delete location (admin only)
+  app.delete("/api/locations/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteLocation(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Delete location error:", error);
+      res.status(500).json({ error: "Lokasyon silinirken hata oluştu" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
