@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
+import { useListing } from '../../contexts/ListingContext';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -20,6 +21,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function Step3() {
   const [, navigate] = useLocation();
+  const { state } = useListing();
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,8 +128,8 @@ export default function Step3() {
             evt.preventDefault?.();
             setImages(prevImages => {
               const newImages = [...prevImages];
-              const [removed] = newImages.splice(evt.oldIndex, 1);
-              newImages.splice(evt.newIndex, 0, removed);
+              const [removed] = newImages.splice(evt.oldIndex!, 1);
+              newImages.splice(evt.newIndex!, 0, removed);
               return newImages;
             });
           }
@@ -235,16 +237,48 @@ export default function Step3() {
     <div className="min-h-screen bg-gray-50">
       <div className="pt-8">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Fotoğraf Yükleme</h1>
-            <p className="text-gray-600">
-              İlanınıza ait fotoğrafları yükleyin. En fazla {MAX_IMAGES} fotoğraf yükleyebilirsiniz.
-            </p>
+
+          {/* Kategori Bilgileri Kutusu */}
+          <div className="mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="mb-4 lg:mb-0">
+                  <h3 className="font-medium text-gray-900 text-lg leading-tight mb-2">
+                    Seçtiğiniz Kategori Bilgileri
+                  </h3>
+                  {/* Breadcrumb Navigation */}
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                    {state.categoryPath.map((category, index) => (
+                      <div key={category.id} className="flex items-center gap-2">
+                        <span className={index === 0 ? "text-gray-400 cursor-not-allowed" : "hover:text-orange-500 cursor-pointer"}>
+                          {category.name}
+                        </span>
+                        {index < state.categoryPath.length - 1 && (
+                          <span className="text-gray-300">/</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate('/create-listing/step-1')}
+                  className="text-orange-500 text-sm font-medium hover:text-orange-600 hover:underline transition-colors"
+                >
+                  Değiştir
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Upload Area */}
-          <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-6 mb-6">
-            <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
+          {/* Fotoğraf Yükleme Kutusu */}
+          <div className="mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+              <div className="w-full">
+                <h3 className="font-medium text-gray-900 text-lg leading-tight mb-6">
+                  Fotoğraf Yükleme
+                </h3>
+                
+                <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
                  onClick={() => fileInputRef.current?.click()}
                  onDragOver={handleDragOver}
                  onDragLeave={handleDragLeave}
@@ -295,11 +329,10 @@ export default function Step3() {
               className="hidden"
               onChange={(e) => handleFileSelect(e.target.files)}
             />
-          </div>
-
-          {/* Images Grid */}
-          {images.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-6 mb-6">
+                
+                {/* Images Grid */}
+                {images.length > 0 && (
+                  <div className="mt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5" />
@@ -384,31 +417,13 @@ export default function Step3() {
                     </div>
                   </div>
                 ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          )}
-
-          {/* Navigation */}
-          <div className="flex justify-between">
-            <button
-              onClick={() => navigate('/create-listing/step-2')}
-              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              ← Geri
-            </button>
-            
-            <button
-              onClick={handleNextStep}
-              disabled={images.length === 0 || images.some(img => img.uploading)}
-              className={`px-6 py-3 rounded-lg flex items-center gap-2 ${
-                images.length > 0 && !images.some(img => img.uploading)
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              İlerle →
-            </button>
           </div>
+
         </div>
       </div>
     </div>
