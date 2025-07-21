@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import sharp from "sharp";
+import { imageProcessor } from "./utils/imageProcessor";
+import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
@@ -32,6 +34,22 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPG and PNG files are allowed'));
+    }
+  },
+});
+
+// Configure multer for listing images (10MB limit)
+const uploadListingImages = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 20 // Maximum 20 files
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
@@ -755,6 +773,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get visible location settings for public use (without admin check)
+  app.get("/api/location-settings/public", async (req, res) => {
+    try {
+      const settings = await storage.getLocationSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon ayarları alınırken hata oluştu" });
+    }
+  });
+
+  // Upload listing images
+  app.post("/api/upload/images", requireAuth, uploadListingImages.array('images'), async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "Hiç dosya yüklenmedi" });
+      }
+
+      const uploadedImages = [];
+      
+      for (const file of files) {
+        const imageId = uuidv4();
+        const extension = path.extname(file.originalname);
+        const filename = `${imageId}${extension}`;
+        
+        // Create user directory structure
+        const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
+        const imagePath = path.join(userDir, filename);
+        
+        try {
+          const processedImage = await imageProcessor.processImage(
+            file.buffer,
+            imagePath,
+            {
+              maxWidth: 1920,
+              maxHeight: 1080,
+              quality: 85,
+              watermark: true,
+              generateThumbnail: true
+            }
+          );
+
+          uploadedImages.push({
+            id: imageId,
+            filename: processedImage.filename,
+            url: `/uploads/users/${userId}/temp-listings/${processedImage.filename}`,
+            thumbnail: processedImage.thumbnailPath 
+              ? `/uploads/users/${userId}/temp-listings/${path.basename(processedImage.thumbnailPath)}`
+              : undefined,
+            size: processedImage.processedSize,
+            originalSize: processedImage.originalSize
+          });
+        } catch (processError) {
+          console.error('Image processing error:', processError);
+          continue; // Skip this image but continue with others
+        }
+      }
+
+      if (uploadedImages.length === 0) {
+        return res.status(500).json({ error: "Hiçbir resim işlenemedi" });
+      }
+
+      res.json({ images: uploadedImages });
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ error: "Dosya yükleme hatası" });
+    }
+  });
+
+  // Delete uploaded image
+  app.delete("/api/upload/images/:imageId", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      const imageId = req.params.imageId;
+      
+      // Find and delete the image file
+      const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
+      const files = await fs.promises.readdir(userDir).catch(() => []);
+      
+      const imageFile = files.find(file => file.startsWith(imageId));
+      if (imageFile) {
+        const imagePath = path.join(userDir, imageFile);
+        await imageProcessor.deleteImage(imagePath);
+      }
+
+      res.json({ message: "Resim silindi" });
+    } catch (error) {
+      console.error('Delete error:', error);
+      res.status(500).json({ error: "Resim silme hatası" });
+    }
+  });
   app.get("/api/location-settings/public", async (req, res) => {
     try {
       const settings = await storage.getLocationSettings();
