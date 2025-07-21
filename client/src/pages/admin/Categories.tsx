@@ -191,40 +191,51 @@ export default function Categories() {
 
   // Initialize SortableJS for categories
   useEffect(() => {
-    const sortableElement = document.querySelector("#hs-category-sortable");
-    if (sortableElement && filteredCategories.length > 1) {
-      // Destroy existing sortable instance if it exists
-      if ((sortableElement as any)._sortable) {
-        (sortableElement as any)._sortable.destroy();
-      }
-
-      const sortableInstance = new Sortable(sortableElement as HTMLElement, {
-        animation: 150,
-        dragClass: 'rounded-none!',
-        onEnd: function (evt) {
-          const oldIndex = evt.oldIndex;
-          const newIndex = evt.newIndex;
-          
-          if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
-            const draggedCategory = filteredCategories[oldIndex];
-            
-            // Update sort order based on new position
-            updateMutation.mutate({ 
-              id: draggedCategory.id, 
-              data: { sortOrder: newIndex + 1 } 
-            });
-          }
+    // Use setTimeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const sortableElement = document.querySelector("#hs-category-sortable");
+      if (sortableElement && filteredCategories.length > 1) {
+        // Destroy existing sortable instance if it exists
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
         }
-      });
 
-      // Store instance for cleanup
-      (sortableElement as any)._sortable = sortableInstance;
-    }
+        const sortableInstance = new Sortable(sortableElement as HTMLElement, {
+          animation: 150,
+          dragClass: 'rounded-none!',
+          onEnd: function (evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+              const draggedCategory = filteredCategories[oldIndex];
+              
+              // Update sort order based on new position
+              updateMutation.mutate({ 
+                id: draggedCategory.id, 
+                data: { sortOrder: newIndex + 1 } 
+              });
+            }
+          }
+        });
+
+        // Store instance for cleanup
+        (sortableElement as any).sortableInstance = sortableInstance;
+      }
+    }, 100);
 
     // Cleanup function
     return () => {
-      if (sortableElement && (sortableElement as any)._sortable) {
-        (sortableElement as any)._sortable.destroy();
+      clearTimeout(timer);
+      const sortableElement = document.querySelector("#hs-category-sortable");
+      if (sortableElement) {
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
       }
     };
   }, [filteredCategories, updateMutation]);
@@ -338,7 +349,7 @@ export default function Categories() {
                     <li
                       key={category.id}
                       data-category-id={category.id}
-                      className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative"
+                      className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
                       onClick={() => handleCategoryClick(category)}
                     >
                       {/* Icon */}
