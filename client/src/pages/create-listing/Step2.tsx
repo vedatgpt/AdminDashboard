@@ -83,7 +83,7 @@ export default function Step2() {
 
           {/* Kategori Bilgi Kutusu */}
           <div className="mb-6 lg:mt-0 mt-3">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 text-sm leading-tight">
@@ -110,7 +110,18 @@ export default function Step2() {
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto">
+          {/* İlan Detayları Kutusu */}
+          <div className="mb-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                    İlan Detayları
+                  </h3>
+                </div>
+              </div>
+
+              <div className="max-w-2xl mx-auto">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -519,7 +530,9 @@ export default function Step2() {
           >
             Sonraki Adım
           </button>
-        </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
