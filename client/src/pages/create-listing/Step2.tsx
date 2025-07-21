@@ -73,10 +73,13 @@ export default function Step2() {
       </div>
 
       {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className="lg:pt-6 pt-[64px]">
+      <div className="lg:pt-6 pt-[60px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
-   
+          {/* Page Title - Only show on desktop */}
+          <div className="hidden lg:block mb-6 text-left">
+            <h1 className="text-1xl font-medium text-gray-900">İlan Detayları</h1>
+          </div>
 
           {/* Kategori Bilgi Kutusu */}
           <div className="mb-6 lg:mt-0 mt-3">
@@ -84,7 +87,7 @@ export default function Step2() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                    Seçtiğiniz Kategori Bilgileri
+                    Seçtiğiniz Araca Ait Bilgiler
                   </h3>
                   {/* Breadcrumb kutunun içinde alt sol kısmında */}
                   <div className="mt-3">
@@ -107,125 +110,112 @@ export default function Step2() {
             </div>
           </div>
 
-          {/* Desktop: 2 column layout, Mobile: single column */}
-          <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:max-w-none max-w-2xl mx-auto">
-            
-            {/* Sol Sütun - Desktop */}
-            <div className="space-y-6">
-              {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  İlan Başlığı
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.customFields.title || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= 64) {
-                      handleInputChange('title', value);
-                    }
-                  }}
-                  placeholder="İlanınız için başlık yazınız"
-                  maxLength={64}
-                  className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                />
-              </div>
+          <div className="max-w-2xl mx-auto">
+        {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            İlan Başlığı
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="text"
+            value={formData.customFields.title || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value.length <= 64) {
+                handleInputChange('title', value);
+              }
+            }}
+            placeholder="İlanınız için başlık yazınız"
+            maxLength={64}
+            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+          />
+        </div>
 
-              {/* Fiyat Input - Tüm kategoriler için geçerli */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Fiyat
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={(() => {
-                      const priceValue = formData.customFields.price || '';
-                      const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
-                      return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
-                    })()}
-                    onChange={(e) => {
-                      let processedValue = e.target.value.replace(/\D/g, '');
-                      const currentPrice = formData.customFields.price || {};
-                      const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                      handleInputChange('price', { value: processedValue, unit: selectedCurrency });
-                    }}
-                    placeholder="Fiyat giriniz"
-                    inputMode="numeric"
-                    className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                  />
-                  <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-                    <select
-                      value={(() => {
-                        const currentPrice = formData.customFields.price || {};
-                        return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                      })()}
-                      onChange={(e) => {
-                        const currentPrice = formData.customFields.price || {};
-                        const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
-                        handleInputChange('price', { value, unit: e.target.value });
-                      }}
-                      className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="TL">TL</option>
-                      <option value="GBP">GBP</option>
-                      <option value="EUR">EUR</option>
-                      <option value="USD">USD</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Açıklama Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            Açıklama
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="quill-editor-wrapper">
+            <ReactQuill
+              theme="snow"
+              value={formData.customFields.description || ''}
+              onChange={(value) => handleInputChange('description', value)}
+              placeholder="Açıklama girin..."
+              onFocus={() => {
+                // Focus olduğunda placeholder'ı hemen temizle
+                const currentValue = formData.customFields.description || '';
+                const hasContent = currentValue && currentValue.replace(/<[^>]*>/g, '').trim();
+                
+                if (!hasContent) {
+                  // Boş bir paragraf ile değiştir ki cursor görünsün
+                  handleInputChange('description', '<p><br></p>');
+                }
+              }}
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  ['link'],
+                  ['clean']
+                ],
+              }}
+            />
+          </div>
+        </div>
 
-            {/* Sağ Sütun - Desktop */}
-            <div className="space-y-6">
-
-              {/* Açıklama Input - Tüm kategoriler için geçerli */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Açıklama
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <div className="quill-editor-wrapper">
-                  <ReactQuill
-                    theme="snow"
-                    value={formData.customFields.description || ''}
-                    onChange={(value) => handleInputChange('description', value)}
-                    placeholder="Açıklama girin..."
-                    onFocus={() => {
-                      // Focus olduğunda placeholder'ı hemen temizle
-                      const currentValue = formData.customFields.description || '';
-                      const hasContent = currentValue && currentValue.replace(/<[^>]*>/g, '').trim();
-                      
-                      if (!hasContent) {
-                        // Boş bir paragraf ile değiştir ki cursor görünsün
-                        handleInputChange('description', '<p><br></p>');
-                      }
-                    }}
-                    modules={{
-                      toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['link'],
-                        ['clean']
-                      ],
-                    }}
-                  />
-                </div>
-              </div>
+        {/* Fiyat Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            Fiyat
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={(() => {
+                const priceValue = formData.customFields.price || '';
+                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
+                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+              })()}
+              onChange={(e) => {
+                let processedValue = e.target.value.replace(/\D/g, '');
+                const currentPrice = formData.customFields.price || {};
+                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
+              }}
+              placeholder="Fiyat giriniz"
+              inputMode="numeric"
+              className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+            />
+            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+              <select
+                value={(() => {
+                  const currentPrice = formData.customFields.price || {};
+                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                })()}
+                onChange={(e) => {
+                  const currentPrice = formData.customFields.price || {};
+                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
+                  handleInputChange('price', { value, unit: e.target.value });
+                }}
+                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="TL">TL</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
             </div>
           </div>
+        </div>
 
-
-
-          {/* Custom Fields */}
-          {customFields && customFields.length > 0 && (
-            <div className="lg:col-span-2 space-y-6 mt-6">
-              {customFields.map((field) => {
+        {customFields && customFields.length > 0 && (
+          <div className="space-y-6">
+            {customFields.map((field) => {
             const currentValue = formData.customFields[field.fieldName] || '';
             
             return (
