@@ -72,14 +72,17 @@ export default function Step2() {
         />
       </div>
 
-      {/* Main content with dynamic padding */}
-      <div className="lg:pt-6 pt-[60px]">
+      {/* Main content with dynamic padding based on breadcrumb presence */}
+      <div className="lg:pt-6 pt-[108px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
-
+          {/* Page Title - Only show on desktop */}
+          <div className="hidden lg:block mb-6 text-left">
+            <h1 className="text-1xl font-medium text-gray-900">İlan Detayları</h1>
+          </div>
 
           {/* Kategori Bilgi Kutusu */}
-          <div className="mb-6 mt-6">
+          <div className="mb-6">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">

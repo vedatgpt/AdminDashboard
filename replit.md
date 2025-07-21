@@ -456,4 +456,5 @@ Authentication features:
 - Mobile fixed breadcrumb header completely removed
 - Desktop breadcrumb removed from separate section (now only in box)
 - Enhanced BreadcrumbNav component with disableFirstCategory prop and improved line spacing (gap-y-2)
-- Mobile content padding reduced from pt-[108px] to pt-[60px] after removing fixed header
+- Mobile content padding restored to pt-[108px] for consistency with Step-1
+- Added "İlan Detayları" page title on desktop matching Step-1 layout structure
