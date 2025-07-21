@@ -522,16 +522,18 @@ export default function Step2() {
           />
         </div>
 
-        <div className="mt-8">
-          <button
-            onClick={nextStep}
-            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Sonraki Adım
-          </button>
-                </div>
               </div>
             </div>
+          </div>
+
+          {/* Sonraki Adım Butonu - Kutu Dışında */}
+          <div className="mb-6">
+            <button
+              onClick={nextStep}
+              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              Sonraki Adım
+            </button>
           </div>
         </div>
       </div>
