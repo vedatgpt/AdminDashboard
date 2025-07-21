@@ -112,35 +112,44 @@ export default function Step3() {
     }
   });
 
-  // Rotate image mutation
-  const rotateImageMutation = useMutation({
-    mutationFn: async (imageId: string) => {
-      const response = await fetch(`/api/upload/images/${imageId}/rotate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Rotate failed');
+  // Rotate image function using zustand state management
+  const rotateImage = (imageId: string) => {
+    setImages(prev => prev.map(img => {
+      if (img.id === imageId) {
+        // Create a new image element to apply rotation
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const imageElement = new Image();
+        
+        imageElement.onload = () => {
+          // Set canvas dimensions for 90-degree rotation
+          canvas.width = imageElement.height;
+          canvas.height = imageElement.width;
+          
+          // Apply rotation
+          ctx?.translate(canvas.width / 2, canvas.height / 2);
+          ctx?.rotate(Math.PI / 2);
+          ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
+          
+          // Convert back to blob and update image
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const newUrl = URL.createObjectURL(blob);
+              setImages(prev => prev.map(prevImg => 
+                prevImg.id === imageId 
+                  ? { ...prevImg, url: newUrl, thumbnail: newUrl }
+                  : prevImg
+              ));
+            }
+          }, 'image/jpeg', 0.9);
+        };
+        
+        imageElement.src = img.url;
+        return img;
       }
-      
-      return response.json();
-    },
-    onSuccess: (data, imageId) => {
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { ...img, url: data.url, thumbnail: data.thumbnail }
-          : img
-      ));
-    },
-    onError: (error) => {
-      console.error('Rotate error:', error);
-      alert(`Döndürme hatası: ${error.message}`);
-    }
-  });
+      return img;
+    }));
+  };
 
   // Initialize Sortable.js for uploaded images
   useEffect(() => {
@@ -264,7 +273,7 @@ export default function Step3() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Navbar */}
       <div className="hidden lg:block">
         <ModernNavbar />
@@ -273,11 +282,12 @@ export default function Step3() {
         <NavbarMobile />
       </div>
 
-      <div className="pt-8 lg:pt-24">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Main content with dynamic padding based on breadcrumb presence */}
+      <div className="lg:pt-6 pt-[64px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
 
           {/* Fotoğraf Yükleme Kutusu */}
-          <div className="mb-6">
+          <div className="mb-6 lg:mt-0 mt-3">
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="w-full">
                 <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
@@ -372,8 +382,7 @@ export default function Step3() {
                     {/* Rotate Button - Sağ alt */}
                     {!image.uploading && (
                       <button
-                        onClick={() => rotateImageMutation.mutate(image.id)}
-                        disabled={rotateImageMutation.isPending}
+                        onClick={() => rotateImage(image.id)}
                         className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
                       >
                         <RotateCw className="w-3 h-3" />
