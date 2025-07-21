@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
-import { useListing } from '../../contexts/ListingContext';
+
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -21,7 +21,6 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function Step3() {
   const [, navigate] = useLocation();
-  const { state } = useListing();
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -237,38 +236,6 @@ export default function Step3() {
     <div className="min-h-screen bg-gray-50">
       <div className="pt-8">
         <div className="max-w-4xl mx-auto px-4 py-8">
-
-          {/* Kategori Bilgileri Kutusu */}
-          <div className="mb-6">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="mb-4 lg:mb-0">
-                  <h3 className="font-medium text-gray-900 text-lg leading-tight mb-2">
-                    Seçtiğiniz Kategori Bilgileri
-                  </h3>
-                  {/* Breadcrumb Navigation */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-                    {state.categoryPath.map((category, index) => (
-                      <div key={category.id} className="flex items-center gap-2">
-                        <span className={index === 0 ? "text-gray-400 cursor-not-allowed" : "hover:text-orange-500 cursor-pointer"}>
-                          {category.name}
-                        </span>
-                        {index < state.categoryPath.length - 1 && (
-                          <span className="text-gray-300">/</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate('/create-listing/step-1')}
-                  className="text-orange-500 text-sm font-medium hover:text-orange-600 hover:underline transition-colors"
-                >
-                  Değiştir
-                </button>
-              </div>
-            </div>
-          </div>
 
           {/* Fotoğraf Yükleme Kutusu */}
           <div className="mb-6">
