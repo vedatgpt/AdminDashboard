@@ -494,6 +494,8 @@ Authentication features:
 - Allow duplicate photo uploads (removed duplicate prevention)
 - Thumbnail dimensions optimized to 200px width x 150px height with contain fit
 - Horizontal photo layout with custom orange scrollbar for better mobile experience
-- Fixed progress bar to reach 100% completion
+- Real-time progress tracking using XMLHttpRequest for accurate upload percentages
 - Mobile-friendly button layout: order badge (top-left), delete button (top-right), drag handle (center)
 - Enlarged interactive elements for better mobile usability
+- Fixed image orientation issues with automatic EXIF rotation
+- Prevented page refresh during drag-and-drop operations

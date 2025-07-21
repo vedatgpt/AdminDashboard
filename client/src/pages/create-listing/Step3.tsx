@@ -34,33 +34,54 @@ export default function Step3() {
     });
     
     try {
-      const response = await fetch('/api/upload/images', {
-        method: 'POST',
-        body: formData,
-      });
+      // Create XMLHttpRequest for real progress tracking
+      const xhr = new XMLHttpRequest();
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Upload failed');
-      }
-      
-      const data = await response.json();
-      
-      // Replace uploading images with actual uploaded ones
-      setImages(prev => {
-        const newImages = [...prev];
-        uploadingIds.forEach((uploadingId, index) => {
-          const uploadingIndex = newImages.findIndex(img => img.id === uploadingId);
-          if (uploadingIndex !== -1 && data.images[index]) {
-            // Clean up blob URL
-            if (newImages[uploadingIndex].url.startsWith('blob:')) {
-              URL.revokeObjectURL(newImages[uploadingIndex].url);
-            }
-            // Replace with uploaded image and set progress to 100%
-            newImages[uploadingIndex] = { ...data.images[index], progress: 100, uploading: false };
+      return new Promise((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            setImages(prev => prev.map(img => {
+              if (uploadingIds.includes(img.id) && img.uploading) {
+                return { ...img, progress: percentComplete };
+              }
+              return img;
+            }));
           }
         });
-        return newImages;
+        
+        xhr.addEventListener('load', async () => {
+          if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            
+            // Replace uploading images with actual uploaded ones
+            setImages(prev => {
+              const newImages = [...prev];
+              uploadingIds.forEach((uploadingId, index) => {
+                const uploadingIndex = newImages.findIndex(img => img.id === uploadingId);
+                if (uploadingIndex !== -1 && data.images[index]) {
+                  // Clean up blob URL
+                  if (newImages[uploadingIndex].url.startsWith('blob:')) {
+                    URL.revokeObjectURL(newImages[uploadingIndex].url);
+                  }
+                  // Replace with uploaded image
+                  newImages[uploadingIndex] = { ...data.images[index], uploading: false };
+                }
+              });
+              return newImages;
+            });
+            resolve(data);
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error'));
+        });
+        
+        xhr.open('POST', '/api/upload/images');
+        xhr.send(formData);
       });
       
     } catch (error) {
@@ -95,15 +116,18 @@ export default function Step3() {
 
   // Initialize Sortable.js for uploaded images
   useEffect(() => {
-    if (sortableRef.current && images.length > 0) {
+    if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
       const sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'opacity-50',
         chosenClass: 'border-orange-500',
         filter: '.uploading-item', // Exclude uploading items from sorting
+        preventOnFilter: false,
         onEnd: (evt) => {
           if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
+            // Prevent page refresh by using React state management
+            evt.preventDefault?.();
             setImages(prevImages => {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex, 1);
@@ -166,22 +190,10 @@ export default function Step3() {
       
       setImages(prev => [...prev, ...newImages]);
       
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setImages(prev => prev.map(img => {
-          if (uploadingIds.includes(img.id) && img.uploading && img.progress < 95) {
-            return { ...img, progress: img.progress + 5 };
-          }
-          return img;
-        }));
-      }, 200);
-      
-      // Start upload
+      // Start upload with real progress tracking
       const fileList = new DataTransfer();
       validFiles.forEach(file => fileList.items.add(file));
       await uploadImages(fileList.files, uploadingIds);
-      
-      clearInterval(progressInterval);
     }
   };
 

@@ -51,13 +51,16 @@ export class ImageProcessor {
       // Process image with Sharp
       let sharpInstance = sharp(inputBuffer);
       
-      // Resize if needed
+      // Resize if needed while preserving orientation
       if (originalWidth > maxWidth || originalHeight > maxHeight) {
         sharpInstance = sharpInstance.resize(maxWidth, maxHeight, {
           fit: 'inside',
           withoutEnlargement: true
         });
       }
+      
+      // Auto-rotate based on EXIF data to prevent orientation issues
+      sharpInstance = sharpInstance.rotate();
       
       // Set quality and format
       sharpInstance = sharpInstance.jpeg({ quality });
@@ -100,6 +103,7 @@ export class ImageProcessor {
     
     try {
       await sharp(inputBuffer)
+        .rotate() // Auto-rotate based on EXIF data
         .resize(thumbnailWidth, thumbnailHeight, {
           fit: 'contain',
           background: { r: 255, g: 255, b: 255, alpha: 1 }
