@@ -10,7 +10,7 @@ import NavbarMobile from '@/components/Navbar-mobile';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Location } from '@shared/schema';
 
 export default function Step2() {
@@ -72,6 +72,21 @@ export default function Step2() {
     staleTime: 5 * 60 * 1000, // 5 dakika
     gcTime: 10 * 60 * 1000, // 10 dakika (TanStack Query v5)
   });
+
+  // Ülke görünürlüğü kapalıyken otomatik ilk ülkeyi seç
+  useEffect(() => {
+    if (locationSettings && !locationSettings.showCountry && availableCountries.length > 0 && !selectedCountry) {
+      const defaultCountry = availableCountries[0];
+      setSelectedCountry(defaultCountry);
+      updateFormData({
+        location: {
+          country: defaultCountry,
+          city: null,
+          district: null
+        }
+      });
+    }
+  }, [locationSettings, availableCountries, selectedCountry]);
   
   const updateFormData = (newData: any) => {
     dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
@@ -635,7 +650,7 @@ export default function Step2() {
                           }
                         });
                       }}
-                      disabled={locationSettings?.showCountry && !selectedCountry}
+                      disabled={locationSettings?.showCountry ? !selectedCountry : false}
                       className="py-2.5 sm:py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                     >
                       <option value="">
@@ -671,7 +686,7 @@ export default function Step2() {
                           }
                         });
                       }}
-                      disabled={locationSettings?.showCity && !selectedCity}
+                      disabled={locationSettings?.showCity ? !selectedCity : false}
                       className="py-2.5 sm:py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                     >
                       <option value="">
