@@ -79,8 +79,8 @@ export default function Step2() {
 
 
           {/* Kategori Bilgi Kutusu */}
-          <div className="mb-6">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+          <div className="mb-6 mt-6">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 text-sm leading-tight">
