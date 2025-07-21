@@ -492,6 +492,8 @@ Authentication features:
 - Single photo display area showing only compressed/processed images (no duplicates)
 - Progress simulation during upload with proper state cleanup after completion
 - Allow duplicate photo uploads (removed duplicate prevention)
-- Thumbnail dimensions fixed to 100px width x 75px height with contain fit
-- Horizontal photo layout with scroll overflow for better mobile experience
+- Thumbnail dimensions optimized to 200px width x 150px height with contain fit
+- Horizontal photo layout with custom orange scrollbar for better mobile experience
 - Fixed progress bar to reach 100% completion
+- Mobile-friendly button layout: order badge (top-left), delete button (top-right), drag handle (center)
+- Enlarged interactive elements for better mobile usability

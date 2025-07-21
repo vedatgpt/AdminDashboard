@@ -306,18 +306,29 @@ export default function Step3() {
               
               <div ref={sortableRef} className="flex gap-4 overflow-x-scroll pb-4" style={{ scrollbarWidth: 'thin' }}>
                 {images.map((image, index) => (
-                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '150px', height: '112px' }}>
-                    {/* Drag Handle */}
-                    {!image.uploading && (
-                      <div className="drag-handle absolute top-1 left-1 p-0.5 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <GripVertical className="w-3 h-3" />
-                      </div>
-                    )}
-                    
-                    {/* Image Order Badge */}
-                    <div className="absolute top-1 right-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium z-10 text-[10px]">
+                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '200px', height: '150px' }}>
+                    {/* Image Order Badge - Sol üst */}
+                    <div className="absolute top-2 left-2 bg-orange-500 text-white text-sm px-2 py-1 rounded-full font-medium z-10">
                       {index + 1}
                     </div>
+                    
+                    {/* Delete Button - Sağ üst */}
+                    {!image.uploading && (
+                      <button
+                        onClick={() => deleteImageMutation.mutate(image.id)}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                        disabled={deleteImageMutation.isPending}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    {/* Drag Handle - Orta */}
+                    {!image.uploading && (
+                      <div className="drag-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <GripVertical className="w-5 h-5" />
+                      </div>
+                    )}
                     
                     <div className="w-full h-full bg-gray-100 overflow-hidden">
                       <img
@@ -331,21 +342,10 @@ export default function Step3() {
                     {image.uploading && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <div className="text-center text-white">
-                          <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
-                          <div className="text-xs font-medium">{image.progress}%</div>
+                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <div className="text-sm font-medium">{image.progress}%</div>
                         </div>
                       </div>
-                    )}
-                    
-                    {/* Delete Button */}
-                    {!image.uploading && (
-                      <button
-                        onClick={() => deleteImageMutation.mutate(image.id)}
-                        className="absolute top-1 left-1/2 transform -translate-x-1/2 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                        disabled={deleteImageMutation.isPending}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
                     )}
                     
                     {/* Image Info */}
