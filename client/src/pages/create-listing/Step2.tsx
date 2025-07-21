@@ -76,10 +76,7 @@ export default function Step2() {
       <div className="lg:pt-6 pt-[60px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
-          {/* Page Title - Only show on desktop */}
-          <div className="hidden lg:block mb-6 text-left">
-            <h1 className="text-1xl font-medium text-gray-900">İlan Detayları</h1>
-          </div>
+         
 
           {/* Kategori Bilgi Kutusu */}
           <div className="mb-6 lg:mt-0 mt-3">
@@ -121,7 +118,7 @@ export default function Step2() {
                 </div>
               </div>
 
-              <div className="max-w-2xl mx-auto">
+              <div className="w-full">
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -523,16 +520,18 @@ export default function Step2() {
           />
         </div>
 
-        <div className="mt-8">
-          <button
-            onClick={nextStep}
-            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Sonraki Adım
-          </button>
-                </div>
               </div>
             </div>
+          </div>
+
+          {/* Sonraki Adım Butonu - Kutu Dışında */}
+          <div className="mb-6">
+            <button
+              onClick={nextStep}
+              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              Sonraki Adım
+            </button>
           </div>
         </div>
       </div>
