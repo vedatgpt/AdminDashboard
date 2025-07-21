@@ -495,9 +495,10 @@ Authentication features:
 - Thumbnail dimensions optimized to 200px width x 150px height with contain fit
 - Horizontal photo layout with custom orange scrollbar for better mobile experience
 - Individual file upload progress tracking for accurate per-image percentages
-- Grid layout: 3 columns on mobile, 5 columns on desktop for better organization
-- Mobile-friendly button layout: order badge (top-left), delete button (top-right), drag handle (center)
-- Enlarged interactive elements for better mobile usability
+- Grid layout: 2 columns on mobile, 5 columns on desktop for better organization
+- Mobile-friendly button layout: order badge (top-left), delete button (top-right), rotate button (bottom-right), drag handle (center)
+- Enlarged interactive elements for better mobile usability with consistent gray theme for all controls
 - Fixed image orientation issues with automatic EXIF rotation
 - Prevented page refresh during drag-and-drop operations
 - Enhanced thumbnail quality (90% JPEG quality) for better visual appearance
+- JavaScript confirmation dialog for photo deletion with Turkish text

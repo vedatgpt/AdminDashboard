@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
+import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
 import Sortable from "sortablejs";
 
@@ -310,29 +310,46 @@ export default function Step3() {
                 </div>
               </div>
               
-              <div ref={sortableRef} className="grid grid-cols-3 md:grid-cols-5 gap-4">
+              <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {images.map((image, index) => (
                   <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
                     {/* Image Order Badge - Sol üst */}
-                    <div className="absolute top-2 left-2 bg-orange-500 text-white text-sm px-2 py-1 rounded-full font-medium z-10">
+                    <div className="absolute top-1 left-1 bg-gray-800 bg-opacity-80 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-medium z-10">
                       {index + 1}
                     </div>
                     
                     {/* Delete Button - Sağ üst */}
                     {!image.uploading && (
                       <button
-                        onClick={() => deleteImageMutation.mutate(image.id)}
-                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                        onClick={() => {
+                          if (confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
+                            deleteImageMutation.mutate(image.id);
+                          }
+                        }}
+                        className="absolute top-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
                         disabled={deleteImageMutation.isPending}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                    
+                    {/* Rotate Button - Sağ alt */}
+                    {!image.uploading && (
+                      <button
+                        onClick={() => {
+                          // Rotate functionality placeholder
+                          alert('Döndürme özelliği yakında eklenecek');
+                        }}
+                        className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
+                      >
+                        <RotateCw className="w-3 h-3" />
                       </button>
                     )}
                     
                     {/* Drag Handle - Orta */}
                     {!image.uploading && (
-                      <div className="drag-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <GripVertical className="w-5 h-5" />
+                      <div className="drag-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 bg-opacity-80 text-white rounded-full cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center">
+                        <GripVertical className="w-4 h-4" />
                       </div>
                     )}
                     
