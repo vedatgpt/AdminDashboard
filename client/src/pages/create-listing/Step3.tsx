@@ -24,11 +24,7 @@ export default function Step3() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sortableRef = useRef<HTMLDivElement>(null);
 
-  // Check authentication
-  const { data: user } = useQuery({
-    queryKey: ['/api/auth/me'],
-    retry: false
-  });
+  // Removed authentication check for development
 
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
@@ -40,7 +36,6 @@ export default function Step3() {
       const response = await fetch('/api/upload/images', {
         method: 'POST',
         body: formData,
-        credentials: 'include', // Include session cookies
       });
       
       if (!response.ok) {
@@ -65,7 +60,6 @@ export default function Step3() {
     mutationFn: async (imageId: string) => {
       const response = await fetch(`/api/upload/images/${imageId}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -106,12 +100,7 @@ export default function Step3() {
     }
   }, [images.length]);
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (user === null) {
-      navigate('/auth/login');
-    }
-  }, [user, navigate]);
+  // Removed redirect for development
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;

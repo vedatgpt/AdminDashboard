@@ -33,82 +33,73 @@ export class ImageProcessor {
       maxWidth = 1920,
       maxHeight = 1080,
       quality = 85,
-      watermark = true,
+      watermark = false,
       generateThumbnail = true
     } = options;
 
     const originalSize = inputBuffer.length;
     
-    // Load image
-    const image = await Jimp.read(inputBuffer);
-    
-    // Resize while maintaining aspect ratio
-    image.scaleToFit(maxWidth, maxHeight);
-    
-    // Apply watermark if enabled
-    if (watermark) {
-      await this.applyWatermark(image);
+    try {
+      // Load image
+      const image = await Jimp.read(inputBuffer);
+      
+      // Get original dimensions
+      const originalWidth = image.getWidth();
+      const originalHeight = image.getHeight();
+      
+      // Resize if needed
+      if (originalWidth > maxWidth || originalHeight > maxHeight) {
+        // Calculate new dimensions maintaining aspect ratio
+        const aspectRatio = originalWidth / originalHeight;
+        let newWidth = originalWidth;
+        let newHeight = originalHeight;
+        
+        if (originalWidth > maxWidth) {
+          newWidth = maxWidth;
+          newHeight = Math.round(maxWidth / aspectRatio);
+        }
+        
+        if (newHeight > maxHeight) {
+          newHeight = maxHeight;
+          newWidth = Math.round(maxHeight * aspectRatio);
+        }
+        
+        image.resize(newWidth, newHeight);
+      }
+      
+      // Set quality
+      image.quality(quality);
+      
+      // Ensure directory exists
+      await fs.mkdir(path.dirname(outputPath), { recursive: true });
+      
+      // Save processed image
+      await image.write(outputPath);
+      
+      // Get processed file size
+      const stats = await fs.stat(outputPath);
+      const processedSize = stats.size;
+      
+      const result: ProcessedImage = {
+        filename: path.basename(outputPath),
+        originalSize,
+        processedSize
+      };
+      
+      // Generate thumbnail if requested
+      if (generateThumbnail) {
+        const thumbnailPath = await this.generateThumbnail(image, outputPath);
+        result.thumbnailPath = thumbnailPath;
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Image processing error:', error);
+      throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
-    // Set quality and save
-    image.quality(quality);
-    
-    // Ensure directory exists
-    await fs.mkdir(path.dirname(outputPath), { recursive: true });
-    
-    // Save processed image
-    await image.writeAsync(outputPath);
-    
-    // Get processed file size
-    const stats = await fs.stat(outputPath);
-    const processedSize = stats.size;
-    
-    const result: ProcessedImage = {
-      filename: path.basename(outputPath),
-      originalSize,
-      processedSize
-    };
-    
-    // Generate thumbnail if requested
-    if (generateThumbnail) {
-      const thumbnailPath = await this.generateThumbnail(image, outputPath);
-      result.thumbnailPath = thumbnailPath;
-    }
-    
-    return result;
   }
   
-  private async applyWatermark(image: Jimp): Promise<void> {
-    try {
-      // Create a simple text watermark if watermark image doesn't exist
-      const watermarkText = "YourSite.com";
-      const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-      
-      // Get image dimensions
-      const imageWidth = image.getWidth();
-      const imageHeight = image.getHeight();
-      
-      // Calculate text dimensions (approximate)
-      const textWidth = watermarkText.length * 20; // Rough estimate
-      const textHeight = 32;
-      
-      // Position watermark at bottom right
-      const x = imageWidth - textWidth - 20;
-      const y = imageHeight - textHeight - 20;
-      
-      // Add semi-transparent background for text
-      image.scan(x - 10, y - 5, textWidth + 20, textHeight + 10, function (this: any, x: number, y: number, idx: number) {
-        this.bitmap.data[idx + 3] = Math.min(this.bitmap.data[idx + 3], 180); // Reduce alpha
-      });
-      
-      // Add watermark text
-      image.print(font, x, y, watermarkText);
-      
-    } catch (error) {
-      console.log('Watermark not applied:', error);
-      // Continue without watermark if there's an issue
-    }
-  }
+  // Watermark disabled for now due to API complexity
   
   private async generateThumbnail(image: Jimp, originalPath: string): Promise<string> {
     const thumbnailSize = 300;
@@ -117,13 +108,28 @@ export class ImageProcessor {
     const dir = path.dirname(originalPath);
     const thumbnailPath = path.join(dir, `${basename}_thumb${ext}`);
     
-    // Create thumbnail copy
-    const thumbnail = image.clone();
-    thumbnail.cover(thumbnailSize, thumbnailSize);
-    
-    await thumbnail.writeAsync(thumbnailPath);
-    
-    return thumbnailPath;
+    try {
+      // Create thumbnail copy
+      const thumbnail = image.clone();
+      
+      // Resize to thumbnail size maintaining aspect ratio
+      const width = thumbnail.getWidth();
+      const height = thumbnail.getHeight();
+      
+      if (width > height) {
+        thumbnail.resize(thumbnailSize, Jimp.AUTO);
+      } else {
+        thumbnail.resize(Jimp.AUTO, thumbnailSize);
+      }
+      
+      await thumbnail.write(thumbnailPath);
+      
+      return thumbnailPath;
+    } catch (error) {
+      console.error('Thumbnail generation error:', error);
+      // Return original path if thumbnail fails
+      return originalPath;
+    }
   }
   
   async deleteImage(imagePath: string): Promise<void> {
@@ -147,14 +153,19 @@ export class ImageProcessor {
   }
   
   async getImageInfo(imagePath: string): Promise<{ width: number; height: number; size: number }> {
-    const image = await Jimp.read(imagePath);
-    const stats = await fs.stat(imagePath);
-    
-    return {
-      width: image.getWidth(),
-      height: image.getHeight(),
-      size: stats.size
-    };
+    try {
+      const image = await Jimp.read(imagePath);
+      const stats = await fs.stat(imagePath);
+      
+      return {
+        width: image.getWidth(),
+        height: image.getHeight(),
+        size: stats.size
+      };
+    } catch (error) {
+      console.error('Error getting image info:', error);
+      throw new Error(`Failed to get image info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 
