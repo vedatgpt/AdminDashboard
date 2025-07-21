@@ -1,4 +1,4 @@
-import { Jimp } from 'jimp';
+import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -40,41 +40,30 @@ export class ImageProcessor {
     const originalSize = inputBuffer.length;
     
     try {
-      // Load image
-      const image = await Jimp.read(inputBuffer);
-      
-      // Get original dimensions
-      const originalWidth = image.bitmap.width;
-      const originalHeight = image.bitmap.height;
-      
-      // Resize if needed
-      if (originalWidth > maxWidth || originalHeight > maxHeight) {
-        // Calculate new dimensions maintaining aspect ratio
-        const aspectRatio = originalWidth / originalHeight;
-        let newWidth = originalWidth;
-        let newHeight = originalHeight;
-        
-        if (originalWidth > maxWidth) {
-          newWidth = maxWidth;
-          newHeight = Math.round(maxWidth / aspectRatio);
-        }
-        
-        if (newHeight > maxHeight) {
-          newHeight = maxHeight;
-          newWidth = Math.round(maxHeight * aspectRatio);
-        }
-        
-        image.resize(newWidth, newHeight);
-      }
-      
-      // Set quality
-      image.quality(quality);
-      
       // Ensure directory exists
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       
+      // Get metadata first
+      const metadata = await sharp(inputBuffer).metadata();
+      const originalWidth = metadata.width || 0;
+      const originalHeight = metadata.height || 0;
+      
+      // Process image with Sharp
+      let sharpInstance = sharp(inputBuffer);
+      
+      // Resize if needed
+      if (originalWidth > maxWidth || originalHeight > maxHeight) {
+        sharpInstance = sharpInstance.resize(maxWidth, maxHeight, {
+          fit: 'inside',
+          withoutEnlargement: true
+        });
+      }
+      
+      // Set quality and format
+      sharpInstance = sharpInstance.jpeg({ quality });
+      
       // Save processed image
-      await image.write(outputPath);
+      await sharpInstance.toFile(outputPath);
       
       // Get processed file size
       const stats = await fs.stat(outputPath);
@@ -88,7 +77,7 @@ export class ImageProcessor {
       
       // Generate thumbnail if requested
       if (generateThumbnail) {
-        const thumbnailPath = await this.generateThumbnail(image, outputPath);
+        const thumbnailPath = await this.generateThumbnail(inputBuffer, outputPath);
         result.thumbnailPath = thumbnailPath;
       }
       
@@ -101,28 +90,21 @@ export class ImageProcessor {
   
   // Watermark disabled for now due to API complexity
   
-  private async generateThumbnail(image: Jimp, originalPath: string): Promise<string> {
+  private async generateThumbnail(inputBuffer: Buffer, originalPath: string): Promise<string> {
     const thumbnailSize = 300;
     const ext = path.extname(originalPath);
     const basename = path.basename(originalPath, ext);
     const dir = path.dirname(originalPath);
-    const thumbnailPath = path.join(dir, `${basename}_thumb${ext}`);
+    const thumbnailPath = path.join(dir, `${basename}_thumb.jpg`);
     
     try {
-      // Create thumbnail copy
-      const thumbnail = image.clone();
-      
-      // Resize to thumbnail size maintaining aspect ratio
-      const width = thumbnail.bitmap.width;
-      const height = thumbnail.bitmap.height;
-      
-      if (width > height) {
-        thumbnail.resize(thumbnailSize, Jimp.AUTO);
-      } else {
-        thumbnail.resize(Jimp.AUTO, thumbnailSize);
-      }
-      
-      await thumbnail.write(thumbnailPath);
+      await sharp(inputBuffer)
+        .resize(thumbnailSize, thumbnailSize, {
+          fit: 'cover',
+          position: 'center'
+        })
+        .jpeg({ quality: 80 })
+        .toFile(thumbnailPath);
       
       return thumbnailPath;
     } catch (error) {
@@ -154,12 +136,12 @@ export class ImageProcessor {
   
   async getImageInfo(imagePath: string): Promise<{ width: number; height: number; size: number }> {
     try {
-      const image = await Jimp.read(imagePath);
+      const metadata = await sharp(imagePath).metadata();
       const stats = await fs.stat(imagePath);
       
       return {
-        width: image.bitmap.width,
-        height: image.bitmap.height,
+        width: metadata.width || 0,
+        height: metadata.height || 0,
         size: stats.size
       };
     } catch (error) {
