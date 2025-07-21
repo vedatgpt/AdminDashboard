@@ -27,7 +27,7 @@ export default function Step3() {
 
   // Removed authentication check for development
 
-  const uploadImages = async (files: FileList) => {
+  const uploadImages = async (files: FileList, uploadingIds: string[]) => {
     const formData = new FormData();
     Array.from(files).forEach(file => {
       formData.append('images', file);
@@ -45,10 +45,28 @@ export default function Step3() {
       }
       
       const data = await response.json();
-      setImages(prev => [...prev, ...data.images]);
+      
+      // Replace uploading images with actual uploaded ones
+      setImages(prev => {
+        const newImages = [...prev];
+        uploadingIds.forEach((uploadingId, index) => {
+          const uploadingIndex = newImages.findIndex(img => img.id === uploadingId);
+          if (uploadingIndex !== -1 && data.images[index]) {
+            // Clean up blob URL
+            if (newImages[uploadingIndex].url.startsWith('blob:')) {
+              URL.revokeObjectURL(newImages[uploadingIndex].url);
+            }
+            // Replace with uploaded image
+            newImages[uploadingIndex] = data.images[index];
+          }
+        });
+        return newImages;
+      });
       
     } catch (error) {
       console.error('Upload error:', error);
+      // Remove failed uploads
+      setImages(prev => prev.filter(img => !uploadingIds.includes(img.id)));
       alert(`Yükleme hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
     }
   };
@@ -78,24 +96,39 @@ export default function Step3() {
   // Initialize Sortable.js for uploaded images
   useEffect(() => {
     if (sortableRef.current && images.length > 0) {
+      // Destroy existing sortable first
+      if (sortableRef.current.sortable) {
+        sortableRef.current.sortable.destroy();
+      }
+      
       const sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'opacity-50',
         chosenClass: 'border-orange-500',
+        filter: '.uploading-item', // Exclude uploading items from sorting
         onEnd: (evt) => {
-          if (evt.oldIndex !== undefined && evt.newIndex !== undefined) {
-            const newImages = [...images];
-            const [removed] = newImages.splice(evt.oldIndex, 1);
-            newImages.splice(evt.newIndex, 0, removed);
-            setImages(newImages);
+          if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
+            setImages(prevImages => {
+              const newImages = [...prevImages];
+              const [removed] = newImages.splice(evt.oldIndex, 1);
+              newImages.splice(evt.newIndex, 0, removed);
+              return newImages;
+            });
           }
         }
       });
 
-      return () => sortable.destroy();
+      // Store reference for cleanup
+      sortableRef.current.sortable = sortable;
+
+      return () => {
+        if (sortable) {
+          sortable.destroy();
+        }
+      };
     }
-  }, [images.length]);
+  }, [images]);
 
   // Removed redirect for development
 
@@ -123,31 +156,39 @@ export default function Step3() {
 
     if (validFiles.length > 0) {
       // Create preview images with uploading state
-      const newImages: UploadedImage[] = validFiles.map((file, index) => ({
-        id: `uploading-${Date.now()}-${index}`,
-        filename: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        originalSize: file.size,
-        uploading: true,
-        progress: 0
-      }));
+      const uploadingIds: string[] = [];
+      const newImages: UploadedImage[] = validFiles.map((file, index) => {
+        const id = `uploading-${Date.now()}-${index}`;
+        uploadingIds.push(id);
+        return {
+          id,
+          filename: file.name,
+          url: URL.createObjectURL(file),
+          size: file.size,
+          originalSize: file.size,
+          uploading: true,
+          progress: 0
+        };
+      });
       
       setImages(prev => [...prev, ...newImages]);
+      
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setImages(prev => prev.map(img => {
+          if (uploadingIds.includes(img.id) && img.uploading && img.progress < 90) {
+            return { ...img, progress: img.progress + 10 };
+          }
+          return img;
+        }));
+      }, 300);
       
       // Start upload
       const fileList = new DataTransfer();
       validFiles.forEach(file => fileList.items.add(file));
-      await uploadImages(fileList.files);
+      await uploadImages(fileList.files, uploadingIds);
       
-      // Clean up blob URLs and remove uploading state
-      setImages(prev => prev.map(img => {
-        if (img.uploading && img.url.startsWith('blob:')) {
-          URL.revokeObjectURL(img.url);
-          return { ...img, uploading: false };
-        }
-        return img;
-      }));
+      clearInterval(progressInterval);
     }
   };
 
@@ -272,7 +313,7 @@ export default function Step3() {
               
               <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {images.map((image, index) => (
-                  <div key={image.id} className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                  <div key={image.id} className={`relative group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`}>
                     {/* Drag Handle */}
                     {!image.uploading && (
                       <div className="drag-handle absolute top-2 left-2 p-1 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -287,7 +328,7 @@ export default function Step3() {
                     
                     <div className="aspect-square bg-gray-100 overflow-hidden">
                       <img
-                        src={image.thumbnail || image.url}
+                        src={image.uploading ? image.url : (image.thumbnail || image.url)}
                         alt={`Fotoğraf ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -298,7 +339,7 @@ export default function Step3() {
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <div className="text-center text-white">
                           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                          <div className="text-sm">Yükleniyor...</div>
+                          <div className="text-sm font-medium">{image.progress}%</div>
                         </div>
                       </div>
                     )}
