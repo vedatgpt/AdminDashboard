@@ -91,7 +91,8 @@ export class ImageProcessor {
   // Watermark disabled for now due to API complexity
   
   private async generateThumbnail(inputBuffer: Buffer, originalPath: string): Promise<string> {
-    const thumbnailSize = 300;
+    const thumbnailWidth = 100;
+    const thumbnailHeight = 75;
     const ext = path.extname(originalPath);
     const basename = path.basename(originalPath, ext);
     const dir = path.dirname(originalPath);
@@ -99,9 +100,9 @@ export class ImageProcessor {
     
     try {
       await sharp(inputBuffer)
-        .resize(thumbnailSize, thumbnailSize, {
-          fit: 'cover',
-          position: 'center'
+        .resize(thumbnailWidth, thumbnailHeight, {
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
         })
         .jpeg({ quality: 80 })
         .toFile(thumbnailPath);

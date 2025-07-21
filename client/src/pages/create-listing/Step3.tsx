@@ -56,8 +56,8 @@ export default function Step3() {
             if (newImages[uploadingIndex].url.startsWith('blob:')) {
               URL.revokeObjectURL(newImages[uploadingIndex].url);
             }
-            // Replace with uploaded image
-            newImages[uploadingIndex] = data.images[index];
+            // Replace with uploaded image and set progress to 100%
+            newImages[uploadingIndex] = { ...data.images[index], progress: 100, uploading: false };
           }
         });
         return newImages;
@@ -138,6 +138,7 @@ export default function Step3() {
         return false;
       }
       
+      // Remove duplicate check - allow same images to be uploaded
       return true;
     });
 
@@ -168,12 +169,12 @@ export default function Step3() {
       // Simulate progress
       const progressInterval = setInterval(() => {
         setImages(prev => prev.map(img => {
-          if (uploadingIds.includes(img.id) && img.uploading && img.progress < 90) {
-            return { ...img, progress: img.progress + 10 };
+          if (uploadingIds.includes(img.id) && img.uploading && img.progress < 95) {
+            return { ...img, progress: img.progress + 5 };
           }
           return img;
         }));
-      }, 300);
+      }, 200);
       
       // Start upload
       const fileList = new DataTransfer();
@@ -303,26 +304,26 @@ export default function Step3() {
                 </div>
               </div>
               
-              <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div ref={sortableRef} className="flex gap-4 overflow-x-auto pb-4">
                 {images.map((image, index) => (
-                  <div key={image.id} className={`relative group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`}>
+                  <div key={image.id} className={`relative group bg-white rounded-lg border-2 border-gray-200 overflow-hidden shadow-sm flex-shrink-0 ${image.uploading ? 'uploading-item' : ''}`} style={{ width: '100px', height: '75px' }}>
                     {/* Drag Handle */}
                     {!image.uploading && (
-                      <div className="drag-handle absolute top-2 left-2 p-1 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <GripVertical className="w-4 h-4" />
+                      <div className="drag-handle absolute top-1 left-1 p-0.5 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <GripVertical className="w-3 h-3" />
                       </div>
                     )}
                     
                     {/* Image Order Badge */}
-                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                    <div className="absolute top-1 right-1 bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium z-10 text-[10px]">
                       {index + 1}
                     </div>
                     
-                    <div className="aspect-square bg-gray-100 overflow-hidden">
+                    <div className="w-full h-full bg-gray-100 overflow-hidden">
                       <img
                         src={image.uploading ? image.url : (image.thumbnail || image.url)}
                         alt={`Fotoğraf ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     
@@ -330,8 +331,8 @@ export default function Step3() {
                     {image.uploading && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <div className="text-center text-white">
-                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                          <div className="text-sm font-medium">{image.progress}%</div>
+                          <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
+                          <div className="text-xs font-medium">{image.progress}%</div>
                         </div>
                       </div>
                     )}
@@ -340,10 +341,10 @@ export default function Step3() {
                     {!image.uploading && (
                       <button
                         onClick={() => deleteImageMutation.mutate(image.id)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                        className="absolute top-1 left-1/2 transform -translate-x-1/2 p-0.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
                         disabled={deleteImageMutation.isPending}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </button>
                     )}
                     

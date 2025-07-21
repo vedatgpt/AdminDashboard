@@ -491,3 +491,7 @@ Authentication features:
 - Fixed sortable drag-drop functionality to maintain proper image order numbering
 - Single photo display area showing only compressed/processed images (no duplicates)
 - Progress simulation during upload with proper state cleanup after completion
+- Allow duplicate photo uploads (removed duplicate prevention)
+- Thumbnail dimensions fixed to 100px width x 75px height with contain fit
+- Horizontal photo layout with scroll overflow for better mobile experience
+- Fixed progress bar to reach 100% completion
