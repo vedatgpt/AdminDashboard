@@ -55,7 +55,25 @@ export const getCountryCode = (country: string): string => {
   }
 };
 
-// Clean phone number input (only allow digits)
-export const cleanPhoneInput = (value: string): string => {
-  return value.replace(/\D/g, '');
+// Get maximum phone length for country (without spaces/formatting)
+export const getMaxPhoneLength = (countryCode: string = 'TR'): number => {
+  const maxLengths: Record<string, number> = {
+    'TR': 10, // Turkey: 5xx xxx xx xx
+    'US': 10, // USA: xxx xxx xxxx  
+    'GB': 11, // UK: xxxx xxx xxxx
+    'DE': 12, // Germany: xxx xxx xxxx (can be longer)
+    'FR': 10, // France: x xx xx xx xx
+    'IT': 10, // Italy: xxx xxx xxxx
+    'ES': 9,  // Spain: xxx xxx xxx
+    'NL': 9,  // Netherlands: x xxxx xxxx
+  };
+  
+  return maxLengths[countryCode] || 15; // International max is 15 digits
+};
+
+// Clean phone number input with length limit
+export const cleanPhoneInput = (value: string, countryCode: string = 'TR'): string => {
+  const cleaned = value.replace(/\D/g, '');
+  const maxLength = getMaxPhoneLength(countryCode);
+  return cleaned.substring(0, maxLength);
 };

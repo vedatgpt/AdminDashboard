@@ -136,9 +136,9 @@ export default function Contact() {
                       inputMode="numeric"
                       className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
                       placeholder={formatPhoneAsYouType('5551234567', mobileCountry)}
-                      value={contactForm.watch("mobilePhone") ? formatPhoneAsYouType(contactForm.watch("mobilePhone"), mobileCountry) : ''}
+                      value={contactForm.watch("mobilePhone") ? formatPhoneAsYouType(contactForm.watch("mobilePhone") || '', mobileCountry) : ''}
                       onChange={(e) => {
-                        const cleaned = cleanPhoneInput(e.target.value);
+                        const cleaned = cleanPhoneInput(e.target.value, mobileCountry);
                         contactForm.setValue("mobilePhone", cleaned);
                       }}
                     />
@@ -146,7 +146,7 @@ export default function Contact() {
                       <select 
                         value={mobileCountry}
                         onChange={(e) => setMobileCountry(e.target.value)}
-                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
+                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-1 appearance-none w-14"
                       >
                         {POPULAR_COUNTRIES.map((country) => (
                           <option key={country.country} value={country.country}>
@@ -174,9 +174,9 @@ export default function Contact() {
                       inputMode="numeric"
                       className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
                       placeholder={formatPhoneAsYouType('5551234567', whatsappCountry)}
-                      value={contactForm.watch("whatsappNumber") ? formatPhoneAsYouType(contactForm.watch("whatsappNumber"), whatsappCountry) : ''}
+                      value={contactForm.watch("whatsappNumber") ? formatPhoneAsYouType(contactForm.watch("whatsappNumber") || '', whatsappCountry) : ''}
                       onChange={(e) => {
-                        const cleaned = cleanPhoneInput(e.target.value);
+                        const cleaned = cleanPhoneInput(e.target.value, whatsappCountry);
                         contactForm.setValue("whatsappNumber", cleaned);
                       }}
                     />
@@ -184,7 +184,7 @@ export default function Contact() {
                       <select 
                         value={whatsappCountry}
                         onChange={(e) => setWhatsappCountry(e.target.value)}
-                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
+                        className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-1 appearance-none w-14"
                       >
                         {POPULAR_COUNTRIES.map((country) => (
                           <option key={country.country} value={country.country}>
@@ -213,9 +213,9 @@ export default function Contact() {
                         inputMode="numeric"
                         className="py-2.5 sm:py-3 px-4 ps-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
                         placeholder={formatPhoneAsYouType('2123456789', businessCountry)}
-                        value={contactForm.watch("businessPhone") ? formatPhoneAsYouType(contactForm.watch("businessPhone"), businessCountry) : ''}
+                        value={contactForm.watch("businessPhone") ? formatPhoneAsYouType(contactForm.watch("businessPhone") || '', businessCountry) : ''}
                         onChange={(e) => {
-                          const cleaned = cleanPhoneInput(e.target.value);
+                          const cleaned = cleanPhoneInput(e.target.value, businessCountry);
                           contactForm.setValue("businessPhone", cleaned);
                         }}
                       />
@@ -223,7 +223,7 @@ export default function Contact() {
                         <select 
                           value={businessCountry}
                           onChange={(e) => setBusinessCountry(e.target.value)}
-                          className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-2"
+                          className="border-0 bg-transparent text-sm focus:ring-0 focus:outline-none pr-1 appearance-none w-14"
                         >
                           {POPULAR_COUNTRIES.map((country) => (
                             <option key={country.country} value={country.country}>
