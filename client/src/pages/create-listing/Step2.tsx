@@ -10,7 +10,7 @@ import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
-  const { selectedCategory, formData } = state;
+  const { selectedCategory, formData, categoryPath } = state;
   
   // Kullanıcı bilgilerini al
   const { data: user } = useQuery({
@@ -72,9 +72,9 @@ export default function Step2() {
 
       {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
-        {selectedCategory && (
+        {categoryPath && categoryPath.length > 0 && (
           <BreadcrumbNav 
-            categoryPath={[selectedCategory]}
+            categoryPath={categoryPath}
             onCategoryClick={() => {}}
           />
         )}
@@ -85,10 +85,10 @@ export default function Step2() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
           
           {/* Desktop Breadcrumb Navigation */}
-          {selectedCategory && (
+          {categoryPath && categoryPath.length > 0 && (
             <div className="hidden lg:block mb-6">
               <BreadcrumbNav 
-                categoryPath={[selectedCategory]}
+                categoryPath={categoryPath}
                 onCategoryClick={() => {}}
               />
             </div>
