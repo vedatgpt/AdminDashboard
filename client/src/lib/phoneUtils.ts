@@ -7,6 +7,8 @@ export interface CountryOption {
 }
 
 // Popular countries for phone input
+// Yeni ülke kodları eklemek için bu listeyi düzenleyin:
+// { code: '+XX', country: 'XX', name: 'Ülke Adı' }
 export const POPULAR_COUNTRIES: CountryOption[] = [
   { code: '+90', country: 'TR', name: 'Türkiye' },
   { code: '+1', country: 'US', name: 'Amerika' },

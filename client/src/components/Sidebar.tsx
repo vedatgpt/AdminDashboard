@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Users, Megaphone, Tags, MapPin, Phone, X, LogOut, Settings } from "lucide-react";
+import { Users, Megaphone, Tags, MapPin, X, LogOut, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoPath from "@assets/logo_1752808818099.png";
 
@@ -10,7 +10,6 @@ const navigation = [
   { name: "İlanlar", href: "/admin/listings", icon: Megaphone },
   { name: "Kategoriler", href: "/admin/categories", icon: Tags },
   { name: "Lokasyonlar", href: "/admin/locations", icon: MapPin },
-  { name: "Telefon Kodları", href: "/admin/phone-countries", icon: Phone },
 ];
 
 export default function Sidebar() {
