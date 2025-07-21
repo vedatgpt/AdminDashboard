@@ -84,12 +84,7 @@ export default function Step2() {
     return findChildren(locations, selectedDistrict.id).filter((loc: any) => loc.type === 'neighborhood');
   }, [locations, selectedDistrict]);
   
-  // Kullanıcı bilgilerini al
-  const { data: user } = useQuery({
-    queryKey: ['/api/auth/me'],
-    staleTime: 5 * 60 * 1000, // 5 dakika
-    gcTime: 10 * 60 * 1000, // 10 dakika (TanStack Query v5)
-  });
+
 
   // Ülke görünürlüğü kapalıyken otomatik ilk ülkeyi seç
   useEffect(() => {
@@ -131,11 +126,7 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // Kimden değerini kullanıcı tipine göre belirle
-  const getKimdenValue = () => {
-    if (!user) return '';
-    return (user as any).role === 'corporate' ? 'Galeriden' : 'Sahibinden';
-  };
+
 
   // Navbar'lar için dummy search handler
   const handleSearch = (query: string) => {
@@ -585,19 +576,7 @@ export default function Step2() {
           </div>
         )}
 
-        {/* Kimden Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6 mt-8">
-          <label className="block text-sm font-medium text-gray-700">
-            Kimden
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <input
-            type="text"
-            value={getKimdenValue()}
-            readOnly
-            className="py-2.5 sm:py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg sm:text-sm bg-gray-50 text-gray-600 cursor-not-allowed focus:outline-none focus:ring-0 focus:border-gray-200"
-          />
-        </div>
+
 
               </div>
             </div>

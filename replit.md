@@ -464,8 +464,15 @@ Authentication features:
 ### Desktop Input Width Optimization (July 21, 2025)
 - Optimized desktop input widths for better user experience and select field visibility
 - Title and description inputs remain full width (w-full)
-- Price input, custom fields, and "Kimden" input set to 30% width on desktop (lg:w-[30%])
+- Price input and custom fields set to 30% width on desktop (lg:w-[30%])
 - Mobile maintains full width (w-full) for all inputs for optimal touch interaction
 - Improved select dropdown visibility by reducing input width on desktop screens
 - Better visual balance between input fields and their associated unit/currency selectors
 - Perfect balance achieved at 30% width for maximum select field visibility
+
+### "Kimden" Field Removal (July 21, 2025)
+- Completely removed "Kimden" (From Whom) input field from Step-2 page
+- Removed getKimdenValue() function and related user role logic
+- Eliminated unnecessary user authentication query for this field
+- Simplified form structure focusing on essential listing information only
+- Form now contains: title, description, price, custom fields, and location data
