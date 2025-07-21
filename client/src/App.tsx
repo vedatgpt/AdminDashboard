@@ -6,6 +6,7 @@ import Users from "@/pages/admin/Users";
 import Ads from "@/pages/admin/Ads";
 import Categories from "@/pages/admin/Categories";
 import Locations from "@/pages/admin/Locations";
+import LocationSettings from "@/pages/admin/LocationSettings";
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import Landing from "@/pages/public/Landing";
@@ -58,6 +59,7 @@ function Router() {
             <Route path="/admin/categories" component={Categories} />
             <Route path="/admin/categories/:parentId" component={Categories} />
             <Route path="/admin/locations" component={Locations} />
+            <Route path="/admin/locations/settings" component={LocationSettings} />
             <Route path="/admin/locations/:parentId" component={Locations} />
             <Route component={NotFound} />
           </Switch>

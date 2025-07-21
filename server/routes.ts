@@ -728,6 +728,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Location Settings API routes
+  
+  // Get location settings
+  app.get("/api/location-settings", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getLocationSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon ayarları alınırken hata oluştu" });
+    }
+  });
+
+  // Update location settings
+  app.patch("/api/location-settings", requireAdmin, async (req, res) => {
+    try {
+      const updates = req.body;
+      const settings = await storage.updateLocationSettings(updates);
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon ayarları güncellenirken hata oluştu" });
+    }
+  });
+
+  // Get visible location settings for public use (without admin check)
+  app.get("/api/location-settings/public", async (req, res) => {
+    try {
+      const settings = await storage.getLocationSettings();
+      res.json({
+        showCountry: settings.showCountry,
+        showCity: settings.showCity,
+        showDistrict: settings.showDistrict,
+        showNeighborhood: settings.showNeighborhood,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Lokasyon ayarları alınırken hata oluştu" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -58,6 +58,10 @@ export interface IStorage {
   updateLocation(id: number, updates: UpdateLocation): Promise<Location>;
   deleteLocation(id: number): Promise<void>;
   getLocationBreadcrumbs(id: number): Promise<Location[]>;
+  
+  // Location Settings methods
+  getLocationSettings(): Promise<LocationSettings>;
+  updateLocationSettings(updates: UpdateLocationSettings): Promise<LocationSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -485,6 +489,40 @@ export class DatabaseStorage implements IStorage {
     }
 
     return breadcrumbs;
+  }
+
+  // Location Settings methods implementation
+  async getLocationSettings(): Promise<LocationSettings> {
+    const [settings] = await db.select().from(locationSettings);
+    
+    // If no settings exist, create default settings
+    if (!settings) {
+      const [defaultSettings] = await db.insert(locationSettings).values({
+        showCountry: true,
+        showCity: true,
+        showDistrict: true,
+        showNeighborhood: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return defaultSettings;
+    }
+    
+    return settings;
+  }
+
+  async updateLocationSettings(updates: UpdateLocationSettings): Promise<LocationSettings> {
+    // Get existing settings first
+    const existingSettings = await this.getLocationSettings();
+    
+    const [settings] = await db.update(locationSettings)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(locationSettings.id, existingSettings.id))
+      .returning();
+    return settings;
   }
 }
 

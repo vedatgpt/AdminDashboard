@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, MapPin, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical } from "lucide-react";
+import { Plus, Search, MapPin, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
 import { useLocation } from "wouter";
 import PageHeader from "@/components/PageHeader";
 import LocationForm from "@/components/LocationForm";
@@ -202,10 +202,23 @@ export default function Locations() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Lokasyon Yönetimi" 
-        subtitle="Ülke, şehir, ilçe ve mahalle bilgilerini yönetin"
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader 
+          title="Lokasyon Yönetimi" 
+          subtitle="Ülke, şehir, ilçe ve mahalle bilgilerini yönetin"
+        />
+        
+        {/* Settings Button - Only show on root locations page */}
+        {!currentParentId && (
+          <button
+            onClick={() => setLocation('/admin/locations/settings')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors"
+          >
+            <Settings className="h-4 w-4" />
+            Görünürlük Ayarları
+          </button>
+        )}
+      </div>
 
       {/* Alert */}
       {showAlert && (

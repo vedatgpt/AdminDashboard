@@ -193,3 +193,27 @@ export type UpdateLocation = z.infer<typeof updateLocationSchema>;
 export type InsertCustomField = z.infer<typeof insertCustomFieldSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
+
+// Location settings for managing visibility
+export const locationSettings = pgTable("location_settings", {
+  id: serial("id").primaryKey(),
+  showCountry: boolean("show_country").default(true).notNull(),
+  showCity: boolean("show_city").default(true).notNull(),
+  showDistrict: boolean("show_district").default(true).notNull(),
+  showNeighborhood: boolean("show_neighborhood").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Schema for location settings
+export const insertLocationSettingsSchema = createInsertSchema(locationSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateLocationSettingsSchema = insertLocationSettingsSchema.partial();
+
+export type LocationSettings = typeof locationSettings.$inferSelect;
+export type InsertLocationSettings = z.infer<typeof insertLocationSettingsSchema>;
+export type UpdateLocationSettings = z.infer<typeof updateLocationSettingsSchema>;
