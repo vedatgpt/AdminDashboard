@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Camera, Upload, X, Image as ImageIcon, Trash2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { useLocation } from "wouter";
+import Sortable from "sortablejs";
 
 interface UploadedImage {
   id: string;
@@ -21,6 +22,13 @@ export default function Step3() {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sortableRef = useRef<HTMLDivElement>(null);
+
+  // Check authentication
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/me'],
+    retry: false
+  });
 
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
@@ -32,10 +40,12 @@ export default function Step3() {
       const response = await fetch('/api/upload/images', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Include session cookies
       });
       
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Upload failed');
       }
       
       return response.json();
@@ -46,6 +56,7 @@ export default function Step3() {
     },
     onError: (error) => {
       console.error('Upload error:', error);
+      alert(`Yükleme hatası: ${error.message}`);
       setUploading(false);
     }
   });
@@ -54,18 +65,53 @@ export default function Step3() {
     mutationFn: async (imageId: string) => {
       const response = await fetch(`/api/upload/images/${imageId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       
       if (!response.ok) {
-        throw new Error('Delete failed');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Delete failed');
       }
       
       return response.json();
     },
     onSuccess: (_, imageId) => {
       setImages(prev => prev.filter(img => img.id !== imageId));
+    },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      alert(`Silme hatası: ${error.message}`);
     }
   });
+
+  // Initialize Sortable.js
+  useEffect(() => {
+    if (sortableRef.current && images.length > 0) {
+      const sortable = Sortable.create(sortableRef.current, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'opacity-50',
+        chosenClass: 'ring-2 ring-orange-500',
+        onEnd: (evt) => {
+          if (evt.oldIndex !== undefined && evt.newIndex !== undefined) {
+            const newImages = [...images];
+            const [removed] = newImages.splice(evt.oldIndex, 1);
+            newImages.splice(evt.newIndex, 0, removed);
+            setImages(newImages);
+          }
+        }
+      });
+
+      return () => sortable.destroy();
+    }
+  }, [images.length]);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (user === null) {
+      navigate('/auth/login');
+    }
+  }, [user, navigate]);
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
@@ -204,12 +250,25 @@ export default function Step3() {
                   <ImageIcon className="w-5 h-5" />
                   Yüklenen Fotoğraflar ({images.length}/{MAX_IMAGES})
                 </h3>
+                <div className="text-sm text-gray-500">
+                  Sürükleyerek sıralayabilirsiniz
+                </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {images.map((image, index) => (
-                  <div key={image.id} className="relative group">
-                    <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                  <div key={image.id} className="relative group bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                    {/* Drag Handle */}
+                    <div className="drag-handle absolute top-2 left-2 p-1 bg-black bg-opacity-50 text-white rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                    
+                    {/* Image Order Badge */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+                      {index + 1}
+                    </div>
+                    
+                    <div className="aspect-square bg-gray-100 overflow-hidden">
                       <img
                         src={image.thumbnail || image.url}
                         alt={`Fotoğraf ${index + 1}`}
@@ -220,20 +279,22 @@ export default function Step3() {
                     {/* Delete Button */}
                     <button
                       onClick={() => deleteImageMutation.mutate(image.id)}
-                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
                       disabled={deleteImageMutation.isPending}
                     >
                       <X className="w-4 h-4" />
                     </button>
                     
                     {/* Image Info */}
-                    <div className="mt-2 text-xs text-gray-500">
-                      <div>{formatFileSize(image.size)}</div>
-                      {image.originalSize > image.size && (
-                        <div className="text-green-600">
-                          ↓ {Math.round((1 - image.size / image.originalSize) * 100)}% küçültüldü
-                        </div>
-                      )}
+                    <div className="p-2 bg-white">
+                      <div className="text-xs text-gray-500 text-center">
+                        <div>{formatFileSize(image.size)}</div>
+                        {image.originalSize > image.size && (
+                          <div className="text-green-600">
+                            ↓ {Math.round((1 - image.size / image.originalSize) * 100)}% küçültüldü
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
