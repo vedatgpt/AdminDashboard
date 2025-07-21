@@ -44,7 +44,7 @@ export default function Sidebar() {
 
 
 
-      {/* Preline UI Sidebar */}
+      {/* Preline UI Sidebar with Footer */}
       <div 
         id="hs-sidebar-collapsible-group" 
         className={`hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64
@@ -86,8 +86,8 @@ export default function Sidebar() {
           </header>
 
           {/* Body */}
-          <nav className="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300">
-            <div className="hs-accordion-group pb-0 px-2 w-full flex flex-col flex-wrap" data-hs-accordion-always-open>
+          <nav className="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 flex flex-col">
+            <div className="hs-accordion-group px-2 flex-1" data-hs-accordion-always-open>
               <ul className="space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;
@@ -100,10 +100,10 @@ export default function Sidebar() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className={`flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg transition-colors duration-200 ${
+                        className={`flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg focus:outline-none transition-colors duration-200 ${
                           isActive
                             ? "bg-gray-100 text-gray-800"
-                            : "text-gray-800 hover:bg-gray-100"
+                            : "text-gray-800 hover:bg-gray-100 focus:bg-gray-100"
                         }`}
                         onClick={close}
                       >
@@ -137,8 +137,8 @@ export default function Sidebar() {
                     </svg>
                     Hesap
 
-                    <ChevronUp className="hs-accordion-active:block ms-auto hidden size-4 text-gray-600" />
-                    <ChevronDown className="hs-accordion-active:hidden ms-auto block size-4 text-gray-600" />
+                    <svg className="hs-accordion-active:block ms-auto hidden size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    <svg className="hs-accordion-active:hidden ms-auto block size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                   </button>
 
                   <div 
@@ -169,18 +169,18 @@ export default function Sidebar() {
                     </ul>
                   </div>
                 </li>
-
-                {/* Logout */}
-                <li className="pt-4 border-t border-gray-200">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-red-600 rounded-lg hover:bg-red-50 focus:outline-none focus:bg-red-50 transition-colors duration-200"
-                  >
-                    <LogOut className="size-4" />
-                    Çıkış Yap
-                  </button>
-                </li>
               </ul>
+            </div>
+
+            {/* Footer Section */}
+            <div className="border-t border-gray-200 p-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-red-600 rounded-lg hover:bg-red-50 focus:outline-none focus:bg-red-50 transition-colors duration-200"
+              >
+                <LogOut className="size-4" />
+                Çıkış Yap
+              </button>
             </div>
           </nav>
         </div>
