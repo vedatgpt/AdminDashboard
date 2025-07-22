@@ -233,8 +233,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoriesTree(): Promise<Category[]> {
-    // Get all categories ordered by parent-child relationship
-    const allCategories = await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    // Get ALL categories (both active and inactive) ordered by parent-child relationship
+    const allCategories = await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
     
     // Build tree structure
     const categoryMap = new Map<number, Category & { children: Category[] }>();

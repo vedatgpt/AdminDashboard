@@ -759,7 +759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Lokasyon sıralaması güncellendi" });
     } catch (error) {
       console.error('Location reorder error:', error);
-      res.status(500).json({ error: "Sıralama güncellenirken hata oluştu" });
+      res.status(500).json({ error: `Sıralama güncellenirken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` });
     }
   });
 
