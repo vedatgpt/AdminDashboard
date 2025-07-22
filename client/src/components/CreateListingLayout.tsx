@@ -48,7 +48,7 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Mobile Navbar */}
       <div className="lg:hidden">
         <NavbarMobile 
