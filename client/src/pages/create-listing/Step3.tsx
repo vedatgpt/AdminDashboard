@@ -434,6 +434,29 @@ export default function Step3() {
           </div>
 
         </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <button
+            onClick={() => {
+              const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
+              navigate(url);
+            }}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Önceki Adım
+          </button>
+          
+          <button
+            onClick={() => {
+              const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
+              navigate(url);
+            }}
+            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Sonraki Adım
+          </button>
+        </div>
         
         {/* Performance indicator */}
         <PageLoadIndicator />
