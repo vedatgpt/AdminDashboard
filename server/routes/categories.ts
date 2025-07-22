@@ -5,30 +5,7 @@ import fs from "fs";
 import { storage } from "../storage";
 import { insertCategorySchema, updateCategorySchema, insertCustomFieldSchema } from "@shared/schema";
 // Middleware functions inline since they're not exported from routes.ts
-const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.session?.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  req.session.userId = req.session.user.id; // Add userId for backward compatibility
-  next();
-};
-
-const requireAdmin = async (req: any, res: any, next: any) => {
-  try {
-    if (!req.session?.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
-    
-    if (req.session.user.role !== "admin") {
-      return res.status(403).json({ error: "Admin access required" });
-    }
-    
-    req.session.userId = req.session.user.id; // Add userId for backward compatibility
-    next();
-  } catch (error) {
-    res.status(500).json({ error: "Server error" });
-  }
-};
+import { requireAuth, requireAdmin, type AuthenticatedRequest } from "../middleware/auth";
 
 const router = express.Router();
 

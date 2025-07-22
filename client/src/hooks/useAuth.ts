@@ -25,17 +25,9 @@ export function useAuth() {
         });
         return response;
       } catch (error: any) {
-        // Parse server error response
-        if (error.message && error.message.includes(":")) {
-          const errorText = error.message.split(": ")[1];
-          try {
-            const errorData = JSON.parse(errorText);
-            throw new Error(errorData.error || "Giriş başarısız");
-          } catch {
-            throw new Error(errorText || "Giriş başarısız");
-          }
-        }
-        throw new Error("Giriş başarısız");
+        const { parseServerError } = await import("@/utils/errorHandler");
+        const parsedError = parseServerError(error);
+        throw new Error(parsedError.message || "Giriş başarısız");
       }
     },
     onSuccess: () => {
@@ -55,17 +47,9 @@ export function useAuth() {
         });
         return response;
       } catch (error: any) {
-        // Parse server error response
-        if (error.message && error.message.includes(":")) {
-          const errorText = error.message.split(": ")[1];
-          try {
-            const errorData = JSON.parse(errorText);
-            throw new Error(errorData.error || "Kayıt başarısız");
-          } catch {
-            throw new Error(errorText || "Kayıt başarısız");
-          }
-        }
-        throw new Error("Kayıt başarısız");
+        const { parseServerError } = await import("@/utils/errorHandler");
+        const parsedError = parseServerError(error);
+        throw new Error(parsedError.message || "Kayıt başarısız");
       }
     },
     onSuccess: () => {

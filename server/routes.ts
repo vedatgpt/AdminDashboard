@@ -11,6 +11,9 @@ import { storage } from "./storage";
 import { loginSchema, registerSchema, type User } from "@shared/schema";
 import session from "express-session";
 import categoriesRouter from "./routes/categories";
+import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
+
+import { requireAuth, requireAdmin, requireCorporate, type AuthenticatedRequest } from "./middleware/auth";
 
 // Extend Express Session type to include custom user properties
 declare module 'express-session' {
@@ -24,40 +27,11 @@ declare module 'express-session' {
   }
 }
 
-// Extended Request interface for typed session access
-interface AuthenticatedRequest extends Request {
-  session: session.Session & {
-    user?: User & {
-      companyId?: number;
-      companyName?: string | null;
-    };
-    userType?: "user" | "personnel";
-    userId?: number;
-  };
-}
-
-// Middleware to check if user is authenticated
-const requireAuth = (req: AuthenticatedRequest, res: Response, next: any) => {
-  if (!req.session?.user) {
-    return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
-  }
-  req.session.userId = req.session.user.id; // Add userId for backward compatibility
-  next();
-};
-
-// Middleware to check if user is admin
-const requireAdmin = (req: AuthenticatedRequest, res: Response, next: any) => {
-  if (!req.session?.user || req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Admin yetkisi gerekli" });
-  }
-  next();
-};
-
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: FILE_LIMITS.PROFILE_IMAGE,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
@@ -72,8 +46,8 @@ const upload = multer({
 const uploadListingImages = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-    files: 20 // Maximum 20 files
+    fileSize: FILE_LIMITS.LISTING_IMAGE,
+    files: FILE_LIMITS.MAX_LISTING_IMAGES
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
@@ -91,14 +65,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Session middleware with optimized settings
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: SESSION_CONFIG.SECRET,
     resave: false, // Don't resave unchanged sessions (better performance)
     saveUninitialized: false,
     rolling: true, // Extend session on activity
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // Secure in production
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 gün
+      maxAge: SESSION_CONFIG.MAX_AGE
     }
   }));
 
@@ -137,8 +111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { password: _, ...userWithoutPassword } = user;
           return res.json({ user: userWithoutPassword });
         }
-      } catch (userAuthError) {
-
+      } catch (userAuthError: any) {
+        // User authentication failed, will try personnel auth
       }
 
       // If regular user authentication fails and identifier is email, try personnel
@@ -172,14 +146,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const { password: _, ...personnelData } = req.session.user;
             return res.json({ user: personnelData });
           }
-        } catch (personnelAuthError) {
-          console.log("Personnel authentication failed for:", loginIdentifier);
+        } catch (personnelAuthError: any) {
+          // Personnel authentication failed, will try fallback
         }
       }
 
       // If both authentications fail
       return res.status(401).json({ error: "E-posta/kullanıcı adı veya şifre hatalı" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       console.error("Request body:", req.body);
       console.error("Error stack:", error.stack);
@@ -244,15 +218,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(401).json({ error: "User not found" });
       }
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({ error: "Server error" });
     }
   });
 
   // Protected admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
-    // This would be implemented later for admin user management
-    res.json({ users: [] });
+    try {
+      const users = await storage.getAllUsers();
+      res.json({ users });
+    } catch (error: any) {
+      res.status(500).json({ error: "Kullanıcılar alınamadı" });
+    }
   });
 
   // Public profile route

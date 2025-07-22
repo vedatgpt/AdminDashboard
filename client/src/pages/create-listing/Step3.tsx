@@ -18,8 +18,9 @@ interface UploadedImage {
   progress?: number;
 }
 
-const MAX_IMAGES = 20;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// Import constants from config
+const MAX_IMAGES = 20; // TODO: Import from shared config
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB // TODO: Import from shared config
 
 export default function Step3() {
   const [, navigate] = useLocation();

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Plus, Search, MapPin, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
 import Sortable from 'sortablejs';
 import { useLocation } from "wouter";
@@ -241,11 +241,14 @@ export default function Locations() {
   }
 
   // Initialize SortableJS for locations
+  // Use useRef instead of DOM querying for better performance
+  const sortableRef = useRef<HTMLDivElement>(null);
+  const sortableInstanceRef = useRef<Sortable | null>(null);
+
   useEffect(() => {
-    // Use setTimeout to ensure DOM is ready
-    const timer = setTimeout(() => {
-      const sortableElement = document.querySelector("#hs-location-sortable");
-      if (sortableElement && filteredLocations.length > 1) {
+    // Use ref instead of DOM query for better performance
+    const sortableElement = sortableRef.current;
+    if (sortableElement && filteredLocations.length > 1) {
         // Destroy existing sortable instance if it exists
         const existingSortable = (sortableElement as any).sortableInstance;
         if (existingSortable) {
@@ -279,21 +282,15 @@ export default function Locations() {
           }
         });
 
-        // Store instance for cleanup
-        (sortableElement as any).sortableInstance = sortableInstance;
+        // Store instance in ref for cleanup
+        sortableInstanceRef.current = sortableInstance;
       }
-    }, 100);
 
     // Cleanup function
     return () => {
-      clearTimeout(timer);
-      const sortableElement = document.querySelector("#hs-location-sortable");
-      if (sortableElement) {
-        const existingSortable = (sortableElement as any).sortableInstance;
-        if (existingSortable) {
-          existingSortable.destroy();
-          (sortableElement as any).sortableInstance = null;
-        }
+      if (sortableInstanceRef.current) {
+        sortableInstanceRef.current.destroy();
+        sortableInstanceRef.current = null;
       }
     };
   }, [filteredLocations]);
@@ -430,7 +427,7 @@ export default function Locations() {
             )}
           </div>
         ) : (
-          <ul id="hs-location-sortable" className="flex flex-col">
+          <ul ref={sortableRef} id="hs-location-sortable" className="flex flex-col">
             {filteredLocations.map((loc, index) => {
               const childrenCount = (loc as any).children ? (loc as any).children.length : 0;
               return (

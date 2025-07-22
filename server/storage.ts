@@ -20,6 +20,7 @@ export interface IStorage {
   registerUser(registerData: RegisterData): Promise<User>;
   updateUser(id: number, updates: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User>;
   getUserById(id: number): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   
   // Authorized Personnel methods
   getAuthorizedPersonnel(companyUserId: number): Promise<AuthorizedPersonnel[]>;
@@ -164,6 +165,15 @@ export class DatabaseStorage implements IStorage {
 
   async getUserById(id: number): Promise<User | undefined> {
     return this.getUser(id);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const allUsers = await db.select().from(users).orderBy(asc(users.createdAt));
+      return allUsers;
+    } catch (error: any) {
+      throw new Error("Kullanıcılar alınamadı");
+    }
   }
 
   // Authorized Personnel methods
@@ -367,33 +377,60 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
-    // Get the category breadcrumbs (current category and all parents)
-    const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
+    // Single optimized SQL query to get all fields from category hierarchy
+    const hierarchyResult = await db.execute(sql`
+      WITH RECURSIVE category_hierarchy AS (
+        -- Base case: start with the given category
+        SELECT id, "parentId", name, 0 as level
+        FROM ${categories}
+        WHERE id = ${categoryId}
+        
+        UNION ALL
+        
+        -- Recursive case: get parent categories
+        SELECT c.id, c."parentId", c.name, ch.level + 1
+        FROM ${categories} c
+        INNER JOIN category_hierarchy ch ON c.id = ch."parentId"
+      )
+      SELECT 
+        ccf.id,
+        ccf."categoryId",
+        ccf."fieldName",
+        ccf.label,
+        ccf."fieldType",
+        ccf."isRequired",
+        ccf."sortOrder",
+        ccf.options,
+        ccf.placeholder,
+        ccf."hasUnits",
+        ccf."unitOptions",
+        ccf."defaultUnit",
+        ccf."minValue",
+        ccf."maxValue",
+        ccf."createdAt",
+        ccf."updatedAt",
+        ch.level
+      FROM category_hierarchy ch
+      LEFT JOIN ${categoryCustomFields} ccf ON ccf."categoryId" = ch.id
+      WHERE ccf.id IS NOT NULL
+      ORDER BY ch.level ASC, ccf."sortOrder" ASC NULLS LAST, ccf.label ASC
+    `);
+
     const allFields: CategoryCustomField[] = [];
     const fieldNamesSeen = new Set<string>();
 
-    // Start from the deepest (current) category and work backwards to parents
-    // This ensures child category fields override parent fields with same fieldName
-    for (let i = breadcrumbs.length - 1; i >= 0; i--) {
-      const category = breadcrumbs[i];
-      const fieldsForCategory = await this.getCategoryCustomFields(category.id);
+    // Process results - child categories override parent fields  
+    for (const row of hierarchyResult.rows) {
+      const field = row as unknown as CategoryCustomField;
       
-      for (const field of fieldsForCategory) {
-        // Only add if we haven't seen this fieldName before (child overrides parent)
-        if (!fieldNamesSeen.has(field.fieldName)) {
-          allFields.push(field);
-          fieldNamesSeen.add(field.fieldName);
-        }
+      // Only add if we haven't seen this fieldName before (child overrides parent)
+      if (!fieldNamesSeen.has(field.fieldName)) {
+        allFields.push(field);
+        fieldNamesSeen.add(field.fieldName);
       }
     }
 
-    // Sort by sortOrder and then by label
-    return allFields.sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) {
-        return (a.sortOrder || 0) - (b.sortOrder || 0);
-      }
-      return a.label.localeCompare(b.label);
-    });
+    return allFields;
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
