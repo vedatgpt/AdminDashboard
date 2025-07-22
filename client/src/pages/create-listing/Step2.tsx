@@ -226,9 +226,27 @@ export default function Step2() {
           country: selectedCountry,
           city: selectedCity,
           district: selectedDistrict,
-          neighborhood: selectedNeighborhood
+          neighborhood: selectedNeighborhood,
+          location: {
+            country: selectedCountry,
+            city: selectedCity,
+            district: selectedDistrict,
+            neighborhood: selectedNeighborhood
+          }
         })
       };
+      
+      // Debug log
+      console.log('Step-2 Saving Data:', {
+        formData: formData.customFields,
+        locationData: {
+          country: selectedCountry,
+          city: selectedCity,
+          district: selectedDistrict,
+          neighborhood: selectedNeighborhood
+        },
+        draftData
+      });
       
       try {
         await updateDraftMutation.mutateAsync({

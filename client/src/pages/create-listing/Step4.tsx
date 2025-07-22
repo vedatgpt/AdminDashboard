@@ -68,6 +68,15 @@ export default function Step4() {
   const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
   const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
+  
+  // Debug log
+  console.log('Step-4 Draft Data:', {
+    customFields,
+    photos,
+    locationData,
+    customFieldsSchema,
+    draftData
+  });
 
   // Find category details
   const findCategory = (categoryId: number | null) => {
