@@ -67,6 +67,7 @@ export interface IStorage {
   // Draft Listings methods
   getDraftListing(id: number): Promise<DraftListing | undefined>;
   getUserDraftListings(userId: number): Promise<DraftListing[]>;
+  getUserDraftForCategory(userId: number, categoryId: number): Promise<DraftListing | undefined>;
   createDraftListing(data: InsertDraftListing): Promise<DraftListing>;
   updateDraftListing(id: number, updates: UpdateDraftListing): Promise<DraftListing>;
   deleteDraftListing(id: number): Promise<void>;
@@ -587,6 +588,20 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDraftListing(id: number): Promise<void> {
     await db.delete(draftListings).where(eq(draftListings.id, id));
+  }
+
+  async getUserDraftForCategory(userId: number, categoryId: number): Promise<DraftListing | undefined> {
+    const [draft] = await db.select().from(draftListings)
+      .where(
+        and(
+          eq(draftListings.userId, userId),
+          eq(draftListings.categoryId, categoryId),
+          eq(draftListings.status, "draft")
+        )
+      )
+      .orderBy(desc(draftListings.updatedAt))
+      .limit(1);
+    return draft || undefined;
   }
 
   async publishDraftListing(id: number): Promise<DraftListing> {

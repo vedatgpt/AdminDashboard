@@ -55,10 +55,19 @@ export function useCreateDraftListing() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: {
+      categoryId: number;
+      title?: string | null;
+      description?: string | null;
+      price?: string | null;
+      customFields?: string | null;
+      photos?: string | null;
+      locationData?: string | null;
+      status?: 'draft' | 'published';
+    }) => {
       return apiRequest('/api/draft-listings', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify(data),
       }) as Promise<DraftListing>;
     },
     onSuccess: () => {
@@ -98,6 +107,25 @@ export function useDeleteDraftListing() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/draft-listings'] });
     },
+  });
+}
+
+// Hook for checking user's draft for specific category
+export function useUserDraftForCategory(categoryId?: number) {
+  return useQuery({
+    queryKey: ['/api/draft-listings', 'category', categoryId],
+    queryFn: async () => {
+      if (!categoryId) return null;
+      const response = await fetch(`/api/draft-listings?categoryId=${categoryId}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Draft araması yapılamadı');
+      }
+      const drafts = await response.json() as DraftListing[];
+      return drafts.length > 0 ? drafts[0] : null;
+    },
+    enabled: !!categoryId,
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
 

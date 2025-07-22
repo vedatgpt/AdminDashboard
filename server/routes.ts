@@ -833,8 +833,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
       
-      const drafts = await storage.getUserDraftListings(userId);
-      res.json(drafts);
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      
+      if (categoryId) {
+        // Get draft for specific category
+        const draft = await storage.getUserDraftForCategory(userId, categoryId);
+        res.json(draft ? [draft] : []);
+      } else {
+        // Get all user drafts
+        const drafts = await storage.getUserDraftListings(userId);
+        res.json(drafts);
+      }
     } catch (error) {
       res.status(500).json({ error: "İlan taslakları alınırken hata oluştu" });
     }

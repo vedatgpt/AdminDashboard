@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
-import { useDraftListing, useCreateDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
+import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useDeleteDraftListing } from '@/hooks/useDraftListing';
 import { Category } from '@shared/schema';
+import DraftContinueModal from '@/components/DraftContinueModal';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
@@ -27,6 +28,15 @@ export default function CreateListingStep1() {
   const { data: draftData } = useDraftListing(classifiedId);
   const createDraftMutation = useCreateDraftListing();
   const updateDraftMutation = useUpdateDraftListing();
+  const deleteDraftMutation = useDeleteDraftListing();
+  
+  // Modal state
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
+  const [pendingPath, setPendingPath] = useState<Category[]>([]);
+  
+  // Check for existing draft when selecting final category
+  const { data: existingDraft, refetch: refetchDraft } = useUserDraftForCategory(pendingCategory?.id);
 
   // Build flat categories array for easy lookup  
   const flatCategories = React.useMemo(() => {
@@ -151,8 +161,12 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), set as final selection
+    // If this is a leaf category (no children), check for existing draft or proceed
     if (!hasChildren(category)) {
+      // Set pending category for draft check
+      setPendingCategory(category);
+      setPendingPath(newPath);
+      
       dispatch({
         type: 'SET_CATEGORY',
         payload: { category, path: newPath }
@@ -170,7 +184,93 @@ export default function CreateListingStep1() {
     });
   };
 
-  // Handle continue to next step - removed as per user request
+  // Check for existing draft when final category is selected
+  useEffect(() => {
+    if (pendingCategory && existingDraft && existingDraft.id !== classifiedId) {
+      setShowDraftModal(true);
+    } else if (pendingCategory && !existingDraft) {
+      // No draft found, proceed normally
+      handleContinueToStep2();
+    }
+  }, [existingDraft, pendingCategory, classifiedId]);
+
+  // Handle continuing to step 2
+  const handleContinueToStep2 = async () => {
+    if (!pendingCategory || !pendingPath) return;
+
+    try {
+      let draftId: number;
+      
+      // Create new draft for this category
+      const draftResult = await createDraftMutation.mutateAsync({
+        categoryId: pendingCategory.id,
+        title: null,
+        description: null,
+        price: null,
+        customFields: null,
+        photos: null,
+        locationData: null,
+        status: 'draft' as const,
+      });
+      
+      draftId = draftResult.id;
+      
+      // Update context with new draft
+      dispatch({ type: 'SET_CLASSIFIED_ID', payload: draftId });
+      dispatch({ type: 'SET_IS_DRAFT', payload: true });
+      dispatch({ 
+        type: 'SET_CATEGORY', 
+        payload: { 
+          category: pendingCategory, 
+          path: pendingPath 
+        } 
+      });
+      
+      // Navigate to step 2
+      navigate(`/create-listing/step-2?classifiedId=${draftId}`);
+    } catch (error) {
+      console.error('Draft oluşturulamadı:', error);
+      alert('İlan taslağı oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+  };
+
+  // Modal handlers
+  const handleContinueExistingDraft = () => {
+    if (!existingDraft) return;
+    
+    setShowDraftModal(false);
+    
+    // Set draft info in context
+    dispatch({ type: 'SET_CLASSIFIED_ID', payload: existingDraft.id });
+    dispatch({ type: 'SET_IS_DRAFT', payload: true });
+    dispatch({ 
+      type: 'SET_CATEGORY', 
+      payload: { 
+        category: pendingCategory!, 
+        path: pendingPath 
+      } 
+    });
+    
+    // Navigate to step 2
+    navigate(`/create-listing/step-2?classifiedId=${existingDraft.id}`);
+  };
+
+  const handleCreateNewListing = async () => {
+    if (!existingDraft || !pendingCategory) return;
+    
+    try {
+      // Delete existing draft
+      await deleteDraftMutation.mutateAsync(existingDraft.id);
+      
+      setShowDraftModal(false);
+      
+      // Continue with new draft creation
+      await handleContinueToStep2();
+    } catch (error) {
+      console.error('Eski draft silinirken hata:', error);
+      alert('Eski taslak silinirken bir hata oluştu. Lütfen tekrar deneyin.');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -461,7 +561,16 @@ export default function CreateListingStep1() {
                       // Create draft only if it doesn't exist
                       if (!currentClassifiedId) {
                         try {
-                          const newDraft = await createDraftMutation.mutateAsync();
+                          const newDraft = await createDraftMutation.mutateAsync({
+                            categoryId: state.selectedCategory!.id,
+                            title: null,
+                            description: null,
+                            price: null,
+                            customFields: null,
+                            photos: null,
+                            locationData: null,
+                            status: 'draft' as const,
+                          });
                           currentClassifiedId = newDraft.id;
                           dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
                           dispatch({ type: 'SET_IS_DRAFT', payload: true });
@@ -500,6 +609,16 @@ export default function CreateListingStep1() {
         </div>
       </div>
       </div>
+      
+      {/* Draft Continue Modal */}
+      {existingDraft && (
+        <DraftContinueModal
+          draft={existingDraft}
+          isOpen={showDraftModal}
+          onContinue={handleContinueExistingDraft}
+          onNewListing={handleCreateNewListing}
+        />
+      )}
     </CreateListingLayout>
   );
 }

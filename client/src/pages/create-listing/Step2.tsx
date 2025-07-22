@@ -9,8 +9,9 @@ import '../../styles/quill-custom.css';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
+import { useCategoriesTree } from '@/hooks/useCategories';
 import { useState, useMemo, useEffect } from 'react';
-import type { Location } from '@shared/schema';
+import type { Location, Category } from '@shared/schema';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
@@ -32,9 +33,25 @@ export default function Step2() {
   const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
   
-  // Fetch locations and location settings
+  // Fetch data
   const { data: locations = [] } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
+  const { data: allCategories = [] } = useCategoriesTree();
+  
+  // Build flat categories array for path building
+  const flatCategories = useMemo(() => {
+    const flatten = (categories: Category[]): Category[] => {
+      const result: Category[] = [];
+      for (const category of categories) {
+        result.push(category);
+        if (category.children && category.children.length > 0) {
+          result.push(...flatten(category.children));
+        }
+      }
+      return result;
+    };
+    return flatten(allCategories);
+  }, [allCategories]);
   
   // Initialize classifiedId from URL on component mount
   useEffect(() => {
@@ -44,9 +61,9 @@ export default function Step2() {
     }
   }, [currentClassifiedId, state.classifiedId, dispatch]);
 
-  // Load draft data when available
+  // Load draft data when available and rebuild category path
   useEffect(() => {
-    if (draftData && state.classifiedId) {
+    if (draftData && state.classifiedId && allCategories.length > 0) {
       // Load draft data into context
       dispatch({ 
         type: 'LOAD_DRAFT', 
@@ -66,6 +83,35 @@ export default function Step2() {
         }
       }
       
+      // Rebuild category path from draft categoryId
+      if (draftData.categoryId) {
+        const buildCategoryPath = (categoryId: number): Category[] => {
+          const path: Category[] = [];
+          let currentId = categoryId;
+          
+          while (currentId) {
+            const category = flatCategories.find(c => c.id === currentId);
+            if (category) {
+              path.unshift(category);
+              currentId = category.parentId || 0;
+            } else {
+              break;
+            }
+          }
+          return path;
+        };
+        
+        const category = flatCategories.find(c => c.id === draftData.categoryId);
+        const path = buildCategoryPath(draftData.categoryId);
+        
+        if (category && path.length > 0) {
+          dispatch({ 
+            type: 'SET_CATEGORY', 
+            payload: { category, path } 
+          });
+        }
+      }
+      
       // Load location data from draft
       if (draftData.locationData) {
         try {
@@ -79,7 +125,7 @@ export default function Step2() {
         }
       }
     }
-  }, [draftData, state.classifiedId, dispatch]);
+  }, [draftData, state.classifiedId, allCategories, flatCategories, dispatch]);
   
   // Get available locations based on selection
   const availableCountries = useMemo(() => {
@@ -190,9 +236,11 @@ export default function Step2() {
       '/create-listing/step-3';
     navigate(url);
   };
-  const { data: customFields, isLoading } = useCustomFields(selectedCategory?.id || 0);
+  // Get categoryId from draft or selected category for custom fields
+  const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
+  const { data: customFields = [], isLoading: fieldsLoading } = useCustomFields(categoryIdForFields);
 
-  if (isLoading) {
+  if (fieldsLoading) {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-2xl mx-auto">

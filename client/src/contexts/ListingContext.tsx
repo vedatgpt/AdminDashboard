@@ -84,7 +84,6 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
         ...state,
         classifiedId: action.payload.classifiedId,
         isDraft: true,
-        // Don't override selectedCategory and categoryPath here - they should be set separately
         formData: {
           ...state.formData,
           customFields: draft.customFields ? JSON.parse(draft.customFields) : {},
