@@ -603,5 +603,7 @@ Authentication features:
 - Added Neon database optimizations: poolQueryViaFetch and reduced WebSocket overhead
 - Enhanced session middleware: disabled unnecessary resave operations
 - **CRITICAL FIX**: Optimized getCategoryCustomFieldsWithInheritance - single SQL query instead of N+1 queries, fixed PostgreSQL array syntax
+- **CACHE OPTIMIZATION**: Global staleTime increased to 5 minutes, custom fields to 10 minutes, draft listings to 2 minutes
+- **CONNECTION POOL**: Increased from 10 to 15 connections, optimized timeouts for better responsiveness
 - Removed useEffect dependency bloat in Step pages - reduced re-render cycles
 - Performance improvements maintain all security measures while dramatically reducing load times
