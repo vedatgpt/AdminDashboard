@@ -583,3 +583,11 @@ Authentication features:
 - Added 403 Forbidden responses when users try to access drafts they don't own
 - Enhanced error handling with proper Turkish error messages for security violations
 - All listing creation workflows now require active user session for access
+
+### Cache Management Security Fix (July 22, 2025)
+- Fixed critical cache data leakage between different user accounts
+- Implemented complete cache clearing on login/logout/register operations
+- Added comprehensive TanStack Query cache management to prevent cross-user data exposure
+- Draft listings cache now properly isolated per user session
+- Enhanced user session security with complete cache invalidation on authentication state changes
+- Eliminated phantom draft listings appearing for wrong users after account switching

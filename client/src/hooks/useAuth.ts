@@ -39,6 +39,8 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
+      // Clear all cache on login to prevent data leakage between users
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
   });
@@ -66,6 +68,8 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
+      // Clear all cache on register to prevent data leakage between users
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
   });
@@ -77,8 +81,22 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
+      // Clear all user-specific data from cache
       queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
+      // Clear ALL draft listings cache to prevent cross-user data leakage
+      queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
+      
+      // Clear any category-specific draft cache
+      queryClient.removeQueries({ 
+        predicate: (query) => 
+          Array.isArray(query.queryKey) && 
+          query.queryKey[0] === "/api/draft-listings"
+      });
+      
+      // Clear all user-specific caches
+      queryClient.clear(); // This is the safest approach - clear everything
     },
   });
 
