@@ -5,7 +5,7 @@
 
 /* Global Layout Fix - Prevents layout shift between pages with/without scroll */
 html {
-  overflow-y: scroll; /* Always reserve space for scrollbar */
+  scrollbar-gutter: stable; /* Reserve space for scrollbar without forcing scroll */
 }
 
 /* Custom scrollbar for photo gallery */
