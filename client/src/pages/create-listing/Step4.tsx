@@ -69,14 +69,7 @@ export default function Step4() {
   const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
   
-  // Debug log
-  console.log('Step-4 Draft Data:', {
-    customFields,
-    photos,
-    locationData,
-    customFieldsSchema,
-    draftData
-  });
+  // Remove debug log - no longer needed
 
   // Find category details
   const findCategory = (categoryId: number | null) => {
@@ -143,15 +136,17 @@ export default function Step4() {
                   thumbs={{ swiper: thumbsSwiper }}
                   className="w-full h-80 rounded-lg overflow-hidden"
                 >
-                  {photos.map((photo: any, index: number) => (
-                    <SwiperSlide key={index}>
-                      <img
-                        src={photo.url}
-                        alt={`Fotoğraf ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </SwiperSlide>
-                  ))}
+                  {photos
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((photo: any, index: number) => (
+                      <SwiperSlide key={photo.id || index}>
+                        <img
+                          src={photo.url}
+                          alt={`Fotoğraf ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </SwiperSlide>
+                    ))}
                 </Swiper>
 
                 {/* Thumbnail Swiper */}
@@ -164,15 +159,17 @@ export default function Step4() {
                     onSwiper={setThumbsSwiper}
                     className="w-full h-20"
                   >
-                    {photos.map((photo: any, index: number) => (
-                      <SwiperSlide key={index} className="cursor-pointer">
-                        <img
-                          src={photo.thumbnail || photo.url}
-                          alt={`Küçük ${index + 1}`}
-                          className="w-full h-full object-cover rounded border-2 border-transparent hover:border-orange-500"
-                        />
-                      </SwiperSlide>
-                    ))}
+                    {photos
+                      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                      .map((photo: any, index: number) => (
+                        <SwiperSlide key={photo.id || index} className="cursor-pointer">
+                          <img
+                            src={photo.thumbnail || photo.url}
+                            alt={`Küçük ${index + 1}`}
+                            className="w-full h-full object-cover rounded border-2 border-transparent hover:border-orange-500"
+                          />
+                        </SwiperSlide>
+                      ))}
                   </Swiper>
                 )}
               </div>
@@ -211,10 +208,21 @@ export default function Step4() {
                     </td>
                   </tr>
 
-                  {/* Custom Fields - use field definitions */}
-                  {customFieldsSchema.filter(Boolean).map((field) => {
+                  {/* Custom Fields - show all field data properly */}
+                  {customFieldsSchema.map((field) => {
                     const value = customFields[field.fieldName];
                     if (!value) return null;
+                    
+                    let displayValue = '';
+                    if (typeof value === 'object' && value !== null) {
+                      if (value.value !== undefined) {
+                        displayValue = `${value.value} ${value.unit || ''}`.trim();
+                      } else {
+                        displayValue = JSON.stringify(value);
+                      }
+                    } else {
+                      displayValue = String(value);
+                    }
                     
                     return (
                       <tr key={field.id} className="border-b border-gray-100">
@@ -222,10 +230,37 @@ export default function Step4() {
                           {field.label}:
                         </td>
                         <td className="py-2 text-gray-900">
-                          {typeof value === 'object' && value !== null
-                            ? `${(value as any).value || ''} ${(value as any).unit || ''}`.trim()
-                            : String(value || '')
-                          }
+                          {displayValue}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  
+                  {/* Show any additional custom fields that aren't in schema */}
+                  {Object.entries(customFields).map(([key, value]) => {
+                    // Skip system fields and fields already shown
+                    if (key === 'title' || key === 'description' || key === 'price') return null;
+                    if (customFieldsSchema.some(f => f.fieldName === key)) return null;
+                    if (!value) return null;
+                    
+                    let displayValue = '';
+                    if (typeof value === 'object' && value !== null) {
+                      if (value.value !== undefined) {
+                        displayValue = `${value.value} ${value.unit || ''}`.trim();
+                      } else {
+                        displayValue = JSON.stringify(value);
+                      }
+                    } else {
+                      displayValue = String(value);
+                    }
+                    
+                    return (
+                      <tr key={key} className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700">
+                          {key}:
+                        </td>
+                        <td className="py-2 text-gray-900">
+                          {displayValue}
                         </td>
                       </tr>
                     );
@@ -240,19 +275,19 @@ export default function Step4() {
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Lokasyon</h3>
               
-              {locationData.location ? (
+              {(locationData.location || locationData.country) ? (
                 <div className="space-y-2 text-sm">
-                  {locationData.location.country && (
-                    <p><span className="font-medium">Ülke:</span> {locationData.location.country.name}</p>
+                  {(locationData.location?.country || locationData.country) && (
+                    <p><span className="font-medium">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}</p>
                   )}
-                  {locationData.location.city && (
-                    <p><span className="font-medium">İl:</span> {locationData.location.city.name}</p>
+                  {(locationData.location?.city || locationData.city) && (
+                    <p><span className="font-medium">İl:</span> {locationData.location?.city?.name || locationData.city?.name}</p>
                   )}
-                  {locationData.location.district && (
-                    <p><span className="font-medium">İlçe:</span> {locationData.location.district.name}</p>
+                  {(locationData.location?.district || locationData.district) && (
+                    <p><span className="font-medium">İlçe:</span> {locationData.location?.district?.name || locationData.district?.name}</p>
                   )}
-                  {locationData.location.neighborhood && (
-                    <p><span className="font-medium">Mahalle:</span> {locationData.location.neighborhood.name}</p>
+                  {(locationData.location?.neighborhood || locationData.neighborhood) && (
+                    <p><span className="font-medium">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}</p>
                   )}
                 </div>
               ) : (

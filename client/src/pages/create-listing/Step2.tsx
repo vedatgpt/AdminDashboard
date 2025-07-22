@@ -236,17 +236,7 @@ export default function Step2() {
         })
       };
       
-      // Debug log
-      console.log('Step-2 Saving Data:', {
-        formData: formData.customFields,
-        locationData: {
-          country: selectedCountry,
-          city: selectedCity,
-          district: selectedDistrict,
-          neighborhood: selectedNeighborhood
-        },
-        draftData
-      });
+      // Data saved successfully
       
       try {
         await updateDraftMutation.mutateAsync({
