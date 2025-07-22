@@ -16,13 +16,7 @@ export function usePageLoadTime() {
   }, [startTime]);
 
   const formatLoadTime = (time: number) => {
-    if (time < 0.1) {
-      return `${(time * 1000).toFixed(0)}ms'de yüklendi`;
-    } else if (time < 1) {
-      return `${(time * 1000).toFixed(0)}ms'de yüklendi`;
-    } else {
-      return `${time.toFixed(2)} saniyede yüklendi`;
-    }
+    return `${time.toFixed(3)} saniyede yüklendi`;
   };
 
   return {

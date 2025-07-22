@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ModernNavbar from "@/components/Navbar";
+import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Landing() {
@@ -65,8 +66,8 @@ export default function Landing() {
           </div>
         </div>
         
-     
-        
+        {/* Performance indicator */}
+        <PageLoadIndicator />
       </main>
     </div>
   );
