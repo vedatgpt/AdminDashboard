@@ -26,7 +26,7 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
     if (!stepNumber) return false;
     
     if (stepNumber === 1) {
-      // Step 1: Show back button only if there are selected categories
+      // Step 1: Show back button when any category is selected (including first main category)
       return categoryPath && categoryPath.length > 0;
     } else {
       // Step 2, 3, etc: Always show back button

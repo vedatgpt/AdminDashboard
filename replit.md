@@ -438,6 +438,15 @@ Authentication features:
 - Extended session duration to 7 days (was 24 hours)
 - Improved session stability for development environment
 
+### Dynamic Navbar System for Step Pages (July 22, 2025)
+- Implemented persistent navbar across all step pages using CreateListingLayout wrapper
+- Added dynamic step titles: "İlan Ver - 1", "İlan Ver - 2", "İlan Ver - 3" in mobile navbar
+- Smart back button logic: Step-1 shows back when categories selected, Step-2+ always show back
+- Step navigation: Step-2 "Sonraki Adım" button now properly navigates to Step-3
+- Context-aware back handling: Step-1 handles category navigation, other steps navigate between steps
+- Eliminated navbar re-rendering during step transitions for smoother UX
+- Custom back handler system allows Step-1 to maintain category selection state
+
 ### Step-2 Navigation Enhancement (July 20, 2025)
 - Added ModernNavbar and NavbarMobile from Step-1 to Step-2
 - Implemented fixed breadcrumb navigation showing complete category path

@@ -105,6 +105,7 @@ export default function Step2() {
   
   const nextStep = () => {
     dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
+    navigate('/create-listing/step-3');
   };
   const { data: customFields, isLoading } = useCustomFields(selectedCategory?.id || 0);
 
