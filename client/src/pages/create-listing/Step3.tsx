@@ -28,6 +28,11 @@ export default function Step3() {
   const sortableRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
+  // URL parameter support
+  const urlParams = new URLSearchParams(window.location.search);
+  const classifiedIdParam = urlParams.get('classifiedId');
+  const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
