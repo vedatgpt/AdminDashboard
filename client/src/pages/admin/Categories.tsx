@@ -413,16 +413,7 @@ export default function Categories() {
                       
                       {/* Action Buttons */}
                       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddChild(category);
-                          }}
-                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                          title="Alt kategori ekle"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
+                        
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
