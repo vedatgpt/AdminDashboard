@@ -50,24 +50,16 @@ export default function Step3() {
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-    console.log('Draft data changed:', draftData);
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
-        console.log('Photos from draft:', draftData.photos);
         const existingPhotos = JSON.parse(draftData.photos as string);
-        console.log('Parsed photos:', existingPhotos);
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
           // Only set if images array is empty to avoid overriding current state
-          setImages(prev => {
-            console.log('Current images:', prev.length, 'New photos:', existingPhotos.length);
-            return prev.length === 0 ? existingPhotos : prev;
-          });
+          setImages(prev => prev.length === 0 ? existingPhotos : prev);
         }
       } catch (error) {
         console.error('Error parsing photos from draft:', error);
       }
-    } else {
-      console.log('No draft data or no photos in draft');
     }
   }, [draftData]);
 
@@ -211,6 +203,14 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
+              
+              // Immediately save the new order to draft
+              if (currentClassifiedId && newImages.length > 0 && !newImages.some(img => img.uploading)) {
+                setTimeout(() => {
+                  updateDraftMutation.mutate(newImages);
+                }, 100);
+              }
+              
               return newImages;
             });
           }
@@ -431,8 +431,8 @@ export default function Step3() {
               onChange={(e) => handleFileSelect(e.target.files)}
             />
                 
-                {/* Loading state for photos - show only during initial load */}
-                {draftLoading && !draftData && images.length === 0 && (
+                {/* Loading state for photos - only show if draft has photos */}
+                {draftLoading && draftData && draftData.photos && images.length === 0 && (
                   <div className="mt-6 text-center text-gray-500">
                     <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
                     Fotoğraflar yükleniyor...

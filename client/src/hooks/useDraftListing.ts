@@ -40,7 +40,8 @@ export function useDraftListing(id?: number) {
       return response.json() as Promise<DraftListing>;
     },
     enabled: !!id && isAuthenticated, // Only run when authenticated
-    staleTime: 60 * 1000, // 1 minute for better performance
+    staleTime: 5 * 60 * 1000, // 5 minutes for better performance
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
   });
 }
 
