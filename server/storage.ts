@@ -485,39 +485,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async reorderLocations(parentId: number | null, locationIds: number[]): Promise<void> {
-    try {
-      console.log('reorderLocations called with:', { parentId, locationIds });
-      
-      // Validate that all locationIds are valid numbers
-      for (const id of locationIds) {
-        if (!Number.isInteger(id) || id <= 0) {
-          throw new Error(`Invalid location ID: ${id}`);
-        }
-      }
-      
-      // Update sort order for each location
-      for (let i = 0; i < locationIds.length; i++) {
-        console.log(`Updating location ${locationIds[i]} to sortOrder ${i + 1}`);
-        
-        const result = await db.update(locations)
-          .set({ 
-            sortOrder: i + 1,
-            updatedAt: new Date()
-          })
-          .where(eq(locations.id, locationIds[i]))
-          .returning();
-          
-        console.log(`Update result for location ${locationIds[i]}:`, result);
-        
-        if (result.length === 0) {
-          throw new Error(`Location with ID ${locationIds[i]} not found`);
-        }
-      }
-      
-      console.log('All locations reordered successfully');
-    } catch (error) {
-      console.error('Error in reorderLocations:', error);
-      throw error;
+    // Update sort order for each location
+    for (let i = 0; i < locationIds.length; i++) {
+      await db.update(locations)
+        .set({ 
+          sortOrder: i + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(locations.id, locationIds[i]));
     }
   }
 

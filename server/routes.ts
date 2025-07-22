@@ -749,21 +749,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reorder locations
   app.patch("/api/locations/reorder", requireAdmin, async (req, res) => {
     try {
-      console.log('Reorder request received:', req.body);
       const { parentId, locationIds } = req.body;
       
       if (!Array.isArray(locationIds)) {
-        console.error('locationIds is not an array:', locationIds);
         return res.status(400).json({ error: "locationIds array gerekli" });
       }
       
-      console.log('Calling storage.reorderLocations with:', { parentId, locationIds });
-      await storage.reorderLocations(parentId, locationIds);
-      console.log('Reorder completed successfully');
+      // Convert string IDs to numbers if needed
+      const numericLocationIds = locationIds.map(id => parseInt(String(id), 10));
+      
+      // Validate all IDs are valid numbers
+      if (numericLocationIds.some(id => isNaN(id) || id <= 0)) {
+        return res.status(400).json({ error: "Geçersiz lokasyon ID'leri" });
+      }
+      
+      await storage.reorderLocations(parentId, numericLocationIds);
       res.json({ message: "Lokasyon sıralaması güncellendi" });
     } catch (error) {
-      console.error('Location reorder error details:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Location reorder error:', error);
       res.status(500).json({ error: `Sıralama güncellenirken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` });
     }
   });
