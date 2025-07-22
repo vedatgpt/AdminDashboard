@@ -87,20 +87,6 @@ export default function LocationSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => setLocation('/admin/locations')}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-900 text-sm"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Geri
-        </button>
-        <PageHeader 
-          title="Lokasyon Görünürlük Ayarları" 
-          subtitle="Hangi lokasyon seviyelerinin kullanıcılara gösterileceğini belirleyin"
-        />
-      </div>
 
       {/* Alert */}
       {showAlert && (
@@ -128,12 +114,16 @@ export default function LocationSettings() {
       {/* Settings Form */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Görünürlük Kontrolü</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Aşağıdaki ayarlar kullanıcıların ilanlarında hangi lokasyon seviyelerini seçebileceğini belirler.
-              Kapatılan seviyeler kullanıcı arayüzünde gösterilmez.
-            </p>
+          {/* Back Button */}
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <button
+              onClick={() => setLocation('/admin/locations')}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Geri
+            </button>
+            <h3 className="text-lg font-medium text-gray-900">Lokasyon Görünürlük Ayarları</h3>
           </div>
 
           <div className="space-y-4">
@@ -206,23 +196,10 @@ export default function LocationSettings() {
             </div>
           </div>
 
-          {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <div className="h-5 w-5 text-blue-400">ℹ️</div>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-blue-800">
-                  <strong>Önemli:</strong> Bu ayarlar tüm kullanıcıların ilanlarında etkili olur. 
-                  Kapatılan seviyeler mevcut ilanları etkilemez, sadece yeni ilan oluştururken görünmez.
-                </p>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Save Button */}
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end">
             <button
               onClick={handleSave}
               disabled={updateMutation.isPending}

@@ -288,28 +288,14 @@ export default function Categories() {
         </div>
       )}
 
-      <PageHeader
-        title="Kategori Yönetimi"
-        subtitle={`${filteredCategories.length} kategori`}
-        actions={
-          currentParent ? (
-            <button 
-              onClick={handleBackClick}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Geri
-            </button>
-          ) : undefined
-        }
-      />
+      
 
       <div className="flex-1 flex flex-col">
         {/* Category List */}
         <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             {/* Breadcrumb Navigation */}
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
               <button
                 onClick={() => setLocation('/admin/categories')}
                 className={`hover:text-[#EC7830] transition-colors ${
@@ -319,7 +305,7 @@ export default function Categories() {
                 Ana Kategoriler
               </button>
               {breadcrumbs.map((crumb, index) => (
-                <div key={crumb.id} className="flex items-center space-x-2">
+                <div key={crumb.id} className="flex items-center gap-x-2">
                   <span className="text-gray-400">/</span>
                   <button
                     onClick={() => setLocation(`/admin/categories/${crumb.id}`)}

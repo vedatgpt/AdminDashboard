@@ -258,7 +258,7 @@ export default function Locations() {
   }, [filteredLocations]);
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col">
 
       {/* Alert */}
       {showAlert && (
@@ -453,10 +453,8 @@ export default function Locations() {
                     </button>
                   </div>
                   
-                  {/* Navigate Arrow (only for non-neighborhood locations) */}
-                  {loc.type !== 'neighborhood' && (
-                    <ChevronRight className="shrink-0 w-4 h-4 text-gray-400" />
-                  )}
+                  {/* Drag Handle */}
+                  <GripVertical className="shrink-0 w-4 h-4 text-gray-400" />
                 </li>
               );
             })}

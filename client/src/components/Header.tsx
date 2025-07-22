@@ -67,7 +67,7 @@ export default function Header() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="ml-4 lg:ml-0">
-            <h1 className="text-xl font-semibold text-gray-900">{config.title}</h1>
+            <h1 className="text-md font-semibold text-gray-900">{config.title}</h1>
             <p className="text-sm text-gray-500">{config.subtitle}</p>
           </div>
         </div>
