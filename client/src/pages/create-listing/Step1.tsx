@@ -318,13 +318,22 @@ export default function CreateListingStep1() {
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
       
-      console.log('Eski draft silindi, ana kategorinin alt kategorileri gösteriliyor...');
+      console.log('Eski draft silindi, context tamamen sıfırlanıyor...');
+      
+      // Tüm context'i sıfırla - eski form verilerini temizle
+      dispatch({ type: 'RESET_LISTING' });
+      
+      // URL'den classifiedId'yi temizle
+      const currentUrl = window.location.pathname;
+      window.history.replaceState({}, '', currentUrl);
+      
+      console.log('Ana kategorinin alt kategorileri gösteriliyor...');
       
       // Ana kategori seçimini devam ettir - alt kategorileri göster
       const newPath = [pendingCategory];
       setCategoryPath(newPath);
       
-      // Context'i ana kategori ile güncelle
+      // Context'i ana kategori ile güncelle (temiz state üzerinde)
       dispatch({ 
         type: 'SET_CATEGORY_WITH_PATH', 
         payload: { 
@@ -642,46 +651,31 @@ export default function CreateListingStep1() {
                         return;
                       }
                       
-                      let currentClassifiedId = state.classifiedId || classifiedId;
+                      // Eğer context'te eski bir classifiedId varsa ama o draft silinmişse temizle
+                      let currentClassifiedId = state.classifiedId;
                       
-                      // Create draft only if it doesn't exist
-                      if (!currentClassifiedId) {
-                        try {
-                          const newDraft = await createDraftMutation.mutateAsync({
-                            categoryId: state.selectedCategory!.id,
-                            title: null,
-                            description: null,
-                            price: null,
-                            customFields: null,
-                            photos: null,
-                            locationData: null,
-                            status: 'draft' as const,
-                          });
-                          currentClassifiedId = newDraft.id;
-                          dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
-                          dispatch({ type: 'SET_IS_DRAFT', payload: true });
-                        } catch (error) {
-                          console.error('Draft oluşturulamadı:', error);
-                          return;
-                        }
-                      }
-                      
-                      // Update draft with selected category
-                      if (currentClassifiedId && state.selectedCategory) {
-                        try {
-                          await updateDraftMutation.mutateAsync({
-                            id: currentClassifiedId,
-                            data: { categoryId: state.selectedCategory.id }
-                          });
-                        } catch (error) {
-                          console.error('Draft güncellenemedi:', error);
-                        }
+                      // Create new draft - her zaman yeni draft oluştur
+                      try {
+                        const newDraft = await createDraftMutation.mutateAsync({
+                          categoryId: state.selectedCategory!.id,
+                          title: null,
+                          description: null,
+                          price: null,
+                          customFields: null,
+                          photos: null,
+                          locationData: null,
+                          status: 'draft' as const,
+                        });
+                        currentClassifiedId = newDraft.id;
+                        dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
+                        dispatch({ type: 'SET_IS_DRAFT', payload: true });
+                      } catch (error) {
+                        console.error('Draft oluşturulamadı:', error);
+                        return;
                       }
                       
                       dispatch({ type: 'SET_STEP', payload: 2 });
-                      const url = currentClassifiedId ? 
-                        `/create-listing/step-2?classifiedId=${currentClassifiedId}` : 
-                        '/create-listing/step-2';
+                      const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
                       navigate(url);
                     }}
                     className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-base font-medium"

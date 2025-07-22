@@ -564,3 +564,13 @@ Authentication features:
 - 30-day automatic draft cleanup policy (implemented via database design)
 - Complete frontend-backend integration with TanStack Query for optimized data management
 - Professional listing creation workflow with persistent state management
+
+### Enhanced Draft Continue Modal System (July 22, 2025)
+- Modal triggers on main category selection (e.g., "Vasıta") instead of final category selection
+- Automatic detection of existing drafts within selected main category hierarchy
+- "Continue with existing draft" option redirects to Step-2 with existing data
+- "Create new listing" option: deletes old draft, resets context completely, shows subcategories
+- Fixed form data persistence issues when switching between drafts
+- Authentication required for all draft operations with proper login redirects
+- Clean URL management: removes invalid classifiedId parameters after draft deletion
+- Complete state reset prevents cached form data from appearing in new listings
