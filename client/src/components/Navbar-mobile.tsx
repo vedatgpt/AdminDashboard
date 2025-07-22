@@ -5,9 +5,10 @@ import { useLocation } from 'wouter';
 interface NavbarMobileProps {
   showBackButton?: boolean;
   onBackClick?: () => void;
+  title?: string;
 }
 
-const NavbarMobile: React.FC<NavbarMobileProps> = ({ showBackButton = true, onBackClick }) => {
+const NavbarMobile: React.FC<NavbarMobileProps> = ({ showBackButton = true, onBackClick, title = "İlan Ver" }) => {
   const [, navigate] = useLocation();
 
   const handleBackClick = () => {
@@ -41,10 +42,10 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({ showBackButton = true, onBa
             )}
           </div>
 
-          {/* Center - İlan Ver title */}
+          {/* Center - Dynamic title */}
           <div className="flex items-center justify-center flex-1">
             <span className="text-lg font-semibold text-gray-800">
-              İlan Ver
+              {title}
             </span>
           </div>
 

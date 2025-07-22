@@ -73,17 +73,17 @@ function Router() {
           <Route path="/" component={Landing} />
 
           <Route path="/create-listing/step-1">
-            <CreateListingLayout>
+            <CreateListingLayout stepNumber={1}>
               <CreateListingStep1 />
             </CreateListingLayout>
           </Route>
           <Route path="/create-listing/step-2">
-            <CreateListingLayout>
+            <CreateListingLayout stepNumber={2}>
               <CreateListingStep2 />
             </CreateListingLayout>
           </Route>
           <Route path="/create-listing/step-3">
-            <CreateListingLayout>
+            <CreateListingLayout stepNumber={3}>
               <CreateListingStep3 />
             </CreateListingLayout>
           </Route>
