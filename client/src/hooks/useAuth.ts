@@ -9,11 +9,11 @@ export function useAuth() {
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes - optimize for performance
+    staleTime: 30 * 1000, // 30 seconds - faster updates
     refetchOnWindowFocus: false, // Reduce unnecessary API calls
-    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnMount: true, // DO refetch on mount for faster auth checks
     refetchOnReconnect: true,
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 2 * 60 * 1000, // Shorter cache time - 2 minutes
   });
 
   const loginMutation = useMutation({
@@ -39,8 +39,9 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
-      // Clear all cache on login to prevent data leakage between users
-      queryClient.clear();
+      // Selective cache clearing - only user-specific data
+      queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
+      queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
   });
@@ -68,8 +69,9 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
-      // Clear all cache on register to prevent data leakage between users
-      queryClient.clear();
+      // Selective cache clearing - only user-specific data
+      queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
+      queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
   });
@@ -81,22 +83,14 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      // Clear all user-specific data from cache
+      // Fast selective clearing - only user-specific data
       queryClient.setQueryData(["/api/auth/me"], null);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      
-      // Clear ALL draft listings cache to prevent cross-user data leakage
       queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
-      
-      // Clear any category-specific draft cache
       queryClient.removeQueries({ 
         predicate: (query) => 
           Array.isArray(query.queryKey) && 
           query.queryKey[0] === "/api/draft-listings"
       });
-      
-      // Clear all user-specific caches
-      queryClient.clear(); // This is the safest approach - clear everything
     },
   });
 

@@ -40,7 +40,7 @@ export function useDraftListing(id?: number) {
       return response.json() as Promise<DraftListing>;
     },
     enabled: !!id && isAuthenticated, // Only run when authenticated
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 1000, // 10 seconds - faster updates for active editing
   });
 }
 
@@ -61,7 +61,7 @@ export function useUserDraftListings() {
       return response.json() as Promise<DraftListing[]>;
     },
     enabled: isAuthenticated, // Only run when authenticated
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - faster updates
   });
 }
 

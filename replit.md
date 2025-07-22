@@ -591,3 +591,15 @@ Authentication features:
 - Draft listings cache now properly isolated per user session
 - Enhanced user session security with complete cache invalidation on authentication state changes
 - Eliminated phantom draft listings appearing for wrong users after account switching
+
+### Performance Optimization & Speed Improvements (July 22, 2025)
+- Fixed major performance bottlenecks causing 10+ second login delays and slow page loading
+- Optimized TanStack Query cache configurations: reduced staleTime from 5 minutes to 30 seconds
+- Enhanced auth hook performance: enabled refetchOnMount for faster auth state detection
+- Replaced aggressive queryClient.clear() with selective cache clearing for better performance
+- Optimized database connection pool: added max connections (10), timeouts, and fetch optimization
+- Reduced draft listing cache times from 5 minutes to 10-30 seconds for active editing
+- Location and category data staleTime reduced to 2 minutes for better responsiveness
+- Added Neon database optimizations: poolQueryViaFetch and reduced WebSocket overhead
+- Enhanced session middleware: disabled unnecessary resave operations
+- Performance improvements maintain all security measures while dramatically reducing load times

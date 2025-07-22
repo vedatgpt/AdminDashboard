@@ -61,16 +61,20 @@ const uploadListingImages = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Session middleware
+  // Performance middleware
+  app.use(express.json({ limit: '10mb' })); // Increase JSON payload limit
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
+  // Session middleware with optimized settings
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: true, // Session'ları her istekte kaydet
+    resave: false, // Don't resave unchanged sessions (better performance)
     saveUninitialized: false,
-    rolling: true, // Her istekte cookie'yi yenile
+    rolling: true, // Extend session on activity
     cookie: {
       secure: false, // Set to true in production with HTTPS
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 gün - daha uzun süre
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 gün
     }
   }));
 

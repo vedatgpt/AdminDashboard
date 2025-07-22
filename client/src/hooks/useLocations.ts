@@ -73,7 +73,7 @@ export const useLocationsTree = () => {
   return useQuery({
     queryKey: ["/api/locations"],
     queryFn: fetchLocations,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - reasonable for location data
   });
 };
 
@@ -81,7 +81,7 @@ export const useChildLocations = (parentId: number | null) => {
   return useQuery({
     queryKey: ["/api/locations", parentId],
     queryFn: () => fetchChildLocations(parentId),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - reasonable for location data
   });
 };
 
@@ -90,7 +90,7 @@ export const useLocationById = (id: number) => {
     queryKey: ["/api/locations", id],
     queryFn: () => fetchLocationById(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - reasonable for location data
   });
 };
 
@@ -99,7 +99,7 @@ export const useLocationBreadcrumbs = (id: number) => {
     queryKey: ["/api/locations", id, "breadcrumbs"],
     queryFn: () => fetchLocationBreadcrumbs(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - reasonable for location data
   });
 };
 
