@@ -8,7 +8,6 @@ import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
 import CreateListingLayout from '@/components/CreateListingLayout';
-import { LoadingSpinner } from '@/components/ui/ISpinner';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -121,15 +120,14 @@ export default function CreateListingStep1() {
 
   if (isLoading) {
     return (
-      <CreateListingLayout stepNumber={1}>
-        <div className="bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center justify-center min-h-96">
-              <LoadingSpinner size={40} />
-            </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Navbar spacing: px-4 sm:px-6 lg:px-8 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#EC7830]"></div>
           </div>
         </div>
-      </CreateListingLayout>
+      </div>
     );
   }
 
