@@ -40,26 +40,16 @@ export default function Step2() {
   const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
   
-  // Draft listing hooks
+  // All hooks must be called unconditionally at the top
   const { data: draftData, isLoading: draftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
-  
-  // Show loading state while draft data is loading
-  if (draftLoading) {
-    return (
-      <CreateListingLayout stepNumber={2}>
-        <div className="text-center py-12">
-          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
-          <p className="text-gray-500">Form verileriniz yükleniyor...</p>
-        </div>
-      </CreateListingLayout>
-    );
-  }
-  
-  // Fetch data
   const { data: locations = [] } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
   const { data: allCategories = [] } = useCategoriesTree();
+  
+  // Get categoryId from draft or selected category for custom fields
+  const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
+  const { data: customFields = [], isLoading: fieldsLoading } = useCustomFields(categoryIdForFields);
   
   // Build flat categories array for path building
   const flatCategories = useMemo(() => {
@@ -259,17 +249,25 @@ export default function Step2() {
       '/create-listing/step-3';
     navigate(url);
   };
-  // Get categoryId from draft or selected category for custom fields
-  const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
-  const { data: customFields = [], isLoading: fieldsLoading } = useCustomFields(categoryIdForFields);
-
-  if (fieldsLoading) {
+  // Show loading states
+  if (draftLoading || fieldsLoading) {
     return (
-      <div className="min-h-screen bg-white p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center py-8">Yükleniyor...</div>
+      <CreateListingLayout stepNumber={2}>
+        <div className="text-center py-12">
+          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
+          <p className="text-gray-500">{draftLoading ? 'Form verileriniz yükleniyor...' : 'Özel alanlar yükleniyor...'}</p>
         </div>
-      </div>
+      </CreateListingLayout>
+    );
+  }
+
+  if (!currentClassifiedId) {
+    return (
+      <CreateListingLayout stepNumber={2}>
+        <div className="text-center py-12">
+          <p className="text-gray-500">İlan bulunamadı. Lütfen Step-1'den başlayın.</p>
+        </div>
+      </CreateListingLayout>
     );
   }
 
