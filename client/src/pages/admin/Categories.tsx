@@ -245,7 +245,10 @@ export default function Categories() {
               console.log('Reordering categories:', { 
                 parentId: currentParent?.id || null, 
                 categoryIds,
-                filteredCategories: filteredCategories.map(c => ({ id: c.id, name: c.name }))
+                filteredCategories: filteredCategories.map(c => ({ id: c.id, name: c.name })),
+                oldIndex,
+                newIndex,
+                draggedCategory: draggedCategory ? { id: draggedCategory.id, name: draggedCategory.name } : null
               });
               
               // Send reorder request to backend
