@@ -807,6 +807,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Draft Listings API routes
+  
+  // Get draft listing by ID
+  app.get("/api/draft-listings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const draft = await storage.getDraftListing(id);
+      
+      if (!draft) {
+        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
+      }
+      
+      res.json(draft);
+    } catch (error) {
+      res.status(500).json({ error: "İlan taslağı alınırken hata oluştu" });
+    }
+  });
+
+  // Get user's draft listings
+  app.get("/api/draft-listings", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
+      const drafts = await storage.getUserDraftListings(userId);
+      res.json(drafts);
+    } catch (error) {
+      res.status(500).json({ error: "İlan taslakları alınırken hata oluştu" });
+    }
+  });
+
+  // Create new draft listing
+  app.post("/api/draft-listings", async (req, res) => {
+    try {
+      const userId = req.session?.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
+      const draft = await storage.createDraftListing({
+        userId,
+        status: "draft"
+      });
+      
+      res.status(201).json(draft);
+    } catch (error) {
+      res.status(500).json({ error: "İlan taslağı oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Update draft listing
+  app.patch("/api/draft-listings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.session?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
+      // Verify ownership
+      const existingDraft = await storage.getDraftListing(id);
+      if (!existingDraft || existingDraft.userId !== userId) {
+        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
+      }
+      
+      const updates = req.body;
+      const draft = await storage.updateDraftListing(id, updates);
+      res.json(draft);
+    } catch (error) {
+      res.status(500).json({ error: "İlan taslağı güncellenirken hata oluştu" });
+    }
+  });
+
+  // Delete draft listing
+  app.delete("/api/draft-listings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.session?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
+      // Verify ownership
+      const existingDraft = await storage.getDraftListing(id);
+      if (!existingDraft || existingDraft.userId !== userId) {
+        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
+      }
+      
+      await storage.deleteDraftListing(id);
+      res.json({ message: "İlan taslağı silindi" });
+    } catch (error) {
+      res.status(500).json({ error: "İlan taslağı silinirken hata oluştu" });
+    }
+  });
+
+  // Publish draft listing
+  app.post("/api/draft-listings/:id/publish", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.session?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
+      // Verify ownership
+      const existingDraft = await storage.getDraftListing(id);
+      if (!existingDraft || existingDraft.userId !== userId) {
+        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
+      }
+      
+      const publishedListing = await storage.publishDraftListing(id);
+      res.json(publishedListing);
+    } catch (error) {
+      res.status(500).json({ error: "İlan yayınlanırken hata oluştu" });
+    }
+  });
+
   // Upload listing images (temporarily removed auth for development)
   app.post("/api/upload/images", uploadListingImages.array('images'), async (req, res) => {
     try {

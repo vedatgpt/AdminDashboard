@@ -217,3 +217,40 @@ export const updateLocationSettingsSchema = insertLocationSettingsSchema.partial
 export type LocationSettings = typeof locationSettings.$inferSelect;
 export type InsertLocationSettings = z.infer<typeof insertLocationSettingsSchema>;
 export type UpdateLocationSettings = z.infer<typeof updateLocationSettingsSchema>;
+
+// Draft listings table for listing creation process
+export const draftListings = pgTable("draft_listings", {
+  id: serial("id").primaryKey(), // This will be the classifiedId
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
+  title: text("title"),
+  description: text("description"),
+  price: text("price"), // JSON string for {value, currency}
+  customFields: text("custom_fields"), // JSON string for form data
+  photos: text("photos"), // JSON array of photo metadata
+  locationData: text("location_data"), // JSON object for location selections
+  status: text("status").notNull().default("draft"), // draft, published, deleted
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating draft listings
+export const insertDraftListingSchema = createInsertSchema(draftListings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  price: z.string().optional(),
+  customFields: z.string().optional(),
+  photos: z.string().optional(),
+  locationData: z.string().optional(),
+});
+
+// Schema for updating draft listings
+export const updateDraftListingSchema = insertDraftListingSchema.partial();
+
+export type DraftListing = typeof draftListings.$inferSelect;
+export type InsertDraftListing = z.infer<typeof insertDraftListingSchema>;
+export type UpdateDraftListing = z.infer<typeof updateDraftListingSchema>;

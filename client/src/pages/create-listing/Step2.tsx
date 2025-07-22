@@ -1,5 +1,6 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCustomFields } from '../../hooks/useCustomFields';
+import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import ReactQuill from 'react-quill';
@@ -13,8 +14,17 @@ import type { Location } from '@shared/schema';
 
 export default function Step2() {
   const { state, dispatch } = useListing();
-  const { selectedCategory, formData, categoryPath } = state;
+  const { selectedCategory, formData, categoryPath, classifiedId } = state;
   const [, navigate] = useLocation();
+  
+  // URL parameter support
+  const urlParams = new URLSearchParams(window.location.search);
+  const classifiedIdParam = urlParams.get('classifiedId');
+  const currentClassifiedId = classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
+  
+  // Draft listing hooks
+  const { data: draftData } = useDraftListing(currentClassifiedId);
+  const updateDraftMutation = useUpdateDraftListing();
   
   // Location selection state
   const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
@@ -25,6 +35,23 @@ export default function Step2() {
   // Fetch locations and location settings
   const { data: locations = [] } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
+  
+  // Load draft data when available
+  useEffect(() => {
+    if (draftData && currentClassifiedId) {
+      // Update the context with classified ID if not already set
+      if (!classifiedId) {
+        dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentClassifiedId });
+        dispatch({ type: 'SET_IS_DRAFT', payload: true });
+      }
+      
+      // Load form data from draft
+      if (draftData.customFields) {
+        const customFields = JSON.parse(draftData.customFields);
+        dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
+      }
+    }
+  }, [draftData, currentClassifiedId, classifiedId, dispatch]);
   
   // Get available locations based on selection
   const availableCountries = useMemo(() => {
@@ -103,9 +130,37 @@ export default function Step2() {
     dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
   };
   
-  const nextStep = () => {
+  const nextStep = async () => {
+    // Update draft with current form data before navigating
+    if (currentClassifiedId) {
+      const draftData = {
+        title: formData.customFields.title || null,
+        description: formData.customFields.description || null,
+        price: formData.customFields.price ? JSON.stringify(formData.customFields.price) : null,
+        customFields: JSON.stringify(formData.customFields),
+        locationData: JSON.stringify({
+          country: selectedCountry,
+          city: selectedCity,
+          district: selectedDistrict,
+          neighborhood: selectedNeighborhood
+        })
+      };
+      
+      try {
+        await updateDraftMutation.mutateAsync({
+          id: currentClassifiedId,
+          data: draftData
+        });
+      } catch (error) {
+        console.error('Draft güncellenemedi:', error);
+      }
+    }
+    
     dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-    navigate('/create-listing/step-3');
+    const url = currentClassifiedId ? 
+      `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
+      '/create-listing/step-3';
+    navigate(url);
   };
   const { data: customFields, isLoading } = useCustomFields(selectedCategory?.id || 0);
 

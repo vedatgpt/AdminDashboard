@@ -6,6 +6,8 @@ export interface ListingState {
   currentStep: number;
   selectedCategory: Category | null;
   categoryPath: Category[];
+  classifiedId?: number; // URL parameter support
+  isDraft: boolean; // Track if this is a draft
   formData: {
     // Step 2: Custom fields data
     customFields: Record<string, any>;
@@ -27,6 +29,9 @@ type ListingAction =
   | { type: 'SET_CATEGORY'; payload: { category: Category; path: Category[] } }
   | { type: 'SET_CATEGORY_WITH_PATH'; payload: { category: Category | null; path: Category[] } }
   | { type: 'SET_CUSTOM_FIELDS'; payload: Record<string, any> }
+  | { type: 'SET_CLASSIFIED_ID'; payload: number }
+  | { type: 'SET_IS_DRAFT'; payload: boolean }
+  | { type: 'LOAD_DRAFT'; payload: { classifiedId: number; draft: any } }
   | { type: 'RESET_LISTING' };
 
 // Initial state
@@ -34,6 +39,8 @@ const initialState: ListingState = {
   currentStep: 1,
   selectedCategory: null,
   categoryPath: [],
+  classifiedId: undefined,
+  isDraft: false,
   formData: {
     customFields: {},
     title: '',
@@ -66,6 +73,24 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
       return {
         ...state,
         formData: { ...state.formData, customFields: action.payload },
+      };
+    case 'SET_CLASSIFIED_ID':
+      return { ...state, classifiedId: action.payload };
+    case 'SET_IS_DRAFT':
+      return { ...state, isDraft: action.payload };
+    case 'LOAD_DRAFT':
+      return {
+        ...state,
+        classifiedId: action.payload.classifiedId,
+        isDraft: true,
+        selectedCategory: action.payload.draft.category || null,
+        formData: {
+          ...state.formData,
+          customFields: action.payload.draft.customFields ? JSON.parse(action.payload.draft.customFields) : {},
+          title: action.payload.draft.title || '',
+          description: action.payload.draft.description || '',
+          price: action.payload.draft.price || '',
+        },
       };
     case 'RESET_LISTING':
       return initialState;

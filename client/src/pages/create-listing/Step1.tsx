@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
+import { useDraftListing, useCreateDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { Category } from '@shared/schema';
 
 import ProgressBar from '@/components/listing/ProgressBar';
@@ -16,6 +17,16 @@ export default function CreateListingStep1() {
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
+  
+  // URL parameter support for classified ID
+  const urlParams = new URLSearchParams(window.location.search);
+  const classifiedIdParam = urlParams.get('classifiedId');
+  const classifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
+  
+  // Draft listing hooks
+  const { data: draftData } = useDraftListing(classifiedId);
+  const createDraftMutation = useCreateDraftListing();
+  const updateDraftMutation = useUpdateDraftListing();
 
   // Build flat categories array for easy lookup  
   const flatCategories = React.useMemo(() => {
@@ -31,6 +42,41 @@ export default function CreateListingStep1() {
     };
     return flatten(allCategories);
   }, [allCategories]);
+
+  // Load draft data when available
+  useEffect(() => {
+    if (draftData && classifiedId) {
+      // Load draft data into context
+      dispatch({ 
+        type: 'LOAD_DRAFT', 
+        payload: { 
+          classifiedId, 
+          draft: draftData 
+        } 
+      });
+      
+      // If draft has category, set it up
+      if (draftData.categoryId) {
+        const category = flatCategories.find(cat => cat.id === draftData.categoryId);
+        if (category) {
+          // Build category path
+          const buildPath = (cat: Category): Category[] => {
+            const path: Category[] = [];
+            let current = cat;
+            while (current) {
+              path.unshift(current);
+              current = flatCategories.find(c => c.id === current.parentId) as Category;
+            }
+            return path;
+          };
+          
+          const path = buildPath(category);
+          setCategoryPath(path);
+          dispatch({ type: 'SET_CATEGORY_WITH_PATH', payload: { category, path } });
+        }
+      }
+    }
+  }, [draftData, classifiedId, flatCategories, dispatch]);
 
   useEffect(() => {
     if (allCategories.length > 0) {
@@ -312,10 +358,39 @@ export default function CreateListingStep1() {
                           Kategori Seçimi Tamamlanmıştır.
                         </p>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
+                            let currentClassifiedId = classifiedId;
+                            
+                            // Create draft if it doesn't exist
+                            if (!currentClassifiedId) {
+                              try {
+                                const newDraft = await createDraftMutation.mutateAsync();
+                                currentClassifiedId = newDraft.id;
+                                dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
+                                dispatch({ type: 'SET_IS_DRAFT', payload: true });
+                              } catch (error) {
+                                console.error('Draft oluşturulamadı:', error);
+                                return;
+                              }
+                            }
+                            
+                            // Update draft with selected category
+                            if (currentClassifiedId && state.selectedCategory) {
+                              try {
+                                await updateDraftMutation.mutateAsync({
+                                  id: currentClassifiedId,
+                                  data: { categoryId: state.selectedCategory.id }
+                                });
+                              } catch (error) {
+                                console.error('Draft güncellenemedi:', error);
+                              }
+                            }
+                            
                             dispatch({ type: 'SET_STEP', payload: 2 });
-                            navigate('/create-listing/step-2');
-                            console.log('Navigating to step 2...');
+                            const url = currentClassifiedId ? 
+                              `/create-listing/step-2?classifiedId=${currentClassifiedId}` : 
+                              '/create-listing/step-2';
+                            navigate(url);
                           }}
                           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                         >
@@ -372,10 +447,39 @@ export default function CreateListingStep1() {
                     Kategori Seçimi Tamamlanmıştır.
                   </p>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      let currentClassifiedId = classifiedId;
+                      
+                      // Create draft if it doesn't exist
+                      if (!currentClassifiedId) {
+                        try {
+                          const newDraft = await createDraftMutation.mutateAsync();
+                          currentClassifiedId = newDraft.id;
+                          dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
+                          dispatch({ type: 'SET_IS_DRAFT', payload: true });
+                        } catch (error) {
+                          console.error('Draft oluşturulamadı:', error);
+                          return;
+                        }
+                      }
+                      
+                      // Update draft with selected category
+                      if (currentClassifiedId && state.selectedCategory) {
+                        try {
+                          await updateDraftMutation.mutateAsync({
+                            id: currentClassifiedId,
+                            data: { categoryId: state.selectedCategory.id }
+                          });
+                        } catch (error) {
+                          console.error('Draft güncellenemedi:', error);
+                        }
+                      }
+                      
                       dispatch({ type: 'SET_STEP', payload: 2 });
-                      navigate('/create-listing/step-2');
-                      console.log('Navigating to step 2...');
+                      const url = currentClassifiedId ? 
+                        `/create-listing/step-2?classifiedId=${currentClassifiedId}` : 
+                        '/create-listing/step-2';
+                      navigate(url);
                     }}
                     className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-base font-medium"
                   >
