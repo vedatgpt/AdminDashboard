@@ -57,6 +57,7 @@ export interface IStorage {
   createLocation(data: InsertLocation): Promise<Location>;
   updateLocation(id: number, updates: UpdateLocation): Promise<Location>;
   deleteLocation(id: number): Promise<void>;
+  reorderLocations(parentId: number | null, locationIds: number[]): Promise<void>;
   getLocationBreadcrumbs(id: number): Promise<Location[]>;
   
   // Location Settings methods
@@ -481,6 +482,18 @@ export class DatabaseStorage implements IStorage {
 
   async deleteLocation(id: number): Promise<void> {
     await db.delete(locations).where(eq(locations.id, id));
+  }
+
+  async reorderLocations(parentId: number | null, locationIds: number[]): Promise<void> {
+    // Update sort order for each location
+    for (let i = 0; i < locationIds.length; i++) {
+      await db.update(locations)
+        .set({ 
+          sortOrder: i + 1,
+          updatedAt: new Date()
+        })
+        .where(eq(locations.id, locationIds[i]));
+    }
   }
 
   async getLocationBreadcrumbs(id: number): Promise<Location[]> {

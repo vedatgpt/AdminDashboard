@@ -36,20 +36,16 @@ export default function Locations() {
     setTimeout(() => setShowAlert(null), duration);
   };
 
-  // Reorder mutation (TODO: Backend implementation needed)
+  // Reorder mutation
   const reorderMutation = useMutation({
     mutationFn: async ({ parentId, locationIds }: { parentId: number | null; locationIds: number[] }) => {
-      // For now, just simulate the API call
-      console.log('Reorder locations:', { parentId, locationIds });
-      // TODO: Implement actual API endpoint
-      // const response = await fetch('/api/locations/reorder', {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ parentId, locationIds })
-      // });
-      // if (!response.ok) throw new Error('Failed to reorder locations');
-      // return response.json();
-      return Promise.resolve({ message: 'Simulated success' });
+      const response = await fetch('/api/locations/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId, locationIds })
+      });
+      if (!response.ok) throw new Error('Failed to reorder locations');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/locations'] });

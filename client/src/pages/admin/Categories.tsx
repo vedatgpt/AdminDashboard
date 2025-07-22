@@ -54,13 +54,13 @@ export default function Categories() {
     }
   });
 
-  // Get categories to display based on current parent
+  // Get categories to display based on current parent (show ALL categories regardless of isActive status)
   const currentCategories = useMemo(() => {
     if (currentParentId === null) {
-      // Show only root categories
+      // Show ALL root categories (both active and inactive)
       return categories.filter(cat => cat.parentId === null);
     } else {
-      // Show children of current parent
+      // Show ALL children of current parent (both active and inactive)
       const findCategoryAndChildren = (cats: Category[]): Category[] => {
         for (const cat of cats) {
           if (cat.id === currentParentId) {

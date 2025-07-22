@@ -746,6 +746,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reorder locations
+  app.patch("/api/locations/reorder", requireAdmin, async (req, res) => {
+    try {
+      const { parentId, locationIds } = req.body;
+      
+      if (!Array.isArray(locationIds)) {
+        return res.status(400).json({ error: "locationIds array gerekli" });
+      }
+      
+      await storage.reorderLocations(parentId, locationIds);
+      res.json({ message: "Lokasyon sıralaması güncellendi" });
+    } catch (error) {
+      console.error('Location reorder error:', error);
+      res.status(500).json({ error: "Sıralama güncellenirken hata oluştu" });
+    }
+  });
+
   // Location Settings API routes
   
   // Get location settings
