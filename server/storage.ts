@@ -281,8 +281,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryById(id: number): Promise<Category | undefined> {
-    const [category] = await db.select().from(categories).where(eq(categories.id, id));
-    return category as Category || undefined;
+    try {
+      const [category] = await db.select().from(categories).where(eq(categories.id, id));
+      return category as Category || undefined;
+    } catch (error: any) {
+      console.error('getCategoryById error:', error);
+      throw error;
+    }
   }
 
   async getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined> {
@@ -377,60 +382,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
-    // Single optimized SQL query to get all fields from category hierarchy
-    const hierarchyResult = await db.execute(sql`
-      WITH RECURSIVE category_hierarchy AS (
-        -- Base case: start with the given category
-        SELECT id, "parentId", name, 0 as level
-        FROM ${categories}
-        WHERE id = ${categoryId}
-        
-        UNION ALL
-        
-        -- Recursive case: get parent categories
-        SELECT c.id, c."parentId", c.name, ch.level + 1
-        FROM ${categories} c
-        INNER JOIN category_hierarchy ch ON c.id = ch."parentId"
-      )
-      SELECT 
-        ccf.id,
-        ccf."categoryId",
-        ccf."fieldName",
-        ccf.label,
-        ccf."fieldType",
-        ccf."isRequired",
-        ccf."sortOrder",
-        ccf.options,
-        ccf.placeholder,
-        ccf."hasUnits",
-        ccf."unitOptions",
-        ccf."defaultUnit",
-        ccf."minValue",
-        ccf."maxValue",
-        ccf."createdAt",
-        ccf."updatedAt",
-        ch.level
-      FROM category_hierarchy ch
-      LEFT JOIN ${categoryCustomFields} ccf ON ccf."categoryId" = ch.id
-      WHERE ccf.id IS NOT NULL
-      ORDER BY ch.level ASC, ccf."sortOrder" ASC NULLS LAST, ccf.label ASC
-    `);
-
-    const allFields: CategoryCustomField[] = [];
-    const fieldNamesSeen = new Set<string>();
-
-    // Process results - child categories override parent fields  
-    for (const row of hierarchyResult.rows) {
-      const field = row as unknown as CategoryCustomField;
+    // For now, just return direct fields to fix the immediate issue
+    const directFields = await db.select().from(categoryCustomFields)
+      .where(eq(categoryCustomFields.categoryId, categoryId))
+      .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
       
-      // Only add if we haven't seen this fieldName before (child overrides parent)
-      if (!fieldNamesSeen.has(field.fieldName)) {
-        allFields.push(field);
-        fieldNamesSeen.add(field.fieldName);
-      }
-    }
-
-    return allFields;
+    return directFields as CategoryCustomField[];
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {
