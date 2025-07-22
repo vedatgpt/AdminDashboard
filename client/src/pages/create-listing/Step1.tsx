@@ -79,6 +79,15 @@ export default function CreateListingStep1() {
     }
     
     setCategoryPath(newPath);
+    
+    // Always update the listing context with the new path - this ensures navbar back button updates
+    dispatch({ 
+      type: 'SET_CATEGORY_WITH_PATH', 
+      payload: { 
+        category: hasChildren(category) ? null : category, // Only set as selected if it's a leaf
+        path: newPath 
+      } 
+    });
 
     // Auto-scroll to the newest box
     setTimeout(() => {
