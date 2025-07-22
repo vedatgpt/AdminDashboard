@@ -289,21 +289,7 @@ export default function Categories() {
         </div>
       )}
 
-      <PageHeader
-        title="Kategori Yönetimi"
-        subtitle={`${filteredCategories.length} kategori`}
-        actions={
-          currentParent ? (
-            <button 
-              onClick={handleBackClick}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Geri
-            </button>
-          ) : undefined
-        }
-      />
+      
 
       <div className="flex-1 flex flex-col">
         {/* Category List */}

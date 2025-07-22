@@ -73,9 +73,7 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary">
-            <Bell className="w-5 h-5" />
-          </button>
+          
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -90,10 +88,7 @@ export default function Header() {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg z-50 shadow-lg">
                 <div className="py-1">
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    <Settings className="w-4 h-4 mr-3" />
-                    Ayarlar
-                  </button>
+                  
                   <button 
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"

@@ -202,6 +202,15 @@ export default function Locations() {
     });
   };
 
+  // Handle back navigation
+  const handleBackClick = () => {
+    if (currentParent && currentParent.parentId !== null) {
+      setLocation(`/admin/locations/${currentParent.parentId}`);
+    } else {
+      setLocation('/admin/locations');
+    }
+  };
+
   // Navigate to location children
   const navigateToChildren = (locationId: number) => {
     setLocation(`/admin/locations/${locationId}`);
@@ -295,37 +304,39 @@ export default function Locations() {
 
   return (
     <div className="h-full flex flex-col">
-
       {/* Alert */}
       {showAlert && (
-        <div className={`rounded-md p-4 ${
-          showAlert.type === 'success' ? 'bg-green-50 border border-green-200' :
-          showAlert.type === 'error' ? 'bg-red-50 border border-red-200' :
-          'bg-blue-50 border border-blue-200'
+        <div className={`mb-4 p-4 rounded-lg flex items-center ${
+          showAlert.type === 'success' ? 'bg-green-50 text-green-800' :
+          showAlert.type === 'error' ? 'bg-red-50 text-red-800' :
+          'bg-blue-50 text-blue-800'
         }`}>
-          <div className="flex">
-            <div className="flex-shrink-0">
-              {showAlert.type === 'success' && <CheckCircle className="h-5 w-5 text-green-400" />}
-              {showAlert.type === 'error' && <AlertTriangle className="h-5 w-5 text-red-400" />}
-              {showAlert.type === 'info' && <Info className="h-5 w-5 text-blue-400" />}
-            </div>
-            <div className="ml-3">
-              <p className={`text-sm font-medium ${
-                showAlert.type === 'success' ? 'text-green-800' :
-                showAlert.type === 'error' ? 'text-red-800' :
-                'text-blue-800'
-              }`}>
-                {showAlert.message}
-              </p>
-            </div>
-          </div>
+          {showAlert.type === 'success' && <CheckCircle className="w-5 h-5 mr-2" />}
+          {showAlert.type === 'error' && <AlertTriangle className="w-5 h-5 mr-2" />}
+          {showAlert.type === 'info' && <Info className="w-5 h-5 mr-2" />}
+          {showAlert.message}
         </div>
       )}
 
+      <PageHeader
+        title="Lokasyon Yönetimi"
+        subtitle={`${filteredLocations.length} lokasyon`}
+        actions={
+          currentParent ? (
+            <button 
+              onClick={handleBackClick}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Geri
+            </button>
+          ) : undefined
+        }
+      />
 
-
-      {/* Locations List */}
-      <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+      <div className="flex-1 flex flex-col">
+        {/* Locations List */}
+        <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -490,6 +501,7 @@ export default function Locations() {
             })}
           </ul>
           )}
+        </div>
         </div>
       </div>
 
