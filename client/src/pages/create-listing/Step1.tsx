@@ -122,14 +122,21 @@ export default function CreateListingStep1() {
 
   // Handle category selection
   const handleCategorySelect = (category: Category) => {
+    console.log('Kategori seçildi:', category.name, 'Parent ID:', category.parentId);
+    
     // Check if this is a root level category (no parent)
     const isRootCategory = !category.parentId;
     
     let newPath;
     
     if (isRootCategory) {
-      // If selecting a root category, reset path completely
+      // Ana kategori seçildiğinde - mevcut draft kontrolü yap
+      console.log('Ana kategori seçildi, draft kontrol ediliyor...');
       newPath = [category];
+      
+      // Set pending category for draft check - ANA KATEGORİ SEÇİLDİĞİNDE
+      setPendingCategory(category);
+      setPendingPath(newPath);
     } else {
       // Find which level this category belongs to
       const currentLevel = getCategoryLevels().findIndex(levelCategories => 
@@ -143,6 +150,13 @@ export default function CreateListingStep1() {
       } else {
         // Fallback: add to end of path
         newPath = [...categoryPath, category];
+      }
+      
+      // Alt kategori seçildiğinde sadece path'i güncelle
+      if (!hasChildren(category)) {
+        // Son kategori seçildiğinde de pending'i güncelle
+        setPendingCategory(category);
+        setPendingPath(newPath);
       }
     }
     
@@ -165,14 +179,8 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), set it as selected but don't auto-proceed
+    // Final category selection için context'i güncelle
     if (!hasChildren(category)) {
-      console.log('Son kategori seçildi:', category.name, 'ID:', category.id);
-      
-      // Set pending category for draft check
-      setPendingCategory(category);
-      setPendingPath(newPath);
-      
       dispatch({
         type: 'SET_CATEGORY',
         payload: { category, path: newPath }
@@ -283,16 +291,30 @@ export default function CreateListingStep1() {
   };
 
   const handleCreateNewListing = async () => {
-    if (!existingDraft || !pendingCategory) return;
+    if (!existingDraft) return;
     
     try {
+      console.log('Yeni ilan oluşturuluyor, eski draft siliniyor...');
+      
       // Delete existing draft
       await deleteDraftMutation.mutateAsync(existingDraft.id);
       
+      // Modal'ı kapat
       setShowDraftModal(false);
       
-      // Continue with new draft creation
-      await handleContinueToStep2();
+      // Tüm state'leri sıfırla
+      setPendingCategory(null);
+      setPendingPath([]);
+      setCategoryPath([]);
+      
+      // Context'i sıfırla
+      dispatch({ type: 'RESET_LISTING' });
+      
+      console.log('Eski draft silindi, tüm stepler sıfırlandı');
+      
+      // Ana sayfaya geri dön (kategoriler listesi)
+      // Kullanıcı tekrar kategori seçmeli
+      
     } catch (error) {
       console.error('Eski draft silinirken hata:', error);
       alert('Eski taslak silinirken bir hata oluştu. Lütfen tekrar deneyin.');
