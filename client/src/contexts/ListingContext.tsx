@@ -79,17 +79,18 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
     case 'SET_IS_DRAFT':
       return { ...state, isDraft: action.payload };
     case 'LOAD_DRAFT':
+      const draft = action.payload.draft;
       return {
         ...state,
         classifiedId: action.payload.classifiedId,
         isDraft: true,
-        selectedCategory: action.payload.draft.category || null,
+        // Don't override selectedCategory and categoryPath here - they should be set separately
         formData: {
           ...state.formData,
-          customFields: action.payload.draft.customFields ? JSON.parse(action.payload.draft.customFields) : {},
-          title: action.payload.draft.title || '',
-          description: action.payload.draft.description || '',
-          price: action.payload.draft.price || '',
+          customFields: draft.customFields ? JSON.parse(draft.customFields) : {},
+          title: draft.title || '',
+          description: draft.description || '',
+          price: draft.price || '',
         },
       };
     case 'RESET_LISTING':

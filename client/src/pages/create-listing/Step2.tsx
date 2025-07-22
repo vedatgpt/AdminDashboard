@@ -38,17 +38,39 @@ export default function Step2() {
   
   // Load draft data when available
   useEffect(() => {
+    // Update context with classified ID from URL if not set
+    if (currentClassifiedId && !classifiedId) {
+      dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentClassifiedId });
+      dispatch({ type: 'SET_IS_DRAFT', payload: true });
+    }
+    
     if (draftData && currentClassifiedId) {
-      // Update the context with classified ID if not already set
-      if (!classifiedId) {
-        dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentClassifiedId });
-        dispatch({ type: 'SET_IS_DRAFT', payload: true });
-      }
+      // Load draft data into context
+      dispatch({ 
+        type: 'LOAD_DRAFT', 
+        payload: { 
+          classifiedId: currentClassifiedId, 
+          draft: draftData 
+        } 
+      });
       
       // Load form data from draft
       if (draftData.customFields) {
         const customFields = JSON.parse(draftData.customFields);
         dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
+      }
+      
+      // Load location data from draft
+      if (draftData.locationData) {
+        try {
+          const locationData = JSON.parse(draftData.locationData);
+          if (locationData.country) setSelectedCountry(locationData.country);
+          if (locationData.city) setSelectedCity(locationData.city);
+          if (locationData.district) setSelectedDistrict(locationData.district);
+          if (locationData.neighborhood) setSelectedNeighborhood(locationData.neighborhood);
+        } catch (error) {
+          console.error('Location data parse error:', error);
+        }
       }
     }
   }, [draftData, currentClassifiedId, classifiedId, dispatch]);

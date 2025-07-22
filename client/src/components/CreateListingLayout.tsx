@@ -42,8 +42,10 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
       // Use custom back handler if provided (for Step1 category navigation)
       customBackHandler();
     } else if (stepNumber > 1) {
-      // Step 2, 3, etc: Navigate to previous step
-      navigate(`/create-listing/step-${stepNumber - 1}`);
+      // Step 2, 3, etc: Navigate to previous step with classifiedId preservation
+      const classifiedId = state.classifiedId;
+      const classifiedIdParam = classifiedId ? `?classifiedId=${classifiedId}` : '';
+      navigate(`/create-listing/step-${stepNumber - 1}${classifiedIdParam}`);
     }
   };
 

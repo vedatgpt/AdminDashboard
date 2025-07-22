@@ -45,18 +45,26 @@ export default function CreateListingStep1() {
 
   // Load draft data when available
   useEffect(() => {
-    if (draftData && classifiedId) {
+    // First check URL parameter for classifiedId
+    if (classifiedId && !state.classifiedId) {
+      dispatch({ type: 'SET_CLASSIFIED_ID', payload: classifiedId });
+      dispatch({ type: 'SET_IS_DRAFT', payload: true });
+    }
+    
+    if (draftData && (classifiedId || state.classifiedId)) {
+      const currentClassifiedId = classifiedId || state.classifiedId;
+      
       // Load draft data into context
       dispatch({ 
         type: 'LOAD_DRAFT', 
         payload: { 
-          classifiedId, 
+          classifiedId: parseInt(currentClassifiedId), 
           draft: draftData 
         } 
       });
       
       // If draft has category, set it up
-      if (draftData.categoryId) {
+      if (draftData.categoryId && flatCategories.length > 0) {
         const category = flatCategories.find(cat => cat.id === draftData.categoryId);
         if (category) {
           // Build category path
@@ -72,11 +80,11 @@ export default function CreateListingStep1() {
           
           const path = buildPath(category);
           setCategoryPath(path);
-          dispatch({ type: 'SET_CATEGORY_WITH_PATH', payload: { category, path } });
+          dispatch({ type: 'SET_CATEGORY', payload: { category, path } });
         }
       }
     }
-  }, [draftData, classifiedId, flatCategories, dispatch]);
+  }, [draftData, classifiedId, state.classifiedId, flatCategories, dispatch]);
 
   useEffect(() => {
     if (allCategories.length > 0) {
