@@ -29,9 +29,15 @@ export default function Sidebar() {
 
   // Initialize Preline UI components on mount
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).HSAccordion) {
-      (window as any).HSAccordion.autoInit();
-    }
+    // Use a more reliable method to initialize Preline components
+    const initPreline = () => {
+      if (typeof window !== 'undefined' && (window as any).HSAccordion) {
+        (window as any).HSAccordion.autoInit();
+      }
+    };
+    
+    // Delay initialization to ensure DOM is ready
+    setTimeout(initPreline, 200);
   }, []);
 
   return (
