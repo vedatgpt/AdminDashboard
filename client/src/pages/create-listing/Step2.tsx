@@ -4,6 +4,7 @@ import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing'
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
+import CreateListingLayout from '@/components/CreateListingLayout';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
@@ -34,8 +35,20 @@ export default function Step2() {
   const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
   
   // Draft listing hooks
-  const { data: draftData } = useDraftListing(currentClassifiedId);
+  const { data: draftData, isLoading: draftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
+  
+  // Show loading state while draft data is loading
+  if (draftLoading) {
+    return (
+      <CreateListingLayout stepNumber={2}>
+        <div className="text-center py-12">
+          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
+          <p className="text-gray-500">Form verileriniz yükleniyor...</p>
+        </div>
+      </CreateListingLayout>
+    );
+  }
   
   // Location selection state
   const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);

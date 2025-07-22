@@ -616,6 +616,16 @@ Authentication features:
 - System provides users with transparent insight into application performance improvements
 - Load time tracking helps monitor the effectiveness of optimization efforts
 
+### Step Form Loading States and Performance Optimization (July 22, 2025)
+- Fixed Step-2 showing empty form data during loading by adding proper loading state screens
+- Step-3 now shows loading state while draft data is being fetched to prevent premature rendering
+- Removed PageLoadIndicator from Step-3 photo upload area as requested by user
+- Enhanced photo drag & drop sorting to immediately save order changes to draft with proper data structure
+- Optimized draft listing cache settings: 5 minutes staleTime, 10 minutes gcTime for better performance
+- Step-4 photo gallery now uses lazy loading for all images except first one for faster initial render
+- Fixed JSX syntax errors and improved component structure throughout Step pages
+- All step pages now use CreateListingLayout wrapper for consistent navigation and user experience
+
 ### Step-4 Listing Preview Page Implementation (July 22, 2025)
 - Created comprehensive listing preview page (Step4.tsx) with Swiper.js integration for photo galleries
 - Implemented 5-section layout as requested: Title (top), 3-column content (gallery|details|location), Description (bottom)
