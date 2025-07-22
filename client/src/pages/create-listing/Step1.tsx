@@ -472,7 +472,10 @@ export default function CreateListingStep1() {
                             // Create draft only if it doesn't exist
                             if (!currentClassifiedId) {
                               try {
-                                const newDraft = await createDraftMutation.mutateAsync();
+                                const newDraft = await createDraftMutation.mutateAsync({
+                                  categoryId: state.selectedCategory?.id || categoryPath[categoryPath.length - 1]?.id || 0,
+                                  status: 'draft'
+                                });
                                 currentClassifiedId = newDraft.id;
                                 dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
                                 dispatch({ type: 'SET_IS_DRAFT', payload: true });
