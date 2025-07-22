@@ -5,6 +5,7 @@ import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
 import { useCategoriesTree } from '@/hooks/useCategories';
 import { useLocationsTree } from '@/hooks/useLocations';
+import { useToast } from "@/hooks/use-toast";
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -19,6 +20,7 @@ export default function Step4() {
   const { state } = useListing();
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
 
   // Redirect to login if not authenticated
@@ -273,7 +275,10 @@ export default function Step4() {
           <button
             onClick={() => {
               // TODO: İlanı yayınla fonksiyonu
-              alert('İlan yayınlama özelliği yakında eklenecek');
+              toast({
+                title: "Bilgi",
+                description: 'İlan yayınlama özelliği yakında eklenecek'
+              });
             }}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >

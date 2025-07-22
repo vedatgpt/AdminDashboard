@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import Sortable from "sortablejs";
 
@@ -27,6 +28,7 @@ export default function Step3() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sortableRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   // URL parameter support
   const urlParams = new URLSearchParams(window.location.search);
@@ -49,21 +51,21 @@ export default function Step3() {
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-    console.log('Draft data received:', draftData);
+
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
-        console.log('Photos from draft:', draftData.photos);
+
         const existingPhotos = JSON.parse(draftData.photos as string);
-        console.log('Parsed photos:', existingPhotos);
+
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
           // Only set if images array is empty to avoid overriding current state
           setImages(prev => {
-            console.log('Current images length:', prev.length);
+
             return prev.length === 0 ? existingPhotos : prev;
           });
         }
       } catch (error) {
-        console.error('Error parsing photos from draft:', error);
+
       }
     }
   }, [draftData]);
@@ -122,10 +124,14 @@ export default function Step3() {
       });
       
     } catch (error) {
-      console.error('Upload error:', error);
+
       // Remove failed upload
       setImages(prev => prev.filter(img => img.id !== uploadingId));
-      alert(`Yükleme hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+      toast({
+        title: "Yükleme Hatası",
+        description: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        variant: "destructive"
+      });
     }
   };
 
@@ -146,8 +152,12 @@ export default function Step3() {
       setImages(prev => prev.filter(img => img.id !== imageId));
     },
     onError: (error) => {
-      console.error('Delete error:', error);
-      alert(`Silme hatası: ${error.message}`);
+
+      toast({
+        title: "Silme Hatası",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -229,12 +239,20 @@ export default function Step3() {
     
     const validFiles = Array.from(files).filter(file => {
       if (!file.type.startsWith('image/')) {
-        alert('Sadece resim dosyaları yüklenebilir');
+        toast({
+          title: "Geçersiz Dosya",
+          description: 'Sadece resim dosyaları yüklenebilir',
+          variant: "destructive"
+        });
         return false;
       }
       
       if (file.size > MAX_FILE_SIZE) {
-        alert(`Dosya boyutu ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB'dan küçük olmalıdır`);
+        toast({
+          title: "Dosya Çok Büyük",
+          description: `Dosya boyutu ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB'dan küçük olmalıdır`,
+          variant: "destructive"
+        });
         return false;
       }
       
@@ -243,7 +261,11 @@ export default function Step3() {
     });
 
     if (images.length + validFiles.length > MAX_IMAGES) {
-      alert(`En fazla ${MAX_IMAGES} resim yükleyebilirsiniz`);
+      toast({
+        title: "Çok Fazla Resim",
+        description: `En fazla ${MAX_IMAGES} resim yükleyebilirsiniz`,
+        variant: "destructive"
+      });
       return;
     }
 
@@ -313,19 +335,19 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log('Photos saved to draft successfully:', data);
+
     },
     onError: (error) => {
-      console.error('Error saving photos to draft:', error);
+
     }
   });
 
   // Auto-save photos to draft whenever images change (with debounce)
   useEffect(() => {
-    if (images.length > 0 && currentClassifiedId && !images.some(img => img.uploading)) {
+    if (currentClassifiedId && !images.some(img => img.uploading)) {
       const timeoutId = setTimeout(() => {
         updateDraftMutation.mutate(images);
-      }, 1000); // 1 second debounce
+      }, 1500); // 1.5 second debounce
       
       return () => clearTimeout(timeoutId);
     }
@@ -335,7 +357,11 @@ export default function Step3() {
     // Wait for all uploads to complete
     const hasUploading = images.some(img => img.uploading);
     if (hasUploading) {
-      alert('Lütfen tüm fotoğrafların yüklenmesini bekleyin');
+      toast({
+        title: "Bekleyiniz",
+        description: 'Lütfen tüm fotoğrafların yüklenmesini bekleyin',
+        variant: "destructive"
+      });
       return;
     }
 

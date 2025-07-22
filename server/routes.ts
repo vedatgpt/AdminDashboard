@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import multer from "multer";
@@ -8,23 +8,47 @@ import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { loginSchema, registerSchema } from "@shared/schema";
+import { loginSchema, registerSchema, type User } from "@shared/schema";
 import session from "express-session";
 import categoriesRouter from "./routes/categories";
 
+// Extend Express Session type to include custom user properties
+declare module 'express-session' {
+  interface SessionData {
+    user?: User & {
+      companyId?: number;
+      companyName?: string | null;
+    };
+    userType?: "user" | "personnel";
+    userId?: number;
+  }
+}
+
+// Extended Request interface for typed session access
+interface AuthenticatedRequest extends Request {
+  session: session.Session & {
+    user?: User & {
+      companyId?: number;
+      companyName?: string | null;
+    };
+    userType?: "user" | "personnel";
+    userId?: number;
+  };
+}
+
 // Middleware to check if user is authenticated
-const requireAuth = (req: any, res: any, next: any) => {
+const requireAuth = (req: AuthenticatedRequest, res: Response, next: any) => {
   if (!req.session?.user) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
   }
   req.session.userId = req.session.user.id; // Add userId for backward compatibility
   next();
 };
 
 // Middleware to check if user is admin
-const requireAdmin = (req: any, res: any, next: any) => {
+const requireAdmin = (req: AuthenticatedRequest, res: Response, next: any) => {
   if (!req.session?.user || req.session.user.role !== 'admin') {
-    return res.status(403).json({ error: "Admin access required" });
+    return res.status(403).json({ error: "Admin yetkisi gerekli" });
   }
   next();
 };
@@ -114,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json({ user: userWithoutPassword });
         }
       } catch (userAuthError) {
-        console.log("Regular user authentication failed for:", loginIdentifier);
+
       }
 
       // If regular user authentication fails and identifier is email, try personnel
@@ -123,22 +147,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const personnelAuth = await storage.authenticateAuthorizedPersonnel(loginIdentifier, password);
           
           if (personnelAuth) {
-            console.log("Personnel authentication successful for:", loginIdentifier);
+
             // Store personnel info in session
             req.session.user = {
               id: personnelAuth.personnel.id,
               username: personnelAuth.personnel.email,
+              password: '', // Don't store actual password
               email: personnelAuth.personnel.email,
               firstName: personnelAuth.personnel.firstName,
               lastName: personnelAuth.personnel.lastName,
-              role: "authorized_personnel",
               companyName: personnelAuth.company.companyName,
-              companyId: personnelAuth.company.id,
+              profileImage: null,
               mobilePhone: personnelAuth.personnel.mobilePhone,
               whatsappNumber: personnelAuth.personnel.whatsappNumber,
+              businessPhone: null,
+              role: "authorized_personnel",
               isActive: personnelAuth.personnel.isActive,
               createdAt: personnelAuth.personnel.createdAt,
               updatedAt: personnelAuth.personnel.updatedAt,
+              companyId: personnelAuth.company.id,
             };
             req.session.userType = "personnel";
 
@@ -247,10 +274,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user contact information
-  app.patch("/api/user/contact", requireAuth, async (req, res) => {
+  app.patch("/api/user/contact", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { mobilePhone, whatsappNumber, businessPhone } = req.body;
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
 
       // Get current user to check role
       const currentUser = await storage.getUserById(userId);
@@ -276,10 +303,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user profile
-  app.patch("/api/user/profile", requireAuth, async (req, res) => {
+  app.patch("/api/user/profile", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { firstName, lastName, companyName, username } = req.body;
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
 
       // Validate required fields
       if (!firstName || !lastName) {
@@ -327,9 +354,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authorized Personnel Management API endpoints
 
   // Get authorized personnel for current corporate user
-  app.get("/api/authorized-personnel", requireAuth, async (req, res) => {
+  app.get("/api/authorized-personnel", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
@@ -345,9 +372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new authorized personnel
-  app.post("/api/authorized-personnel", requireAuth, async (req, res) => {
+  app.post("/api/authorized-personnel", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
       
       // Verify user is corporate
@@ -388,9 +415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update authorized personnel
-  app.patch("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
+  app.patch("/api/authorized-personnel/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
       
@@ -434,9 +461,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Toggle authorized personnel active status
-  app.patch("/api/authorized-personnel/:id/toggle-status", requireAuth, async (req, res) => {
+  app.patch("/api/authorized-personnel/:id/toggle-status", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
       const { isActive } = req.body;
       
@@ -465,9 +492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete authorized personnel
-  app.delete("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
+  app.delete("/api/authorized-personnel/:id", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
       
       // Verify user is corporate
@@ -490,10 +517,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Change password
-  app.patch("/api/user/change-password", requireAuth, async (req, res) => {
+  app.patch("/api/user/change-password", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
 
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ error: "Mevcut şifre ve yeni şifre gerekli" });
@@ -528,10 +555,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Change user email
-  app.patch("/api/user/change-email", requireAuth, async (req, res) => {
+  app.patch("/api/user/change-email", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { email } = req.body;
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
 
       // Validate email format
       if (!email || !email.includes("@")) {
@@ -557,9 +584,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload profile image
-  app.post("/api/user/profile-image", requireAuth, upload.single("profileImage"), async (req, res) => {
+  app.post("/api/user/profile-image", requireAuth, upload.single("profileImage"), async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
       const file = req.file;
 
       if (!file) {
@@ -615,9 +642,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete profile image
-  app.delete("/api/user/profile-image", requireAuth, async (req, res) => {
+  app.delete("/api/user/profile-image", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const userId = req.session.userId;
+      const userId = req.session.user!.id;
 
       // Get current user
       const currentUser = await storage.getUserById(userId);
@@ -770,7 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.reorderLocations(parentId, numericLocationIds);
       res.json({ message: "Lokasyon sıralaması güncellendi" });
     } catch (error) {
-      console.error('Location reorder error:', error);
+
       res.status(500).json({ error: "Lokasyon sıralaması güncellenirken hata oluştu" });
     }
   });
@@ -790,13 +817,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update location settings
   app.patch("/api/location-settings", requireAdmin, async (req, res) => {
     try {
-      console.log('Location settings update request:', req.body);
+
       const updates = req.body;
       const settings = await storage.updateLocationSettings(updates);
-      console.log('Location settings updated successfully:', settings);
+
       res.json(settings);
     } catch (error) {
-      console.error('Location settings update error:', error);
+
       res.status(500).json({ error: `Lokasyon ayarları güncellenirken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` });
     }
   });
@@ -814,7 +841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Draft Listings API routes
   
   // Get draft listing by ID (Authentication required + ownership check)
-  app.get("/api/draft-listings/:id", async (req, res) => {
+  app.get("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
@@ -841,7 +868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's draft listings
-  app.get("/api/draft-listings", async (req, res) => {
+  app.get("/api/draft-listings", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.session?.user?.id;
       if (!userId) {
@@ -865,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new draft listing
-  app.post("/api/draft-listings", async (req, res) => {
+  app.post("/api/draft-listings", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.session?.user?.id;
       if (!userId) {
@@ -884,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update draft listing
-  app.patch("/api/draft-listings/:id", async (req, res) => {
+  app.patch("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
@@ -908,7 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete draft listing
-  app.delete("/api/draft-listings/:id", async (req, res) => {
+  app.delete("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
@@ -931,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Publish draft listing
-  app.post("/api/draft-listings/:id/publish", async (req, res) => {
+  app.post("/api/draft-listings/:id/publish", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
@@ -1009,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ images: uploadedImages });
     } catch (error) {
-      console.error('Upload error:', error);
+
       res.status(500).json({ error: "Dosya yükleme hatası" });
     }
   });
@@ -1057,7 +1084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         thumbnail: `/uploads/users/${userId}/temp-listings/thumb_${imageFile}`
       });
     } catch (error) {
-      console.error('Rotate error:', error);
+
       res.status(500).json({ error: "Resim döndürme hatası" });
     }
   });
@@ -1080,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ message: "Resim silindi" });
     } catch (error) {
-      console.error('Delete error:', error);
+
       res.status(500).json({ error: "Resim silme hatası" });
     }
   });

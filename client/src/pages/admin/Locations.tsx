@@ -53,7 +53,7 @@ export default function Locations() {
     },
     onError: (error) => {
       showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
-      console.error('Reorder error:', error);
+
     }
   });
 
@@ -182,7 +182,7 @@ export default function Locations() {
 
   // Handle delete location
   const handleDelete = (location: Location) => {
-    if (!confirm(`"${location.name}" lokasyonunu silmek istediğinizden emin misiniz? Bu işlem alt lokasyonları da silecektir.`)) {
+    if (!window.confirm(`"${location.name}" lokasyonunu silmek istediğinizden emin misiniz? Bu işlem alt lokasyonları da silecektir.`)) {
       return;
     }
 

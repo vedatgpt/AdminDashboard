@@ -191,10 +191,10 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
         onSearch(searchTerm.trim());
       } else {
         // Default search behavior
-        console.log('Arama yapılıyor:', searchTerm.trim());
+
       }
     } catch (error) {
-      console.error('Arama hatası:', error);
+
     } finally {
       setIsSearching(false);
     }

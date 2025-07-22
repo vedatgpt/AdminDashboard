@@ -4,6 +4,7 @@ import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
 import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useDeleteDraftListing, useUserDraftListings, DraftListing } from '@/hooks/useDraftListing';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from "@/hooks/use-toast";
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -18,6 +19,7 @@ export default function CreateListingStep1() {
   const { state, dispatch } = useListing();
   const { data: allCategories = [], isLoading } = useCategories();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   // Redirect to login if not authenticated - simplified
   useEffect(() => {
@@ -288,7 +290,11 @@ export default function CreateListingStep1() {
       navigate(`/create-listing/step-2?classifiedId=${draftId}`);
     } catch (error) {
       console.error('Draft oluşturulamadı:', error);
-      alert('İlan taslağı oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+      toast({
+        title: "Hata",
+        description: 'İlan taslağı oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.',
+        variant: "destructive"
+      });
     }
   };
 
@@ -357,7 +363,11 @@ export default function CreateListingStep1() {
       
     } catch (error) {
       console.error('Eski draft silinirken hata:', error);
-      alert('Eski taslak silinirken bir hata oluştu. Lütfen tekrar deneyin.');
+      toast({
+        title: "Hata",
+        description: 'Eski taslak silinirken bir hata oluştu. Lütfen tekrar deneyin.',
+        variant: "destructive"
+      });
     }
   };
 

@@ -229,7 +229,7 @@ router.patch("/reorder", requireAuth, requireAdmin, async (req, res) => {
     
     res.json({ message: "Categories reordered successfully" });
   } catch (error) {
-    console.error("Error reordering categories:", error);
+
     res.status(500).json({ error: "Failed to reorder categories" });
   }
 });
@@ -242,7 +242,7 @@ router.use(requireAdmin);
 router.post("/", async (req, res) => {
   try {
     const validatedData = insertCategorySchema.parse(req.body);
-    console.log("Creating category with data:", validatedData);
+
     
     // Check for duplicate slug within same parent
     const existingCategory = await storage.getCategoryBySlug(validatedData.slug, validatedData.parentId ?? null);
@@ -256,8 +256,7 @@ router.post("/", async (req, res) => {
     const category = await storage.createCategory(validatedData);
     res.status(201).json(category);
   } catch (error: any) {
-    console.error("Error creating category:", error);
-    console.error("Error details:", error.message);
+
     if (error.name === "ZodError") {
       return res.status(400).json({ error: "Invalid input data", details: error.errors });
     }

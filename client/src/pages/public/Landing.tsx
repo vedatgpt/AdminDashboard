@@ -24,7 +24,6 @@ export default function Landing() {
   };
 
   const handleSearch = (searchTerm: string) => {
-    console.log('Landing sayfasında arama:', searchTerm);
     // Burada arama fonksiyonunu implement edebilirsiniz
   };
 
