@@ -38,7 +38,7 @@ export default function Sidebar() {
     <>
       {/* Mobile backdrop */}
       <div
-        className={`fixed inset-0 z-[9998] bg-black bg-opacity-50 lg:hidden ${isOpen ? "block" : "hidden"}`}
+        className={`fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden ${isOpen ? "block" : "hidden"}`}
         onClick={close}
       />
 
@@ -52,7 +52,7 @@ export default function Sidebar() {
         ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-all duration-300 transform
         h-full
         ${isOpen ? "block" : "hidden lg:block"}
-        fixed top-0 start-0 bottom-0 z-[9999]
+        fixed top-0 start-0 bottom-0 z-40
         bg-white border-e border-gray-200`}
         role="dialog" 
         tabIndex={-1} 
