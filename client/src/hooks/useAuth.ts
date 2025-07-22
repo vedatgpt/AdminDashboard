@@ -9,11 +9,11 @@ export function useAuth() {
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    staleTime: 30 * 1000, // 30 seconds - faster updates
+    staleTime: 10 * 1000, // 10 seconds - faster auth updates
     refetchOnWindowFocus: false, // Reduce unnecessary API calls
     refetchOnMount: true, // DO refetch on mount for faster auth checks
     refetchOnReconnect: true,
-    gcTime: 2 * 60 * 1000, // Shorter cache time - 2 minutes
+    gcTime: 1 * 60 * 1000, // 1 minute cache time - faster clearing
   });
 
   const loginMutation = useMutation({

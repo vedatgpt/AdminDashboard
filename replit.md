@@ -602,6 +602,6 @@ Authentication features:
 - Location and category data staleTime optimized: 5-10 minutes for static data, 3 minutes for custom fields
 - Added Neon database optimizations: poolQueryViaFetch and reduced WebSocket overhead
 - Enhanced session middleware: disabled unnecessary resave operations
-- **CRITICAL FIX**: Optimized getCategoryCustomFieldsWithInheritance - single SQL query instead of N+1 queries
+- **CRITICAL FIX**: Optimized getCategoryCustomFieldsWithInheritance - single SQL query instead of N+1 queries, fixed PostgreSQL array syntax
 - Removed useEffect dependency bloat in Step pages - reduced re-render cycles
 - Performance improvements maintain all security measures while dramatically reducing load times
