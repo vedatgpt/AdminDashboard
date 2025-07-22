@@ -242,6 +242,12 @@ export default function Categories() {
               // Extract category IDs in new order
               const categoryIds = reorderedCategories.map(cat => cat.id);
               
+              console.log('Reordering categories:', { 
+                parentId: currentParent?.id || null, 
+                categoryIds,
+                filteredCategories: filteredCategories.map(c => ({ id: c.id, name: c.name }))
+              });
+              
               // Send reorder request to backend
               reorderMutation.mutate({
                 parentId: currentParent?.id || null,

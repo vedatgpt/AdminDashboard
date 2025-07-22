@@ -270,9 +270,18 @@ router.patch("/reorder", async (req, res) => {
       return res.status(400).json({ error: "categoryIds must be an array" });
     }
     
+    // Validate that all category IDs are valid integers
+    const validCategoryIds = categoryIds.filter(id => 
+      typeof id === 'number' && Number.isInteger(id) && id > 0
+    );
+    
+    if (validCategoryIds.length !== categoryIds.length) {
+      return res.status(400).json({ error: "All category IDs must be valid positive integers" });
+    }
+    
     // Update sort order for all categories in the list
-    for (let i = 0; i < categoryIds.length; i++) {
-      const categoryId = categoryIds[i];
+    for (let i = 0; i < validCategoryIds.length; i++) {
+      const categoryId = validCategoryIds[i];
       await storage.updateCategory(categoryId, { sortOrder: i + 1 });
     }
     

@@ -504,3 +504,18 @@ Authentication features:
 - JavaScript confirmation dialog for photo deletion with Turkish text
 - Preline UI file upload design with professional icon and layout
 - Improved drag-and-drop visual feedback with orange color scheme
+
+### Migration to Standard Replit Environment & Bug Fixes (July 22, 2025)
+- Successfully migrated project from Replit Agent to standard Replit environment
+- Installed missing tsx dependency for TypeScript execution
+- Created PostgreSQL database and configured environment variables
+- Pushed database schema successfully using Drizzle ORM
+- Created admin user account: username "admin", password "admin"
+- Fixed drag & drop category sorting system that was not working properly
+- Replaced faulty single-category sortOrder update with comprehensive reordering system
+- Added new /api/categories/reorder endpoint with proper validation
+- Implemented complete category reordering logic that updates all categories' sort orders
+- Added frontend reorderMutation with proper error handling and cache invalidation
+- Enhanced backend validation to prevent integer parsing errors
+- Added debug logging for troubleshooting drag & drop operations
+- Application now fully operational on port 5000 with all features working
