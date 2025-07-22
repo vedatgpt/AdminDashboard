@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, MapPin, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
+import Sortable from 'sortablejs';
 import { useLocation } from "wouter";
 import PageHeader from "@/components/PageHeader";
 import LocationForm from "@/components/LocationForm";
@@ -200,12 +201,64 @@ export default function Locations() {
     );
   }
 
+  // Initialize SortableJS for locations
+  useEffect(() => {
+    // Use setTimeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const sortableElement = document.querySelector("#hs-location-sortable");
+      if (sortableElement && filteredLocations.length > 1) {
+        // Destroy existing sortable instance if it exists
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
+
+        const sortableInstance = new Sortable(sortableElement as HTMLElement, {
+          animation: 150,
+          dragClass: 'rounded-none!',
+          onEnd: function (evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+              // Create new array with reordered locations
+              const reorderedLocations = [...filteredLocations];
+              const [draggedLocation] = reorderedLocations.splice(oldIndex, 1);
+              reorderedLocations.splice(newIndex, 0, draggedLocation);
+              
+              // Extract location IDs in new order
+              const locationIds = reorderedLocations.map(loc => loc.id);
+              
+              // For locations, we would need a reorder API endpoint
+              // This would be similar to categories reorder
+              console.log('Reorder locations:', locationIds);
+              // TODO: Implement location reorder API call
+            }
+          }
+        });
+
+        // Store instance for cleanup
+        (sortableElement as any).sortableInstance = sortableInstance;
+      }
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+      const sortableElement = document.querySelector("#hs-location-sortable");
+      if (sortableElement) {
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
+      }
+    };
+  }, [filteredLocations]);
+
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Lokasyon Yönetimi" 
-        subtitle="Ülke, şehir, ilçe ve mahalle bilgilerini yönetin"
-      />
 
       {/* Alert */}
       {showAlert && (
@@ -334,13 +387,13 @@ export default function Locations() {
             )}
           </div>
         ) : (
-          <ul className="flex flex-col">
+          <ul id="hs-location-sortable" className="flex flex-col">
             {filteredLocations.map((loc, index) => {
               const childrenCount = (loc as any).children ? (loc as any).children.length : 0;
               return (
                 <li
                   key={loc.id}
-                  className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative"
+                  className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
                   onClick={() => {
                     // Navigate to children if it's a clickable location type
                     if (loc.type !== 'neighborhood') {
