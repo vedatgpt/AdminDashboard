@@ -157,7 +157,7 @@ export default function CreateListingStep1() {
     // Always go back to root (card layout) when breadcrumb is clicked
     setCategoryPath([]);
     dispatch({
-      type: 'SET_CATEGORY',
+      type: 'SET_CATEGORY_WITH_PATH',
       payload: { category: null, path: [] }
     });
   };
