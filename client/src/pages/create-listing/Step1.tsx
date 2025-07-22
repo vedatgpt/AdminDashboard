@@ -3,6 +3,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
 import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useDeleteDraftListing } from '@/hooks/useDraftListing';
+import { useAuth } from '@/hooks/useAuth';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -15,6 +16,7 @@ export default function CreateListingStep1() {
   const [, navigate] = useLocation();
   const { state, dispatch } = useListing();
   const { data: allCategories = [], isLoading } = useCategories();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
@@ -24,7 +26,7 @@ export default function CreateListingStep1() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const classifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
   
-  // Draft listing hooks
+  // Draft listing hooks - only enabled when authenticated
   const { data: draftData } = useDraftListing(classifiedId);
   const createDraftMutation = useCreateDraftListing();
   const updateDraftMutation = useUpdateDraftListing();
@@ -35,8 +37,10 @@ export default function CreateListingStep1() {
   const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
   const [pendingPath, setPendingPath] = useState<Category[]>([]);
   
-  // Check for existing draft when selecting final category
-  const { data: existingDraft, refetch: refetchDraft } = useUserDraftForCategory(pendingCategory?.id);
+  // Check for existing draft when selecting final category - only when authenticated
+  const { data: existingDraft, refetch: refetchDraft } = useUserDraftForCategory(
+    isAuthenticated ? pendingCategory?.id : undefined
+  );
 
   // Build flat categories array for easy lookup  
   const flatCategories = React.useMemo(() => {
@@ -186,17 +190,31 @@ export default function CreateListingStep1() {
 
   // Check for existing draft when final category is selected
   useEffect(() => {
-    if (pendingCategory && existingDraft && existingDraft.id !== classifiedId) {
-      setShowDraftModal(true);
-    } else if (pendingCategory && !existingDraft) {
-      // No draft found, proceed normally
-      handleContinueToStep2();
+    if (pendingCategory && !authLoading) {
+      if (!isAuthenticated) {
+        // Redirect to login if not authenticated
+        navigate('/auth/login');
+        return;
+      }
+      
+      if (existingDraft && existingDraft.id !== classifiedId) {
+        setShowDraftModal(true);
+      } else if (!existingDraft) {
+        // No draft found, proceed normally
+        handleContinueToStep2();
+      }
     }
-  }, [existingDraft, pendingCategory, classifiedId]);
+  }, [existingDraft, pendingCategory, classifiedId, isAuthenticated, authLoading, navigate]);
 
   // Handle continuing to step 2
   const handleContinueToStep2 = async () => {
     if (!pendingCategory || !pendingPath) return;
+
+    // Check authentication first
+    if (!isAuthenticated) {
+      navigate('/auth/login');
+      return;
+    }
 
     try {
       let draftId: number;
@@ -467,6 +485,12 @@ export default function CreateListingStep1() {
                         </p>
                         <button
                           onClick={async () => {
+                            // Check authentication first
+                            if (!isAuthenticated) {
+                              navigate('/auth/login');
+                              return;
+                            }
+                            
                             let currentClassifiedId = state.classifiedId || classifiedId;
                             
                             // Create draft only if it doesn't exist
@@ -505,7 +529,7 @@ export default function CreateListingStep1() {
                           }}
                           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                         >
-                          Devam Et
+                          {isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et'}
                         </button>
                       </div>
                     </div>
@@ -559,6 +583,12 @@ export default function CreateListingStep1() {
                   </p>
                   <button
                     onClick={async () => {
+                      // Check authentication first
+                      if (!isAuthenticated) {
+                        navigate('/auth/login');
+                        return;
+                      }
+                      
                       let currentClassifiedId = state.classifiedId || classifiedId;
                       
                       // Create draft only if it doesn't exist
@@ -603,7 +633,7 @@ export default function CreateListingStep1() {
                     }}
                     className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-base font-medium"
                   >
-                    Devam Et
+                    {isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et'}
                   </button>
                 </div>
               )}
