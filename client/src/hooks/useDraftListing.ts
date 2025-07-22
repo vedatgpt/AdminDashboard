@@ -129,25 +129,6 @@ export function useUserDraftForCategory(categoryId?: number) {
   });
 }
 
-// Hook for checking user's draft for ROOT category (and all its subcategories)
-export function useUserDraftForRootCategory(rootCategoryId?: number) {
-  return useQuery({
-    queryKey: ['/api/draft-listings', 'rootCategory', rootCategoryId],
-    queryFn: async () => {
-      if (!rootCategoryId) return null;
-      const response = await fetch(`/api/draft-listings?rootCategoryId=${rootCategoryId}`);
-      if (!response.ok) {
-        if (response.status === 404) return null;
-        throw new Error('Ana kategori draft araması yapılamadı');
-      }
-      const drafts = await response.json() as DraftListing[];
-      return drafts.length > 0 ? drafts[0] : null;
-    },
-    enabled: !!rootCategoryId,
-    staleTime: 1 * 60 * 1000, // 1 minute
-  });
-}
-
 // Hook for publishing a draft listing
 export function usePublishDraftListing() {
   const queryClient = useQueryClient();

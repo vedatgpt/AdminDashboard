@@ -1,6 +1,6 @@
 import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc, and, or, sql } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -68,7 +68,6 @@ export interface IStorage {
   getDraftListing(id: number): Promise<DraftListing | undefined>;
   getUserDraftListings(userId: number): Promise<DraftListing[]>;
   getUserDraftForCategory(userId: number, categoryId: number): Promise<DraftListing | undefined>;
-  getUserDraftForRootCategory(userId: number, rootCategoryId: number): Promise<DraftListing | undefined>;
   createDraftListing(data: InsertDraftListing): Promise<DraftListing>;
   updateDraftListing(id: number, updates: UpdateDraftListing): Promise<DraftListing>;
   deleteDraftListing(id: number): Promise<void>;
@@ -597,39 +596,6 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(draftListings.userId, userId),
           eq(draftListings.categoryId, categoryId),
-          eq(draftListings.status, "draft")
-        )
-      )
-      .orderBy(desc(draftListings.updatedAt))
-      .limit(1);
-    return draft || undefined;
-  }
-
-  // Ana kategori için draft arama - kategorinin kendisi veya alt kategorilerinde draft var mı
-  async getUserDraftForRootCategory(userId: number, rootCategoryId: number): Promise<DraftListing | undefined> {
-    // Önce tüm kategorileri çek
-    const allCategories = await db.select().from(categories);
-    
-    // Ana kategorinin altındaki tüm kategori ID'lerini bul (recursive)
-    const findAllSubcategoryIds = (parentId: number): number[] => {
-      const subcategories = allCategories.filter(cat => cat.parentId === parentId);
-      let allIds = [parentId]; // Ana kategoriyi de dahil et
-      
-      for (const subcat of subcategories) {
-        allIds = [...allIds, ...findAllSubcategoryIds(subcat.id)];
-      }
-      
-      return allIds;
-    };
-    
-    const allCategoryIds = findAllSubcategoryIds(rootCategoryId);
-    
-    // Bu kategori ID'lerinde draft var mı kontrol et
-    const [draft] = await db.select().from(draftListings)
-      .where(
-        and(
-          eq(draftListings.userId, userId),
-          sql`${draftListings.categoryId} IN (${allCategoryIds.join(',')})`,
           eq(draftListings.status, "draft")
         )
       )

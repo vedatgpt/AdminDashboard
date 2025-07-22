@@ -17,7 +17,7 @@ const requireAuth = (req: any, res: any, next: any) => {
   if (!req.session?.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-  req.session.userId = req.session.user?.id; // Add userId for backward compatibility
+  req.session.userId = req.session.user.id; // Add userId for backward compatibility
   next();
 };
 
@@ -102,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Store user in session
-          req.session.user = user as any;
+          req.session.user = user;
           req.session.userType = "user";
           
           // Return user without password
@@ -135,10 +135,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               isActive: personnelAuth.personnel.isActive,
               createdAt: personnelAuth.personnel.createdAt,
               updatedAt: personnelAuth.personnel.updatedAt,
-            } as any;
+            };
             req.session.userType = "personnel";
 
-            const { password: _, ...personnelData } = req.session.user as any;
+            const { password: _, ...personnelData } = req.session.user;
             return res.json({ user: personnelData });
           }
         } catch (personnelAuthError) {
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Login error:", error);
       console.error("Request body:", req.body);
-      console.error("Error stack:", (error as Error).stack);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ error: "Giriş işlemi sırasında hata oluştu" });
     }
   });
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.registerUser(registerData);
       
       // Store user in session
-      req.session.user = user as any;
+      req.session.user = user;
       
       // Return user without password
       const { password, ...userWithoutPassword } = user;
@@ -199,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // If this is an authorized personnel session, return the session data directly
       if (req.session?.userType === "personnel") {
-        const { password, ...userWithoutPassword } = sessionUser as any;
+        const { password, ...userWithoutPassword } = sessionUser;
         return res.json(userWithoutPassword);
       }
       
@@ -207,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const freshUser = await storage.getUserById(sessionUser.id);
       if (freshUser) {
         // Update session with fresh data
-        req.session.user = freshUser as any;
+        req.session.user = freshUser;
         const { password, ...userWithoutPassword } = freshUser;
         res.json(userWithoutPassword);
       } else {
@@ -246,10 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/contact", requireAuth, async (req, res) => {
     try {
       const { mobilePhone, whatsappNumber, businessPhone } = req.body;
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
 
       // Get current user to check role
       const currentUser = await storage.getUserById(userId);
@@ -266,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update session with fresh user data
-      req.session.user = updatedUser as any;
+      req.session.user = updatedUser;
       
       res.json(updatedUser);
     } catch (error) {
@@ -278,10 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/profile", requireAuth, async (req, res) => {
     try {
       const { firstName, lastName, companyName, username } = req.body;
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
 
       // Validate required fields
       if (!firstName || !lastName) {
@@ -317,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Update session with fresh user data
-      req.session.user = updatedUser as any;
+      req.session.user = updatedUser;
 
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -331,10 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get authorized personnel for current corporate user
   app.get("/api/authorized-personnel", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
@@ -352,10 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new authorized personnel
   app.post("/api/authorized-personnel", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
       
       // Verify user is corporate
@@ -398,10 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update authorized personnel
   app.patch("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       const personnelId = parseInt(req.params.id);
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
       
@@ -447,10 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Toggle authorized personnel active status
   app.patch("/api/authorized-personnel/:id/toggle-status", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       const personnelId = parseInt(req.params.id);
       const { isActive } = req.body;
       
@@ -481,10 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete authorized personnel
   app.delete("/api/authorized-personnel/:id", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
       const personnelId = parseInt(req.params.id);
       
       // Verify user is corporate
@@ -510,10 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/change-password", requireAuth, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
 
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ error: "Mevcut şifre ve yeni şifre gerekli" });
@@ -551,10 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user/change-email", requireAuth, async (req, res) => {
     try {
       const { email } = req.body;
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
 
       // Validate email format
       if (!email || !email.includes("@")) {
@@ -570,7 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, { email });
       
       // Update session with fresh user data
-      req.session.user = updatedUser as any;
+      req.session.user = updatedUser;
       
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
@@ -582,11 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload profile image
   app.post("/api/user/profile-image", requireAuth, upload.single("profileImage"), async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-      
+      const userId = req.session.userId;
       const file = req.file;
 
       if (!file) {
@@ -644,10 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete profile image
   app.delete("/api/user/profile-image", requireAuth, async (req, res) => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      const userId = req.session.userId;
 
       // Get current user
       const currentUser = await storage.getUserById(userId);
@@ -868,13 +834,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      const rootCategoryId = req.query.rootCategoryId ? parseInt(req.query.rootCategoryId as string) : undefined;
       
-      if (rootCategoryId) {
-        // Ana kategori için draft arama - alt kategoriler dahil
-        const draft = await storage.getUserDraftForRootCategory(userId, rootCategoryId);
-        res.json(draft ? [draft] : []);
-      } else if (categoryId) {
+      if (categoryId) {
         // Get draft for specific category
         const draft = await storage.getUserDraftForCategory(userId, categoryId);
         res.json(draft ? [draft] : []);
