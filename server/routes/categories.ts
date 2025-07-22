@@ -245,7 +245,7 @@ router.post("/", async (req, res) => {
     console.log("Creating category with data:", validatedData);
     
     // Check for duplicate slug within same parent
-    const existingCategory = await storage.getCategoryBySlug(validatedData.slug, validatedData.parentId);
+    const existingCategory = await storage.getCategoryBySlug(validatedData.slug, validatedData.parentId ?? null);
     if (existingCategory) {
       return res.status(400).json({ 
         error: "Bu slug aynı üst kategoride zaten kullanılıyor", 
@@ -339,10 +339,11 @@ router.post("/:id/custom-fields", async (req, res) => {
     res.status(201).json(customField);
   } catch (error) {
     console.error("Error creating custom field:", error);
-    if (error.name === "ZodError") {
-      return res.status(400).json({ error: "Invalid input data", details: error.errors });
+    if (error instanceof Error && error.name === "ZodError") {
+      return res.status(400).json({ error: "Invalid input data", details: (error as any).errors });
     }
-    res.status(500).json({ error: "Failed to create custom field" });
+    const errorMessage = error instanceof Error ? error.message : "Failed to create custom field";
+    res.status(500).json({ error: errorMessage });
   }
 });
 

@@ -281,11 +281,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChildCategories(parentId: number | null): Promise<Category[]> {
+    let result: any[];
     if (parentId === null) {
-      const result = await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
-      return result as Category[];
+      result = await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    } else {
+      result = await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
     }
-    const result = await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
     return result as Category[];
   }
 
@@ -323,7 +324,7 @@ export class DatabaseStorage implements IStorage {
     // Prevent circular references
     if (newParentId !== null) {
       const breadcrumbs = await this.getCategoryBreadcrumbs(newParentId);
-      if (breadcrumbs.some(cat => cat.id === id)) {
+      if (breadcrumbs.some((cat: Category) => cat.id === id)) {
         throw new Error('Bu işlem döngüsel referans oluşturacak.');
       }
     }
@@ -349,9 +350,10 @@ export class DatabaseStorage implements IStorage {
 
   // Custom Fields methods
   async getCategoryCustomFields(categoryId: number): Promise<CategoryCustomField[]> {
-    return await db.select().from(categoryCustomFields)
+    const result = await db.select().from(categoryCustomFields)
       .where(eq(categoryCustomFields.categoryId, categoryId))
       .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
+    return result as CategoryCustomField[];
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
@@ -389,7 +391,7 @@ export class DatabaseStorage implements IStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
-    return field;
+    return field as CategoryCustomField;
   }
 
   async updateCustomField(id: number, updates: Partial<InsertCustomField>): Promise<CategoryCustomField> {
@@ -397,7 +399,7 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(categoryCustomFields.id, id))
       .returning();
-    return field;
+    return field as CategoryCustomField;
   }
 
   async deleteCustomField(id: number): Promise<void> {
@@ -406,7 +408,8 @@ export class DatabaseStorage implements IStorage {
 
   // Location methods implementation
   async getLocations(): Promise<Location[]> {
-    return await db.select().from(locations).orderBy(asc(locations.sortOrder), asc(locations.name));
+    const result = await db.select().from(locations).orderBy(asc(locations.sortOrder), asc(locations.name));
+    return result as Location[];
   }
 
   async getLocationsTree(): Promise<Location[]> {
@@ -443,15 +446,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChildLocations(parentId: number | null): Promise<Location[]> {
+    let result: any[];
     if (parentId === null) {
-      return await db.select().from(locations)
+      result = await db.select().from(locations)
         .where(isNull(locations.parentId))
         .orderBy(asc(locations.sortOrder), asc(locations.name));
     } else {
-      return await db.select().from(locations)
+      result = await db.select().from(locations)
         .where(eq(locations.parentId, parentId))
         .orderBy(asc(locations.sortOrder), asc(locations.name));
     }
+    return result as Location[];
   }
 
   async createLocation(data: InsertLocation): Promise<Location> {
@@ -460,7 +465,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
-    return location;
+    return location as Location;
   }
 
   async updateLocation(id: number, updates: UpdateLocation): Promise<Location> {
@@ -471,7 +476,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(locations.id, id))
       .returning();
-    return location;
+    return location as Location;
   }
 
   async deleteLocation(id: number): Promise<void> {

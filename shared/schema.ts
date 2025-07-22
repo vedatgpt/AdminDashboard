@@ -85,7 +85,7 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  parentId: integer("parent_id").references(() => categories.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id").references((): any => categories.id, { onDelete: "cascade" }),
   slug: text("slug").notNull(),
   icon: text("icon"), // Icon name or URL
   sortOrder: integer("sort_order").notNull().default(0),
@@ -130,7 +130,7 @@ export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(), // country, city, district, neighborhood
-  parentId: integer("parent_id").references(() => locations.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id").references((): any => locations.id, { onDelete: "cascade" }),
   sortOrder: integer("sort_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
