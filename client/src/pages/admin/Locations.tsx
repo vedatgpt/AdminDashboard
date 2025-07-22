@@ -233,22 +233,13 @@ export default function Locations() {
         </div>
       )}
 
-      {/* Breadcrumb and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {/* Back button */}
-          {currentParentId && (
-            <button
-              onClick={navigateBack}
-              className="flex items-center gap-1 text-gray-600 hover:text-gray-900 text-sm"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Geri
-            </button>
-          )}
-          
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1 text-sm text-gray-600">
+
+
+      {/* Locations List */}
+      <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
             <button
               onClick={() => setLocation('/admin/locations')}
               className={`hover:text-[#EC7830] transition-colors ${
@@ -258,13 +249,10 @@ export default function Locations() {
               Ülkeler
             </button>
             {breadcrumbs.map((crumb, index) => (
-              <div key={crumb.id} className="flex items-center gap-1">
-                <ChevronRight className="h-4 w-4" />
+              <div key={crumb.id} className="flex items-center space-x-2">
+                <span className="text-gray-400">/</span>
                 <button
-                  onClick={() => {
-                    if (index === breadcrumbs.length - 1) return;
-                    setLocation(`/admin/locations/${crumb.id}`);
-                  }}
+                  onClick={() => setLocation(`/admin/locations/${crumb.id}`)}
                   className={`hover:text-[#EC7830] transition-colors ${
                     index === breadcrumbs.length - 1 ? 'text-[#EC7830] font-medium' : ''
                   }`}
@@ -274,51 +262,47 @@ export default function Locations() {
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+          
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Lokasyon ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Lokasyon ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500 w-64"
-            />
-          </div>
 
-          {/* Settings Button - Only show on root locations page */}
-          {!currentParentId && (
+            {/* Settings Button - Only show on root locations page */}
+            {!currentParentId && (
+              <button
+                onClick={() => setLocation('/admin/locations/settings')}
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                <Settings className="w-4 h-4" />
+                Görünürlük Ayarları
+              </button>
+            )}
+
+            {/* Add button */}
             <button
-              onClick={() => setLocation('/admin/locations/settings')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors"
+              onClick={() => {
+                setParentLocation(currentParent);
+                setEditingLocation(null);
+                setIsFormOpen(true);
+              }}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a]"
             >
-              <Settings className="h-4 w-4" />
-              Görünürlük Ayarları
+              <Plus className="w-4 h-4" />
+              Yeni {getLocationTypeLabel(nextType)}
             </button>
-          )}
-
-          {/* Add button */}
-          <button
-            onClick={() => {
-              setParentLocation(currentParent);
-              setEditingLocation(null);
-              setIsFormOpen(true);
-            }}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#EC7830] hover:bg-[#d6691a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EC7830]"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Yeni {getLocationTypeLabel(nextType)}
-          </button>
+          </div>
         </div>
-      </div>
 
-      {/* Locations List */}
-      <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           {isLoading ? (
           <div className="flex items-center justify-center py-8">
