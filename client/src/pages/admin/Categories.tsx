@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Sortable from "sortablejs";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
@@ -17,6 +18,8 @@ export default function Categories() {
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
   const [customFieldsCategory, setCustomFieldsCategory] = useState<Category | null>(null);
+  
+  const queryClient = useQueryClient();
 
   // Extract current parent ID from URL
   const currentParentId = useMemo(() => {
@@ -29,6 +32,27 @@ export default function Categories() {
   const createMutation = useCreateCategory();
   const updateMutation = useUpdateCategory();
   const deleteMutation = useDeleteCategory();
+  
+  // Reorder mutation
+  const reorderMutation = useMutation({
+    mutationFn: async ({ parentId, categoryIds }: { parentId: number | null; categoryIds: number[] }) => {
+      const response = await fetch('/api/categories/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentId, categoryIds })
+      });
+      if (!response.ok) throw new Error('Failed to reorder categories');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      setShowAlert({ type: 'success', message: 'Kategori sıralaması başarıyla güncellendi' });
+    },
+    onError: (error) => {
+      setShowAlert({ type: 'error', message: 'Sıralama güncellenirken hata oluştu' });
+      console.error('Reorder error:', error);
+    }
+  });
 
   // Get categories to display based on current parent
   const currentCategories = useMemo(() => {
@@ -210,12 +234,18 @@ export default function Categories() {
             const newIndex = evt.newIndex;
             
             if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
-              const draggedCategory = filteredCategories[oldIndex];
+              // Create new array with reordered categories
+              const reorderedCategories = [...filteredCategories];
+              const [draggedCategory] = reorderedCategories.splice(oldIndex, 1);
+              reorderedCategories.splice(newIndex, 0, draggedCategory);
               
-              // Update sort order based on new position
-              updateMutation.mutate({ 
-                id: draggedCategory.id, 
-                data: { sortOrder: newIndex + 1 } 
+              // Extract category IDs in new order
+              const categoryIds = reorderedCategories.map(cat => cat.id);
+              
+              // Send reorder request to backend
+              reorderMutation.mutate({
+                parentId: currentParent?.id || null,
+                categoryIds: categoryIds
               });
             }
           }

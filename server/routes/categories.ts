@@ -261,6 +261,28 @@ router.patch("/:id/move", async (req, res) => {
   }
 });
 
+// Reorder categories (admin only)
+router.patch("/reorder", async (req, res) => {
+  try {
+    const { parentId, categoryIds } = req.body;
+    
+    if (!Array.isArray(categoryIds)) {
+      return res.status(400).json({ error: "categoryIds must be an array" });
+    }
+    
+    // Update sort order for all categories in the list
+    for (let i = 0; i < categoryIds.length; i++) {
+      const categoryId = categoryIds[i];
+      await storage.updateCategory(categoryId, { sortOrder: i + 1 });
+    }
+    
+    res.json({ message: "Categories reordered successfully" });
+  } catch (error) {
+    console.error("Error reordering categories:", error);
+    res.status(500).json({ error: "Failed to reorder categories" });
+  }
+});
+
 // Delete category (admin only)
 router.delete("/:id", async (req, res) => {
   try {
