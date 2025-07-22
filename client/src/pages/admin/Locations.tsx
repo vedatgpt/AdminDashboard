@@ -264,7 +264,7 @@ export default function Locations() {
           </div>
           
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             {/* Search */}
             <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -273,7 +273,7 @@ export default function Locations() {
                 placeholder="Lokasyon ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
               />
             </div>
 
@@ -281,7 +281,7 @@ export default function Locations() {
             {!currentParentId && (
               <button
                 onClick={() => setLocation('/admin/locations/settings')}
-                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 w-full sm:w-auto justify-center sm:justify-start"
               >
                 <Settings className="w-4 h-4" />
                 Görünürlük Ayarları
@@ -295,7 +295,7 @@ export default function Locations() {
                 setEditingLocation(null);
                 setIsFormOpen(true);
               }}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a]"
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] w-full sm:w-auto justify-center sm:justify-start"
             >
               <Plus className="w-4 h-4" />
               Yeni {getLocationTypeLabel(nextType)}
