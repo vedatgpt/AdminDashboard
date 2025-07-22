@@ -747,7 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reorder locations
-  app.patch("/api/locations/reorder", requireAdmin, async (req, res) => {
+  app.patch("/api/locations-reorder", requireAdmin, async (req, res) => {
     try {
       const { parentId, locationIds } = req.body;
       
@@ -767,6 +767,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Lokasyon sıralaması güncellendi" });
     } catch (error) {
       console.error('Location reorder error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack',
+        body: req.body
+      });
       res.status(500).json({ error: `Sıralama güncellenirken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}` });
     }
   });

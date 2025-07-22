@@ -39,7 +39,7 @@ export default function Locations() {
   // Reorder mutation
   const reorderMutation = useMutation({
     mutationFn: async ({ parentId, locationIds }: { parentId: number | null; locationIds: number[] }) => {
-      const response = await fetch('/api/locations/reorder', {
+      const response = await fetch('/api/locations-reorder', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parentId, locationIds })
