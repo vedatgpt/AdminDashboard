@@ -271,7 +271,7 @@ export default function Step3() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-white">
 
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">

@@ -193,7 +193,7 @@ export default function CreateListingStep1() {
 
   return (
     <CreateListingLayout stepNumber={1} customBackHandler={handleMobileBack}>
-      <div className="min-h-screen bg-white">
+      <div className="bg-white">
 
       {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
