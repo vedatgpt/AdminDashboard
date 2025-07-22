@@ -382,12 +382,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
-    // For now, just return direct fields to fix the immediate issue
-    const directFields = await db.select().from(categoryCustomFields)
-      .where(eq(categoryCustomFields.categoryId, categoryId))
-      .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
+    try {
+      // Get direct fields first
+      const directFields = await db.select().from(categoryCustomFields)
+        .where(eq(categoryCustomFields.categoryId, categoryId))
+        .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
       
-    return directFields as CategoryCustomField[];
+      // If we have direct fields, return them
+      if (directFields.length > 0) {
+        return directFields as CategoryCustomField[];
+      }
+      
+      // No direct fields, check parent hierarchy
+      const category = await this.getCategoryById(categoryId);
+      if (!category?.parentId) {
+        return []; // No parent, no fields
+      }
+      
+      // Recursively check parent categories
+      return await this.getCategoryCustomFieldsWithInheritance(category.parentId);
+    } catch (error: any) {
+      console.error('Get custom fields with inheritance error:', error);
+      return [];
+    }
   }
 
   async createCustomField(data: InsertCustomField): Promise<CategoryCustomField> {

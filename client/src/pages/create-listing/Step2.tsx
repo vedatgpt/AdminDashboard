@@ -1,5 +1,5 @@
 import { useListing } from '../../contexts/ListingContext';
-import { useCustomFields } from '../../hooks/useCustomFields';
+import { useCategoryCustomFields } from '../../hooks/useCustomFields';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
@@ -248,7 +248,8 @@ export default function Step2() {
   };
   // Get categoryId from draft or selected category for custom fields
   const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
-  const { data: customFields = [], isLoading: fieldsLoading } = useCustomFields(categoryIdForFields);
+  console.log('categoryIdForFields:', categoryIdForFields, 'draftData?.categoryId:', draftData?.categoryId, 'selectedCategory?.id:', selectedCategory?.id);
+  const { data: customFields = [], isLoading: fieldsLoading } = useCategoryCustomFields(categoryIdForFields);
 
   if (fieldsLoading) {
     return (
