@@ -372,7 +372,6 @@ export default function Categories() {
                       key={category.id}
                       data-category-id={category.id}
                       className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
-                      onClick={() => handleCategoryClick(category)}
                     >
                       {/* Icon */}
                       {category.icon ? (
@@ -385,9 +384,14 @@ export default function Categories() {
                         <FolderTree className="shrink-0 w-4 h-4 text-gray-400" />
                       )}
                       
-                      {/* Category Name */}
+                      {/* Category Name - Clickable */}
                       <div className="flex-1 text-left">
-                        <span className="font-medium">{category.name}</span>
+                        <button
+                          onClick={() => handleCategoryClick(category)}
+                          className="font-medium hover:text-[#EC7830] transition-colors text-left"
+                        >
+                          {category.name}
+                        </button>
                         {childrenCount > 0 && (
                           <span className="text-gray-500 ml-1">({childrenCount})</span>
                         )}

@@ -437,20 +437,22 @@ export default function Locations() {
                 <li
                   key={loc.id}
                   className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
-                  onClick={() => {
-                    // Navigate to children if it's a clickable location type
-                    if (loc.type !== 'neighborhood') {
-                      setLocation(`/admin/locations/${loc.id}`);
-                    }
-                  }}
                 >
                   {/* Location Icon */}
                   <MapPin className="shrink-0 w-4 h-4 text-gray-400" />
                   
-                  {/* Location Name and Type */}
+                  {/* Location Name - Clickable */}
                   <div className="flex-1 text-left">
-                    <span className="font-medium">{loc.name}</span>
-                    
+                    {loc.type !== 'neighborhood' ? (
+                      <button
+                        onClick={() => setLocation(`/admin/locations/${loc.id}`)}
+                        className="font-medium hover:text-[#EC7830] transition-colors text-left"
+                      >
+                        {loc.name}
+                      </button>
+                    ) : (
+                      <span className="font-medium">{loc.name}</span>
+                    )}
                   </div>
                   
                   {/* Status Badge */}
