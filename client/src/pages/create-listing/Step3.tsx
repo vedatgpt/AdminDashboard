@@ -42,18 +42,25 @@ export default function Step3() {
 
   // Load existing photos from draft when component mounts
   const { data: draftData } = useQuery({
-    queryKey: ['/api/draft-listings', currentClassifiedId],
+    queryKey: [`/api/draft-listings/${currentClassifiedId}`],
     enabled: !!currentClassifiedId && isAuthenticated,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  // Load photos from draft data when available
+  // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-    if (draftData && 'photos' in draftData && draftData.photos) {
+    console.log('Draft data received:', draftData);
+    if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
+        console.log('Photos from draft:', draftData.photos);
         const existingPhotos = JSON.parse(draftData.photos as string);
+        console.log('Parsed photos:', existingPhotos);
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
-          setImages(existingPhotos);
+          // Only set if images array is empty to avoid overriding current state
+          setImages(prev => {
+            console.log('Current images length:', prev.length);
+            return prev.length === 0 ? existingPhotos : prev;
+          });
         }
       } catch (error) {
         console.error('Error parsing photos from draft:', error);
@@ -136,14 +143,7 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (_, imageId) => {
-      setImages(prev => {
-        const newImages = prev.filter(img => img.id !== imageId);
-        // Also update draft listing when image is deleted
-        if (currentClassifiedId && newImages.length >= 0) {
-          updateDraftMutation.mutate(newImages);
-        }
-        return newImages;
-      });
+      setImages(prev => prev.filter(img => img.id !== imageId));
     },
     onError: (error) => {
       console.error('Delete error:', error);
@@ -312,16 +312,22 @@ export default function Step3() {
       
       return response.json();
     },
+    onSuccess: (data) => {
+      console.log('Photos saved to draft successfully:', data);
+    },
     onError: (error) => {
       console.error('Error saving photos to draft:', error);
-      alert('Fotoğraflar kaydedilirken hata oluştu');
     }
   });
 
-  // Auto-save photos to draft whenever images change
+  // Auto-save photos to draft whenever images change (with debounce)
   useEffect(() => {
     if (images.length > 0 && currentClassifiedId && !images.some(img => img.uploading)) {
-      updateDraftMutation.mutate(images);
+      const timeoutId = setTimeout(() => {
+        updateDraftMutation.mutate(images);
+      }, 1000); // 1 second debounce
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [images, currentClassifiedId]);
 
