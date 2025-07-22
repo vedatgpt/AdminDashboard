@@ -5,7 +5,7 @@
 
 /* Global Layout Fix - Prevents layout shift between pages with/without scroll */
 html {
-  scrollbar-gutter: stable; /* Reserve space for scrollbar without forcing scroll */
+  overflow-y: scroll !important; /* Instagram method - always show scrollbar */
 }
 
 /* Custom scrollbar for photo gallery */
