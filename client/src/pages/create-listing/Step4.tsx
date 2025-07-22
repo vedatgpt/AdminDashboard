@@ -5,6 +5,7 @@ import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
 import { useCategoriesTree } from '@/hooks/useCategories';
 import { useLocationsTree } from '@/hooks/useLocations';
+import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -39,6 +40,9 @@ export default function Step4() {
   const { data: draftData } = useDraftListing(currentClassifiedId);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
+  
+  // Get custom fields for the category
+  const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
 
   if (!currentClassifiedId) {
     return (
@@ -198,14 +202,15 @@ export default function Step4() {
                     </td>
                   </tr>
 
-                  {/* Custom Fields */}
-                  {Object.entries(customFields).map(([key, value]) => {
-                    if (key === 'title' || key === 'description' || key === 'price') return null;
+                  {/* Custom Fields - use field definitions */}
+                  {customFieldsSchema.filter(Boolean).map((field) => {
+                    const value = customFields[field.fieldName];
+                    if (!value) return null;
                     
                     return (
-                      <tr key={key} className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-700 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}:
+                      <tr key={field.id} className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700">
+                          {field.label}:
                         </td>
                         <td className="py-2 text-gray-900">
                           {typeof value === 'object' && value !== null

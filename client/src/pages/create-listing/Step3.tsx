@@ -5,6 +5,8 @@ import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
+import CreateListingLayout from '@/components/CreateListingLayout';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -44,11 +46,7 @@ export default function Step3() {
   }, [authLoading, isAuthenticated]);
 
   // Load existing photos from draft when component mounts
-  const { data: draftData } = useQuery({
-    queryKey: [`/api/draft-listings/${currentClassifiedId}`],
-    enabled: !!currentClassifiedId && isAuthenticated,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
+  const { data: draftData } = useDraftListing(currentClassifiedId);
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
@@ -309,45 +307,26 @@ export default function Step3() {
     handleFileSelect(e.dataTransfer.files);
   };
 
-  // Mutation to update draft with photos
-  const updateDraftMutation = useMutation({
-    mutationFn: async (photos: UploadedImage[]) => {
-      if (!currentClassifiedId) throw new Error('No classified ID');
-      
-      const response = await fetch(`/api/draft-listings/${currentClassifiedId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          photos: JSON.stringify(photos.map(img => ({
-            id: img.id,
-            filename: img.filename,
-            url: img.url,
-            thumbnail: img.thumbnail,
-            size: img.size,
-            originalSize: img.originalSize
-          })))
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save photos');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data) => {
-
-    },
-    onError: (error) => {
-
-    }
-  });
+  // Use standard draft mutation
+  const updateDraftMutation = useUpdateDraftListing();
 
   // Auto-save photos to draft whenever images change (with debounce)
   useEffect(() => {
     if (currentClassifiedId && !images.some(img => img.uploading)) {
       const timeoutId = setTimeout(() => {
-        updateDraftMutation.mutate(images);
+        updateDraftMutation.mutate({
+          id: currentClassifiedId,
+          data: {
+            photos: JSON.stringify(images.map(img => ({
+              id: img.id,
+              filename: img.filename,
+              url: img.url,
+              thumbnail: img.thumbnail,
+              size: img.size,
+              originalSize: img.originalSize
+            })))
+          }
+        });
       }, 1500); // 1.5 second debounce
       
       return () => clearTimeout(timeoutId);
@@ -368,7 +347,19 @@ export default function Step3() {
 
     // Save photos to draft before navigating
     if (currentClassifiedId && images.length > 0) {
-      updateDraftMutation.mutate(images, {
+      updateDraftMutation.mutate({
+        id: currentClassifiedId,
+        data: {
+          photos: JSON.stringify(images.map(img => ({
+            id: img.id,
+            filename: img.filename,
+            url: img.url,
+            thumbnail: img.thumbnail,
+            size: img.size,
+            originalSize: img.originalSize
+          })))
+        }
+      }, {
         onSuccess: () => {
           navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
         }
@@ -387,11 +378,8 @@ export default function Step3() {
   };
 
   return (
-    <div className="bg-white">
-
-      {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className="lg:pt-6 pt-[64px]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
+    <CreateListingLayout stepNumber={3}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
           {/* Fotoğraf Yükleme Kutusu */}
           <div className="mb-6 lg:mt-0 mt-3">
@@ -541,34 +529,33 @@ export default function Step3() {
             </div>
           </div>
 
-        </div>
-
-        {/* Navigation Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <button
-            onClick={() => {
-              const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
-              navigate(url);
-            }}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Önceki Adım
-          </button>
-          
-          <button
-            onClick={() => {
-              const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
-              navigate(url);
-            }}
-            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Sonraki Adım
-          </button>
-        </div>
-        
-        {/* Performance indicator */}
-        <PageLoadIndicator />
       </div>
-    </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+        <button
+          onClick={() => {
+            const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
+            navigate(url);
+          }}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Önceki Adım
+        </button>
+        
+        <button
+          onClick={() => {
+            const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
+            navigate(url);
+          }}
+          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+        >
+          Sonraki Adım
+        </button>
+      </div>
+      
+      {/* Performance indicator */}
+      <PageLoadIndicator />
+    </CreateListingLayout>
   );
 }
