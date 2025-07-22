@@ -306,7 +306,7 @@ export default function CreateListingStep1() {
   };
 
   const handleCreateNewListing = async () => {
-    if (!currentExistingDraft) return;
+    if (!currentExistingDraft || !pendingCategory) return;
     
     try {
       console.log('Yeni ilan oluşturuluyor, eski draft siliniyor...');
@@ -318,18 +318,24 @@ export default function CreateListingStep1() {
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
       
-      // Tüm state'leri sıfırla
+      console.log('Eski draft silindi, ana kategorinin alt kategorileri gösteriliyor...');
+      
+      // Ana kategori seçimini devam ettir - alt kategorileri göster
+      const newPath = [pendingCategory];
+      setCategoryPath(newPath);
+      
+      // Context'i ana kategori ile güncelle
+      dispatch({ 
+        type: 'SET_CATEGORY_WITH_PATH', 
+        payload: { 
+          category: null, // Ana kategori selected değil, sadece path'te
+          path: newPath 
+        } 
+      });
+      
+      // Pending'i temizle
       setPendingCategory(null);
       setPendingPath([]);
-      setCategoryPath([]);
-      
-      // Context'i sıfırla
-      dispatch({ type: 'RESET_LISTING' });
-      
-      console.log('Eski draft silindi, tüm stepler sıfırlandı');
-      
-      // Ana sayfaya geri dön (kategoriler listesi)
-      // Kullanıcı tekrar kategori seçmeli
       
     } catch (error) {
       console.error('Eski draft silinirken hata:', error);
