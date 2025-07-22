@@ -5,6 +5,8 @@ import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 export function useCategories() {
   return useQuery<Category[]>({
     queryKey: ["/api/categories"],
+    staleTime: 5 * 60 * 1000, // 5 minutes - categories don't change often
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
   });
 }
 
@@ -15,6 +17,8 @@ export function useCategoriesTree() {
       if (!res.ok) throw new Error('Failed to fetch categories');
       return res.json();
     }),
+    staleTime: 5 * 60 * 1000, // 5 minutes - categories don't change often
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
   });
 }
 

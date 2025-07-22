@@ -1,6 +1,6 @@
 import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing } from "@shared/schema";
 import { db } from "./db";
-import { eq, isNull, desc, asc, and, or } from "drizzle-orm";
+import { eq, isNull, desc, asc, and, or, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 // Generate unique username like "velikara4678"
@@ -367,21 +367,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
-    // Get the category breadcrumbs (current category and all parents)
+    // OPTIMIZED: Single query approach instead of multiple queries
+    // Get category breadcrumbs first
     const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
+    const categoryIds = breadcrumbs.map(cat => cat.id);
+    
+    if (categoryIds.length === 0) return [];
+    
+    // Single query to get ALL custom fields for all categories in hierarchy
+    const allFieldsInHierarchy = await db.select()
+      .from(categoryCustomFields)
+      .where(
+        categoryIds.length === 1 
+          ? eq(categoryCustomFields.categoryId, categoryIds[0])
+          : sql`${categoryCustomFields.categoryId} IN (${categoryIds.join(',')})`
+      );
+    
+    // Process inheritance: child overrides parent (deeper categories first)
     const allFields: CategoryCustomField[] = [];
     const fieldNamesSeen = new Set<string>();
-
-    // Start from the deepest (current) category and work backwards to parents
-    // This ensures child category fields override parent fields with same fieldName
+    
+    // Process from deepest to shallowest category
     for (let i = breadcrumbs.length - 1; i >= 0; i--) {
-      const category = breadcrumbs[i];
-      const fieldsForCategory = await this.getCategoryCustomFields(category.id);
+      const categoryId = breadcrumbs[i].id;
+      const fieldsForCategory = allFieldsInHierarchy.filter(f => f.categoryId === categoryId);
       
       for (const field of fieldsForCategory) {
-        // Only add if we haven't seen this fieldName before (child overrides parent)
         if (!fieldNamesSeen.has(field.fieldName)) {
-          allFields.push(field);
+          allFields.push(field as CategoryCustomField);
           fieldNamesSeen.add(field.fieldName);
         }
       }

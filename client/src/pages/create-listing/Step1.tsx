@@ -18,13 +18,12 @@ export default function CreateListingStep1() {
   const { data: allCategories = [], isLoading } = useCategories();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated - simplified
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/auth/login');
-      return;
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
@@ -48,13 +47,14 @@ export default function CreateListingStep1() {
   // Get all user drafts for checking main categories
   const { data: allUserDrafts = [] } = useUserDraftListings();
 
-  // Build flat categories array for easy lookup  
+  // Build flat categories array for easy lookup - optimized
   const flatCategories = React.useMemo(() => {
+    if (!allCategories.length) return [];
     const flatten = (categories: Category[]): Category[] => {
       const result: Category[] = [];
       for (const category of categories) {
         result.push(category);
-        if (category.children && category.children.length > 0) {
+        if (category.children?.length) {
           result.push(...flatten(category.children));
         }
       }

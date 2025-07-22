@@ -22,16 +22,12 @@ export default function Login() {
     },
   });
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - optimized
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "admin") {
-        navigate("/admin/users");
-      } else {
-        navigate("/");
-      }
+      navigate(user.role === "admin" ? "/admin/users" : "/");
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user]);
 
   // Don't show login page if already authenticated
   if (isAuthenticated && user) {

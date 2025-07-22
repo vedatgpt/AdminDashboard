@@ -73,7 +73,8 @@ export const useLocationsTree = () => {
   return useQuery({
     queryKey: ["/api/locations"],
     queryFn: fetchLocations,
-    staleTime: 2 * 60 * 1000, // 2 minutes - reasonable for location data
+    staleTime: 10 * 60 * 1000, // 10 minutes - locations don't change often
+    gcTime: 15 * 60 * 1000, // 15 minutes cache
   });
 };
 

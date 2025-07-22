@@ -594,12 +594,14 @@ Authentication features:
 
 ### Performance Optimization & Speed Improvements (July 22, 2025)
 - Fixed major performance bottlenecks causing 10+ second login delays and slow page loading
-- Optimized TanStack Query cache configurations: reduced staleTime from 5 minutes to 30 seconds
+- Optimized TanStack Query cache configurations: reduced global staleTime from Infinity to 30 seconds
 - Enhanced auth hook performance: enabled refetchOnMount for faster auth state detection
 - Replaced aggressive queryClient.clear() with selective cache clearing for better performance
 - Optimized database connection pool: added max connections (10), timeouts, and fetch optimization
 - Reduced draft listing cache times from 5 minutes to 10-30 seconds for active editing
-- Location and category data staleTime reduced to 2 minutes for better responsiveness
+- Location and category data staleTime optimized: 5-10 minutes for static data, 3 minutes for custom fields
 - Added Neon database optimizations: poolQueryViaFetch and reduced WebSocket overhead
 - Enhanced session middleware: disabled unnecessary resave operations
+- **CRITICAL FIX**: Optimized getCategoryCustomFieldsWithInheritance - single SQL query instead of N+1 queries
+- Removed useEffect dependency bloat in Step pages - reduced re-render cycles
 - Performance improvements maintain all security measures while dramatically reducing load times

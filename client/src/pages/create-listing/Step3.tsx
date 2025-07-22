@@ -31,9 +31,8 @@ export default function Step3() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/auth/login');
-      return;
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
 
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();

@@ -9,6 +9,8 @@ export function useCategoryCustomFields(categoryId: number) {
       return res.json();
     }),
     enabled: !!categoryId,
+    staleTime: 3 * 60 * 1000, // 3 minutes - custom fields don't change often
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
   });
 }
 

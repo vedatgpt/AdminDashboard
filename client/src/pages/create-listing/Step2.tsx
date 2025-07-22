@@ -24,9 +24,8 @@ export default function Step2() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/auth/login');
-      return;
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated]);
   
   // URL parameter support
   const urlParams = new URLSearchParams(window.location.search);
