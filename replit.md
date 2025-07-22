@@ -574,3 +574,12 @@ Authentication features:
 - Authentication required for all draft operations with proper login redirects
 - Clean URL management: removes invalid classifiedId parameters after draft deletion
 - Complete state reset prevents cached form data from appearing in new listings
+
+### Critical Security Fixes (July 22, 2025)
+- Fixed major security vulnerability: users can no longer access other users' draft listings
+- Added authentication and ownership verification to GET /api/draft-listings/:id endpoint
+- Implemented strict authentication checks for all listing creation pages (Step1, Step2, Step3)
+- Draft listing hooks now require authentication - unauthenticated users redirected to login
+- Added 403 Forbidden responses when users try to access drafts they don't own
+- Enhanced error handling with proper Turkish error messages for security violations
+- All listing creation workflows now require active user session for access

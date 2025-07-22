@@ -17,6 +17,14 @@ export default function CreateListingStep1() {
   const { state, dispatch } = useListing();
   const { data: allCategories = [], isLoading } = useCategories();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth/login');
+      return;
+    }
+  }, [authLoading, isAuthenticated, navigate]);
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);

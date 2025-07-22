@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
+import { useAuth } from '@/hooks/useAuth';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -24,8 +25,15 @@ export default function Step3() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sortableRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Removed authentication check for development
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth/login');
+      return;
+    }
+  }, [authLoading, isAuthenticated, navigate]);
 
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();

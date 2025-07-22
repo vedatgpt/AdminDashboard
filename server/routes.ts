@@ -809,14 +809,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Draft Listings API routes
   
-  // Get draft listing by ID
+  // Get draft listing by ID (Authentication required + ownership check)
   app.get("/api/draft-listings/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const userId = req.session?.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+      }
+      
       const draft = await storage.getDraftListing(id);
       
       if (!draft) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
+      }
+      
+      // Verify ownership - user can only access their own drafts
+      if (draft.userId !== userId) {
+        return res.status(403).json({ error: "Bu ilan taslağına erişim yetkiniz yok" });
       }
       
       res.json(draft);

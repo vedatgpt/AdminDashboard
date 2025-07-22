@@ -3,6 +3,7 @@ import { useCustomFields } from '../../hooks/useCustomFields';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
@@ -17,6 +18,15 @@ export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath, classifiedId } = state;
   const [, navigate] = useLocation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth/login');
+      return;
+    }
+  }, [authLoading, isAuthenticated, navigate]);
   
   // URL parameter support
   const urlParams = new URLSearchParams(window.location.search);

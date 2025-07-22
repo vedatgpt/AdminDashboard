@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from './useAuth';
 
 // Draft listing types
 export interface DraftListing {
@@ -17,8 +18,10 @@ export interface DraftListing {
   updatedAt: string;
 }
 
-// Hook for fetching a single draft listing
+// Hook for fetching a single draft listing (authentication required)
 export function useDraftListing(id?: number) {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: ['/api/draft-listings', id],
     queryFn: async () => {
@@ -26,26 +29,38 @@ export function useDraftListing(id?: number) {
       const response = await fetch(`/api/draft-listings/${id}`);
       if (!response.ok) {
         if (response.status === 404) return null;
+        if (response.status === 401) {
+          throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
+        }
+        if (response.status === 403) {
+          throw new Error('Bu ilan taslağına erişim yetkiniz yok');
+        }
         throw new Error('İlan taslağı alınamadı');
       }
       return response.json() as Promise<DraftListing>;
     },
-    enabled: !!id,
+    enabled: !!id && isAuthenticated, // Only run when authenticated
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
-// Hook for fetching user's draft listings
+// Hook for fetching user's draft listings (authentication required)
 export function useUserDraftListings() {
+  const { isAuthenticated } = useAuth();
+  
   return useQuery({
     queryKey: ['/api/draft-listings'],
     queryFn: async () => {
       const response = await fetch('/api/draft-listings');
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
+        }
         throw new Error('İlan taslakları alınamadı');
       }
       return response.json() as Promise<DraftListing[]>;
     },
+    enabled: isAuthenticated, // Only run when authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
