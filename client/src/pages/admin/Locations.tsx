@@ -202,23 +202,10 @@ export default function Locations() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <PageHeader 
-          title="Lokasyon Yönetimi" 
-          subtitle="Ülke, şehir, ilçe ve mahalle bilgilerini yönetin"
-        />
-        
-        {/* Settings Button - Only show on root locations page */}
-        {!currentParentId && (
-          <button
-            onClick={() => setLocation('/admin/locations/settings')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors"
-          >
-            <Settings className="h-4 w-4" />
-            Görünürlük Ayarları
-          </button>
-        )}
-      </div>
+      <PageHeader 
+        title="Lokasyon Yönetimi" 
+        subtitle="Ülke, şehir, ilçe ve mahalle bilgilerini yönetin"
+      />
 
       {/* Alert */}
       {showAlert && (
@@ -261,27 +248,32 @@ export default function Locations() {
           )}
           
           {/* Breadcrumb */}
-          {breadcrumbs.length > 0 && (
-            <div className="flex items-center gap-1 text-sm text-gray-600">
-              <span>Lokasyonlar</span>
-              {breadcrumbs.map((crumb, index) => (
-                <div key={crumb.id} className="flex items-center gap-1">
-                  <ChevronRight className="h-4 w-4" />
-                  <button
-                    onClick={() => {
-                      if (index === breadcrumbs.length - 1) return;
-                      setLocation(`/admin/locations/${crumb.id}`);
-                    }}
-                    className={`hover:text-gray-900 ${
-                      index === breadcrumbs.length - 1 ? 'text-gray-900 font-medium' : ''
-                    }`}
-                  >
-                    {crumb.name}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-1 text-sm text-gray-600">
+            <button
+              onClick={() => setLocation('/admin/locations')}
+              className={`hover:text-[#EC7830] transition-colors ${
+                !currentParentId ? 'text-[#EC7830] font-medium' : ''
+              }`}
+            >
+              Ülkeler
+            </button>
+            {breadcrumbs.map((crumb, index) => (
+              <div key={crumb.id} className="flex items-center gap-1">
+                <ChevronRight className="h-4 w-4" />
+                <button
+                  onClick={() => {
+                    if (index === breadcrumbs.length - 1) return;
+                    setLocation(`/admin/locations/${crumb.id}`);
+                  }}
+                  className={`hover:text-[#EC7830] transition-colors ${
+                    index === breadcrumbs.length - 1 ? 'text-[#EC7830] font-medium' : ''
+                  }`}
+                >
+                  {crumb.name}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -299,6 +291,17 @@ export default function Locations() {
             />
           </div>
 
+          {/* Settings Button - Only show on root locations page */}
+          {!currentParentId && (
+            <button
+              onClick={() => setLocation('/admin/locations/settings')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              Görünürlük Ayarları
+            </button>
+          )}
+
           {/* Add button */}
           <button
             onClick={() => {
@@ -306,7 +309,7 @@ export default function Locations() {
               setEditingLocation(null);
               setIsFormOpen(true);
             }}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#EC7830] hover:bg-[#d6691a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#EC7830]"
           >
             <Plus className="h-4 w-4 mr-2" />
             Yeni {getLocationTypeLabel(nextType)}
@@ -315,8 +318,9 @@ export default function Locations() {
       </div>
 
       {/* Locations List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {isLoading ? (
+      <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
             <span className="ml-2 text-gray-600">Lokasyonlar yükleniyor...</span>
@@ -420,7 +424,8 @@ export default function Locations() {
               );
             })}
           </ul>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Location Form Modal */}
