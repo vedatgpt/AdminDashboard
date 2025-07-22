@@ -43,28 +43,28 @@ export default function CreateListingStep1() {
     return flatten(allCategories);
   }, [allCategories]);
 
-  // Load draft data when available
+  // Initialize classifiedId from URL on component mount
   useEffect(() => {
-    // First check URL parameter for classifiedId
     if (classifiedId && !state.classifiedId) {
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: classifiedId });
       dispatch({ type: 'SET_IS_DRAFT', payload: true });
     }
-    
-    if (draftData && (classifiedId || state.classifiedId)) {
-      const currentClassifiedId = classifiedId || state.classifiedId;
-      
+  }, [classifiedId, state.classifiedId, dispatch]);
+
+  // Load draft data when available
+  useEffect(() => {
+    if (draftData && state.classifiedId && flatCategories.length > 0) {
       // Load draft data into context
       dispatch({ 
         type: 'LOAD_DRAFT', 
         payload: { 
-          classifiedId: parseInt(currentClassifiedId), 
+          classifiedId: state.classifiedId, 
           draft: draftData 
         } 
       });
       
       // If draft has category, set it up
-      if (draftData.categoryId && flatCategories.length > 0) {
+      if (draftData.categoryId) {
         const category = flatCategories.find(cat => cat.id === draftData.categoryId);
         if (category) {
           // Build category path
@@ -84,7 +84,7 @@ export default function CreateListingStep1() {
         }
       }
     }
-  }, [draftData, classifiedId, state.classifiedId, flatCategories, dispatch]);
+  }, [draftData, state.classifiedId, flatCategories, dispatch]);
 
   useEffect(() => {
     if (allCategories.length > 0) {
@@ -367,9 +367,9 @@ export default function CreateListingStep1() {
                         </p>
                         <button
                           onClick={async () => {
-                            let currentClassifiedId = classifiedId;
+                            let currentClassifiedId = state.classifiedId || classifiedId;
                             
-                            // Create draft if it doesn't exist
+                            // Create draft only if it doesn't exist
                             if (!currentClassifiedId) {
                               try {
                                 const newDraft = await createDraftMutation.mutateAsync();
@@ -456,9 +456,9 @@ export default function CreateListingStep1() {
                   </p>
                   <button
                     onClick={async () => {
-                      let currentClassifiedId = classifiedId;
+                      let currentClassifiedId = state.classifiedId || classifiedId;
                       
-                      // Create draft if it doesn't exist
+                      // Create draft only if it doesn't exist
                       if (!currentClassifiedId) {
                         try {
                           const newDraft = await createDraftMutation.mutateAsync();

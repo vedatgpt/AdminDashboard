@@ -20,7 +20,7 @@ export default function Step2() {
   // URL parameter support
   const urlParams = new URLSearchParams(window.location.search);
   const classifiedIdParam = urlParams.get('classifiedId');
-  const currentClassifiedId = classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
+  const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
   
   // Draft listing hooks
   const { data: draftData } = useDraftListing(currentClassifiedId);
@@ -36,28 +36,34 @@ export default function Step2() {
   const { data: locations = [] } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
   
-  // Load draft data when available
+  // Initialize classifiedId from URL on component mount
   useEffect(() => {
-    // Update context with classified ID from URL if not set
-    if (currentClassifiedId && !classifiedId) {
+    if (currentClassifiedId && !state.classifiedId) {
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentClassifiedId });
       dispatch({ type: 'SET_IS_DRAFT', payload: true });
     }
-    
-    if (draftData && currentClassifiedId) {
+  }, [currentClassifiedId, state.classifiedId, dispatch]);
+
+  // Load draft data when available
+  useEffect(() => {
+    if (draftData && state.classifiedId) {
       // Load draft data into context
       dispatch({ 
         type: 'LOAD_DRAFT', 
         payload: { 
-          classifiedId: currentClassifiedId, 
+          classifiedId: state.classifiedId, 
           draft: draftData 
         } 
       });
       
       // Load form data from draft
       if (draftData.customFields) {
-        const customFields = JSON.parse(draftData.customFields);
-        dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
+        try {
+          const customFields = JSON.parse(draftData.customFields);
+          dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
+        } catch (error) {
+          console.error('Custom fields parse error:', error);
+        }
       }
       
       // Load location data from draft
@@ -73,7 +79,7 @@ export default function Step2() {
         }
       }
     }
-  }, [draftData, currentClassifiedId, classifiedId, dispatch]);
+  }, [draftData, state.classifiedId, dispatch]);
   
   // Get available locations based on selection
   const availableCountries = useMemo(() => {
