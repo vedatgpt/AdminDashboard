@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import { useListing } from '@/contexts/ListingContext';
 import { useLocation } from 'wouter';
-import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useDeleteDraftListing } from '@/hooks/useDraftListing';
+import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useUserDraftForRootCategory, useDeleteDraftListing } from '@/hooks/useDraftListing';
 import { useAuth } from '@/hooks/useAuth';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
@@ -37,9 +37,9 @@ export default function CreateListingStep1() {
   const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
   const [pendingPath, setPendingPath] = useState<Category[]>([]);
   
-  // Check for existing draft when selecting final category - only when authenticated
-  const { data: existingDraft, refetch: refetchDraft } = useUserDraftForCategory(
-    isAuthenticated ? pendingCategory?.id : undefined
+  // Check for existing draft for ROOT CATEGORY - only when authenticated
+  const { data: existingDraft, refetch: refetchDraft } = useUserDraftForRootCategory(
+    isAuthenticated && pendingCategory && !pendingCategory.parentId ? pendingCategory.id : undefined
   );
 
   // Build flat categories array for easy lookup  
@@ -198,28 +198,29 @@ export default function CreateListingStep1() {
     });
   };
 
-  // Check for existing draft when final category is selected
+  // Check for existing draft when ROOT category is selected
   useEffect(() => {
     console.log('Draft check effect çalışıyor:', {
       pendingCategory: pendingCategory?.name,
+      isRootCategory: pendingCategory && !pendingCategory.parentId,
       authLoading,
       isAuthenticated,
       existingDraft: existingDraft?.id,
       classifiedId
     });
     
-    if (pendingCategory && !authLoading && isAuthenticated) {
-      console.log('Kullanıcı giriş yapmış, draft kontrol ediliyor...');
+    // SADECE ANA KATEGORİ SEÇİLDİĞİNDE draft kontrol et
+    if (pendingCategory && !pendingCategory.parentId && !authLoading && isAuthenticated) {
+      console.log('ANA KATEGORİ seçildi, draft kontrol ediliyor...', pendingCategory.name);
       
-      // Eğer mevcut draft var ve bu farklı bir draft ise modal göster
+      // Eğer bu ana kategori için mevcut draft var ise modal göster
       if (existingDraft && existingDraft.id !== classifiedId) {
-        console.log('Mevcut draft bulundu, modal açılıyor:', existingDraft.id);
+        console.log('Bu ana kategori için mevcut draft bulundu, modal açılıyor:', existingDraft.id);
         setShowDraftModal(true);
       } else {
-        console.log('Mevcut draft yok veya aynı draft, modal açılmıyor');
+        console.log('Bu ana kategori için mevcut draft yok, alt kategoriler gösterilebilir');
+        // Draft yok ise alt kategoriler gösterilir, kullanıcı devam eder
       }
-      // Eğer draft yok ise hiçbir şey yapma - kullanıcı "Devam Et" butonuna tıklayana kadar bekle
-      // handleContinueToStep2() fonksiyonunu otomatik çağırmıyoruz
     }
   }, [existingDraft, pendingCategory, classifiedId, isAuthenticated, authLoading]);
 

@@ -834,8 +834,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      const rootCategoryId = req.query.rootCategoryId ? parseInt(req.query.rootCategoryId as string) : undefined;
       
-      if (categoryId) {
+      if (rootCategoryId) {
+        // Ana kategori için draft arama - alt kategoriler dahil
+        const draft = await storage.getUserDraftForRootCategory(userId, rootCategoryId);
+        res.json(draft ? [draft] : []);
+      } else if (categoryId) {
         // Get draft for specific category
         const draft = await storage.getUserDraftForCategory(userId, categoryId);
         res.json(draft ? [draft] : []);
