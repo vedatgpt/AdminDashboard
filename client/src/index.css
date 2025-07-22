@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Layout Fix - Prevents layout shift between pages with/without scroll */
+html {
+  overflow-y: scroll; /* Always reserve space for scrollbar */
+}
+
 /* Custom scrollbar for photo gallery */
 .overflow-x-scroll::-webkit-scrollbar {
   height: 8px;
