@@ -217,6 +217,7 @@ export default function Locations() {
         const sortableInstance = new Sortable(sortableElement as HTMLElement, {
           animation: 150,
           dragClass: 'rounded-none!',
+          handle: '.drag-handle',
           onEnd: function (evt) {
             const oldIndex = evt.oldIndex;
             const newIndex = evt.newIndex;
@@ -393,7 +394,7 @@ export default function Locations() {
               return (
                 <li
                   key={loc.id}
-                  className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
+                  className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
                   onClick={() => {
                     // Navigate to children if it's a clickable location type
                     if (loc.type !== 'neighborhood') {
@@ -407,10 +408,7 @@ export default function Locations() {
                   {/* Location Name and Type */}
                   <div className="flex-1 text-left">
                     <span className="font-medium">{loc.name}</span>
-                    <span className="text-gray-500 ml-2 text-xs">({getLocationTypeLabel(loc.type)})</span>
-                    {childrenCount > 0 && (
-                      <span className="text-gray-500 ml-1">• {childrenCount} alt lokasyon</span>
-                    )}
+                    
                   </div>
                   
                   {/* Status Badge */}
@@ -422,10 +420,7 @@ export default function Locations() {
                     {loc.isActive ? 'Aktif' : 'Pasif'}
                   </span>
                   
-                  {/* Sort Order */}
-                  <span className="text-gray-500 text-xs min-w-[2rem] text-center">
-                    #{loc.sortOrder}
-                  </span>
+                  
                   
                   {/* Action Buttons */}
                   <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -439,7 +434,7 @@ export default function Locations() {
                       className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
                       title="Düzenle"
                     >
-                      <Edit className="w-3 h-3" />
+                      <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -449,12 +444,12 @@ export default function Locations() {
                       className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                       title="Sil"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   
                   {/* Drag Handle */}
-                  <GripVertical className="shrink-0 w-4 h-4 text-gray-400" />
+                  <GripVertical className="shrink-0 w-4 h-4 text-gray-400 drag-handle cursor-grab hover:cursor-grabbing" />
                 </li>
               );
             })}

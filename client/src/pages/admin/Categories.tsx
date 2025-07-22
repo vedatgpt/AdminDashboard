@@ -229,6 +229,7 @@ export default function Categories() {
         const sortableInstance = new Sortable(sortableElement as HTMLElement, {
           animation: 150,
           dragClass: 'rounded-none!',
+          handle: '.drag-handle',
           onEnd: function (evt) {
             const oldIndex = evt.oldIndex;
             const newIndex = evt.newIndex;
@@ -288,7 +289,21 @@ export default function Categories() {
         </div>
       )}
 
-      
+      <PageHeader
+        title="Kategori Yönetimi"
+        subtitle={`${filteredCategories.length} kategori`}
+        actions={
+          currentParent ? (
+            <button 
+              onClick={handleBackClick}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Geri
+            </button>
+          ) : undefined
+        }
+      />
 
       <div className="flex-1 flex flex-col">
         {/* Category List */}
@@ -370,7 +385,7 @@ export default function Categories() {
                     <li
                       key={category.id}
                       data-category-id={category.id}
-                      className="inline-flex items-center gap-x-3 py-3 px-4 cursor-grab text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
+                      className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
                       onClick={() => handleCategoryClick(category)}
                     >
                       {/* Icon */}
@@ -385,11 +400,25 @@ export default function Categories() {
                       )}
                       
                       {/* Category Name */}
-                      <span className="flex-1 text-left">
-                        {category.name}
+                      <div className="flex-1 text-left">
+                        <span className="font-medium">{category.name}</span>
                         {childrenCount > 0 && (
                           <span className="text-gray-500 ml-1">({childrenCount})</span>
                         )}
+                      </div>
+                      
+                      {/* Status Badge */}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        category.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {category.isActive ? 'Aktif' : 'Pasif'}
+                      </span>
+                      
+                      {/* Sort Order */}
+                      <span className="text-gray-500 text-xs min-w-[2rem] text-center">
+                        #{category.sortOrder}
                       </span>
                       
                       {/* Action Buttons */}
@@ -402,7 +431,7 @@ export default function Categories() {
                           className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
                           title="Alt kategori ekle"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -412,7 +441,7 @@ export default function Categories() {
                           className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
                           title="Özel alanlar"
                         >
-                          <Settings className="w-3 h-3" />
+                          <Settings className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -422,7 +451,7 @@ export default function Categories() {
                           className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
                           title="Düzenle"
                         >
-                          <Edit className="w-3 h-3" />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -433,12 +462,12 @@ export default function Categories() {
                           title="Sil"
                           disabled={isAnyMutationLoading}
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                       
                       {/* Drag Handle */}
-                      <GripVertical className="shrink-0 w-4 h-4 text-gray-400" />
+                      <GripVertical className="shrink-0 w-4 h-4 text-gray-400 drag-handle cursor-grab hover:cursor-grabbing" />
                     </li>
                   );
                 })}
