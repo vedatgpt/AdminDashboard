@@ -156,7 +156,8 @@ router.post('/:id/custom-fields', requireAdmin, async (req, res) => {
     res.status(201).json(customField);
   } catch (error) {
     console.error('Create custom field error:', error);
-    res.status(500).json({ error: 'Failed to create custom field' });
+    const errorMessage = error instanceof Error ? error.message : "Failed to create custom field";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -180,7 +181,8 @@ router.patch('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
     res.json(updatedField);
   } catch (error) {
     console.error('Update custom field error:', error);
-    res.status(500).json({ error: 'Failed to update custom field' });
+    const errorMessage = error instanceof Error ? error.message : "Failed to update custom field";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -196,7 +198,8 @@ router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error('Delete custom field error:', error);
-    res.status(500).json({ error: 'Failed to delete custom field' });
+    const errorMessage = error instanceof Error ? error.message : "Failed to delete custom field";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -271,10 +274,11 @@ router.patch("/:id", async (req, res) => {
     res.json(category);
   } catch (error) {
     console.error("Error updating category:", error);
-    if (error.name === "ZodError") {
-      return res.status(400).json({ error: "Invalid input data", details: error.errors });
+    if (error instanceof Error && error.name === "ZodError") {
+      return res.status(400).json({ error: "Invalid input data", details: (error as any).errors });
     }
-    res.status(500).json({ error: "Failed to update category" });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    res.status(500).json({ error: "Failed to update category", details: errorMessage });
   }
 });
 
@@ -288,7 +292,8 @@ router.patch("/:id/move", async (req, res) => {
     res.json(category);
   } catch (error) {
     console.error("Error moving category:", error);
-    res.status(500).json({ error: error.message || "Failed to move category" });
+    const errorMessage = error instanceof Error ? error.message : "Failed to move category";
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -302,7 +307,8 @@ router.delete("/:id", async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error("Error deleting category:", error);
-    res.status(500).json({ error: error.message || "Failed to delete category" });
+    const errorMessage = error instanceof Error ? error.message : "Failed to delete category";
+    res.status(500).json({ error: errorMessage });
   }
 });
 

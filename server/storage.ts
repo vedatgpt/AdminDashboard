@@ -241,7 +241,7 @@ export class DatabaseStorage implements IStorage {
 
     // Initialize all categories with children array
     allCategories.forEach(cat => {
-      categoryMap.set(cat.id, { ...cat, children: [] });
+      categoryMap.set(cat.id, { ...cat, children: [] } as Category & { children: Category[] });
     });
 
     // Build parent-child relationships
@@ -262,7 +262,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCategoryById(id: number): Promise<Category | undefined> {
     const [category] = await db.select().from(categories).where(eq(categories.id, id));
-    return category || undefined;
+    return category as Category || undefined;
   }
 
   async getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined> {
@@ -270,21 +270,23 @@ export class DatabaseStorage implements IStorage {
     
     if (parentId !== undefined) {
       if (parentId === null) {
-        whereCondition = and(whereCondition, isNull(categories.parentId));
+        whereCondition = and(whereCondition, isNull(categories.parentId))!;
       } else {
-        whereCondition = and(whereCondition, eq(categories.parentId, parentId));
+        whereCondition = and(whereCondition, eq(categories.parentId, parentId))!;
       }
     }
     
     const [category] = await db.select().from(categories).where(whereCondition);
-    return category || undefined;
+    return category as Category || undefined;
   }
 
   async getChildCategories(parentId: number | null): Promise<Category[]> {
     if (parentId === null) {
-      return await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+      const result = await db.select().from(categories).where(isNull(categories.parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+      return result as Category[];
     }
-    return await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    const result = await db.select().from(categories).where(eq(categories.parentId, parentId)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    return result as Category[];
   }
 
   async createCategory(data: InsertCategory): Promise<Category> {
@@ -293,7 +295,7 @@ export class DatabaseStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
-    return category;
+    return category as Category;
   }
 
   async updateCategory(id: number, updates: UpdateCategory): Promise<Category> {
@@ -304,7 +306,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(categories.id, id))
       .returning();
-    return category;
+    return category as Category;
   }
 
   async deleteCategory(id: number): Promise<void> {
