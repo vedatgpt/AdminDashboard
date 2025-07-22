@@ -292,25 +292,15 @@ export default function Categories() {
         title="Kategori Yönetimi"
         subtitle={`${filteredCategories.length} kategori`}
         actions={
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            {currentParent && (
-              <button 
-                onClick={handleBackClick}
-                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 w-full sm:w-auto justify-center sm:justify-start"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Geri
-              </button>
-            )}
+          currentParent ? (
             <button 
-              onClick={handleAddRootCategory}
-              disabled={isAnyMutationLoading}
-              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
+              onClick={handleBackClick}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
             >
-              <Plus className="w-4 h-4" />
-              {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
+              <ArrowLeft className="w-4 h-4" />
+              Geri
             </button>
-          </div>
+          ) : undefined
         }
       />
 
@@ -343,16 +333,29 @@ export default function Categories() {
               ))}
             </div>
             
-            {/* Search */}
-            <div className="relative w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Kategori ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-              />
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {/* Search */}
+              <div className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Kategori ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                />
+              </div>
+
+              {/* Add Category Button */}
+              <button 
+                onClick={handleAddRootCategory}
+                disabled={isAnyMutationLoading}
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
+              >
+                <Plus className="w-4 h-4" />
+                {currentParent ? 'Alt Kategori Ekle' : 'Ana Kategori Ekle'}
+              </button>
             </div>
           </div>
 
