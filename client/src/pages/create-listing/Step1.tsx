@@ -165,8 +165,10 @@ export default function CreateListingStep1() {
       }
     }, 100);
 
-    // If this is a leaf category (no children), check for existing draft or proceed
+    // If this is a leaf category (no children), set it as selected but don't auto-proceed
     if (!hasChildren(category)) {
+      console.log('Son kategori seçildi:', category.name, 'ID:', category.id);
+      
       // Set pending category for draft check
       setPendingCategory(category);
       setPendingPath(newPath);
@@ -190,21 +192,28 @@ export default function CreateListingStep1() {
 
   // Check for existing draft when final category is selected
   useEffect(() => {
-    if (pendingCategory && !authLoading) {
-      if (!isAuthenticated) {
-        // Redirect to login if not authenticated
-        navigate('/auth/login');
-        return;
-      }
+    console.log('Draft check effect çalışıyor:', {
+      pendingCategory: pendingCategory?.name,
+      authLoading,
+      isAuthenticated,
+      existingDraft: existingDraft?.id,
+      classifiedId
+    });
+    
+    if (pendingCategory && !authLoading && isAuthenticated) {
+      console.log('Kullanıcı giriş yapmış, draft kontrol ediliyor...');
       
+      // Eğer mevcut draft var ve bu farklı bir draft ise modal göster
       if (existingDraft && existingDraft.id !== classifiedId) {
+        console.log('Mevcut draft bulundu, modal açılıyor:', existingDraft.id);
         setShowDraftModal(true);
-      } else if (!existingDraft) {
-        // No draft found, proceed normally
-        handleContinueToStep2();
+      } else {
+        console.log('Mevcut draft yok veya aynı draft, modal açılmıyor');
       }
+      // Eğer draft yok ise hiçbir şey yapma - kullanıcı "Devam Et" butonuna tıklayana kadar bekle
+      // handleContinueToStep2() fonksiyonunu otomatik çağırmıyoruz
     }
-  }, [existingDraft, pendingCategory, classifiedId, isAuthenticated, authLoading, navigate]);
+  }, [existingDraft, pendingCategory, classifiedId, isAuthenticated, authLoading]);
 
   // Handle continuing to step 2
   const handleContinueToStep2 = async () => {
