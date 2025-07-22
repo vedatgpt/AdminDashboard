@@ -47,18 +47,6 @@ export default function Step3() {
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes cache time
   });
-  
-  // Show loading state while draft data is loading
-  if (draftLoading) {
-    return (
-      <CreateListingLayout stepNumber={3}>
-        <div className="text-center py-12">
-          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
-          <p className="text-gray-500">Fotoğraflarınız yükleniyor...</p>
-        </div>
-      </CreateListingLayout>
-    );
-  }
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
@@ -380,6 +368,18 @@ export default function Step3() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
+
+  // Show loading state while draft data is loading
+  if (draftLoading) {
+    return (
+      <CreateListingLayout stepNumber={3}>
+        <div className="text-center py-12">
+          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
+          <p className="text-gray-500">Fotoğraflarınız yükleniyor...</p>
+        </div>
+      </CreateListingLayout>
+    );
+  }
 
   return (
     <CreateListingLayout stepNumber={3}>

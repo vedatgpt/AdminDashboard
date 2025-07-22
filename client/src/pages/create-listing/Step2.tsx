@@ -34,6 +34,12 @@ export default function Step2() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
   
+  // Location selection state
+  const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
+  const [selectedCity, setSelectedCity] = useState<Location | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
+  
   // Draft listing hooks
   const { data: draftData, isLoading: draftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
@@ -49,12 +55,6 @@ export default function Step2() {
       </CreateListingLayout>
     );
   }
-  
-  // Location selection state
-  const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
-  const [selectedCity, setSelectedCity] = useState<Location | null>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
   
   // Fetch data
   const { data: locations = [] } = useLocationsTree();
