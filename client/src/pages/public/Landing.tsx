@@ -2,10 +2,13 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ModernNavbar from "@/components/Navbar";
 import logoPath from "@assets/logo_1752808818099.png";
+import { LoadingSpinner, ButtonSpinner, PageSpinner } from "@/components/ui/ISpinner";
+import { useState } from "react";
 
 export default function Landing() {
   const { isAuthenticated, user, logout } = useAuth();
   const [, navigate] = useLocation();
+  const [showDemo, setShowDemo] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -48,6 +51,13 @@ export default function Landing() {
               </button>
             </Link>
             
+            <button 
+              onClick={() => setShowDemo(!showDemo)}
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-8 rounded-lg transition-colors"
+            >
+              ISpinner Demo
+            </button>
+            
             {!isAuthenticated && (
               <>
                 <Link href="/login">
@@ -65,7 +75,29 @@ export default function Landing() {
           </div>
         </div>
         
-     
+        {showDemo && (
+          <div className="mt-12 bg-gray-100 p-8 rounded-lg">
+            <h3 className="text-2xl font-bold mb-6 text-center">ISpinner Demo</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="text-center">
+                <h4 className="font-medium mb-3">Default (Orange)</h4>
+                <LoadingSpinner />
+              </div>
+              <div className="text-center">
+                <h4 className="font-medium mb-3">Large Blue</h4>
+                <LoadingSpinner size={50} color="#3B82F6" />
+              </div>
+              <div className="text-center bg-gray-800 p-4 rounded">
+                <h4 className="font-medium mb-3 text-white">Button Spinner</h4>
+                <ButtonSpinner />
+              </div>
+              <div className="text-center">
+                <h4 className="font-medium mb-3">Custom Green</h4>
+                <LoadingSpinner size={35} color="#10B981" />
+              </div>
+            </div>
+          </div>
+        )}
         
       </main>
     </div>
