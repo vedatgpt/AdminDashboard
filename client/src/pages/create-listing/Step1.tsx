@@ -7,6 +7,7 @@ import { Category } from '@shared/schema';
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
+import CreateListingLayout from '@/components/CreateListingLayout';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -182,7 +183,8 @@ export default function CreateListingStep1() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <CreateListingLayout stepNumber={1} customBackHandler={handleMobileBack}>
+      <div className="min-h-screen bg-white">
 
       {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
@@ -376,6 +378,7 @@ export default function CreateListingStep1() {
           </>
         </div>
       </div>
-    </div>
+      </div>
+    </CreateListingLayout>
   );
 }
