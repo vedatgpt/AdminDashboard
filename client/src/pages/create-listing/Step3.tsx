@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
-import CreateListingLayout from '@/components/CreateListingLayout';
+import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -41,21 +41,26 @@ export default function Step3() {
   }, [authLoading, isAuthenticated]);
 
   // Load existing photos from draft when component mounts
-  const { data: draftData, isLoading: draftLoading } = useQuery({
+  const { data: draftData } = useQuery({
     queryKey: [`/api/draft-listings/${currentClassifiedId}`],
     enabled: !!currentClassifiedId && isAuthenticated,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes cache time
   });
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
+    console.log('Draft data received:', draftData);
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
+        console.log('Photos from draft:', draftData.photos);
         const existingPhotos = JSON.parse(draftData.photos as string);
+        console.log('Parsed photos:', existingPhotos);
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
           // Only set if images array is empty to avoid overriding current state
-          setImages(prev => prev.length === 0 ? existingPhotos : prev);
+          setImages(prev => {
+            console.log('Current images length:', prev.length);
+            return prev.length === 0 ? existingPhotos : prev;
+          });
         }
       } catch (error) {
         console.error('Error parsing photos from draft:', error);
@@ -203,21 +208,6 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
-              
-              // Immediately save the new order to draft
-              if (currentClassifiedId && newImages.length > 0 && !newImages.some(img => img.uploading)) {
-                setTimeout(() => {
-                  updateDraftMutation.mutate(newImages.map(img => ({
-                    id: img.id,
-                    filename: img.filename,
-                    url: img.url,
-                    thumbnail: img.thumbnail,
-                    size: img.size,
-                    originalSize: img.originalSize
-                  })));
-                }, 100);
-              }
-              
               return newImages;
             });
           }
@@ -322,8 +312,8 @@ export default function Step3() {
       
       return response.json();
     },
-    onSuccess: () => {
-      // Silently save without console logs for better performance
+    onSuccess: (data) => {
+      console.log('Photos saved to draft successfully:', data);
     },
     onError: (error) => {
       console.error('Error saving photos to draft:', error);
@@ -369,20 +359,10 @@ export default function Step3() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Show loading state while draft data is loading
-  if (draftLoading) {
-    return (
-      <CreateListingLayout stepNumber={3}>
-        <div className="text-center py-12">
-          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
-          <p className="text-gray-500">Fotoğraflarınız yükleniyor...</p>
-        </div>
-      </CreateListingLayout>
-    );
-  }
-
   return (
-    <CreateListingLayout stepNumber={3}>
+    <div className="bg-white">
+
+      {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
 
@@ -447,14 +427,6 @@ export default function Step3() {
               onChange={(e) => handleFileSelect(e.target.files)}
             />
                 
-                {/* Loading state for photos - only show if draft has photos */}
-                {draftLoading && draftData && draftData.photos && images.length === 0 && (
-                  <div className="mt-6 text-center text-gray-500">
-                    <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
-                    Fotoğraflar yükleniyor...
-                  </div>
-                )}
-
                 {/* Images Grid */}
                 {images.length > 0 && (
                   <div className="mt-6">
@@ -509,8 +481,6 @@ export default function Step3() {
                         src={image.uploading ? image.url : (image.thumbnail || image.url)}
                         alt={`Fotoğraf ${index + 1}`}
                         className="w-full h-full object-contain"
-                        loading="lazy"
-                        decoding="async"
                       />
                     </div>
                     
@@ -559,14 +529,19 @@ export default function Step3() {
           </button>
           
           <button
-            onClick={handleNextStep}
+            onClick={() => {
+              const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
+              navigate(url);
+            }}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             Sonraki Adım
           </button>
         </div>
         
+        {/* Performance indicator */}
+        <PageLoadIndicator />
       </div>
-    </CreateListingLayout>
+    </div>
   );
 }

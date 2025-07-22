@@ -33,8 +33,8 @@ export default function Step4() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
-  // Draft listing data with optimized cache
-  const { data: draftData, isLoading: draftLoading } = useDraftListing(currentClassifiedId);
+  // Draft listing data
+  const { data: draftData } = useDraftListing(currentClassifiedId);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
 
@@ -48,41 +48,20 @@ export default function Step4() {
     );
   }
 
-  if (draftLoading || !draftData) {
+  if (!draftData) {
     return (
       <CreateListingLayout stepNumber={4}>
         <div className="text-center py-12">
-          <div className="inline-block w-6 h-6 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
-          <p className="text-gray-500">İlan verileriniz yükleniyor...</p>
+          <p className="text-gray-500">Yükleniyor...</p>
         </div>
       </CreateListingLayout>
     );
   }
 
-  // Parse data with error handling
-  const customFields = draftData?.customFields ? (() => {
-    try {
-      return JSON.parse(draftData.customFields);
-    } catch {
-      return {};
-    }
-  })() : {};
-  
-  const photos = draftData?.photos ? (() => {
-    try {
-      return JSON.parse(draftData.photos);
-    } catch {
-      return [];
-    }
-  })() : [];
-  
-  const locationData = draftData?.locationData ? (() => {
-    try {
-      return JSON.parse(draftData.locationData);
-    } catch {
-      return {};
-    }
-  })() : {};
+  // Parse data
+  const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
+  const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
+  const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
 
   // Find category details
   const findCategory = (categoryId: number | null) => {
@@ -155,8 +134,6 @@ export default function Step4() {
                         src={photo.url}
                         alt={`Fotoğraf ${index + 1}`}
                         className="w-full h-full object-cover"
-                        loading={index === 0 ? "eager" : "lazy"}
-                        decoding="async"
                       />
                     </SwiperSlide>
                   ))}
@@ -178,8 +155,6 @@ export default function Step4() {
                           src={photo.thumbnail || photo.url}
                           alt={`Küçük ${index + 1}`}
                           className="w-full h-full object-cover rounded border-2 border-transparent hover:border-orange-500"
-                          loading="lazy"
-                          decoding="async"
                         />
                       </SwiperSlide>
                     ))}
