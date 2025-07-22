@@ -203,11 +203,9 @@ router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
 // Reorder categories (admin only) - MUST BE BEFORE router.use middleware
 router.patch("/reorder", requireAuth, requireAdmin, async (req, res) => {
   try {
-    console.log('Reorder request received:', req.body);
     const { parentId, categoryIds } = req.body;
     
     if (!Array.isArray(categoryIds)) {
-      console.log('Invalid categoryIds:', categoryIds);
       return res.status(400).json({ error: "categoryIds must be an array" });
     }
     
@@ -216,25 +214,20 @@ router.patch("/reorder", requireAuth, requireAdmin, async (req, res) => {
       typeof id === 'number' && Number.isInteger(id) && id > 0
     );
     
-    console.log('Valid category IDs:', validCategoryIds);
-    console.log('Original category IDs:', categoryIds);
-    
     if (validCategoryIds.length !== categoryIds.length) {
-      console.log('Some category IDs are invalid');
       return res.status(400).json({ error: "All category IDs must be valid positive integers" });
     }
     
     // Update sort order for all categories in the list
     for (let i = 0; i < validCategoryIds.length; i++) {
       const categoryId = validCategoryIds[i];
-      console.log(`Updating category ${categoryId} with sortOrder ${i + 1}`);
       await storage.updateCategory(categoryId, { sortOrder: i + 1 });
     }
     
     res.json({ message: "Categories reordered successfully" });
   } catch (error) {
     console.error("Error reordering categories:", error);
-    res.status(500).json({ error: "Failed to reorder categories", details: error.message });
+    res.status(500).json({ error: "Failed to reorder categories" });
   }
 });
 
