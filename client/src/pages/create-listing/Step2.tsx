@@ -8,6 +8,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
+import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoriesTree } from '@/hooks/useCategories';
@@ -889,6 +890,9 @@ export default function Step2() {
             </button>
           </div>
         </div>
+        
+        {/* Performance indicator */}
+        <PageLoadIndicator />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
+import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -433,6 +434,9 @@ export default function Step3() {
           </div>
 
         </div>
+        
+        {/* Performance indicator */}
+        <PageLoadIndicator />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
 import CreateListingLayout from '@/components/CreateListingLayout';
+import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -695,6 +696,9 @@ export default function CreateListingStep1() {
             </div>
           </>
         </div>
+        
+        {/* Performance indicator */}
+        <PageLoadIndicator />
       </div>
       </div>
       
