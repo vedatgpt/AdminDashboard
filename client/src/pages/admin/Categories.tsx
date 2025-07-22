@@ -46,10 +46,10 @@ export default function Categories() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
-      setShowAlert({ type: 'success', message: 'Kategori sıralaması başarıyla güncellendi' });
+      showAlertMessage('success', 'Kategori sıralaması başarıyla güncellendi', 1000);
     },
     onError: (error) => {
-      setShowAlert({ type: 'error', message: 'Sıralama güncellenirken hata oluştu' });
+      showAlertMessage('error', 'Sıralama güncellenirken hata oluştu');
       console.error('Reorder error:', error);
     }
   });
@@ -124,9 +124,9 @@ export default function Categories() {
   }, [currentCategories, searchTerm]);
 
   // Show alert helper
-  const showAlertMessage = (type: 'success' | 'error' | 'info', message: string) => {
+  const showAlertMessage = (type: 'success' | 'error' | 'info', message: string, duration: number = 5000) => {
     setShowAlert({ type, message });
-    setTimeout(() => setShowAlert(null), 5000);
+    setTimeout(() => setShowAlert(null), duration);
   };
 
   // Handle form submission
