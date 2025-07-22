@@ -24,6 +24,7 @@ import NotFound from "@/pages/public/not-found";
 import CreateListingStep1 from "@/pages/create-listing/Step1";
 import CreateListingStep2 from "@/pages/create-listing/Step2";
 import CreateListingStep3 from "@/pages/create-listing/Step3";
+import CreateListingLayout from "@/components/CreateListingLayout";
 import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -71,9 +72,21 @@ function Router() {
         <Switch>
           <Route path="/" component={Landing} />
 
-          <Route path="/create-listing/step-1" component={CreateListingStep1} />
-          <Route path="/create-listing/step-2" component={CreateListingStep2} />
-          <Route path="/create-listing/step-3" component={CreateListingStep3} />
+          <Route path="/create-listing/step-1">
+            <CreateListingLayout>
+              <CreateListingStep1 />
+            </CreateListingLayout>
+          </Route>
+          <Route path="/create-listing/step-2">
+            <CreateListingLayout>
+              <CreateListingStep2 />
+            </CreateListingLayout>
+          </Route>
+          <Route path="/create-listing/step-3">
+            <CreateListingLayout>
+              <CreateListingStep3 />
+            </CreateListingLayout>
+          </Route>
           <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>

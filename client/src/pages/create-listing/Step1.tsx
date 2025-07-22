@@ -7,8 +7,6 @@ import { Category } from '@shared/schema';
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
-import ModernNavbar from '@/components/Navbar';
-import NavbarMobile from '@/components/Navbar-mobile';
 
 export default function CreateListingStep1() {
   const [, navigate] = useLocation();
@@ -185,18 +183,6 @@ export default function CreateListingStep1() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Desktop Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar onSearch={handleSearch} />
-      </div>
-      
-      {/* Mobile/Tablet Navbar */}
-      <div className="lg:hidden">
-        <NavbarMobile 
-          showBackButton={categoryPath.length > 0} 
-          onBackClick={handleMobileBack}
-        />
-      </div>
 
       {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">

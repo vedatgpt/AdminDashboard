@@ -5,8 +5,6 @@ import { useLocation } from 'wouter';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
-import ModernNavbar from '@/components/Navbar';
-import NavbarMobile from '@/components/Navbar-mobile';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
@@ -128,25 +126,10 @@ export default function Step2() {
 
 
 
-  // Navbar'lar için dummy search handler
-  const handleSearch = (query: string) => {
-    console.log('Search query:', query);
-  };
+
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Desktop Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar onSearch={handleSearch} />
-      </div>
-      
-      {/* Mobile/Tablet Navbar */}
-      <div className="lg:hidden">
-        <NavbarMobile 
-          showBackButton={true}
-          onBackClick={() => window.history.back()}
-        />
-      </div>
 
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">

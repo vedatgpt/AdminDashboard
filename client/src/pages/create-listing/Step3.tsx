@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
-import ModernNavbar from '@/components/Navbar';
-import NavbarMobile from '@/components/Navbar-mobile';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -274,13 +272,6 @@ export default function Step3() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <div className="hidden lg:block">
-        <ModernNavbar />
-      </div>
-      <div className="lg:hidden">
-        <NavbarMobile />
-      </div>
 
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">
