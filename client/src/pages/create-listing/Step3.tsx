@@ -41,26 +41,23 @@ export default function Step3() {
   }, [authLoading, isAuthenticated]);
 
   // Load existing photos from draft when component mounts
-  const { data: draftData } = useQuery({
+  const { data: draftData, isLoading: draftLoading } = useQuery({
     queryKey: [`/api/draft-listings/${currentClassifiedId}`],
     enabled: !!currentClassifiedId && isAuthenticated,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes for better caching
+    gcTime: 15 * 60 * 1000, // 15 minutes cache time
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
   });
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-    console.log('Draft data received:', draftData);
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
-        console.log('Photos from draft:', draftData.photos);
         const existingPhotos = JSON.parse(draftData.photos as string);
-        console.log('Parsed photos:', existingPhotos);
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
           // Only set if images array is empty to avoid overriding current state
-          setImages(prev => {
-            console.log('Current images length:', prev.length);
-            return prev.length === 0 ? existingPhotos : prev;
-          });
+          setImages(prev => prev.length === 0 ? existingPhotos : prev);
         }
       } catch (error) {
         console.error('Error parsing photos from draft:', error);
@@ -312,8 +309,8 @@ export default function Step3() {
       
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log('Photos saved to draft successfully:', data);
+    onSuccess: () => {
+      // Silently save without console logs for better performance
     },
     onError: (error) => {
       console.error('Error saving photos to draft:', error);
@@ -322,14 +319,14 @@ export default function Step3() {
 
   // Auto-save photos to draft whenever images change (with debounce)
   useEffect(() => {
-    if (images.length > 0 && currentClassifiedId && !images.some(img => img.uploading)) {
+    if (images.length > 0 && currentClassifiedId && !images.some(img => img.uploading) && !draftLoading) {
       const timeoutId = setTimeout(() => {
         updateDraftMutation.mutate(images);
-      }, 1000); // 1 second debounce
+      }, 2000); // 2 second debounce for better performance
       
       return () => clearTimeout(timeoutId);
     }
-  }, [images, currentClassifiedId]);
+  }, [images, currentClassifiedId, draftLoading]);
 
   const handleNextStep = () => {
     // Wait for all uploads to complete
@@ -361,6 +358,7 @@ export default function Step3() {
 
   return (
     <div className="bg-white">
+      <PageLoadIndicator />
 
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">
@@ -427,6 +425,14 @@ export default function Step3() {
               onChange={(e) => handleFileSelect(e.target.files)}
             />
                 
+                {/* Loading state for photos */}
+                {draftLoading && images.length === 0 && (
+                  <div className="mt-6 text-center text-gray-500">
+                    <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-orange-500 rounded-full animate-spin mr-2"></div>
+                    Fotoğraflar yükleniyor...
+                  </div>
+                )}
+
                 {/* Images Grid */}
                 {images.length > 0 && (
                   <div className="mt-6">
@@ -481,6 +487,8 @@ export default function Step3() {
                         src={image.uploading ? image.url : (image.thumbnail || image.url)}
                         alt={`Fotoğraf ${index + 1}`}
                         className="w-full h-full object-contain"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                     
