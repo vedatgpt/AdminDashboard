@@ -150,12 +150,12 @@ export default function Locations() {
   };
 
   // Handle delete location
-  const handleDelete = (id: number, name: string) => {
-    if (!confirm(`"${name}" lokasyonunu silmek istediğinizden emin misiniz? Bu işlem alt lokasyonları da silecektir.`)) {
+  const handleDelete = (location: Location) => {
+    if (!confirm(`"${location.name}" lokasyonunu silmek istediğinizden emin misiniz? Bu işlem alt lokasyonları da silecektir.`)) {
       return;
     }
 
-    deleteMutation.mutate(id, {
+    deleteMutation.mutate(location.id, {
       onSuccess: () => {
         setShowAlert({ type: 'success', message: 'Lokasyon başarıyla silindi' });
         setTimeout(() => setShowAlert(null), 3000);
@@ -314,20 +314,18 @@ export default function Locations() {
         </div>
       </div>
 
-      {/* Locations Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      {/* Locations List */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-6 text-center text-gray-500">
-            <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
-            <p className="mt-2">Lokasyonlar yükleniyor...</p>
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
+            <span className="ml-2 text-gray-600">Lokasyonlar yükleniyor...</span>
           </div>
         ) : filteredLocations.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
-            <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? "Lokasyon bulunamadı" : `Henüz ${getLocationTypeLabel(nextType).toLowerCase()} eklenmemiş`}
-            </h3>
-            <p className="text-gray-500 mb-4">
+          <div className="text-center py-8 text-gray-500">
+            <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p>{searchTerm ? "Lokasyon bulunamadı" : `Henüz ${getLocationTypeLabel(nextType).toLowerCase()} eklenmemiş`}</p>
+            <p className="text-sm mt-1">
               {searchTerm 
                 ? "Arama kriterlerinize uygun lokasyon bulunamadı."
                 : `İlk ${getLocationTypeLabel(nextType).toLowerCase()}ünüzü ekleyerek başlayın.`
@@ -340,7 +338,7 @@ export default function Locations() {
                   setEditingLocation(null);
                   setIsFormOpen(true);
                 }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#EC7830] hover:bg-[#d6691a] mt-4"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Yeni {getLocationTypeLabel(nextType)} Ekle
@@ -348,97 +346,80 @@ export default function Locations() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lokasyon
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tip
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Durum
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sıra
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    İşlemler
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredLocations.map((loc) => (
-                  <tr key={loc.id} className="hover:bg-gray-50 group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <MapPin className="h-5 w-5 text-gray-400 mr-3" />
-                        <div>
-                          <button
-                            onClick={() => {
-                              if (loc.type !== 'neighborhood') {
-                                navigateToChildren(loc.id);
-                              }
-                            }}
-                            className={`text-sm font-medium text-gray-900 ${
-                              loc.type !== 'neighborhood' ? 'hover:text-orange-600' : ''
-                            }`}
-                            disabled={loc.type === 'neighborhood'}
-                          >
-                            {loc.name}
-                          </button>
-                          {(loc as any).children && (
-                            <p className="text-xs text-gray-500">
-                              {(loc as any).children.length} alt lokasyon
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                        {getLocationTypeLabel(loc.type)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        loc.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {loc.isActive ? 'Aktif' : 'Pasif'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {loc.sortOrder}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            setEditingLocation(loc);
-                            setParentLocation(currentParent);
-                            setIsFormOpen(true);
-                          }}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(loc.id, loc.name)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="flex flex-col">
+            {filteredLocations.map((loc, index) => {
+              const childrenCount = (loc as any).children ? (loc as any).children.length : 0;
+              return (
+                <li
+                  key={loc.id}
+                  className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative"
+                  onClick={() => {
+                    // Navigate to children if it's a clickable location type
+                    if (loc.type !== 'neighborhood') {
+                      setLocation(`/admin/locations/${loc.id}`);
+                    }
+                  }}
+                >
+                  {/* Location Icon */}
+                  <MapPin className="shrink-0 w-4 h-4 text-gray-400" />
+                  
+                  {/* Location Name and Type */}
+                  <div className="flex-1 text-left">
+                    <span className="font-medium">{loc.name}</span>
+                    <span className="text-gray-500 ml-2 text-xs">({getLocationTypeLabel(loc.type)})</span>
+                    {childrenCount > 0 && (
+                      <span className="text-gray-500 ml-1">• {childrenCount} alt lokasyon</span>
+                    )}
+                  </div>
+                  
+                  {/* Status Badge */}
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    loc.isActive 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {loc.isActive ? 'Aktif' : 'Pasif'}
+                  </span>
+                  
+                  {/* Sort Order */}
+                  <span className="text-gray-500 text-xs min-w-[2rem] text-center">
+                    #{loc.sortOrder}
+                  </span>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingLocation(loc);
+                        setParentLocation(currentParent);
+                        setIsFormOpen(true);
+                      }}
+                      className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                      title="Düzenle"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(loc);
+                      }}
+                      className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                      title="Sil"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Navigate Arrow (only for non-neighborhood locations) */}
+                  {loc.type !== 'neighborhood' && (
+                    <ChevronRight className="shrink-0 w-4 h-4 text-gray-400" />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
