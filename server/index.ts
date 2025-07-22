@@ -9,11 +9,20 @@ declare module "express-session" {
       id: number;
       username: string;
       email: string;
+      firstName: string;
+      lastName: string;
       role: string;
       isActive: boolean;
       createdAt: Date;
       updatedAt: Date;
+      password?: string;
+      companyName?: string;
+      companyId?: number;
+      mobilePhone?: string;
+      whatsappNumber?: string;
     };
+    userId?: number;
+    userType?: string;
   }
 }
 
