@@ -40,6 +40,27 @@ export default function Step3() {
     }
   }, [authLoading, isAuthenticated]);
 
+  // Load existing photos from draft when component mounts
+  const { data: draftData } = useQuery({
+    queryKey: ['/api/draft-listings', currentClassifiedId],
+    enabled: !!currentClassifiedId && isAuthenticated,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  // Load photos from draft data when available
+  useEffect(() => {
+    if (draftData && 'photos' in draftData && draftData.photos) {
+      try {
+        const existingPhotos = JSON.parse(draftData.photos as string);
+        if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
+          setImages(existingPhotos);
+        }
+      } catch (error) {
+        console.error('Error parsing photos from draft:', error);
+      }
+    }
+  }, [draftData]);
+
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();
     formData.append('images', file);
@@ -115,7 +136,14 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (_, imageId) => {
-      setImages(prev => prev.filter(img => img.id !== imageId));
+      setImages(prev => {
+        const newImages = prev.filter(img => img.id !== imageId);
+        // Also update draft listing when image is deleted
+        if (currentClassifiedId && newImages.length >= 0) {
+          updateDraftMutation.mutate(newImages);
+        }
+        return newImages;
+      });
     },
     onError: (error) => {
       console.error('Delete error:', error);
@@ -258,6 +286,45 @@ export default function Step3() {
     handleFileSelect(e.dataTransfer.files);
   };
 
+  // Mutation to update draft with photos
+  const updateDraftMutation = useMutation({
+    mutationFn: async (photos: UploadedImage[]) => {
+      if (!currentClassifiedId) throw new Error('No classified ID');
+      
+      const response = await fetch(`/api/draft-listings/${currentClassifiedId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          photos: JSON.stringify(photos.map(img => ({
+            id: img.id,
+            filename: img.filename,
+            url: img.url,
+            thumbnail: img.thumbnail,
+            size: img.size,
+            originalSize: img.originalSize
+          })))
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save photos');
+      }
+      
+      return response.json();
+    },
+    onError: (error) => {
+      console.error('Error saving photos to draft:', error);
+      alert('Fotoğraflar kaydedilirken hata oluştu');
+    }
+  });
+
+  // Auto-save photos to draft whenever images change
+  useEffect(() => {
+    if (images.length > 0 && currentClassifiedId && !images.some(img => img.uploading)) {
+      updateDraftMutation.mutate(images);
+    }
+  }, [images, currentClassifiedId]);
+
   const handleNextStep = () => {
     // Wait for all uploads to complete
     const hasUploading = images.some(img => img.uploading);
@@ -266,13 +333,16 @@ export default function Step3() {
       return;
     }
 
-    // For now, just store images in localStorage temporarily
-    localStorage.setItem('listingImages', JSON.stringify(images.map(img => ({
-      filename: img.filename,
-      url: img.url,
-      thumbnail: img.thumbnail
-    }))));
-    navigate('/create-listing/step-4');
+    // Save photos to draft before navigating
+    if (currentClassifiedId && images.length > 0) {
+      updateDraftMutation.mutate(images, {
+        onSuccess: () => {
+          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+        }
+      });
+    } else {
+      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
