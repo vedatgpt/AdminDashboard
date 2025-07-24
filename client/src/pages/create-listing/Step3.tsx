@@ -7,25 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import CreateListingLayout from '@/components/CreateListingLayout';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import Sortable from "sortablejs";
 
 interface UploadedImage {
   id: string;
@@ -37,94 +19,6 @@ interface UploadedImage {
   uploading?: boolean;
   progress?: number;
   order?: number;
-}
-
-// Sortable Photo Item Component
-function SortablePhotoItem({ 
-  image, 
-  index, 
-  onDelete, 
-  onRotate 
-}: { 
-  image: UploadedImage; 
-  index: number; 
-  onDelete: (id: string) => void;
-  onRotate: (id: string) => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: image.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative bg-white border border-gray-200 rounded-lg overflow-hidden ${
-        image.uploading ? 'uploading-item' : ''
-      } ${isDragging ? 'z-50' : ''}`}
-    >
-      {/* Order Badge */}
-      <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
-        {index + 1}
-      </div>
-      
-      {/* Delete Button */}
-      <button
-        onClick={() => onDelete(image.id)}
-        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 z-10"
-        disabled={image.uploading}
-      >
-        <X className="w-3 h-3" />
-      </button>
-      
-      {/* Rotate Button */}
-      <button
-        onClick={() => onRotate(image.id)}
-        className="absolute bottom-2 right-2 bg-gray-700 text-white p-1 rounded-full hover:bg-gray-800 z-10"
-        disabled={image.uploading}
-      >
-        <RotateCw className="w-3 h-3" />
-      </button>
-      
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute inset-0 flex items-center justify-center cursor-move z-20"
-        style={{ background: 'rgba(0,0,0,0.1)' }}
-      >
-        <GripVertical className="w-6 h-6 text-white drop-shadow-lg" />
-      </div>
-      
-      {/* Image */}
-      <img
-        src={image.thumbnail || image.url}
-        alt={`Fotoğraf ${index + 1}`}
-        className="w-full h-32 object-cover"
-        draggable={false}
-      />
-      
-      {/* Upload Progress */}
-      {image.uploading && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="text-white text-sm">
-            {image.progress ? `${image.progress}%` : 'Yükleniyor...'}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // Import constants from config
@@ -333,19 +227,22 @@ export default function Step3() {
                 order: index + 1
               }));
               
-              // Save updated photo order to draft with sync
-              if (currentClassifiedId) {
-                console.log('Saving photo order:', updatedImages.map(img => ({ id: img.id, order: img.order })));
-                updateDraftMutation.mutate({
-                  photos: JSON.stringify(updatedImages)
-                });
+              // KESIN ÇÖZÜM: Fotoğraf sıralamasını kaydet
+              if (currentClassifiedId && updateDraftMutation) {
+                console.log('Fotoğraf sıralaması kaydediliyor:', updatedImages.map(img => ({ id: img.id, order: img.order })));
                 
-                // Also update global images state immediately
+                // 1. State'i hemen güncelle
+                setImages(updatedImages);
+                
+                // 2. Draft'ı asenkron olarak güncelle
                 setTimeout(() => {
-                  setImages(updatedImages);
-                }, 100);
+                  updateDraftMutation.mutate({
+                    photos: JSON.stringify(updatedImages)
+                  });
+                }, 50);
               }
               
+              // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
               return updatedImages;
             });
           }
