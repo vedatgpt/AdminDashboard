@@ -227,19 +227,31 @@ export default function Step3() {
                 order: index + 1
               }));
               
-              // KESIN ÇÖZÜM: Fotoğraf sıralamasını kaydet
-              if (currentClassifiedId && updateDraftMutation) {
-                console.log('Fotoğraf sıralaması kaydediliyor:', updatedImages.map(img => ({ id: img.id, order: img.order })));
-                
-                // 1. State'i hemen güncelle
-                setImages(updatedImages);
-                
-                // 2. Draft'ı asenkron olarak güncelle
-                setTimeout(() => {
-                  updateDraftMutation.mutate({
+              // GERÇEK ÇÖZÜM: Manual draft kaydetme - updateDraftMutation kullanmak yerine direkt API çağrısı
+              console.log('currentClassifiedId:', currentClassifiedId);
+              console.log('Fotoğraf sıralaması kaydediliyor:', updatedImages.map(img => ({ id: img.id, order: img.order })));
+              
+              if (currentClassifiedId) {
+                // Direkt API çağrısı yap - updateDraftMutation yerine
+                fetch(`/api/draft-listings/${currentClassifiedId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
                     photos: JSON.stringify(updatedImages)
-                  });
-                }, 50);
+                  })
+                }).then(response => {
+                  if (response.ok) {
+                    console.log('Fotoğraf sıralaması başarıyla kaydedildi');
+                  } else {
+                    console.error('Fotoğraf sıralaması kaydedilemedi');
+                  }
+                }).catch(error => {
+                  console.error('API hatası:', error);
+                });
+              } else {
+                console.error('currentClassifiedId bulunamadı!');
               }
               
               // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
