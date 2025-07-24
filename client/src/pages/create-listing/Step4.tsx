@@ -247,9 +247,9 @@ export default function Step4() {
 
                   {/* Thumbnail Grid - Masaüstü için */}
                   {photosState.length > 1 && (
-                  <div className="hidden lg:block border border-gray-200 bg-white p-2 h-[140px] flex flex-col justify-between">
-                    {/* Thumbnails Grid - Fixed Height */}
-                    <div className="grid grid-cols-5 gap-1 justify-items-center min-h-[100px]">
+                  <div className="hidden lg:block border border-gray-200 bg-white p-2 h-[180px] flex flex-col justify-between">
+                    {/* Thumbnails Grid - Fixed Height for 2 rows */}
+                    <div className="grid grid-cols-5 grid-rows-2 gap-1 justify-items-center min-h-[140px]">
                       {/* Render thumbnails for current page */}
                       {Array.from({ length: thumbnailsPerPage }).map((_, index) => {
                         const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
@@ -291,7 +291,7 @@ export default function Step4() {
                     </div>
 
                     {/* Sayfalama Noktaları - Fixed Position */}
-                    <div className="flex items-center justify-center gap-1 h-[20px]">
+                    <div className="flex items-center justify-center gap-1 h-[24px] mt-1">
                       {photosState.length > thumbnailsPerPage && 
                         Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
                           <button
