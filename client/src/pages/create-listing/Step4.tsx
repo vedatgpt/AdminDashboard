@@ -160,7 +160,7 @@ export default function Step4() {
 
   return (
     <CreateListingLayout stepNumber={4}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-4">
 
         {/* Mobile/Tablet Header - Başlık */}
         <div className="lg:hidden bg-white sm:px-8 md:px-10 lg:px-10 py-1 mt-[56px]">
@@ -362,8 +362,8 @@ export default function Step4() {
                         {/* Fiyat */}
                         {customFields.price && (
                           <tr className="border-b border-gray-100">
-                            <td className="py-2 font-medium text-gray-700">Fiyat:</td>
-                            <td className="py-2 text-gray-900 text-right">
+                            <td className="py-2 lg:py-1.5 font-medium text-gray-700">Fiyat:</td>
+                            <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                               {typeof customFields.price === 'object' && customFields.price !== null
                                 ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
                                 : customFields.price
@@ -376,8 +376,8 @@ export default function Step4() {
                         {((locationSettings?.showCity && (locationData.location?.city || locationData.city)) || 
                           (locationSettings?.showDistrict && (locationData.location?.district || locationData.district))) && (
                           <tr className="border-b border-gray-100">
-                            <td className="py-2 font-medium text-gray-700">Konum:</td>
-                            <td className="py-2 text-gray-900 text-right">
+                            <td className="py-2 lg:py-1.5 font-medium text-gray-700">Konum:</td>
+                            <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                               {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
                                (locationData.location?.city?.name || locationData.city?.name)}
                               {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
@@ -420,10 +420,10 @@ export default function Step4() {
 
                           return (
                             <tr key={field.id} className="border-b border-gray-100">
-                              <td className="py-2 font-medium text-gray-700">
-                                {field.label}:
-                              </td>
-                              <td className="py-2 text-gray-900 text-right">
+                                                                                                                     <td className="py-2 lg:py-1.5 font-medium text-gray-700">
+                              {field.label}:
+                            </td>
+                            <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                                 {displayValue}
                               </td>
                             </tr>
@@ -451,10 +451,10 @@ export default function Step4() {
 
                           return (
                             <tr key={key} className="border-b border-gray-100">
-                              <td className="py-2 font-medium text-gray-700">
+                              <td className="py-2 lg:py-1.5 font-medium text-gray-700">
                                 {key}:
                               </td>
-                              <td className="py-2 text-gray-900 text-right">
+                              <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                                 {displayValue}
                               </td>
                             </tr>
@@ -487,8 +487,8 @@ export default function Step4() {
                     {/* Fiyat */}
                     {customFields.price && (
                       <tr className="border-b border-dashed border-gray-200">
-                        <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
-                        <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
+                                                    <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
+                            <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
                           {typeof customFields.price === 'object' && customFields.price !== null
                             ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
                             : customFields.price
@@ -501,7 +501,7 @@ export default function Step4() {
                     {((locationSettings?.showCity && (locationData.location?.city || locationData.city)) || 
                       (locationSettings?.showDistrict && (locationData.location?.district || locationData.district))) && (
                       <tr className="border-b border-dashed border-gray-200">
-                        <td className="py-2 text-orange-500 font-semibold text-left">
+                                                    <td className="py-2 text-orange-500 font-semibold text-left">
                           {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
                            (locationData.location?.city?.name || locationData.city?.name)}
                           {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
@@ -515,10 +515,10 @@ export default function Step4() {
                     {/* Kategori - Her kategori ayrı satırda */}
                     {categoryPath.map((cat, index) => (
                       <tr key={cat.id} className="border-b border-dashed border-gray-200">
-                        <td className="py-2 font-medium text-gray-700">
+                        <td className="py-2 lg:py-1.5 font-medium text-gray-700">
                           {cat.categoryType || `Seviye ${index + 1}`}:
                         </td>
-                        <td className="py-2 text-gray-900">
+                        <td className="py-2 lg:py-1.5 text-gray-900">
                           {cat.name}
                         </td>
                       </tr>
@@ -543,10 +543,10 @@ export default function Step4() {
 
                       return (
                         <tr key={field.id} className="border-b border-dashed border-gray-200">
-                          <td className="py-2 font-medium text-gray-700">
-                            {field.label}:
-                          </td>
-                          <td className="py-2 text-gray-900">
+                                                                                                             <td className="py-2 lg:py-1.5 font-medium text-gray-700">
+                              {field.label}:
+                            </td>
+                            <td className="py-2 lg:py-1.5 text-gray-900">
                             {displayValue}
                           </td>
                         </tr>
