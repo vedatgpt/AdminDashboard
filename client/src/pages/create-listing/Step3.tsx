@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
 import { useLocation } from "wouter";
@@ -32,6 +32,9 @@ export default function Step3() {
   const sortableRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const blobUrlsRef = useRef<Set<string>>(new Set());
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateDraftMutation = useUpdateDraftListing();
 
   // URL parameter support - SABIT DEĞİŞKEN
   const urlParams = new URLSearchParams(window.location.search);
@@ -39,6 +42,31 @@ export default function Step3() {
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
 
   console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
+
+  // Memoized filtered images for Sortable.js
+  const nonUploadingImages = useMemo(() => 
+    images.filter(img => !img.uploading), 
+    [images]
+  );
+
+  // Memoized file size formatter
+  const formatFileSize = useCallback((bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }, []);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach(url => {
+        URL.revokeObjectURL(url);
+      });
+      blobUrlsRef.current.clear();
+    };
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -68,6 +96,37 @@ export default function Step3() {
     }
   }, [draftData]);
 
+  // Debounced save function
+  const debouncedSave = useCallback((updatedImages: UploadedImage[]) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      if (currentClassifiedId) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
+          } else {
+            console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
+          }
+        };
+
+        xhr.onerror = function() {
+          console.error('❌ ASYNC: API hatası');
+        };
+
+        xhr.send(JSON.stringify({
+          photos: JSON.stringify(updatedImages)
+        }));
+      }
+    }, 500); // 500ms debounce
+  }, [currentClassifiedId]);
+
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();
     formData.append('images', file);
@@ -80,12 +139,15 @@ export default function Step3() {
         xhr.upload.addEventListener('progress', (e) => {
           if (e.lengthComputable) {
             const percentComplete = Math.round((e.loaded / e.total) * 100);
-            setImages(prev => prev.map(img => {
-              if (img.id === uploadingId && img.uploading) {
-                return { ...img, progress: percentComplete };
+            setImages(prev => {
+              const uploadingIndex = prev.findIndex(img => img.id === uploadingId && img.uploading);
+              if (uploadingIndex !== -1) {
+                const newImages = [...prev];
+                newImages[uploadingIndex] = { ...newImages[uploadingIndex], progress: percentComplete };
+                return newImages;
               }
-              return img;
-            }));
+              return prev;
+            });
           }
         });
 
@@ -101,6 +163,7 @@ export default function Step3() {
                 // Clean up blob URL
                 if (newImages[uploadingIndex].url.startsWith('blob:')) {
                   URL.revokeObjectURL(newImages[uploadingIndex].url);
+                  blobUrlsRef.current.delete(newImages[uploadingIndex].url);
                 }
                 // Replace with uploaded image
                 newImages[uploadingIndex] = { ...data.images[0], uploading: false };
@@ -123,7 +186,16 @@ export default function Step3() {
 
     } catch (error) {
       // Remove failed upload
-      setImages(prev => prev.filter(img => img.id !== uploadingId));
+      setImages(prev => {
+        const newImages = prev.filter(img => img.id !== uploadingId);
+        // Clean up blob URL
+        const failedImage = prev.find(img => img.id === uploadingId);
+        if (failedImage?.url.startsWith('blob:')) {
+          URL.revokeObjectURL(failedImage.url);
+          blobUrlsRef.current.delete(failedImage.url);
+        }
+        return newImages;
+      });
       toast({
         title: "Yükleme Hatası",
         description: error instanceof Error ? error.message : 'Bilinmeyen hata',
@@ -146,7 +218,14 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (_, imageId) => {
-      setImages(prev => prev.filter(img => img.id !== imageId));
+      setImages(prev => {
+        const imageToDelete = prev.find(img => img.id === imageId);
+        if (imageToDelete?.url.startsWith('blob:')) {
+          URL.revokeObjectURL(imageToDelete.url);
+          blobUrlsRef.current.delete(imageToDelete.url);
+        }
+        return prev.filter(img => img.id !== imageId);
+      });
     },
     onError: (error) => {
       toast({
@@ -157,111 +236,91 @@ export default function Step3() {
     }
   });
 
-  // Rotate image function using zustand state management
-  const rotateImage = (imageId: string) => {
+  // Optimized rotate image function using requestIdleCallback
+  const rotateImage = useCallback((imageId: string) => {
     setImages(prev => prev.map(img => {
       if (img.id === imageId) {
-        // Create a new image element to apply rotation
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const imageElement = new Image();
+        // Use requestIdleCallback for non-blocking rotation
+        requestIdleCallback(() => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const imageElement = new Image();
 
-        imageElement.onload = () => {
-          // Set canvas dimensions for 90-degree rotation
-          canvas.width = imageElement.height;
-          canvas.height = imageElement.width;
+          imageElement.onload = () => {
+            // Set canvas dimensions for 90-degree rotation
+            canvas.width = imageElement.height;
+            canvas.height = imageElement.width;
 
-          // Apply rotation
-          ctx?.translate(canvas.width / 2, canvas.height / 2);
-          ctx?.rotate(Math.PI / 2);
-          ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
+            // Apply rotation
+            ctx?.translate(canvas.width / 2, canvas.height / 2);
+            ctx?.rotate(Math.PI / 2);
+            ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
 
-          // Convert back to blob and update image
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const newUrl = URL.createObjectURL(blob);
-              setImages(prev => prev.map(prevImg => 
-                prevImg.id === imageId 
-                  ? { ...prevImg, url: newUrl, thumbnail: newUrl }
-                  : prevImg
-              ));
-            }
-          }, 'image/jpeg', 0.9);
-        };
+            // Convert back to blob and update image
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const newUrl = URL.createObjectURL(blob);
+                blobUrlsRef.current.add(newUrl);
+                setImages(prev => prev.map(prevImg => 
+                  prevImg.id === imageId 
+                    ? { ...prevImg, url: newUrl, thumbnail: newUrl }
+                    : prevImg
+                ));
+              }
+            }, 'image/jpeg', 0.9);
+          };
 
-        imageElement.src = img.url;
+          imageElement.src = img.url;
+        });
         return img;
       }
       return img;
     }));
-  };
+  }, []);
 
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
     let sortable: Sortable | null = null;
 
-    if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
-      sortable = Sortable.create(sortableRef.current, {
-        animation: 150,
-        handle: '.drag-handle',
-        ghostClass: 'opacity-50',
-        chosenClass: 'border-orange-500',
-        filter: '.uploading-item', // Exclude uploading items from sorting
-        preventOnFilter: false,
-        onEnd: (evt) => {
-          if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
-            // Prevent page refresh by using React state management
-            evt.preventDefault?.();
-            setImages(prevImages => {
-              const newImages = [...prevImages];
-              const [removed] = newImages.splice(evt.oldIndex!, 1);
-              newImages.splice(evt.newIndex!, 0, removed);
+    if (sortableRef.current && nonUploadingImages.length > 0) {
+      try {
+                sortable = Sortable.create(sortableRef.current, {
+          animation: 150,
+          handle: '.drag-handle',
+          ghostClass: 'opacity-50',
+          chosenClass: 'border-orange-500',
+          filter: '.uploading-item', // Exclude uploading items from sorting
+          preventOnFilter: false,
+          onEnd: (evt) => {
+            if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
+              // Prevent page refresh by using React state management
+              evt.preventDefault?.();
+              setImages(prevImages => {
+                const newImages = [...prevImages];
+                const [removed] = newImages.splice(evt.oldIndex!, 1);
+                newImages.splice(evt.newIndex!, 0, removed);
 
-              // Update order numbers and save to draft
-              const updatedImages = newImages.map((img, index) => ({
-                ...img,
-                order: index + 1
-              }));
-
-              // SON ÇARE: Fotoğraf sıralama kaydetme - sync call
-              console.log('DRAG END - currentClassifiedId:', currentClassifiedId);
-              console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
-
-              if (currentClassifiedId) {
-                // Async XMLHttpRequest - hızlı kaydetme
-                const xhr = new XMLHttpRequest();
-                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true); // true = async
-                xhr.setRequestHeader('Content-Type', 'application/json');
-
-                xhr.onload = function() {
-                  if (xhr.status === 200) {
-                    console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
-                  } else {
-                    console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
-                  }
-                };
-
-                xhr.onerror = function() {
-                  console.error('❌ ASYNC: API hatası');
-                };
-
-                xhr.send(JSON.stringify({
-                  photos: JSON.stringify(updatedImages)
+                // Update order numbers and save to draft
+                const updatedImages = newImages.map((img, index) => ({
+                  ...img,
+                  order: index + 1
                 }));
-              } else {
-                console.error('❌ currentClassifiedId YOK!');
-              }
 
-              // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
-              return updatedImages;
-            });
+                // Debounced save
+                debouncedSave(updatedImages);
+
+                return updatedImages;
+              });
+            }
           }
-        }
-      });
+        });
+      } catch (error) {
+        console.error('Sortable.js initialization error:', error);
+      }
     }
 
     return () => {
-      if (sortable) {
+      if (sortable && sortable.el) {
         try {
           sortable.destroy();
         } catch (error) {
@@ -269,7 +328,7 @@ export default function Step3() {
         }
       }
     };
-  }, [images.filter(img => !img.uploading).length, currentClassifiedId]); // Only reinitialize when non-uploading images change
+  }, [nonUploadingImages.length, debouncedSave]); // Only reinitialize when non-uploading images change
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return;
@@ -299,34 +358,36 @@ export default function Step3() {
 
     if (images.length + validFiles.length > MAX_IMAGES) {
       toast({
-        title: "Çok Fazla Resim",
-        description: `En fazla ${MAX_IMAGES} resim yükleyebilirsiniz`,
+        title: "Çok Fazla Fotoğraf",
+        description: `En fazla ${MAX_IMAGES} fotoğraf yükleyebilirsiniz`,
         variant: "destructive"
       });
       return;
     }
 
-    if (validFiles.length > 0) {
-      // Create preview images with uploading state
-      const newImages: UploadedImage[] = validFiles.map((file, index) => {
-        const id = `uploading-${Date.now()}-${index}`;
-        return {
-          id,
-          filename: file.name,
-          url: URL.createObjectURL(file),
-          size: file.size,
-          originalSize: file.size,
-          uploading: true,
-          progress: 0
-        };
-      });
+    // Add files to images array with uploading state
+    const newUploadingImages = validFiles.map(file => {
+      const blobUrl = URL.createObjectURL(file);
+      blobUrlsRef.current.add(blobUrl);
+      return {
+        id: `uploading-${Date.now()}-${Math.random()}`,
+        filename: file.name,
+        url: blobUrl,
+        size: file.size,
+        originalSize: file.size,
+        uploading: true,
+        progress: 0,
+        order: images.length + 1
+      } as UploadedImage;
+    });
 
-      setImages(prev => [...prev, ...newImages]);
+    setImages(prev => [...prev, ...newUploadingImages]);
 
-      // Upload each image individually for separate progress tracking
-      newImages.forEach((newImage, index) => {
-        uploadSingleImage(validFiles[index], newImage.id);
-      });
+    // Upload files sequentially
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      const uploadingId = newUploadingImages[i].id;
+      await uploadSingleImage(file, uploadingId);
     }
   };
 
@@ -342,77 +403,61 @@ export default function Step3() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    handleFileSelect(e.dataTransfer.files);
+
+    const files = e.dataTransfer.files;
+    if (files) {
+      handleFileSelect(files);
+    }
   };
 
-  // Use standard draft mutation
-  const updateDraftMutation = useUpdateDraftListing();
-
-  // Auto-save photos to draft whenever images change (with debounce)
-  useEffect(() => {
-    if (currentClassifiedId && !images.some(img => img.uploading)) {
-      const timeoutId = setTimeout(() => {
-        updateDraftMutation.mutate({
-          id: currentClassifiedId,
-          data: {
-            photos: JSON.stringify(images.map(img => ({
-              id: img.id,
-              filename: img.filename,
-              url: img.url,
-              thumbnail: img.thumbnail,
-              size: img.size,
-              originalSize: img.originalSize
-            })))
-          }
-        });
-      }, 1500); // 1.5 second debounce
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [images, currentClassifiedId]);
-
   const handleNextStep = () => {
-    // Wait for all uploads to complete
-    const hasUploading = images.some(img => img.uploading);
-    if (hasUploading) {
+    // Clear any pending save timeout and execute immediately
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+
+      // Immediately save any pending changes
+      if (currentClassifiedId && images.length > 0) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // Synchronous for immediate save
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({
+          photos: JSON.stringify(images)
+        }));
+      }
+    }
+
+    if (!currentClassifiedId) {
       toast({
-        title: "Bekleyiniz",
-        description: 'Lütfen tüm fotoğrafların yüklenmesini bekleyin',
+        title: "Hata",
+        description: "İlan ID bulunamadı. Lütfen sayfayı yenileyin.",
         variant: "destructive"
       });
       return;
     }
 
-    // Save photos to draft before navigating
-    if (currentClassifiedId && images.length > 0) {
+    if (images.length > 0) {
+      // Save current state before navigating
       updateDraftMutation.mutate({
         id: currentClassifiedId,
         data: {
-          photos: JSON.stringify(images.map(img => ({
-            id: img.id,
-            filename: img.filename,
-            url: img.url,
-            thumbnail: img.thumbnail,
-            size: img.size,
-            originalSize: img.originalSize
-          })))
+          photos: JSON.stringify(images)
         }
       }, {
         onSuccess: () => {
-          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
+        },
+        onError: (error) => {
+          toast({
+            title: "Kaydetme Hatası",
+            description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
+            variant: "destructive"
+          });
         }
       });
     } else {
-      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (

@@ -207,7 +207,7 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
   };
 
   return (
-    <div className="sticky top-0 w-full bg-white border-b border-gray-300 z-50">
+    <div className="sticky top-0 w-full bg-white border-b border-gray-200 z-50">
       <header className="flex items-center justify-center w-full h-[56px]">
         <div className="flex items-center justify-between w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-8">
           {/* Logo */}

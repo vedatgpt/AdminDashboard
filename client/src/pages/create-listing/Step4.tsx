@@ -75,7 +75,15 @@ export default function Step4() {
   // Step-3'ten geldiğinde draft'ı yeniden fetch et
   useEffect(() => {
     if (currentClassifiedId) {
+      // Force refetch immediately
       refetchDraft();
+
+      // Additional refetch after a short delay to ensure latest data
+      const timeoutId = setTimeout(() => {
+        refetchDraft();
+      }, 200);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [currentClassifiedId, refetchDraft]);
 
@@ -204,7 +212,7 @@ export default function Step4() {
                       setCurrentThumbnailPage(targetPage);
                     }
                   }}
-                  className="w-full aspect-[4/3] lg:aspect-[4/3] overflow-hidden"
+                  className="w-full aspect-[4/2] lg:aspect-[4/3] overflow-hidden"
                 >
                   {photosState
                     .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
@@ -232,7 +240,8 @@ export default function Step4() {
                           <img
                             src={photo.url}
                             alt={`Fotoğraf ${index + 1}`}
-                            className="w-full h-full object-contain pointer-events-none"
+                            className="w-full h-full object-contain lg:object-contain object-cover pointer-events-none select-none"
+                            draggable="false"
                           />
                         </div>
                       </SwiperSlide>
@@ -247,8 +256,14 @@ export default function Step4() {
 
                                   {/* Büyük Fotoğraf Butonu - Masaüstü için */}
                   <div className="hidden lg:block">
-                    <button className="w-full py-2 px-4 bg-gradient-to-b from-white to-gray-100 text-gray-700 text-sm font-medium">
-                      <span className="hover:underline cursor-pointer">Büyük Fotoğraf</span>
+                    <button className="w-full py-2 px-4 bg-gradient-to-b from-white to-gray-100 text-gray-700 text-sm font-medium group">
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <circle cx="11" cy="11" r="8"/>
+                          <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <span className="group-hover:underline">Büyük Fotoğraf</span>
+                      </div>
                     </button>
                   </div>
 
@@ -279,7 +294,8 @@ export default function Step4() {
                               <img
                                 src={photo.thumbnail || photo.url}
                                 alt={`Küçük ${actualIndex + 1}`}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover select-none"
+                                draggable="false"
                               />
                             </div>
                           );
@@ -486,7 +502,7 @@ export default function Step4() {
                   <tbody className="space-y-2">
                     {/* Fiyat */}
                     {customFields.price && (
-                      <tr className="border-b border-dashed border-gray-200">
+                      <tr className="border-b border-gray-200">
                                                     <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
                             <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
                           {typeof customFields.price === 'object' && customFields.price !== null
@@ -500,7 +516,7 @@ export default function Step4() {
                     {/* İl ve İlçe bilgisi - Tek satırda göster */}
                     {((locationSettings?.showCity && (locationData.location?.city || locationData.city)) || 
                       (locationSettings?.showDistrict && (locationData.location?.district || locationData.district))) && (
-                      <tr className="border-b border-dashed border-gray-200">
+                      <tr className="border-b border-gray-200">
                                                     <td className="py-2 text-orange-500 font-semibold text-left">
                           {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
                            (locationData.location?.city?.name || locationData.city?.name)}
@@ -601,7 +617,7 @@ export default function Step4() {
                       {/* Kayıt olma tarihi */}
                       {user.createdAt && (
                         <p className="text-xs text-gray-500 mt-1">
-                          Üye olma: {formatDate(user.createdAt)}
+                          Hesap açma tarihi: {formatDate(user.createdAt)}
                         </p>
                       )}
                     </div>
