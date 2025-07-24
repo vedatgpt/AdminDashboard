@@ -332,7 +332,7 @@ export default function Step4() {
               <div className="lg:hidden">
                 {/* İlan Bilgileri Tab */}
                 {activeTab === 'details' && (
-                  <div className="px-4 py-2">
+                  <div className="pt-2 pb-6">
                     <table className="w-full text-sm">
                       <tbody className="space-y-2">
                         {/* Fiyat */}
@@ -446,7 +446,7 @@ export default function Step4() {
 
                 {/* Açıklama Tab */}
                 {activeTab === 'description' && (
-                  <div className="px-4 py-2">
+                  <div className="pt-2 pb-6">
                     {customFields.description ? (
                       <div 
                         className="text-gray-700 prose max-w-none"
@@ -574,7 +574,7 @@ export default function Step4() {
           </div>
 
           {/* Sağ Sütun - İletişim (%25) */}
-          <div className="lg:col-span-2">
+          <div className="hidden lg:block lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
 
@@ -618,7 +618,7 @@ export default function Step4() {
         </div>
 
         {/* Açıklama */}
-        <div className="mb-6">
+        <div className="hidden lg:block mb-6">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Açıklama</h3>
             {customFields.description ? (
