@@ -5,6 +5,7 @@ import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
 import { useCategoriesTree } from '@/hooks/useCategories';
 import { useLocationsTree } from '@/hooks/useLocations';
+import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import CreateListingLayout from '@/components/CreateListingLayout';
@@ -40,6 +41,7 @@ export default function Step4() {
   const { data: draftData } = useDraftListing(currentClassifiedId);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
+  const { data: locationSettings } = useLocationSettings();
   
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
@@ -283,16 +285,20 @@ export default function Step4() {
               
               {(locationData.location || locationData.country) ? (
                 <div className="space-y-2 text-sm">
-                  {(locationData.location?.country || locationData.country) && (
+                  {/* Ülke - sadece locationSettings.showCountry true ise göster */}
+                  {locationSettings?.showCountry && (locationData.location?.country || locationData.country) && (
                     <p><span className="font-medium">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}</p>
                   )}
-                  {(locationData.location?.city || locationData.city) && (
+                  {/* İl - sadece locationSettings.showCity true ise göster */}
+                  {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
                     <p><span className="font-medium">İl:</span> {locationData.location?.city?.name || locationData.city?.name}</p>
                   )}
-                  {(locationData.location?.district || locationData.district) && (
+                  {/* İlçe - sadece locationSettings.showDistrict true ise göster */}
+                  {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
                     <p><span className="font-medium">İlçe:</span> {locationData.location?.district?.name || locationData.district?.name}</p>
                   )}
-                  {(locationData.location?.neighborhood || locationData.neighborhood) && (
+                  {/* Mahalle - sadece locationSettings.showNeighborhood true ise göster */}
+                  {locationSettings?.showNeighborhood && (locationData.location?.neighborhood || locationData.neighborhood) && (
                     <p><span className="font-medium">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}</p>
                   )}
                 </div>
