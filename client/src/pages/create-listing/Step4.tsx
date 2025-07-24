@@ -154,15 +154,15 @@ export default function Step4() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-6">
 
         {/* Mobile/Tablet Header - Başlık */}
-        <div className="lg:hidden bg-white px-4 py-2 mt-[56px]">
-          <h1 className="text-lg font-semibold text-gray-900 truncate text-center">
+        <div className="lg:hidden bg-white sm:px-8 md:px-10 lg:px-10 py-1 mt-[56px]">
+          <h1 className="text-base font-normal text-gray-900 text-center overflow-hidden whitespace-normal max-w-full">
             {customFields.title || 'İlan Başlığı Girilmedi'}
           </h1>
         </div>
 
         {/* Desktop Başlık */}
-        <div className="hidden lg:block mb-6">
-          <h1 className="text-lg font-bold text-gray-900">
+        <div className="hidden lg:block mb-4">
+          <h1 className="text-lg font-semibold text-gray-900">
             {customFields.title || 'İlan Başlığı Girilmedi'}
           </h1>
         </div>
@@ -233,7 +233,7 @@ export default function Step4() {
                 {photosState.length > 1 && (
                   <div className="hidden lg:block">
                     {/* Thumbnails Grid */}
-                    <div className="grid grid-cols-5 gap-2 mb-3 justify-items-center">
+                    <div className="grid grid-cols-5 gap-3 mb-3 justify-items-center">
                       {photosState
                         .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                         .slice(currentThumbnailPage * thumbnailsPerPage, (currentThumbnailPage + 1) * thumbnailsPerPage)
@@ -242,12 +242,11 @@ export default function Step4() {
                           return (
                             <div 
                               key={photo.id || actualIndex}
-                              className={`bg-gray-200 overflow-hidden cursor-pointer ${
+                              className={`bg-gray-200 overflow-hidden cursor-pointer aspect-[4/3] ${
                                 mainSlideIndex === actualIndex 
                                   ? 'ring-1 ring-orange-500' 
                                   : ''
                               }`}
-                              style={{ width: '100px', height: '75px' }}
                               onClick={() => {
                                 if (mainSwiper) {
                                   mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
@@ -290,14 +289,16 @@ export default function Step4() {
             )}
 
             {/* Mobile/Tablet Alt Header - Ad Soyad */}
-            <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-2">
-              <h2 className="text-base font-medium text-gray-900 truncate text-center">
+            <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-1">
+              <h2 className="text-base font-normal text-gray-900 truncate text-center">
                 {user?.role === 'individual' 
                   ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kullanıcı'
                   : user?.companyName || 'Kullanıcı'
                 }
               </h2>
             </div>
+
+
           </div>
 
           {/* Orta Sütun - İlan Detayları (%25) */}
@@ -310,7 +311,7 @@ export default function Step4() {
                   onClick={() => setActiveTab('details')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === 'details'
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -320,7 +321,7 @@ export default function Step4() {
                   onClick={() => setActiveTab('description')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === 'description'
-                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      ? 'text-orange-500 border-b-2 border-orange-500 bg-white'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -339,7 +340,7 @@ export default function Step4() {
                         {customFields.price && (
                           <tr className="border-b border-gray-100">
                             <td className="py-2 font-medium text-gray-700">Fiyat:</td>
-                            <td className="py-2 text-gray-900">
+                            <td className="py-2 text-gray-900 text-right">
                               {typeof customFields.price === 'object' && customFields.price !== null
                                 ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
                                 : customFields.price
@@ -348,25 +349,22 @@ export default function Step4() {
                           </tr>
                         )}
 
-                        {/* İl bilgisi - locationSettings.showCity true ise göster */}
-                        {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
+                        {/* Konum bilgisi */}
+                        {((locationSettings?.showCity && (locationData.location?.city || locationData.city)) || 
+                          (locationSettings?.showDistrict && (locationData.location?.district || locationData.district))) && (
                           <tr className="border-b border-gray-100">
-                            <td className="py-2 font-medium text-gray-700">İl:</td>
-                            <td className="py-2 text-gray-900">
-                              {locationData.location?.city?.name || locationData.city?.name}
+                            <td className="py-2 font-medium text-gray-700">Konum:</td>
+                            <td className="py-2 text-gray-900 text-right">
+                              {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
+                               (locationData.location?.city?.name || locationData.city?.name)}
+                              {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
+                               locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && ' / '}
+                              {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && 
+                               (locationData.location?.district?.name || locationData.district?.name)}
                             </td>
                           </tr>
                         )}
 
-                        {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
-                        {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
-                          <tr className="border-b border-gray-100">
-                            <td className="py-2 font-medium text-gray-700">İlçe:</td>
-                            <td className="py-2 text-gray-900">
-                              {locationData.location?.district?.name || locationData.district?.name}
-                            </td>
-                          </tr>
-                        )}
 
                         {/* Kategori - Her kategori ayrı satırda */}
                         {categoryPath.map((cat, index) => (
@@ -374,7 +372,7 @@ export default function Step4() {
                             <td className="py-2 font-medium text-gray-700">
                               {cat.categoryType || `Seviye ${index + 1}`}:
                             </td>
-                            <td className="py-2 text-gray-900">
+                            <td className="py-2 text-gray-900 text-right">
                               {cat.name}
                             </td>
                           </tr>
@@ -402,7 +400,7 @@ export default function Step4() {
                               <td className="py-2 font-medium text-gray-700">
                                 {field.label}:
                               </td>
-                              <td className="py-2 text-gray-900">
+                              <td className="py-2 text-gray-900 text-right">
                                 {displayValue}
                               </td>
                             </tr>
@@ -433,7 +431,7 @@ export default function Step4() {
                               <td className="py-2 font-medium text-gray-700">
                                 {key}:
                               </td>
-                              <td className="py-2 text-gray-900">
+                              <td className="py-2 text-gray-900 text-right">
                                 {displayValue}
                               </td>
                             </tr>
@@ -465,7 +463,7 @@ export default function Step4() {
                   <tbody className="space-y-2">
                     {/* Fiyat */}
                     {customFields.price && (
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-dashed border-gray-200">
                         <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
                         <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
                           {typeof customFields.price === 'object' && customFields.price !== null
@@ -476,29 +474,24 @@ export default function Step4() {
                       </tr>
                     )}
 
-                    {/* İl bilgisi - locationSettings.showCity true ise göster */}
-                    {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
-                      <tr className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-700">İl:</td>
-                        <td className="py-2 text-gray-900">
-                          {locationData.location?.city?.name || locationData.city?.name}
-                        </td>
-                      </tr>
-                    )}
-
-                    {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
-                    {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
-                      <tr className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-700">İlçe:</td>
-                        <td className="py-2 text-gray-900">
-                          {locationData.location?.district?.name || locationData.district?.name}
+                    {/* İl ve İlçe bilgisi - Tek satırda göster */}
+                    {((locationSettings?.showCity && (locationData.location?.city || locationData.city)) || 
+                      (locationSettings?.showDistrict && (locationData.location?.district || locationData.district))) && (
+                      <tr className="border-b border-dashed border-gray-200">
+                        <td className="py-2 text-orange-500 font-semibold text-left">
+                          {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
+                           (locationData.location?.city?.name || locationData.city?.name)}
+                          {locationSettings?.showCity && (locationData.location?.city || locationData.city) && 
+                           locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && ' / '}
+                          {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && 
+                           (locationData.location?.district?.name || locationData.district?.name)}
                         </td>
                       </tr>
                     )}
 
                     {/* Kategori - Her kategori ayrı satırda */}
                     {categoryPath.map((cat, index) => (
-                      <tr key={cat.id} className="border-b border-gray-100">
+                      <tr key={cat.id} className="border-b border-dashed border-gray-200">
                         <td className="py-2 font-medium text-gray-700">
                           {cat.categoryType || `Seviye ${index + 1}`}:
                         </td>
@@ -526,7 +519,7 @@ export default function Step4() {
                       }
 
                       return (
-                        <tr key={field.id} className="border-b border-gray-100">
+                        <tr key={field.id} className="border-b border-dashed border-gray-200">
                           <td className="py-2 font-medium text-gray-700">
                             {field.label}:
                           </td>
@@ -557,7 +550,7 @@ export default function Step4() {
                       }
 
                       return (
-                        <tr key={key} className="border-b border-gray-100">
+                        <tr key={key} className="border-b border-dashed border-gray-200">
                           <td className="py-2 font-medium text-gray-700">
                             {key}:
                           </td>
@@ -575,39 +568,56 @@ export default function Step4() {
 
           {/* Sağ Sütun - İletişim (%25) */}
           <div className="hidden lg:block lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
-
+            <div className="bg-gray-50 border border-gray-200 p-6">
               {user ? (
-                <div className="space-y-2 text-sm">
+                <div className="space-y-3 text-sm">
                   {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
                   {user.role === 'individual' ? (
                     <div>
-                      <p><span className="font-medium">Ad Soyad:</span> {user.firstName || ''} {user.lastName || ''}</p>
+                      <p className="font-semibold text-gray-900">{user.firstName || ''} {user.lastName || ''}</p>
                     </div>
                   ) : (
                     <div>
-                      <p><span className="font-medium">Firma Adı:</span> {user.companyName || 'Belirtilmemiş'}</p>
+                      <p className="font-semibold text-gray-900">{user.companyName || 'Belirtilmemiş'}</p>
                     </div>
                   )}
 
-                  {/* İletişim Bilgileri - E-posta bilgisi gösterilmiyor */}
+                  {/* İletişim Bilgileri - Butonlar içerisinde */}
                   {user.mobilePhone && (
-                    <p><span className="font-medium">Cep Telefonu:</span> {user.mobilePhone}</p>
+                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">Cep:</span>
+                        <span className="text-gray-900">{user.mobilePhone}</span>
+                      </div>
+                    </button>
                   )}
                   {user.whatsappNumber && (
-                    <p><span className="font-medium">WhatsApp:</span> {user.whatsappNumber}</p>
+                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">WhatsApp:</span>
+                        <span className="text-gray-900">{user.whatsappNumber}</span>
+                      </div>
+                    </button>
                   )}
                   {user.role === 'corporate' && user.businessPhone && (
-                    <p><span className="font-medium">İş Telefonu:</span> {user.businessPhone}</p>
+                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-700">İş:</span>
+                        <span className="text-gray-900">{user.businessPhone}</span>
+                      </div>
+                    </button>
                   )}
 
-                  {/* Ülke ve Mahalle - sadece visibility ayarlarına göre */}
+                  {/* Ülke ve Mahalle - Butonlar içerisinde */}
                   {locationSettings?.showCountry && (locationData.location?.country || locationData.country) && (
-                    <p><span className="font-medium">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}</p>
+                    <button className="w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      <span className="font-medium text-gray-700">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}
+                    </button>
                   )}
                   {locationSettings?.showNeighborhood && (locationData.location?.neighborhood || locationData.neighborhood) && (
-                    <p><span className="font-medium">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}</p>
+                    <button className="w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                      <span className="font-medium text-gray-700">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}
+                    </button>
                   )}
                 </div>
               ) : (

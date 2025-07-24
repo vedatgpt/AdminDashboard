@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
-import CreateListingLayout from '@/components/CreateListingLayout';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -38,7 +37,7 @@ export default function Step3() {
   const urlParams = new URLSearchParams(window.location.search);
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
-  
+
   console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
 
   // Redirect to login if not authenticated
@@ -53,21 +52,18 @@ export default function Step3() {
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
-
         const existingPhotos = JSON.parse(draftData.photos as string);
 
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
           // Only set if images array is empty to avoid overriding current state
           setImages(prev => {
-
             return prev.length === 0 ? existingPhotos : prev;
           });
         }
       } catch (error) {
-
+        // Handle parsing error silently
       }
     }
   }, [draftData]);
@@ -75,11 +71,11 @@ export default function Step3() {
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();
     formData.append('images', file);
-    
+
     try {
       // Create XMLHttpRequest for real progress tracking
       const xhr = new XMLHttpRequest();
-      
+
       return new Promise((resolve, reject) => {
         xhr.upload.addEventListener('progress', (e) => {
           if (e.lengthComputable) {
@@ -92,11 +88,11 @@ export default function Step3() {
             }));
           }
         });
-        
+
         xhr.addEventListener('load', async () => {
           if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
-            
+
             // Replace uploading image with actual uploaded one
             setImages(prev => {
               const newImages = [...prev];
@@ -116,17 +112,16 @@ export default function Step3() {
             reject(new Error('Upload failed'));
           }
         });
-        
+
         xhr.addEventListener('error', () => {
           reject(new Error('Network error'));
         });
-        
+
         xhr.open('POST', '/api/upload/images');
         xhr.send(formData);
       });
-      
-    } catch (error) {
 
+    } catch (error) {
       // Remove failed upload
       setImages(prev => prev.filter(img => img.id !== uploadingId));
       toast({
@@ -142,19 +137,18 @@ export default function Step3() {
       const response = await fetch(`/api/upload/images/${imageId}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Delete failed');
       }
-      
+
       return response.json();
     },
     onSuccess: (_, imageId) => {
       setImages(prev => prev.filter(img => img.id !== imageId));
     },
     onError: (error) => {
-
       toast({
         title: "Silme Hatası",
         description: error.message,
@@ -171,17 +165,17 @@ export default function Step3() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const imageElement = new Image();
-        
+
         imageElement.onload = () => {
           // Set canvas dimensions for 90-degree rotation
           canvas.width = imageElement.height;
           canvas.height = imageElement.width;
-          
+
           // Apply rotation
           ctx?.translate(canvas.width / 2, canvas.height / 2);
           ctx?.rotate(Math.PI / 2);
           ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
-          
+
           // Convert back to blob and update image
           canvas.toBlob((blob) => {
             if (blob) {
@@ -194,7 +188,7 @@ export default function Step3() {
             }
           }, 'image/jpeg', 0.9);
         };
-        
+
         imageElement.src = img.url;
         return img;
       }
@@ -205,7 +199,7 @@ export default function Step3() {
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
     let sortable: Sortable | null = null;
-    
+
     if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
       sortable = Sortable.create(sortableRef.current, {
         animation: 150,
@@ -222,23 +216,23 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
-              
+
               // Update order numbers and save to draft
               const updatedImages = newImages.map((img, index) => ({
                 ...img,
                 order: index + 1
               }));
-              
+
               // SON ÇARE: Fotoğraf sıralama kaydetme - sync call
               console.log('DRAG END - currentClassifiedId:', currentClassifiedId);
               console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
-              
+
               if (currentClassifiedId) {
                 // Async XMLHttpRequest - hızlı kaydetme
                 const xhr = new XMLHttpRequest();
                 xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true); // true = async
                 xhr.setRequestHeader('Content-Type', 'application/json');
-                
+
                 xhr.onload = function() {
                   if (xhr.status === 200) {
                     console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
@@ -246,18 +240,18 @@ export default function Step3() {
                     console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
                   }
                 };
-                
+
                 xhr.onerror = function() {
                   console.error('❌ ASYNC: API hatası');
                 };
-                
+
                 xhr.send(JSON.stringify({
                   photos: JSON.stringify(updatedImages)
                 }));
               } else {
                 console.error('❌ currentClassifiedId YOK!');
               }
-              
+
               // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
               return updatedImages;
             });
@@ -277,11 +271,9 @@ export default function Step3() {
     };
   }, [images.filter(img => !img.uploading).length, currentClassifiedId]); // Only reinitialize when non-uploading images change
 
-  // Removed redirect for development
-
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return;
-    
+
     const validFiles = Array.from(files).filter(file => {
       if (!file.type.startsWith('image/')) {
         toast({
@@ -291,7 +283,7 @@ export default function Step3() {
         });
         return false;
       }
-      
+
       if (file.size > MAX_FILE_SIZE) {
         toast({
           title: "Dosya Çok Büyük",
@@ -300,7 +292,7 @@ export default function Step3() {
         });
         return false;
       }
-      
+
       // Remove duplicate check - allow same images to be uploaded
       return true;
     });
@@ -328,9 +320,9 @@ export default function Step3() {
           progress: 0
         };
       });
-      
+
       setImages(prev => [...prev, ...newImages]);
-      
+
       // Upload each image individually for separate progress tracking
       newImages.forEach((newImage, index) => {
         uploadSingleImage(validFiles[index], newImage.id);
@@ -374,7 +366,7 @@ export default function Step3() {
           }
         });
       }, 1500); // 1.5 second debounce
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [images, currentClassifiedId]);
@@ -424,22 +416,20 @@ export default function Step3() {
   };
 
   return (
-    <CreateListingLayout stepNumber={3}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Fotoğraf Yükleme Kutusu */}
+      <div className="mb-6 lg:mt-0 mt-3">
+        <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+          <div className="w-full">
+            <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
+              Fotoğraf
+            </h3>
 
-          {/* Fotoğraf Yükleme Kutusu */}
-          <div className="mb-6 lg:mt-0 mt-3">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-              <div className="w-full">
-                <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
-                  Fotoğraf
-                </h3>
-                
-                <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
-                 onClick={() => fileInputRef.current?.click()}
-                 onDragOver={handleDragOver}
-                 onDragLeave={handleDragLeave}
-                 onDrop={handleDrop}>
+            <div className="cursor-pointer p-12 flex justify-center bg-white border border-dashed border-gray-300 rounded-xl hover:border-orange-400 transition-colors"
+             onClick={() => fileInputRef.current?.click()}
+             onDragOver={handleDragOver}
+             onDragLeave={handleDragLeave}
+             onDrop={handleDrop}>
               <div className="text-center">
                 <span className="inline-flex justify-center items-center size-16">
                   <svg className="shrink-0 w-16 h-auto text-orange-500" width="71" height="51" viewBox="0 0 71 51" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -466,7 +456,6 @@ export default function Step3() {
                 </span>
 
                 <div className="mt-4 flex flex-wrap justify-center text-sm/6 text-gray-600">
-                 
                   <span className="pe-1 bg-white font-semibold text-orange-600 hover:text-orange-700 rounded-lg decoration-2 hover:underline focus-within:outline-hidden focus-within:ring-2 focus-within:ring-orange-600 focus-within:ring-offset-2">Fotoğraf Ekle</span>
                   <span className="font-medium text-gray-800">
                     veya sürükle bırak
@@ -478,7 +467,7 @@ export default function Step3() {
                 </p>
               </div>
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -487,94 +476,92 @@ export default function Step3() {
               className="hidden"
               onChange={(e) => handleFileSelect(e.target.files)}
             />
-                
-                {/* Images Grid */}
-                {images.length > 0 && (
-                  <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900 text-sm leading-tight">
-                  Eklenen Fotoğraflar ({images.length}/{MAX_IMAGES})
-                </h3>
-              </div>
-              
-              <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {images.map((image, index) => (
-                  <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
-                    {/* Image Order Badge - Sol üst */}
-                    <div className="absolute top-1 left-1 bg-gray-800 bg-opacity-80 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-medium z-10">
-                      {index + 1}
-                    </div>
-                    
-                    {/* Delete Button - Sağ üst */}
-                    {!image.uploading && (
-                      <button
-                        onClick={() => {
-                          if (confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
-                            deleteImageMutation.mutate(image.id);
-                          }
-                        }}
-                        className="absolute top-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
-                        disabled={deleteImageMutation.isPending}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
-                    
-                    {/* Rotate Button - Sağ alt */}
-                    {!image.uploading && (
-                      <button
-                        onClick={() => rotateImage(image.id)}
-                        className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
-                      >
-                        <RotateCw className="w-3 h-3" />
-                      </button>
-                    )}
-                    
-                    {/* Drag Handle - Orta */}
-                    {!image.uploading && (
-                      <div className="drag-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 bg-opacity-80 text-white rounded-full cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center">
-                        <GripVertical className="w-4 h-4" />
+
+            {/* Images Grid */}
+            {images.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-gray-900 text-sm leading-tight">
+                    Eklenen Fotoğraflar ({images.length}/{MAX_IMAGES})
+                  </h3>
+                </div>
+
+                <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {images.map((image, index) => (
+                    <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
+                      {/* Image Order Badge - Sol üst */}
+                      <div className="absolute top-1 left-1 bg-gray-800 bg-opacity-80 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-medium z-10">
+                        {index + 1}
                       </div>
-                    )}
-                    
-                    <div className="w-full h-full bg-gray-100 overflow-hidden">
-                      <img
-                        src={image.uploading ? image.url : (image.thumbnail || image.url)}
-                        alt={`Fotoğraf ${index + 1}`}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    
-                    {/* Upload Progress */}
-                    {image.uploading && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                          <div className="text-sm font-medium">{image.progress}%</div>
+
+                      {/* Delete Button - Sağ üst */}
+                      {!image.uploading && (
+                        <button
+                          onClick={() => {
+                            if (confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
+                              deleteImageMutation.mutate(image.id);
+                            }
+                          }}
+                          className="absolute top-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
+                          disabled={deleteImageMutation.isPending}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* Rotate Button - Sağ alt */}
+                      {!image.uploading && (
+                        <button
+                          onClick={() => rotateImage(image.id)}
+                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* Drag Handle - Orta */}
+                      {!image.uploading && (
+                        <div className="drag-handle absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-gray-800 bg-opacity-80 text-white rounded-full cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10 flex items-center justify-center">
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                      )}
+
+                      <div className="w-full h-full bg-gray-100 overflow-hidden">
+                        <img
+                          src={image.uploading ? image.url : (image.thumbnail || image.url)}
+                          alt={`Fotoğraf ${index + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Upload Progress */}
+                      {image.uploading && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <div className="text-sm font-medium">{image.progress}%</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Image Info */}
+                      <div className="p-2 bg-white">
+                        <div className="text-xs text-gray-500 text-center">
+                          <div>{formatFileSize(image.size)}</div>
+                          {image.originalSize > image.size && (
+                            <div className="text-green-600">
+                              ↓ {Math.round((1 - image.size / image.originalSize) * 100)}% küçültüldü
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
-                    
-                    {/* Image Info */}
-                    <div className="p-2 bg-white">
-                      <div className="text-xs text-gray-500 text-center">
-                        <div>{formatFileSize(image.size)}</div>
-                        {image.originalSize > image.size && (
-                          <div className="text-green-600">
-                            ↓ {Math.round((1 - image.size / image.originalSize) * 100)}% küçültüldü
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                ))}
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-
+        </div>
       </div>
 
       {/* Navigation Buttons */}
@@ -588,20 +575,17 @@ export default function Step3() {
         >
           Önceki Adım
         </button>
-        
+
         <button
-          onClick={() => {
-            const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
-            navigate(url);
-          }}
+          onClick={handleNextStep}
           className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
         >
           Sonraki Adım
         </button>
       </div>
-      
+
       {/* Performance indicator */}
       <PageLoadIndicator />
-    </CreateListingLayout>
+    </div>
   );
-}
+} 
