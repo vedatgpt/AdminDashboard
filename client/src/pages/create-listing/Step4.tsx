@@ -106,6 +106,15 @@ export default function Step4() {
   const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
 
+  // Tarih formatlama fonksiyonu
+  const formatDate = (dateInput: string | Date) => {
+    const date = new Date(dateInput);
+    return date.toLocaleDateString('tr-TR', {
+      year: 'numeric',
+      month: 'long'
+    });
+  };
+
   // Photos artık photosState'ten geliyor
 
   // Remove debug log - no longer needed
@@ -162,7 +171,7 @@ export default function Step4() {
 
         {/* Desktop Başlık */}
         <div className="hidden lg:block mb-4">
-          <h1 className="text-lg font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-gray-900 pb-2 border-b border-gray-200">
             {customFields.title || 'İlan Başlığı Girilmedi'}
           </h1>
         </div>
@@ -173,7 +182,7 @@ export default function Step4() {
                     {/* Sol Sütun - Fotoğraf Galerisi (%50) */}
           <div className="lg:col-span-4 -mx-4 sm:-mx-6 lg:mx-0">
             {photosState.length > 0 ? (
-              <div className="space-y-4">
+              <div className="overflow-hidden">
                 {/* Ana Swiper */}
                 <Swiper
                   onSwiper={setMainSwiper}
@@ -194,14 +203,14 @@ export default function Step4() {
                       setCurrentThumbnailPage(targetPage);
                     }
                   }}
-                  className="w-full aspect-[5/3] lg:aspect-[4/3] overflow-hidden"
+                  className="w-full aspect-[4/3] lg:aspect-[4/3] overflow-hidden"
                 >
                   {photosState
                     .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                     .map((photo: any, index: number) => (
                       <SwiperSlide key={photo.id || index}>
                         <div 
-                          className="w-full h-full bg-gray-200 overflow-hidden lg:cursor-pointer"
+                          className="w-full h-full bg-white overflow-hidden lg:cursor-pointer"
                           onClick={() => {
                             // Sadece masaüstü cihazlarda çalışsın
                             if (window.innerWidth >= 1024) { // lg breakpoint
@@ -222,51 +231,69 @@ export default function Step4() {
                           <img
                             src={photo.url}
                             alt={`Fotoğraf ${index + 1}`}
-                            className="w-full h-full object-cover pointer-events-none"
+                            className="w-full h-full object-contain pointer-events-none"
                           />
                         </div>
                       </SwiperSlide>
                     ))}
                 </Swiper>
 
-                {/* Thumbnail Grid - Masaüstü için */}
-                {photosState.length > 1 && (
+                                  {/* Büyük Fotoğraf Butonu - Masaüstü için */}
                   <div className="hidden lg:block">
-                    {/* Thumbnails Grid */}
-                    <div className="grid grid-cols-5 gap-3 mb-3 justify-items-center">
-                      {photosState
-                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-                        .slice(currentThumbnailPage * thumbnailsPerPage, (currentThumbnailPage + 1) * thumbnailsPerPage)
-                        .map((photo: any, index: number) => {
-                          const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
+                    <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
+                      Büyük Fotoğraf
+                    </button>
+                  </div>
+
+                  {/* Thumbnail Grid - Masaüstü için */}
+                  {photosState.length > 1 && (
+                  <div className="hidden lg:block border border-gray-200 bg-white p-2 h-[140px] flex flex-col justify-between">
+                    {/* Thumbnails Grid - Fixed Height */}
+                    <div className="grid grid-cols-5 gap-1 justify-items-center min-h-[100px]">
+                      {/* Render thumbnails for current page */}
+                      {Array.from({ length: thumbnailsPerPage }).map((_, index) => {
+                        const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
+                        const photo = photosState
+                          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))[actualIndex];
+                        
+                        if (!photo) {
+                          // Empty placeholder to maintain grid structure
                           return (
                             <div 
-                              key={photo.id || actualIndex}
-                              className={`bg-gray-200 overflow-hidden cursor-pointer aspect-[4/3] ${
-                                mainSlideIndex === actualIndex 
-                                  ? 'ring-1 ring-orange-500' 
-                                  : ''
-                              }`}
-                              onClick={() => {
-                                if (mainSwiper) {
-                                  mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
-                                }
-                              }}
-                            >
-                              <img
-                                src={photo.thumbnail || photo.url}
-                                alt={`Küçük ${actualIndex + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                              key={`placeholder-${index}`}
+                              className="bg-transparent aspect-[4/3] opacity-0"
+                            />
                           );
-                        })}
+                        }
+                        
+                        return (
+                          <div 
+                            key={photo.id || actualIndex}
+                            className={`bg-gray-200 overflow-hidden cursor-pointer aspect-[4/3] ${
+                              mainSlideIndex === actualIndex 
+                                ? 'ring-1 ring-orange-500' 
+                                : ''
+                            }`}
+                            onClick={() => {
+                              if (mainSwiper) {
+                                mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
+                              }
+                            }}
+                          >
+                            <img
+                              src={photo.thumbnail || photo.url}
+                              alt={`Küçük ${actualIndex + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Sayfalama Noktaları */}
-                    {photosState.length > thumbnailsPerPage && (
-                      <div className="flex items-center justify-center gap-1">
-                        {Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
+                    {/* Sayfalama Noktaları - Fixed Position */}
+                    <div className="flex items-center justify-center gap-1 h-[20px]">
+                      {photosState.length > thumbnailsPerPage && 
+                        Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
                           <button
                             key={pageIndex}
                             onClick={() => setCurrentThumbnailPage(pageIndex)}
@@ -276,9 +303,9 @@ export default function Step4() {
                                 : 'bg-gray-300 hover:bg-gray-400'
                             }`}
                           />
-                        ))}
-                      </div>
-                    )}
+                        ))
+                      }
+                    </div>
                   </div>
                 )}
               </div>
@@ -568,23 +595,45 @@ export default function Step4() {
 
           {/* Sağ Sütun - İletişim (%25) */}
           <div className="hidden lg:block lg:col-span-2">
-            <div className="bg-gray-50 border border-gray-200 p-6">
+            <div className="bg-white border border-gray-200 p-6">
               {user ? (
                 <div className="space-y-3 text-sm">
                   {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
                   {user.role === 'individual' ? (
                     <div>
                       <p className="font-semibold text-gray-900">{user.firstName || ''} {user.lastName || ''}</p>
+                      {/* Kayıt olma tarihi */}
+                      {user.createdAt && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Üye olma: {formatDate(user.createdAt)}
+                        </p>
+                      )}
                     </div>
                   ) : (
-                    <div>
-                      <p className="font-semibold text-gray-900">{user.companyName || 'Belirtilmemiş'}</p>
+                    <div className="flex items-center gap-3">
+                      {/* Kurumsal kullanıcı profil resmi */}
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                        {user.profileImage ? (
+                          <img 
+                            src={user.profileImage} 
+                            alt="Profil Resmi" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <svg className="w-6 h-6 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{user.companyName || 'Belirtilmemiş'}</p>
+                      </div>
                     </div>
                   )}
 
                   {/* İletişim Bilgileri - Butonlar içerisinde */}
                   {user.mobilePhone && (
-                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button className="w-full px-3 py-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-700">Cep:</span>
                         <span className="text-gray-900">{user.mobilePhone}</span>
@@ -592,7 +641,7 @@ export default function Step4() {
                     </button>
                   )}
                   {user.whatsappNumber && (
-                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button className="w-full px-3 py-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-700">WhatsApp:</span>
                         <span className="text-gray-900">{user.whatsappNumber}</span>
@@ -600,7 +649,7 @@ export default function Step4() {
                     </button>
                   )}
                   {user.role === 'corporate' && user.businessPhone && (
-                    <button className="w-full px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                    <button className="w-full px-3 py-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-700">İş:</span>
                         <span className="text-gray-900">{user.businessPhone}</span>
@@ -610,12 +659,12 @@ export default function Step4() {
 
                   {/* Ülke ve Mahalle - Butonlar içerisinde */}
                   {locationSettings?.showCountry && (locationData.location?.country || locationData.country) && (
-                    <button className="w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="w-full text-left px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                       <span className="font-medium text-gray-700">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}
                     </button>
                   )}
                   {locationSettings?.showNeighborhood && (locationData.location?.neighborhood || locationData.neighborhood) && (
-                    <button className="w-full text-left px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="w-full text-left px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                       <span className="font-medium text-gray-700">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}
                     </button>
                   )}
