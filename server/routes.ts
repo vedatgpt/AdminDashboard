@@ -75,13 +75,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       createTableIfMissing: true, // Auto-create table if missing
     }),
     secret: SESSION_CONFIG.SECRET,
-    resave: false, // Don't resave unchanged sessions (better performance)
+    resave: true, // Production için true - session persistence
     saveUninitialized: false,
     rolling: true, // Extend session on activity
+    name: 'sessionid', // Custom session name
     cookie: {
-      secure: process.env.NODE_ENV === 'production', // Secure in production
+      secure: false, // HTTPS olsa bile false - Replit deployment için
       httpOnly: true,
-      maxAge: SESSION_CONFIG.MAX_AGE
+      maxAge: SESSION_CONFIG.MAX_AGE,
+      sameSite: 'lax' // Cross-site request'ler için
     }
   }));
 
@@ -199,7 +201,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           return res.status(500).json({ error: "Çıkış işlemi başarısız" });
         }
-        res.clearCookie('connect.sid');
+        res.clearCookie('sessionid', {
+          secure: false,
+          httpOnly: true,
+          sameSite: 'lax'
+        });
         res.json({ message: "Başarıyla çıkış yapıldı" });
       });
     } else {
