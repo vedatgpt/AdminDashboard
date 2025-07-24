@@ -234,24 +234,26 @@ export default function Step3() {
               console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
               
               if (currentClassifiedId) {
-                // Sync XMLHttpRequest - garantili kaydetme
+                // Async XMLHttpRequest - hızlı kaydetme
                 const xhr = new XMLHttpRequest();
-                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // false = sync
+                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true); // true = async
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 
-                try {
-                  xhr.send(JSON.stringify({
-                    photos: JSON.stringify(updatedImages)
-                  }));
-                  
+                xhr.onload = function() {
                   if (xhr.status === 200) {
-                    console.log('✅ SYNC: Fotoğraf sıralaması kaydedildi');
+                    console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
                   } else {
-                    console.error('❌ SYNC: Kaydetme başarısız', xhr.status);
+                    console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
                   }
-                } catch (error) {
-                  console.error('❌ SYNC: API hatası', error);
-                }
+                };
+                
+                xhr.onerror = function() {
+                  console.error('❌ ASYNC: API hatası');
+                };
+                
+                xhr.send(JSON.stringify({
+                  photos: JSON.stringify(updatedImages)
+                }));
               } else {
                 console.error('❌ currentClassifiedId YOK!');
               }

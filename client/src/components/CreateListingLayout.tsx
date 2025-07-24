@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation } from 'wouter';
 import { useListing } from '@/contexts/ListingContext';
+import ModernNavbar from '@/components/Navbar';
 import NavbarMobile from '@/components/Navbar-mobile';
 
 interface CreateListingLayoutProps {
@@ -59,7 +60,10 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
         />
       </div>
       
-      {/* Desktop'ta navbar yok - sadece mobile navbar kullanılıyor */}
+      {/* Desktop Navbar */}
+      <div className="hidden lg:block">
+        <ModernNavbar />
+      </div>
       
       {/* Main Content - No extra wrapper needed, children handle their own layout */}
       {children}
