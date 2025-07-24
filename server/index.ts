@@ -1,19 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { type User } from "@shared/schema";
 
-// Extend the session types
+// Extend the session types to match routes.ts
 declare module "express-session" {
   interface SessionData {
-    user?: {
-      id: number;
-      username: string;
-      email: string;
-      role: string;
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
+    user?: User & {
+      companyId?: number;
+      companyName?: string | null;
     };
+    userType?: "user" | "personnel";
+    userId?: number;
   }
 }
 

@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     store: new PgSession({
       pool: pool,
       tableName: 'sessions',
-      createTableIfMissing: false, // We'll create the table in schema
+      createTableIfMissing: true, // Auto-create table if missing
     }),
     secret: SESSION_CONFIG.SECRET,
     resave: false, // Don't resave unchanged sessions (better performance)
@@ -115,6 +115,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Store user in session
           req.session.user = user;
           req.session.userType = "user";
+          
+          console.log('LOGIN SUCCESS - User stored in session:', { id: user.id, username: user.username });
+          console.log('LOGIN SUCCESS - Session ID:', req.sessionID);
           
           // Return user without password
           const { password: _, ...userWithoutPassword } = user;
@@ -206,6 +209,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/me", async (req, res) => {
     const sessionUser = req.session?.user;
+    console.log('AUTH/ME - Session user:', sessionUser ? { id: sessionUser.id, username: sessionUser.username } : 'none');
+    console.log('AUTH/ME - Session ID:', req.sessionID);
+    console.log('AUTH/ME - Session store:', req.session ? 'exists' : 'none');
+    
     if (!sessionUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -228,6 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(401).json({ error: "User not found" });
       }
     } catch (error: any) {
+      console.error('AUTH/ME Error:', error);
       res.status(500).json({ error: "Server error" });
     }
   });
