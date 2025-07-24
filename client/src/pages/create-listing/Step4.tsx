@@ -184,7 +184,8 @@ export default function Step4() {
             {photosState.length > 0 ? (
               <div className="overflow-hidden">
                 {/* Ana Swiper */}
-                <Swiper
+                <div className="relative">
+                  <Swiper
                   onSwiper={setMainSwiper}
                   modules={[Navigation, Pagination, Thumbs]}
                   navigation={false}
@@ -235,71 +236,60 @@ export default function Step4() {
                           />
                         </div>
                       </SwiperSlide>
-                    ))}
-                </Swiper>
+                                          ))}
+                  </Swiper>
+
+                  {/* Fotoğraf Sayısı Badge */}
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-2 py-0.5 rounded-full text-xs font-normal z-20 shadow-lg">
+                    {mainSlideIndex + 1}/{photosState.length}
+                  </div>
+                </div>
 
                                   {/* Büyük Fotoğraf Butonu - Masaüstü için */}
                   <div className="hidden lg:block">
-                    <button className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium transition-colors">
-                      Büyük Fotoğraf
+                    <button className="w-full py-2 px-4 bg-gradient-to-b from-white to-gray-100 text-gray-700 text-sm font-medium">
+                      <span className="hover:underline cursor-pointer">Büyük Fotoğraf</span>
                     </button>
                   </div>
 
                   {/* Thumbnail Grid - Masaüstü için */}
                   {photosState.length > 1 && (
-                  <div className={`hidden lg:block border border-gray-200 bg-white p-3 flex flex-col justify-between ${
-                    photosState.length <= 5 ? 'h-[100px]' : 'h-[200px]'
-                  }`}>
-                    {/* Thumbnails Grid - Dynamic Height */}
-                    <div className={`grid grid-cols-5 gap-1 justify-items-center ${
-                      photosState.length <= 5 ? 'grid-rows-1 min-h-[60px]' : 'grid-rows-2 min-h-[160px]'
-                    }`}>
-                      {/* Render thumbnails for current page */}
-                      {Array.from({ length: thumbnailsPerPage }).map((_, index) => {
-                        const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
-                        const photo = photosState
-                          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))[actualIndex];
-                        
-                        if (!photo) {
-                          // Empty placeholder to maintain grid structure
+                  <div className="hidden lg:block border border-gray-200 bg-white p-2  flex flex-col justify-between">
+                    {/* Thumbnails Grid */}
+                    <div className="grid grid-cols-5 gap-1 justify-items-center flex-1">
+                      {photosState
+                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                        .slice(currentThumbnailPage * thumbnailsPerPage, (currentThumbnailPage + 1) * thumbnailsPerPage)
+                        .map((photo: any, index: number) => {
+                          const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
                           return (
                             <div 
-                              key={`placeholder-${index}`}
-                              className="bg-transparent aspect-[4/3] opacity-0"
-                            />
+                              key={photo.id || actualIndex}
+                              className={`bg-gray-200 overflow-hidden cursor-pointer aspect-[4/3] ${
+                                mainSlideIndex === actualIndex 
+                                  ? 'ring-1 ring-orange-500' 
+                                  : ''
+                              }`}
+                              onClick={() => {
+                                if (mainSwiper) {
+                                  mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
+                                }
+                              }}
+                            >
+                              <img
+                                src={photo.thumbnail || photo.url}
+                                alt={`Küçük ${actualIndex + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
                           );
-                        }
-                        
-                        return (
-                          <div 
-                            key={photo.id || actualIndex}
-                            className={`bg-gray-200 overflow-hidden cursor-pointer aspect-[4/3] ${
-                              mainSlideIndex === actualIndex 
-                                ? 'ring-1 ring-orange-500' 
-                                : ''
-                            }`}
-                            onClick={() => {
-                              if (mainSwiper) {
-                                mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
-                              }
-                            }}
-                          >
-                            <img
-                              src={photo.thumbnail || photo.url}
-                              alt={`Küçük ${actualIndex + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        );
-                      })}
+                        })}
                     </div>
 
-                    {/* Sayfalama Noktaları - Dynamic Position */}
-                    <div className={`flex items-center justify-center gap-1 h-[24px] ${
-                      photosState.length <= 5 ? 'mt-2' : 'mt-1'
-                    }`}>
-                      {photosState.length > thumbnailsPerPage && 
-                        Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
+                    {/* Sayfalama Noktaları */}
+                    {photosState.length > thumbnailsPerPage && (
+                      <div className="flex items-center justify-center gap-1 pt-2">
+                        {Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
                           <button
                             key={pageIndex}
                             onClick={() => setCurrentThumbnailPage(pageIndex)}
@@ -309,9 +299,9 @@ export default function Step4() {
                                 : 'bg-gray-300 hover:bg-gray-400'
                             }`}
                           />
-                        ))
-                      }
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
