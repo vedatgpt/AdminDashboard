@@ -34,10 +34,12 @@ export default function Step3() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  // URL parameter support
+  // URL parameter support - SABIT DEĞİŞKEN
   const urlParams = new URLSearchParams(window.location.search);
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
+  
+  console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -227,31 +229,31 @@ export default function Step3() {
                 order: index + 1
               }));
               
-              // GERÇEK ÇÖZÜM: Manual draft kaydetme - updateDraftMutation kullanmak yerine direkt API çağrısı
-              console.log('currentClassifiedId:', currentClassifiedId);
-              console.log('Fotoğraf sıralaması kaydediliyor:', updatedImages.map(img => ({ id: img.id, order: img.order })));
+              // SON ÇARE: Fotoğraf sıralama kaydetme - sync call
+              console.log('DRAG END - currentClassifiedId:', currentClassifiedId);
+              console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
               
               if (currentClassifiedId) {
-                // Direkt API çağrısı yap - updateDraftMutation yerine
-                fetch(`/api/draft-listings/${currentClassifiedId}`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
+                // Sync XMLHttpRequest - garantili kaydetme
+                const xhr = new XMLHttpRequest();
+                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // false = sync
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                try {
+                  xhr.send(JSON.stringify({
                     photos: JSON.stringify(updatedImages)
-                  })
-                }).then(response => {
-                  if (response.ok) {
-                    console.log('Fotoğraf sıralaması başarıyla kaydedildi');
+                  }));
+                  
+                  if (xhr.status === 200) {
+                    console.log('✅ SYNC: Fotoğraf sıralaması kaydedildi');
                   } else {
-                    console.error('Fotoğraf sıralaması kaydedilemedi');
+                    console.error('❌ SYNC: Kaydetme başarısız', xhr.status);
                   }
-                }).catch(error => {
-                  console.error('API hatası:', error);
-                });
+                } catch (error) {
+                  console.error('❌ SYNC: API hatası', error);
+                }
               } else {
-                console.error('currentClassifiedId bulunamadı!');
+                console.error('❌ currentClassifiedId YOK!');
               }
               
               // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM

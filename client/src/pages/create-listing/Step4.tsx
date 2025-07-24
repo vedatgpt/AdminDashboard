@@ -183,8 +183,8 @@ export default function Step4() {
             )}
           </div>
 
-          {/* Orta Sütun - İlan Detayları (Orijinal genişlik korundu) */}
-          <div className="lg:col-span-3">
+          {/* Orta Sütun - İlan Detayları (Daraltıldı) */}
+          <div className="lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İlan Detayları</h3>
               
@@ -299,8 +299,8 @@ export default function Step4() {
             </div>
           </div>
 
-          {/* Sağ Sütun - İletişim (Dengeli genişlik) */}
-          <div className="lg:col-span-1">
+          {/* Sağ Sütun - İletişim (Genişletildi) */}
+          <div className="lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
               
