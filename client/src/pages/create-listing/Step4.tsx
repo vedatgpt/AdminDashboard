@@ -42,6 +42,7 @@ export default function Step4() {
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
+  const { user } = useAuth();
   
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
@@ -202,6 +203,26 @@ export default function Step4() {
                     </tr>
                   )}
 
+                  {/* İl bilgisi - locationSettings.showCity true ise göster */}
+                  {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-2 font-medium text-gray-700">İl:</td>
+                      <td className="py-2 text-gray-900">
+                        {locationData.location?.city?.name || locationData.city?.name}
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
+                  {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-2 font-medium text-gray-700">İlçe:</td>
+                      <td className="py-2 text-gray-900">
+                        {locationData.location?.district?.name || locationData.district?.name}
+                      </td>
+                    </tr>
+                  )}
+
                   {/* Kategori - Her kategori ayrı satırda */}
                   {categoryPath.map((cat, index) => (
                     <tr key={cat.id} className="border-b border-gray-100">
@@ -278,32 +299,48 @@ export default function Step4() {
             </div>
           </div>
 
-          {/* Sağ Sütun - Lokasyon */}
+          {/* Sağ Sütun - İletişim */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Lokasyon</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
               
-              {(locationData.location || locationData.country) ? (
+              {user ? (
                 <div className="space-y-2 text-sm">
-                  {/* Ülke - sadece locationSettings.showCountry true ise göster */}
+                  {/* Ad Soyad veya Firma Adı */}
+                  {user.membershipType === 'individual' ? (
+                    <div>
+                      <p><span className="font-medium">Ad Soyad:</span> {user.firstName || ''} {user.lastName || ''}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p><span className="font-medium">Firma Adı:</span> {user.companyName || 'Belirtilmemiş'}</p>
+                    </div>
+                  )}
+                  
+                  {/* İletişim Bilgileri */}
+                  {user.mobilePhone && (
+                    <p><span className="font-medium">Cep Telefonu:</span> {user.mobilePhone}</p>
+                  )}
+                  {user.whatsappNumber && (
+                    <p><span className="font-medium">WhatsApp:</span> {user.whatsappNumber}</p>
+                  )}
+                  {user.membershipType === 'corporate' && user.businessPhone && (
+                    <p><span className="font-medium">İş Telefonu:</span> {user.businessPhone}</p>
+                  )}
+                  {user.email && (
+                    <p><span className="font-medium">E-posta:</span> {user.email}</p>
+                  )}
+
+                  {/* Ülke ve Mahalle - sadece visibility ayarlarına göre */}
                   {locationSettings?.showCountry && (locationData.location?.country || locationData.country) && (
                     <p><span className="font-medium">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}</p>
                   )}
-                  {/* İl - sadece locationSettings.showCity true ise göster */}
-                  {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
-                    <p><span className="font-medium">İl:</span> {locationData.location?.city?.name || locationData.city?.name}</p>
-                  )}
-                  {/* İlçe - sadece locationSettings.showDistrict true ise göster */}
-                  {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
-                    <p><span className="font-medium">İlçe:</span> {locationData.location?.district?.name || locationData.district?.name}</p>
-                  )}
-                  {/* Mahalle - sadece locationSettings.showNeighborhood true ise göster */}
                   {locationSettings?.showNeighborhood && (locationData.location?.neighborhood || locationData.neighborhood) && (
                     <p><span className="font-medium">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">Lokasyon seçilmedi</p>
+                <p className="text-gray-500 text-sm">Kullanıcı bilgileri yükleniyor...</p>
               )}
             </div>
           </div>
