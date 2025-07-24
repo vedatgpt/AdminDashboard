@@ -40,3 +40,9 @@ body {
   background-color: white;
   color: #1f2937;
 }
+
+/* Swiper Thumbnail Active State */
+.swiper-slide-thumb-active img {
+  border-color: #EC7830 !important;
+  border-width: 2px !important;
+}

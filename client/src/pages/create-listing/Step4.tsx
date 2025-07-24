@@ -24,6 +24,11 @@ export default function Step4() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
+  const [currentThumbnailPage, setCurrentThumbnailPage] = useState(0);
+  const [mainSlideIndex, setMainSlideIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
+  const thumbnailsPerPage = 10;
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -43,10 +48,10 @@ export default function Step4() {
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
   const { user } = useAuth();
-  
+
   // Photos state - real-time güncellemesi için
   const [photosState, setPhotosState] = useState<any[]>([]);
-  
+
   // Draft data değiştiğinde photos state'ini güncelle
   useEffect(() => {
     if (draftData?.photos) {
@@ -66,14 +71,14 @@ export default function Step4() {
       setPhotosState([]);
     }
   }, [draftData?.photos]);
-  
+
   // Step-3'ten geldiğinde draft'ı yeniden fetch et
   useEffect(() => {
     if (currentClassifiedId) {
       refetchDraft();
     }
   }, [currentClassifiedId, refetchDraft]);
-  
+
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
 
@@ -100,9 +105,9 @@ export default function Step4() {
   // Parse data
   const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
-  
+
   // Photos artık photosState'ten geliyor
-  
+
   // Remove debug log - no longer needed
 
   // Find category details
@@ -127,7 +132,7 @@ export default function Step4() {
   const getCategoryPath = (categoryId: number | null) => {
     if (!categories || !categoryId) return [];
     const path: any[] = [];
-    
+
     const findPath = (cats: any[], targetId: number): boolean => {
       for (const cat of cats) {
         path.push(cat);
@@ -137,7 +142,7 @@ export default function Step4() {
       }
       return false;
     };
-    
+
     findPath(categories, categoryId);
     return path;
   };
@@ -146,195 +151,433 @@ export default function Step4() {
 
   return (
     <CreateListingLayout stepNumber={4}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
-        {/* Başlık */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-6">
+
+        {/* Mobile/Tablet Header - Başlık */}
+        <div className="lg:hidden bg-white px-4 py-2 mt-[56px]">
+          <h1 className="text-lg font-semibold text-gray-900 truncate text-center">
             {customFields.title || 'İlan Başlığı Girilmedi'}
           </h1>
         </div>
 
-        {/* Ana İçerik - Dengeli 3 Sütun Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mb-6">
-          
-          {/* Sol Sütun - Fotoğraf Galerisi (Orta genişlik) */}
-          <div className="lg:col-span-2">
+        {/* Desktop Başlık */}
+        <div className="hidden lg:block mb-6">
+          <h1 className="text-lg font-bold text-gray-900">
+            {customFields.title || 'İlan Başlığı Girilmedi'}
+          </h1>
+        </div>
+
+                          {/* Ana İçerik - 8 Sütunlu Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-3 lg:gap-6 mb-6 lg:pt-0">
+
+                    {/* Sol Sütun - Fotoğraf Galerisi (%50) */}
+          <div className="lg:col-span-4 -mx-4 sm:-mx-6 lg:mx-0">
             {photosState.length > 0 ? (
               <div className="space-y-4">
                 {/* Ana Swiper */}
                 <Swiper
+                  onSwiper={setMainSwiper}
                   modules={[Navigation, Pagination, Thumbs]}
-                  navigation
-                  pagination={{ clickable: true }}
+                  navigation={false}
+                  pagination={false}
                   thumbs={{ swiper: thumbsSwiper }}
-                  className="w-full h-80 rounded-lg overflow-hidden"
+                  allowTouchMove={true}
+                  simulateTouch={true}
+                  speed={250}
+                  onSlideChange={(swiper) => {
+                    const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
+                    setMainSlideIndex(index);
+
+                    // Thumbnails sayfa geçişi
+                    if (photosState.length > thumbnailsPerPage) {
+                      const targetPage = Math.floor(index / thumbnailsPerPage);
+                      setCurrentThumbnailPage(targetPage);
+                    }
+                  }}
+                  className="w-full aspect-[5/3] lg:aspect-[4/3] overflow-hidden"
                 >
                   {photosState
                     .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                     .map((photo: any, index: number) => (
                       <SwiperSlide key={photo.id || index}>
-                        <img
-                          src={photo.url}
-                          alt={`Fotoğraf ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        <div 
+                          className="w-full h-full bg-gray-200 overflow-hidden lg:cursor-pointer"
+                          onClick={() => {
+                            // Sadece masaüstü cihazlarda çalışsın
+                            if (window.innerWidth >= 1024) { // lg breakpoint
+                              // Bir sonraki fotoğrafa geç
+                              const nextIndex = (index + 1) % photosState.length;
+                              if (mainSwiper) {
+                                mainSwiper.slideTo(nextIndex, 0, false); // false = animasyon yok
+                              }
+                            }
+                          }}
+                          onTouchStart={(e) => {
+                            // Mobil cihazlarda touch event'ini engelleme
+                            if (window.innerWidth < 1024) {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          <img
+                            src={photo.url}
+                            alt={`Fotoğraf ${index + 1}`}
+                            className="w-full h-full object-cover pointer-events-none"
+                          />
+                        </div>
                       </SwiperSlide>
                     ))}
                 </Swiper>
 
-                {/* Thumbnail Swiper */}
+                {/* Thumbnail Grid - Masaüstü için */}
                 {photosState.length > 1 && (
-                  <Swiper
-                    modules={[Thumbs]}
-                    spaceBetween={8}
-                    slidesPerView={4}
-                    watchSlidesProgress
-                    onSwiper={setThumbsSwiper}
-                    className="w-full h-20"
-                  >
-                    {photosState
-                      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-                      .map((photo: any, index: number) => (
-                        <SwiperSlide key={photo.id || index} className="cursor-pointer">
-                          <img
-                            src={photo.thumbnail || photo.url}
-                            alt={`Küçük ${index + 1}`}
-                            className="w-full h-full object-cover rounded border-2 border-transparent hover:border-orange-500"
+                  <div className="hidden lg:block">
+                    {/* Thumbnails Grid */}
+                    <div className="grid grid-cols-5 gap-2 mb-3 justify-items-center">
+                      {photosState
+                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                        .slice(currentThumbnailPage * thumbnailsPerPage, (currentThumbnailPage + 1) * thumbnailsPerPage)
+                        .map((photo: any, index: number) => {
+                          const actualIndex = currentThumbnailPage * thumbnailsPerPage + index;
+                          return (
+                            <div 
+                              key={photo.id || actualIndex}
+                              className={`bg-gray-200 overflow-hidden cursor-pointer ${
+                                mainSlideIndex === actualIndex 
+                                  ? 'ring-1 ring-orange-500' 
+                                  : ''
+                              }`}
+                              style={{ width: '100px', height: '75px' }}
+                              onClick={() => {
+                                if (mainSwiper) {
+                                  mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
+                                }
+                              }}
+                            >
+                              <img
+                                src={photo.thumbnail || photo.url}
+                                alt={`Küçük ${actualIndex + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    {/* Sayfalama Noktaları */}
+                    {photosState.length > thumbnailsPerPage && (
+                      <div className="flex items-center justify-center gap-1">
+                        {Array.from({ length: Math.ceil(photosState.length / thumbnailsPerPage) }).map((_: any, pageIndex: number) => (
+                          <button
+                            key={pageIndex}
+                            onClick={() => setCurrentThumbnailPage(pageIndex)}
+                            className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                              currentThumbnailPage === pageIndex 
+                                ? 'bg-orange-500 scale-110' 
+                                : 'bg-gray-300 hover:bg-gray-400'
+                            }`}
                           />
-                        </SwiperSlide>
-                      ))}
-                  </Swiper>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
-              <div className="w-full h-80 bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center">
                 <p className="text-gray-500">Fotoğraf eklenmedi</p>
               </div>
             )}
-          </div>
 
-          {/* Orta Sütun - İlan Detayları (Daraltıldı) */}
-          <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">İlan Detayları</h3>
-              
-              <table className="w-full text-sm">
-                <tbody className="space-y-2">
-                  {/* Fiyat */}
-                  {customFields.price && (
-                    <tr className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">Fiyat:</td>
-                      <td className="py-2 text-gray-900">
-                        {typeof customFields.price === 'object' && customFields.price !== null
-                          ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
-                          : customFields.price
-                        }
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* İl bilgisi - locationSettings.showCity true ise göster */}
-                  {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
-                    <tr className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">İl:</td>
-                      <td className="py-2 text-gray-900">
-                        {locationData.location?.city?.name || locationData.city?.name}
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
-                  {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
-                    <tr className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">İlçe:</td>
-                      <td className="py-2 text-gray-900">
-                        {locationData.location?.district?.name || locationData.district?.name}
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Kategori - Her kategori ayrı satırda */}
-                  {categoryPath.map((cat, index) => (
-                    <tr key={cat.id} className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">
-                        {cat.categoryType || `Seviye ${index + 1}`}:
-                      </td>
-                      <td className="py-2 text-gray-900">
-                        {cat.name}
-                      </td>
-                    </tr>
-                  ))}
-
-                  {/* Custom Fields - show all field data properly */}
-                  {customFieldsSchema.map((field) => {
-                    const value = customFields[field.fieldName];
-                    if (!value) return null;
-                    
-                    let displayValue = '';
-                    if (typeof value === 'object' && value !== null) {
-                      if (value.value !== undefined) {
-                        displayValue = `${value.value} ${value.unit || ''}`.trim();
-                      } else {
-                        // Skip complex objects that don't have value/unit structure
-                        return null;
-                      }
-                    } else {
-                      displayValue = String(value);
-                    }
-                    
-                    return (
-                      <tr key={field.id} className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-700">
-                          {field.label}:
-                        </td>
-                        <td className="py-2 text-gray-900">
-                          {displayValue}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  
-                  {/* Show any additional custom fields that aren't in schema */}
-                  {Object.entries(customFields).map(([key, value]) => {
-                    // Skip system fields, location, and fields already shown
-                    if (key === 'title' || key === 'description' || key === 'price' || key === 'location') return null;
-                    if (customFieldsSchema.some(f => f.fieldName === key)) return null;
-                    if (!value) return null;
-                    
-                    let displayValue = '';
-                    if (typeof value === 'object' && value !== null) {
-                      if (value.value !== undefined) {
-                        displayValue = `${value.value} ${value.unit || ''}`.trim();
-                      } else {
-                        // Don't show complex JSON objects in details table
-                        return null;
-                      }
-                    } else {
-                      displayValue = String(value);
-                    }
-                    
-                    return (
-                      <tr key={key} className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-700">
-                          {key}:
-                        </td>
-                        <td className="py-2 text-gray-900">
-                          {displayValue}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* Mobile/Tablet Alt Header - Ad Soyad */}
+            <div className="lg:hidden bg-white border-b border-gray-200 px-4 py-2">
+              <h2 className="text-base font-medium text-gray-900 truncate text-center">
+                {user?.role === 'individual' 
+                  ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kullanıcı'
+                  : user?.companyName || 'Kullanıcı'
+                }
+              </h2>
             </div>
           </div>
 
-          {/* Sağ Sütun - İletişim (Genişletildi) */}
+          {/* Orta Sütun - İlan Detayları (%25) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white lg:pt-0 -mt-3 lg:mt-0">
+
+              {/* Tab Headers - Mobil/Tablet */}
+              <div className="lg:hidden flex border-b border-gray-200 -mx-4 sm:-mx-6 lg:mx-0">
+                <button
+                  onClick={() => setActiveTab('details')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'details'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  İlan Bilgileri
+                </button>
+                <button
+                  onClick={() => setActiveTab('description')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'description'
+                      ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Açıklama
+                </button>
+              </div>
+
+              {/* Tab Contents */}
+              <div className="lg:hidden">
+                {/* İlan Bilgileri Tab */}
+                {activeTab === 'details' && (
+                  <div className="px-4 py-2">
+                    <table className="w-full text-sm">
+                      <tbody className="space-y-2">
+                        {/* Fiyat */}
+                        {customFields.price && (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2 font-medium text-gray-700">Fiyat:</td>
+                            <td className="py-2 text-gray-900">
+                              {typeof customFields.price === 'object' && customFields.price !== null
+                                ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
+                                : customFields.price
+                              }
+                            </td>
+                          </tr>
+                        )}
+
+                        {/* İl bilgisi - locationSettings.showCity true ise göster */}
+                        {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2 font-medium text-gray-700">İl:</td>
+                            <td className="py-2 text-gray-900">
+                              {locationData.location?.city?.name || locationData.city?.name}
+                            </td>
+                          </tr>
+                        )}
+
+                        {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
+                        {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2 font-medium text-gray-700">İlçe:</td>
+                            <td className="py-2 text-gray-900">
+                              {locationData.location?.district?.name || locationData.district?.name}
+                            </td>
+                          </tr>
+                        )}
+
+                        {/* Kategori - Her kategori ayrı satırda */}
+                        {categoryPath.map((cat, index) => (
+                          <tr key={cat.id} className="border-b border-gray-100">
+                            <td className="py-2 font-medium text-gray-700">
+                              {cat.categoryType || `Seviye ${index + 1}`}:
+                            </td>
+                            <td className="py-2 text-gray-900">
+                              {cat.name}
+                            </td>
+                          </tr>
+                        ))}
+
+                        {/* Custom Fields - show all field data properly */}
+                        {customFieldsSchema.map((field) => {
+                          const value = customFields[field.fieldName];
+                          if (!value) return null;
+
+                          let displayValue = '';
+                          if (typeof value === 'object' && value !== null) {
+                            if (value.value !== undefined) {
+                              displayValue = `${value.value} ${value.unit || ''}`.trim();
+                            } else {
+                              // Skip complex objects that don't have value/unit structure
+                              return null;
+                            }
+                          } else {
+                            displayValue = String(value);
+                          }
+
+                          return (
+                            <tr key={field.id} className="border-b border-gray-100">
+                              <td className="py-2 font-medium text-gray-700">
+                                {field.label}:
+                              </td>
+                              <td className="py-2 text-gray-900">
+                                {displayValue}
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* Show any additional custom fields that aren't in schema */}
+                        {Object.entries(customFields).map(([key, value]) => {
+                          // Skip system fields, location, and fields already shown
+                          if (key === 'title' || key === 'description' || key === 'price' || key === 'location') return null;
+                          if (customFieldsSchema.some(f => f.fieldName === key)) return null;
+                          if (!value) return null;
+
+                          let displayValue = '';
+                          if (typeof value === 'object' && value !== null) {
+                            if (value.value !== undefined) {
+                              displayValue = `${value.value} ${value.unit || ''}`.trim();
+                            } else {
+                              // Don't show complex JSON objects in details table
+                              return null;
+                            }
+                          } else {
+                            displayValue = String(value);
+                          }
+
+                          return (
+                            <tr key={key} className="border-b border-gray-100">
+                              <td className="py-2 font-medium text-gray-700">
+                                {key}:
+                              </td>
+                              <td className="py-2 text-gray-900">
+                                {displayValue}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Açıklama Tab */}
+                {activeTab === 'description' && (
+                  <div className="px-4 py-2">
+                    {customFields.description ? (
+                      <div 
+                        className="text-gray-700 prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: customFields.description }}
+                      />
+                    ) : (
+                      <p className="text-gray-500">Açıklama eklenmedi</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop İlan Detayları - Eski hali korundu */}
+              <div className="hidden lg:block">
+                <table className="w-full text-sm">
+                  <tbody className="space-y-2">
+                    {/* Fiyat */}
+                    {customFields.price && (
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
+                        <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
+                          {typeof customFields.price === 'object' && customFields.price !== null
+                            ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
+                            : customFields.price
+                          }
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* İl bilgisi - locationSettings.showCity true ise göster */}
+                    {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700">İl:</td>
+                        <td className="py-2 text-gray-900">
+                          {locationData.location?.city?.name || locationData.city?.name}
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
+                    {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
+                      <tr className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700">İlçe:</td>
+                        <td className="py-2 text-gray-900">
+                          {locationData.location?.district?.name || locationData.district?.name}
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* Kategori - Her kategori ayrı satırda */}
+                    {categoryPath.map((cat, index) => (
+                      <tr key={cat.id} className="border-b border-gray-100">
+                        <td className="py-2 font-medium text-gray-700">
+                          {cat.categoryType || `Seviye ${index + 1}`}:
+                        </td>
+                        <td className="py-2 text-gray-900">
+                          {cat.name}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Custom Fields - show all field data properly */}
+                    {customFieldsSchema.map((field) => {
+                      const value = customFields[field.fieldName];
+                      if (!value) return null;
+
+                      let displayValue = '';
+                      if (typeof value === 'object' && value !== null) {
+                        if (value.value !== undefined) {
+                          displayValue = `${value.value} ${value.unit || ''}`.trim();
+                        } else {
+                          // Skip complex objects that don't have value/unit structure
+                          return null;
+                        }
+                      } else {
+                        displayValue = String(value);
+                      }
+
+                      return (
+                        <tr key={field.id} className="border-b border-gray-100">
+                          <td className="py-2 font-medium text-gray-700">
+                            {field.label}:
+                          </td>
+                          <td className="py-2 text-gray-900">
+                            {displayValue}
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {/* Show any additional custom fields that aren't in schema */}
+                    {Object.entries(customFields).map(([key, value]) => {
+                      // Skip system fields, location, and fields already shown
+                      if (key === 'title' || key === 'description' || key === 'price' || key === 'location') return null;
+                      if (customFieldsSchema.some(f => f.fieldName === key)) return null;
+                      if (!value) return null;
+
+                      let displayValue = '';
+                      if (typeof value === 'object' && value !== null) {
+                        if (value.value !== undefined) {
+                          displayValue = `${value.value} ${value.unit || ''}`.trim();
+                        } else {
+                          // Don't show complex JSON objects in details table
+                          return null;
+                        }
+                      } else {
+                        displayValue = String(value);
+                      }
+
+                      return (
+                        <tr key={key} className="border-b border-gray-100">
+                          <td className="py-2 font-medium text-gray-700">
+                            {key}:
+                          </td>
+                          <td className="py-2 text-gray-900">
+                            {displayValue}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Sağ Sütun - İletişim (%25) */}
           <div className="lg:col-span-2">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
-              
+
               {user ? (
                 <div className="space-y-2 text-sm">
                   {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
@@ -347,7 +590,7 @@ export default function Step4() {
                       <p><span className="font-medium">Firma Adı:</span> {user.companyName || 'Belirtilmemiş'}</p>
                     </div>
                   )}
-                  
+
                   {/* İletişim Bilgileri - E-posta bilgisi gösterilmiyor */}
                   {user.mobilePhone && (
                     <p><span className="font-medium">Cep Telefonu:</span> {user.mobilePhone}</p>
@@ -397,7 +640,7 @@ export default function Step4() {
           >
             Önceki Adım
           </button>
-          
+
           <button
             onClick={() => {
               // TODO: İlanı yayınla fonksiyonu
