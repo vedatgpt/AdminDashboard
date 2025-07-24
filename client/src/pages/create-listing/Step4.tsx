@@ -38,11 +38,41 @@ export default function Step4() {
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
   // Draft listing data
-  const { data: draftData } = useDraftListing(currentClassifiedId);
+  const { data: draftData, refetch: refetchDraft } = useDraftListing(currentClassifiedId);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
   const { user } = useAuth();
+  
+  // Photos state - real-time güncellemesi için
+  const [photosState, setPhotosState] = useState<any[]>([]);
+  
+  // Draft data değiştiğinde photos state'ini güncelle
+  useEffect(() => {
+    if (draftData?.photos) {
+      try {
+        const parsedPhotos = JSON.parse(draftData.photos as string);
+        if (Array.isArray(parsedPhotos)) {
+          // Order'a göre sırala
+          const sortedPhotos = parsedPhotos.sort((a, b) => (a.order || 0) - (b.order || 0));
+          setPhotosState(sortedPhotos);
+          console.log('Step4 - Photos updated:', sortedPhotos.map(p => ({ id: p.id, order: p.order })));
+        }
+      } catch (error) {
+        console.error('Photos parse error:', error);
+        setPhotosState([]);
+      }
+    } else {
+      setPhotosState([]);
+    }
+  }, [draftData?.photos]);
+  
+  // Step-3'ten geldiğinde draft'ı yeniden fetch et
+  useEffect(() => {
+    if (currentClassifiedId) {
+      refetchDraft();
+    }
+  }, [currentClassifiedId, refetchDraft]);
   
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
@@ -69,8 +99,9 @@ export default function Step4() {
 
   // Parse data
   const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
-  const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
+  
+  // Photos artık photosState'ten geliyor
   
   // Remove debug log - no longer needed
 
@@ -129,7 +160,7 @@ export default function Step4() {
           
           {/* Sol Sütun - Fotoğraf Galerisi (Orta genişlik) */}
           <div className="lg:col-span-2">
-            {photos.length > 0 ? (
+            {photosState.length > 0 ? (
               <div className="space-y-4">
                 {/* Ana Swiper */}
                 <Swiper
@@ -139,7 +170,7 @@ export default function Step4() {
                   thumbs={{ swiper: thumbsSwiper }}
                   className="w-full h-80 rounded-lg overflow-hidden"
                 >
-                  {photos
+                  {photosState
                     .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                     .map((photo: any, index: number) => (
                       <SwiperSlide key={photo.id || index}>
@@ -153,7 +184,7 @@ export default function Step4() {
                 </Swiper>
 
                 {/* Thumbnail Swiper */}
-                {photos.length > 1 && (
+                {photosState.length > 1 && (
                   <Swiper
                     modules={[Thumbs]}
                     spaceBetween={8}
@@ -162,7 +193,7 @@ export default function Step4() {
                     onSwiper={setThumbsSwiper}
                     className="w-full h-20"
                   >
-                    {photos
+                    {photosState
                       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                       .map((photo: any, index: number) => (
                         <SwiperSlide key={photo.id || index} className="cursor-pointer">
@@ -307,7 +338,7 @@ export default function Step4() {
               {user ? (
                 <div className="space-y-2 text-sm">
                   {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
-                  {user.membershipType === 'individual' ? (
+                  {user.role === 'individual' ? (
                     <div>
                       <p><span className="font-medium">Ad Soyad:</span> {user.firstName || ''} {user.lastName || ''}</p>
                     </div>
