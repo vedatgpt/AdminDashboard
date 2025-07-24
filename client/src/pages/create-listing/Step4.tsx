@@ -5,7 +5,6 @@ import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
 import { useCategoriesTree } from '@/hooks/useCategories';
 import { useLocationsTree } from '@/hooks/useLocations';
-import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import CreateListingLayout from '@/components/CreateListingLayout';
@@ -38,41 +37,9 @@ export default function Step4() {
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
   // Draft listing data
-  const { data: draftData, refetch: refetchDraft } = useDraftListing(currentClassifiedId);
+  const { data: draftData } = useDraftListing(currentClassifiedId);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
-  const { data: locationSettings } = useLocationSettings();
-  const { user } = useAuth();
-  
-  // Photos state - real-time güncellemesi için
-  const [photosState, setPhotosState] = useState<any[]>([]);
-  
-  // Draft data değiştiğinde photos state'ini güncelle
-  useEffect(() => {
-    if (draftData?.photos) {
-      try {
-        const parsedPhotos = JSON.parse(draftData.photos as string);
-        if (Array.isArray(parsedPhotos)) {
-          // Order'a göre sırala
-          const sortedPhotos = parsedPhotos.sort((a, b) => (a.order || 0) - (b.order || 0));
-          setPhotosState(sortedPhotos);
-          console.log('Step4 - Photos updated:', sortedPhotos.map(p => ({ id: p.id, order: p.order })));
-        }
-      } catch (error) {
-        console.error('Photos parse error:', error);
-        setPhotosState([]);
-      }
-    } else {
-      setPhotosState([]);
-    }
-  }, [draftData?.photos]);
-  
-  // Step-3'ten geldiğinde draft'ı yeniden fetch et
-  useEffect(() => {
-    if (currentClassifiedId) {
-      refetchDraft();
-    }
-  }, [currentClassifiedId, refetchDraft]);
   
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);
@@ -99,9 +66,8 @@ export default function Step4() {
 
   // Parse data
   const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
+  const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
   const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
-  
-  // Photos artık photosState'ten geliyor
   
   // Remove debug log - no longer needed
 
@@ -155,12 +121,12 @@ export default function Step4() {
           </h1>
         </div>
 
-        {/* Ana İçerik - Dengeli 3 Sütun Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mb-6">
+        {/* Ana İçerik - 3 Sütun */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           
-          {/* Sol Sütun - Fotoğraf Galerisi (Orta genişlik) */}
-          <div className="lg:col-span-2">
-            {photosState.length > 0 ? (
+          {/* Sol Sütun - Fotoğraf Galerisi */}
+          <div className="lg:col-span-1">
+            {photos.length > 0 ? (
               <div className="space-y-4">
                 {/* Ana Swiper */}
                 <Swiper
@@ -170,7 +136,7 @@ export default function Step4() {
                   thumbs={{ swiper: thumbsSwiper }}
                   className="w-full h-80 rounded-lg overflow-hidden"
                 >
-                  {photosState
+                  {photos
                     .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                     .map((photo: any, index: number) => (
                       <SwiperSlide key={photo.id || index}>
@@ -184,7 +150,7 @@ export default function Step4() {
                 </Swiper>
 
                 {/* Thumbnail Swiper */}
-                {photosState.length > 1 && (
+                {photos.length > 1 && (
                   <Swiper
                     modules={[Thumbs]}
                     spaceBetween={8}
@@ -193,7 +159,7 @@ export default function Step4() {
                     onSwiper={setThumbsSwiper}
                     className="w-full h-20"
                   >
-                    {photosState
+                    {photos
                       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
                       .map((photo: any, index: number) => (
                         <SwiperSlide key={photo.id || index} className="cursor-pointer">
@@ -214,8 +180,8 @@ export default function Step4() {
             )}
           </div>
 
-          {/* Orta Sütun - İlan Detayları (Daraltıldı) */}
-          <div className="lg:col-span-2">
+          {/* Orta Sütun - İlan Detayları */}
+          <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İlan Detayları</h3>
               
@@ -234,37 +200,13 @@ export default function Step4() {
                     </tr>
                   )}
 
-                  {/* İl bilgisi - locationSettings.showCity true ise göster */}
-                  {locationSettings?.showCity && (locationData.location?.city || locationData.city) && (
-                    <tr className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">İl:</td>
-                      <td className="py-2 text-gray-900">
-                        {locationData.location?.city?.name || locationData.city?.name}
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* İlçe bilgisi - locationSettings.showDistrict true ise göster */}
-                  {locationSettings?.showDistrict && (locationData.location?.district || locationData.district) && (
-                    <tr className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">İlçe:</td>
-                      <td className="py-2 text-gray-900">
-                        {locationData.location?.district?.name || locationData.district?.name}
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Kategori - Her kategori ayrı satırda */}
-                  {categoryPath.map((cat, index) => (
-                    <tr key={cat.id} className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-700">
-                        {cat.categoryType || `Seviye ${index + 1}`}:
-                      </td>
-                      <td className="py-2 text-gray-900">
-                        {cat.name}
-                      </td>
-                    </tr>
-                  ))}
+                  {/* Kategori */}
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2 font-medium text-gray-700">Kategori:</td>
+                    <td className="py-2 text-gray-900">
+                      {categoryPath.map(cat => cat.name).join(' > ')}
+                    </td>
+                  </tr>
 
                   {/* Custom Fields - show all field data properly */}
                   {customFieldsSchema.map((field) => {
@@ -330,45 +272,28 @@ export default function Step4() {
             </div>
           </div>
 
-          {/* Sağ Sütun - İletişim (Genişletildi) */}
-          <div className="lg:col-span-2">
+          {/* Sağ Sütun - Lokasyon */}
+          <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Lokasyon</h3>
               
-              {user ? (
+              {(locationData.location || locationData.country) ? (
                 <div className="space-y-2 text-sm">
-                  {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
-                  {user.role === 'individual' ? (
-                    <div>
-                      <p><span className="font-medium">Ad Soyad:</span> {user.firstName || ''} {user.lastName || ''}</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p><span className="font-medium">Firma Adı:</span> {user.companyName || 'Belirtilmemiş'}</p>
-                    </div>
-                  )}
-                  
-                  {/* İletişim Bilgileri - E-posta bilgisi gösterilmiyor */}
-                  {user.mobilePhone && (
-                    <p><span className="font-medium">Cep Telefonu:</span> {user.mobilePhone}</p>
-                  )}
-                  {user.whatsappNumber && (
-                    <p><span className="font-medium">WhatsApp:</span> {user.whatsappNumber}</p>
-                  )}
-                  {user.role === 'corporate' && user.businessPhone && (
-                    <p><span className="font-medium">İş Telefonu:</span> {user.businessPhone}</p>
-                  )}
-
-                  {/* Ülke ve Mahalle - sadece visibility ayarlarına göre */}
-                  {locationSettings?.showCountry && (locationData.location?.country || locationData.country) && (
+                  {(locationData.location?.country || locationData.country) && (
                     <p><span className="font-medium">Ülke:</span> {locationData.location?.country?.name || locationData.country?.name}</p>
                   )}
-                  {locationSettings?.showNeighborhood && (locationData.location?.neighborhood || locationData.neighborhood) && (
+                  {(locationData.location?.city || locationData.city) && (
+                    <p><span className="font-medium">İl:</span> {locationData.location?.city?.name || locationData.city?.name}</p>
+                  )}
+                  {(locationData.location?.district || locationData.district) && (
+                    <p><span className="font-medium">İlçe:</span> {locationData.location?.district?.name || locationData.district?.name}</p>
+                  )}
+                  {(locationData.location?.neighborhood || locationData.neighborhood) && (
                     <p><span className="font-medium">Mahalle:</span> {locationData.location?.neighborhood?.name || locationData.neighborhood?.name}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">Kullanıcı bilgileri yükleniyor...</p>
+                <p className="text-gray-500 text-sm">Lokasyon seçilmedi</p>
               )}
             </div>
           </div>

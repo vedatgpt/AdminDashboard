@@ -18,7 +18,6 @@ interface UploadedImage {
   originalSize: number;
   uploading?: boolean;
   progress?: number;
-  order?: number;
 }
 
 // Import constants from config
@@ -34,12 +33,10 @@ export default function Step3() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  // URL parameter support - SABIT DEĞİŞKEN
+  // URL parameter support
   const urlParams = new URLSearchParams(window.location.search);
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
-  
-  console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -202,12 +199,10 @@ export default function Step3() {
     }));
   };
 
-  // Initialize Sortable.js for uploaded images with proper cleanup
+  // Initialize Sortable.js for uploaded images
   useEffect(() => {
-    let sortable: Sortable | null = null;
-    
     if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
-      sortable = Sortable.create(sortableRef.current, {
+      const sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'opacity-50',
@@ -222,60 +217,19 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
-              
-              // Update order numbers and save to draft
-              const updatedImages = newImages.map((img, index) => ({
-                ...img,
-                order: index + 1
-              }));
-              
-              // SON ÇARE: Fotoğraf sıralama kaydetme - sync call
-              console.log('DRAG END - currentClassifiedId:', currentClassifiedId);
-              console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
-              
-              if (currentClassifiedId) {
-                // Async XMLHttpRequest - hızlı kaydetme
-                const xhr = new XMLHttpRequest();
-                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true); // true = async
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                
-                xhr.onload = function() {
-                  if (xhr.status === 200) {
-                    console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
-                  } else {
-                    console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
-                  }
-                };
-                
-                xhr.onerror = function() {
-                  console.error('❌ ASYNC: API hatası');
-                };
-                
-                xhr.send(JSON.stringify({
-                  photos: JSON.stringify(updatedImages)
-                }));
-              } else {
-                console.error('❌ currentClassifiedId YOK!');
-              }
-              
-              // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
-              return updatedImages;
+              return newImages;
             });
           }
         }
       });
-    }
 
-    return () => {
-      if (sortable) {
-        try {
+      return () => {
+        if (sortable) {
           sortable.destroy();
-        } catch (error) {
-          // Sortable already destroyed, ignore error
         }
-      }
-    };
-  }, [images.filter(img => !img.uploading).length, currentClassifiedId]); // Only reinitialize when non-uploading images change
+      };
+    }
+  }, [images.filter(img => !img.uploading).length]); // Only reinitialize when non-uploading images change
 
   // Removed redirect for development
 
@@ -379,7 +333,7 @@ export default function Step3() {
     }
   }, [images, currentClassifiedId]);
 
-  const handleNextStep = async () => {
+  const handleNextStep = () => {
     // Wait for all uploads to complete
     const hasUploading = images.some(img => img.uploading);
     if (hasUploading) {
@@ -391,53 +345,24 @@ export default function Step3() {
       return;
     }
 
-    // Önce pending operations'ları bekle
-    if (updateDraftMutation.isPending) {
-      console.log('⏳ Pending draft update bekleniyor...');
-      await new Promise(resolve => {
-        const checkPending = () => {
-          if (!updateDraftMutation.isPending) {
-            console.log('✅ Pending operations tamamlandı');
-            resolve(void 0);
-          } else {
-            setTimeout(checkPending, 50);
-          }
-        };
-        checkPending();
-      });
-    }
-
     // Save photos to draft before navigating
     if (currentClassifiedId && images.length > 0) {
-      console.log('💾 Son fotoğraf durumu kaydediliyor...', images.map(img => ({ id: img.id, order: img.order })));
-      
-      return new Promise((resolve) => {
-        updateDraftMutation.mutate({
-          id: currentClassifiedId,
-          data: {
-            photos: JSON.stringify(images.map(img => ({
-              id: img.id,
-              filename: img.filename,
-              url: img.url,
-              thumbnail: img.thumbnail,
-              size: img.size,
-              originalSize: img.originalSize,
-              order: img.order || 0
-            })))
-          }
-        }, {
-          onSuccess: () => {
-            console.log('✅ Fotoğraflar kaydedildi, Step-4\'e geçiliyor');
-            navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
-            resolve(void 0);
-          },
-          onError: (error) => {
-            console.error('❌ Fotoğraf kaydetme hatası:', error);
-            // Hata olsa bile geçiş yap
-            navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
-            resolve(void 0);
-          }
-        });
+      updateDraftMutation.mutate({
+        id: currentClassifiedId,
+        data: {
+          photos: JSON.stringify(images.map(img => ({
+            id: img.id,
+            filename: img.filename,
+            url: img.url,
+            thumbnail: img.thumbnail,
+            size: img.size,
+            originalSize: img.originalSize
+          })))
+        }
+      }, {
+        onSuccess: () => {
+          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+        }
       });
     } else {
       navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
@@ -619,11 +544,13 @@ export default function Step3() {
         </button>
         
         <button
-          onClick={handleNextStep}
-          disabled={updateDraftMutation.isPending}
-          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => {
+            const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
+            navigate(url);
+          }}
+          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
         >
-          {updateDraftMutation.isPending ? 'Kaydediliyor...' : 'Sonraki Adım'}
+          Sonraki Adım
         </button>
       </div>
       
