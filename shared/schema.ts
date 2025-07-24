@@ -254,3 +254,12 @@ export const updateDraftListingSchema = insertDraftListingSchema.partial();
 export type DraftListing = typeof draftListings.$inferSelect;
 export type InsertDraftListing = z.infer<typeof insertDraftListingSchema>;
 export type UpdateDraftListing = z.infer<typeof updateDraftListingSchema>;
+
+// Sessions table for production-ready session storage
+export const sessions = pgTable("sessions", {
+  sid: text("sid").primaryKey().notNull(),
+  sess: text("sess").notNull(), // JSON session data
+  expire: timestamp("expire").notNull(),
+});
+
+export type Session = typeof sessions.$inferSelect;
