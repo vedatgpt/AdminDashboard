@@ -379,7 +379,7 @@ export default function Step3() {
     }
   }, [images, currentClassifiedId]);
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     // Wait for all uploads to complete
     const hasUploading = images.some(img => img.uploading);
     if (hasUploading) {
@@ -391,24 +391,53 @@ export default function Step3() {
       return;
     }
 
+    // Önce pending operations'ları bekle
+    if (updateDraftMutation.isPending) {
+      console.log('⏳ Pending draft update bekleniyor...');
+      await new Promise(resolve => {
+        const checkPending = () => {
+          if (!updateDraftMutation.isPending) {
+            console.log('✅ Pending operations tamamlandı');
+            resolve(void 0);
+          } else {
+            setTimeout(checkPending, 50);
+          }
+        };
+        checkPending();
+      });
+    }
+
     // Save photos to draft before navigating
     if (currentClassifiedId && images.length > 0) {
-      updateDraftMutation.mutate({
-        id: currentClassifiedId,
-        data: {
-          photos: JSON.stringify(images.map(img => ({
-            id: img.id,
-            filename: img.filename,
-            url: img.url,
-            thumbnail: img.thumbnail,
-            size: img.size,
-            originalSize: img.originalSize
-          })))
-        }
-      }, {
-        onSuccess: () => {
-          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
-        }
+      console.log('💾 Son fotoğraf durumu kaydediliyor...', images.map(img => ({ id: img.id, order: img.order })));
+      
+      return new Promise((resolve) => {
+        updateDraftMutation.mutate({
+          id: currentClassifiedId,
+          data: {
+            photos: JSON.stringify(images.map(img => ({
+              id: img.id,
+              filename: img.filename,
+              url: img.url,
+              thumbnail: img.thumbnail,
+              size: img.size,
+              originalSize: img.originalSize,
+              order: img.order || 0
+            })))
+          }
+        }, {
+          onSuccess: () => {
+            console.log('✅ Fotoğraflar kaydedildi, Step-4\'e geçiliyor');
+            navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+            resolve(void 0);
+          },
+          onError: (error) => {
+            console.error('❌ Fotoğraf kaydetme hatası:', error);
+            // Hata olsa bile geçiş yap
+            navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
+            resolve(void 0);
+          }
+        });
       });
     } else {
       navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
@@ -590,13 +619,11 @@ export default function Step3() {
         </button>
         
         <button
-          onClick={() => {
-            const url = `/create-listing/step-4?classifiedId=${currentClassifiedId}`;
-            navigate(url);
-          }}
-          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          onClick={handleNextStep}
+          disabled={updateDraftMutation.isPending}
+          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sonraki Adım
+          {updateDraftMutation.isPending ? 'Kaydediliyor...' : 'Sonraki Adım'}
         </button>
       </div>
       
