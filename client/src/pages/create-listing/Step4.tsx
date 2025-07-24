@@ -218,7 +218,8 @@ export default function Step4() {
                       if (value.value !== undefined) {
                         displayValue = `${value.value} ${value.unit || ''}`.trim();
                       } else {
-                        displayValue = JSON.stringify(value);
+                        // Skip complex objects that don't have value/unit structure
+                        return null;
                       }
                     } else {
                       displayValue = String(value);
@@ -238,8 +239,8 @@ export default function Step4() {
                   
                   {/* Show any additional custom fields that aren't in schema */}
                   {Object.entries(customFields).map(([key, value]) => {
-                    // Skip system fields and fields already shown
-                    if (key === 'title' || key === 'description' || key === 'price') return null;
+                    // Skip system fields, location, and fields already shown
+                    if (key === 'title' || key === 'description' || key === 'price' || key === 'location') return null;
                     if (customFieldsSchema.some(f => f.fieldName === key)) return null;
                     if (!value) return null;
                     
@@ -248,7 +249,8 @@ export default function Step4() {
                       if (value.value !== undefined) {
                         displayValue = `${value.value} ${value.unit || ''}`.trim();
                       } else {
-                        displayValue = JSON.stringify(value);
+                        // Don't show complex JSON objects in details table
+                        return null;
                       }
                     } else {
                       displayValue = String(value);
