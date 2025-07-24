@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
 import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
@@ -29,6 +30,7 @@ export default function Step4() {
   const [mainSlideIndex, setMainSlideIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
   const thumbnailsPerPage = 10;
+  const queryClient = useQueryClient();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -42,8 +44,28 @@ export default function Step4() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
-  // Draft listing data
-  const { data: draftData, refetch: refetchDraft } = useDraftListing(currentClassifiedId);
+  // Draft listing data with cache bypass for immediate updates
+  const { data: draftData, refetch: refetchDraft } = useQuery({
+    queryKey: ['/api/draft-listings', currentClassifiedId],
+    queryFn: async () => {
+      if (!currentClassifiedId) return null;
+      const response = await fetch(`/api/draft-listings/${currentClassifiedId}?t=${Date.now()}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        if (response.status === 401) {
+          throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
+        }
+        if (response.status === 403) {
+          throw new Error('Bu ilan taslağına erişim yetkiniz yok');
+        }
+        throw new Error('İlan taslağı alınamadı');
+      }
+      return response.json();
+    },
+    enabled: !!currentClassifiedId,
+    staleTime: 0, // No cache for immediate updates
+    gcTime: 0, // No cache for immediate updates
+  });
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
@@ -75,17 +97,35 @@ export default function Step4() {
   // Step-3'ten geldiğinde draft'ı yeniden fetch et
   useEffect(() => {
     if (currentClassifiedId) {
+      // Clear any existing cache for this query
+      queryClient.removeQueries({ queryKey: ['/api/draft-listings', currentClassifiedId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/draft-listings', currentClassifiedId] });
+
       // Force refetch immediately
       refetchDraft();
 
       // Additional refetch after a short delay to ensure latest data
       const timeoutId = setTimeout(() => {
         refetchDraft();
-      }, 200);
+      }, 50);
 
-      return () => clearTimeout(timeoutId);
+      // Third refetch to be absolutely sure
+      const timeoutId2 = setTimeout(() => {
+        refetchDraft();
+      }, 150);
+
+      // Fourth refetch for maximum certainty
+      const timeoutId3 = setTimeout(() => {
+        refetchDraft();
+      }, 500);
+
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(timeoutId2);
+        clearTimeout(timeoutId3);
+      };
     }
-  }, [currentClassifiedId, refetchDraft]);
+  }, [currentClassifiedId, refetchDraft, queryClient]);
 
   // Get custom fields for the category
   const { data: customFieldsSchema = [] } = useCategoryCustomFields(draftData?.categoryId || 0);

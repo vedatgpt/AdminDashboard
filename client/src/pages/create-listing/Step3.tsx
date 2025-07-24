@@ -410,7 +410,7 @@ export default function Step3() {
     }
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     // Clear any pending save timeout and execute immediately
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -437,24 +437,43 @@ export default function Step3() {
     }
 
     if (images.length > 0) {
-      // Save current state before navigating
-      updateDraftMutation.mutate({
-        id: currentClassifiedId,
-        data: {
-          photos: JSON.stringify(images)
-        }
-      }, {
-        onSuccess: () => {
-          navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
-        },
-        onError: (error) => {
-          toast({
-            title: "Kaydetme Hatası",
-            description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
-            variant: "destructive"
-          });
-        }
+      // Show loading state
+      toast({
+        title: "Kaydediliyor...",
+        description: "Fotoğraflar kaydediliyor, lütfen bekleyin.",
+        variant: "default"
       });
+
+      try {
+        // Wait for the save to complete
+        await new Promise((resolve, reject) => {
+          updateDraftMutation.mutate({
+            id: currentClassifiedId,
+            data: {
+              photos: JSON.stringify(images)
+            }
+          }, {
+            onSuccess: () => {
+              resolve(true);
+            },
+            onError: (error) => {
+              reject(error);
+            }
+          });
+        });
+
+        // Wait a bit more to ensure server has processed the data
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Navigate to Step-4
+        navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
+      } catch (error) {
+        toast({
+          title: "Kaydetme Hatası",
+          description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
+          variant: "destructive"
+        });
+      }
     } else {
       navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
     }
