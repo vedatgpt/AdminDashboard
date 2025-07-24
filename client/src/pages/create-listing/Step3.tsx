@@ -219,7 +219,21 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
-              return newImages;
+              
+              // Update order numbers and save to draft
+              const updatedImages = newImages.map((img, index) => ({
+                ...img,
+                order: index + 1
+              }));
+              
+              // Save updated photo order to draft
+              if (currentClassifiedId) {
+                updateDraftMutation.mutate({
+                  photos: JSON.stringify(updatedImages)
+                });
+              }
+              
+              return updatedImages;
             });
           }
         }
