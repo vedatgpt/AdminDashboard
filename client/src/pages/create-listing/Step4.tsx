@@ -247,12 +247,12 @@ export default function Step4() {
 
                   {/* Thumbnail Grid - Masaüstü için */}
                   {photosState.length > 1 && (
-                  <div className={`hidden lg:block border border-gray-200 bg-white p-2 flex flex-col justify-between ${
-                    photosState.length <= 5 ? 'h-[100px]' : 'h-[180px]'
+                  <div className={`hidden lg:block border border-gray-200 bg-white p-3 flex flex-col justify-between ${
+                    photosState.length <= 5 ? 'h-[100px]' : 'h-[200px]'
                   }`}>
                     {/* Thumbnails Grid - Dynamic Height */}
                     <div className={`grid grid-cols-5 gap-1 justify-items-center ${
-                      photosState.length <= 5 ? 'grid-rows-1 min-h-[60px]' : 'grid-rows-2 min-h-[140px]'
+                      photosState.length <= 5 ? 'grid-rows-1 min-h-[60px]' : 'grid-rows-2 min-h-[160px]'
                     }`}>
                       {/* Render thumbnails for current page */}
                       {Array.from({ length: thumbnailsPerPage }).map((_, index) => {
