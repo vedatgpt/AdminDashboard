@@ -124,10 +124,10 @@ export default function Step4() {
           </h1>
         </div>
 
-        {/* Ana İçerik - Layout: Fotoğraf Geniş, İletişim Dar */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+        {/* Ana İçerik - Dengeli 3 Sütun Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 mb-6">
           
-          {/* Sol Sütun - Fotoğraf Galerisi (Genişletildi) */}
+          {/* Sol Sütun - Fotoğraf Galerisi (Orta genişlik) */}
           <div className="lg:col-span-2">
             {photos.length > 0 ? (
               <div className="space-y-4">
@@ -183,8 +183,8 @@ export default function Step4() {
             )}
           </div>
 
-          {/* Orta Sütun - İlan Detayları */}
-          <div className="lg:col-span-2">
+          {/* Orta Sütun - İlan Detayları (Orijinal genişlik korundu) */}
+          <div className="lg:col-span-3">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İlan Detayları</h3>
               
@@ -299,7 +299,7 @@ export default function Step4() {
             </div>
           </div>
 
-          {/* Sağ Sütun - İletişim (Daraltıldı) */}
+          {/* Sağ Sütun - İletişim (Dengeli genişlik) */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">İletişim</h3>
