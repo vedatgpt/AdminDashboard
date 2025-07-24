@@ -226,11 +226,17 @@ export default function Step3() {
                 order: index + 1
               }));
               
-              // Save updated photo order to draft
+              // Save updated photo order to draft with sync
               if (currentClassifiedId) {
+                console.log('Saving photo order:', updatedImages.map(img => ({ id: img.id, order: img.order })));
                 updateDraftMutation.mutate({
                   photos: JSON.stringify(updatedImages)
                 });
+                
+                // Also update global images state immediately
+                setTimeout(() => {
+                  setImages(updatedImages);
+                }, 100);
               }
               
               return updatedImages;

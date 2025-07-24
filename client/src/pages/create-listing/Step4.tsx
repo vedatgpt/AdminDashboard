@@ -324,7 +324,7 @@ export default function Step4() {
                   {user.whatsappNumber && (
                     <p><span className="font-medium">WhatsApp:</span> {user.whatsappNumber}</p>
                   )}
-                  {user.membershipType === 'corporate' && user.businessPhone && (
+                  {user.role === 'corporate' && user.businessPhone && (
                     <p><span className="font-medium">İş Telefonu:</span> {user.businessPhone}</p>
                   )}
 
