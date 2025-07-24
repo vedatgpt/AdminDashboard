@@ -18,6 +18,7 @@ interface UploadedImage {
   originalSize: number;
   uploading?: boolean;
   progress?: number;
+  order?: number;
 }
 
 // Import constants from config
@@ -33,10 +34,12 @@ export default function Step3() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  // URL parameter support
+  // URL parameter support - SABIT DEĞİŞKEN
   const urlParams = new URLSearchParams(window.location.search);
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
+  
+  console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -199,10 +202,12 @@ export default function Step3() {
     }));
   };
 
-  // Initialize Sortable.js for uploaded images
+  // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
+    let sortable: Sortable | null = null;
+    
     if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
-      const sortable = Sortable.create(sortableRef.current, {
+      sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'opacity-50',
@@ -217,19 +222,60 @@ export default function Step3() {
               const newImages = [...prevImages];
               const [removed] = newImages.splice(evt.oldIndex!, 1);
               newImages.splice(evt.newIndex!, 0, removed);
-              return newImages;
+              
+              // Update order numbers and save to draft
+              const updatedImages = newImages.map((img, index) => ({
+                ...img,
+                order: index + 1
+              }));
+              
+              // SON ÇARE: Fotoğraf sıralama kaydetme - sync call
+              console.log('DRAG END - currentClassifiedId:', currentClassifiedId);
+              console.log('DRAG END - updatedImages:', updatedImages.map(img => ({ id: img.id, order: img.order })));
+              
+              if (currentClassifiedId) {
+                // Async XMLHttpRequest - hızlı kaydetme
+                const xhr = new XMLHttpRequest();
+                xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true); // true = async
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onload = function() {
+                  if (xhr.status === 200) {
+                    console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
+                  } else {
+                    console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
+                  }
+                };
+                
+                xhr.onerror = function() {
+                  console.error('❌ ASYNC: API hatası');
+                };
+                
+                xhr.send(JSON.stringify({
+                  photos: JSON.stringify(updatedImages)
+                }));
+              } else {
+                console.error('❌ currentClassifiedId YOK!');
+              }
+              
+              // State'i return etmeden önce bir daha güncelle - KESIN ÇÖZÜM
+              return updatedImages;
             });
           }
         }
       });
-
-      return () => {
-        if (sortable) {
-          sortable.destroy();
-        }
-      };
     }
-  }, [images.filter(img => !img.uploading).length]); // Only reinitialize when non-uploading images change
+
+    return () => {
+      if (sortable) {
+        try {
+          sortable.destroy();
+        } catch (error) {
+          // Sortable already destroyed, ignore error
+        }
+      }
+    };
+  }, [images.filter(img => !img.uploading).length, currentClassifiedId]); // Only reinitialize when non-uploading images change
 
   // Removed redirect for development
 

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, unique, varchar, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -254,14 +254,3 @@ export const updateDraftListingSchema = insertDraftListingSchema.partial();
 export type DraftListing = typeof draftListings.$inferSelect;
 export type InsertDraftListing = z.infer<typeof insertDraftListingSchema>;
 export type UpdateDraftListing = z.infer<typeof updateDraftListingSchema>;
-
-// Sessions table for PostgreSQL session storage (required for production)
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
