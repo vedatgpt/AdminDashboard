@@ -249,7 +249,7 @@ export default function Step3() {
         }
       }
     };
-  }, [images.filter(img => !img.uploading).length, currentClassifiedId, updateDraftMutation]); // Only reinitialize when non-uploading images change
+  }, [images.filter(img => !img.uploading).length, currentClassifiedId]); // Only reinitialize when non-uploading images change
 
   // Removed redirect for development
 
