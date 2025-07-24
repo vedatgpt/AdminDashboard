@@ -306,7 +306,7 @@ export default function Step4() {
               
               {user ? (
                 <div className="space-y-2 text-sm">
-                  {/* Ad Soyad veya Firma Adı */}
+                  {/* Ad Soyad veya Firma Adı - sadece ilgili bilgileri göster */}
                   {user.membershipType === 'individual' ? (
                     <div>
                       <p><span className="font-medium">Ad Soyad:</span> {user.firstName || ''} {user.lastName || ''}</p>
@@ -317,7 +317,7 @@ export default function Step4() {
                     </div>
                   )}
                   
-                  {/* İletişim Bilgileri */}
+                  {/* İletişim Bilgileri - E-posta bilgisi gösterilmiyor */}
                   {user.mobilePhone && (
                     <p><span className="font-medium">Cep Telefonu:</span> {user.mobilePhone}</p>
                   )}
@@ -326,9 +326,6 @@ export default function Step4() {
                   )}
                   {user.membershipType === 'corporate' && user.businessPhone && (
                     <p><span className="font-medium">İş Telefonu:</span> {user.businessPhone}</p>
-                  )}
-                  {user.email && (
-                    <p><span className="font-medium">E-posta:</span> {user.email}</p>
                   )}
 
                   {/* Ülke ve Mahalle - sadece visibility ayarlarına göre */}

@@ -199,10 +199,12 @@ export default function Step3() {
     }));
   };
 
-  // Initialize Sortable.js for uploaded images
+  // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
+    let sortable: Sortable | null = null;
+    
     if (sortableRef.current && images.filter(img => !img.uploading).length > 0) {
-      const sortable = Sortable.create(sortableRef.current, {
+      sortable = Sortable.create(sortableRef.current, {
         animation: 150,
         handle: '.drag-handle',
         ghostClass: 'opacity-50',
@@ -222,13 +224,17 @@ export default function Step3() {
           }
         }
       });
-
-      return () => {
-        if (sortable) {
-          sortable.destroy();
-        }
-      };
     }
+
+    return () => {
+      if (sortable) {
+        try {
+          sortable.destroy();
+        } catch (error) {
+          // Sortable already destroyed, ignore error
+        }
+      }
+    };
   }, [images.filter(img => !img.uploading).length]); // Only reinitialize when non-uploading images change
 
   // Removed redirect for development
