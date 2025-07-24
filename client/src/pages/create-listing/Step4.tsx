@@ -200,13 +200,17 @@ export default function Step4() {
                     </tr>
                   )}
 
-                  {/* Kategori */}
-                  <tr className="border-b border-gray-100">
-                    <td className="py-2 font-medium text-gray-700">Kategori:</td>
-                    <td className="py-2 text-gray-900">
-                      {categoryPath.map(cat => cat.name).join(' > ')}
-                    </td>
-                  </tr>
+                  {/* Kategori - Her kategori ayrı satırda */}
+                  {categoryPath.map((cat, index) => (
+                    <tr key={cat.id} className="border-b border-gray-100">
+                      <td className="py-2 font-medium text-gray-700">
+                        {cat.categoryType || `Seviye ${index + 1}`}:
+                      </td>
+                      <td className="py-2 text-gray-900">
+                        {cat.name}
+                      </td>
+                    </tr>
+                  ))}
 
                   {/* Custom Fields - show all field data properly */}
                   {customFieldsSchema.map((field) => {
