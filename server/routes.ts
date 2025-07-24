@@ -10,6 +10,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { loginSchema, registerSchema, type User } from "@shared/schema";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 import categoriesRouter from "./routes/categories";
 import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
 
@@ -63,8 +64,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(express.json({ limit: '10mb' })); // Increase JSON payload limit
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   
-  // Session middleware with optimized settings
+  // Session middleware with PostgreSQL store for production
+  const PgSession = connectPg(session);
+  const sessionStore = new PgSession({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    tableName: 'sessions', // matches schema.ts sessions table
+    ttl: Math.floor(SESSION_CONFIG.MAX_AGE / 1000), // Convert to seconds
+  });
+  
   app.use(session({
+    store: sessionStore,
     secret: SESSION_CONFIG.SECRET,
     resave: false, // Don't resave unchanged sessions (better performance)
     saveUninitialized: false,
