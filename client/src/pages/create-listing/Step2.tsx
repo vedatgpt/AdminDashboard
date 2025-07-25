@@ -10,6 +10,7 @@ import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '../../components/iOSSpinner';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoriesTree } from '@/hooks/useCategories';
@@ -345,7 +346,9 @@ export default function Step2() {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center py-8">Yükleniyor...</div>
+          <div className="flex justify-center items-center py-8">
+            <IOSSpinner />
+          </div>
         </div>
       </div>
     );
