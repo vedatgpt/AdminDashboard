@@ -345,7 +345,11 @@ export default function Step2() {
     return (
       <div className="min-h-screen bg-white p-4">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center py-8">Yükleniyor...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin inline-block size-6 border-3 border-current border-t-transparent text-orange-600 rounded-full" role="status" aria-label="loading">
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
         </div>
       </div>
     );
