@@ -255,9 +255,9 @@ export default function Step3() {
     }
   });
 
-  // PHOTO ROTATION FIX: Stable rotation function with proper memory management
+  // ROTATION FIX v2: Server-side rotation endpoint kullanımı
   const rotateImage = useCallback(async (imageId: string) => {
-    console.log('🔄 ROTATION FIX: Fotoğraf döndürme başlatılıyor:', imageId);
+    console.log('🔄 ROTATION FIX v2: Server-side rotation başlatılıyor:', imageId);
     
     try {
       // Find the image to rotate
@@ -274,6 +274,65 @@ export default function Step3() {
           : img
       ));
 
+      console.log('📡 ROTATION FIX v2: Calling server rotation endpoint...');
+      
+      // Call server-side rotation endpoint
+      const response = await fetch(`/api/upload/images/${imageId}/rotate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Server rotation failed');
+      }
+
+      const result = await response.json();
+      console.log('✅ ROTATION FIX v2: Server rotation successful:', result);
+
+      // Update image URLs with rotated versions
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { 
+              ...img, 
+              url: result.url + `?t=${Date.now()}`,  // Add timestamp to force refresh
+              thumbnail: result.thumbnail + `?t=${Date.now()}`,
+              rotating: false 
+            }
+          : img
+      ));
+
+      console.log('✅ ROTATION SUCCESS v2: Image rotated via server');
+      
+      // Trigger Step4 prefetch after rotation
+      if (currentClassifiedId && user?.id) {
+        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme (server)');
+      }
+
+    } catch (error) {
+      console.error('❌ ROTATION ERROR v2: Server rotation failed:', error);
+      
+      // Fallback to client-side rotation if server fails
+      console.log('🔄 ROTATION FIX v2: Trying client-side fallback...');
+      await clientSideRotateImage(imageId);
+    }
+  }, [images, currentClassifiedId, user?.id, smartPrefetchStep4]);
+
+  // CLIENT-SIDE ROTATION FALLBACK: Enhanced blob URL handling
+  const clientSideRotateImage = useCallback(async (imageId: string) => {
+    console.log('🔄 CLIENT ROTATION: Fotoğraf döndürme başlatılıyor:', imageId);
+    
+    try {
+      // Find the image to rotate
+      const imageToRotate = images.find(img => img.id === imageId);
+      if (!imageToRotate) {
+        console.error('❌ CLIENT ROTATION ERROR: Image not found:', imageId);
+        return;
+      }
+
       // Create canvas for rotation with proper error handling
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -282,14 +341,24 @@ export default function Step3() {
         throw new Error('Canvas context oluşturulamadı');
       }
 
-      // Load image and perform rotation
+      // Load image and perform rotation - ENHANCED BLOB URL HANDLING
       const imageElement = new Image();
-      imageElement.crossOrigin = 'anonymous'; // CORS fix for blob URLs
       
       const rotationPromise = new Promise<string>((resolve, reject) => {
+        // Enhanced error handling with timeout
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Resim yükleme zaman aşımı (5 saniye)'));
+        }, 5000);
+
         imageElement.onload = () => {
+          clearTimeout(timeoutId);
           try {
-            console.log('🖼️ ROTATION FIX: Image loaded, performing rotation...');
+            console.log('🖼️ ROTATION FIX: Image loaded successfully, dimensions:', imageElement.width, 'x', imageElement.height);
+            
+            // Validate image dimensions
+            if (imageElement.width === 0 || imageElement.height === 0) {
+              throw new Error('Geçersiz resim boyutları');
+            }
             
             // Set canvas dimensions for 90-degree rotation
             canvas.width = imageElement.height;
@@ -305,9 +374,13 @@ export default function Step3() {
             ctx.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
             ctx.restore(); // Restore context state
 
+            console.log('🔄 ROTATION FIX: Canvas drawing completed, creating blob...');
+
             // Convert to high-quality blob
             canvas.toBlob((blob) => {
               if (blob) {
+                console.log('✅ ROTATION FIX: Blob created successfully, size:', blob.size);
+                
                 // Clean up old blob URL if it exists
                 if (imageToRotate.url.startsWith('blob:')) {
                   URL.revokeObjectURL(imageToRotate.url);
@@ -318,25 +391,46 @@ export default function Step3() {
                 blobUrlsRef.current.add(newUrl);
                 resolve(newUrl);
               } else {
-                reject(new Error('Blob oluşturulamadı'));
+                reject(new Error('Blob oluşturulamadı - canvas.toBlob() başarısız'));
               }
             }, 'image/jpeg', 0.95); // Higher quality for better visual result
             
           } catch (error) {
+            clearTimeout(timeoutId);
             console.error('❌ ROTATION ERROR: Canvas operation failed:', error);
-            reject(error);
+            reject(error instanceof Error ? error : new Error('Canvas işlemi başarısız'));
           }
         };
 
-        imageElement.onerror = () => {
-          console.error('❌ ROTATION ERROR: Image load failed');
-          reject(new Error('Resim yüklenemedi'));
+        imageElement.onerror = (event) => {
+          clearTimeout(timeoutId);
+          console.error('❌ ROTATION ERROR: Image load failed:', event);
+          console.error('Failed URL:', imageToRotate.url);
+          reject(new Error('Resim dosyası yüklenemedi - corrupt veya invalid format'));
         };
+
+        // Enhanced image loading for blob URLs
+        try {
+          console.log('🔄 ROTATION FIX: Starting image load:', imageToRotate.url.substring(0, 50) + '...');
+          
+          // For blob URLs, don't set crossOrigin (causes issues)
+          if (imageToRotate.url.startsWith('blob:')) {
+            imageElement.src = imageToRotate.url;
+          } else {
+            // For regular URLs, use crossOrigin
+            imageElement.crossOrigin = 'anonymous';
+            imageElement.src = imageToRotate.url;
+          }
+        } catch (error) {
+          clearTimeout(timeoutId);
+          reject(new Error('Resim URL\'si set edilemedi'));
+        }
       });
 
-      // Set image source and wait for completion
-      imageElement.src = imageToRotate.url;
+      // Wait for image processing
+      console.log('⏳ ROTATION FIX: Waiting for rotation to complete...');
       const newUrl = await rotationPromise;
+      console.log('✅ ROTATION FIX: Rotation completed, new URL:', newUrl.substring(0, 50) + '...');
 
       // Update state with new rotated image
       setImages(prev => prev.map(img => 
