@@ -35,6 +35,7 @@ export default function Step2() {
   };
 
   // TipTap Editor Setup - Tam featured setup
+  const MAX_DESCRIPTION_LENGTH = 2000;
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -60,14 +61,30 @@ export default function Step2() {
     content: formData.customFields.description || '<p></p>',
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      handleInputChange('description', html);
+      const textContent = editor.getText();
+      
+      // Karakter sınırlaması kontrolü
+      if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
+        handleInputChange('description', html);
+      } else {
+        // Sınır aşıldığında geri al
+        const currentContent = editor.getHTML();
+        setTimeout(() => {
+          if (editor && currentContent !== formData.customFields.description) {
+            editor.commands.setContent(formData.customFields.description || '<p></p>');
+          }
+        }, 100);
+      }
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] p-4 prose prose-sm max-w-none',
+        class: 'focus:outline-none min-h-[200px] max-h-[300px] overflow-y-auto p-4 prose prose-sm max-w-none',
       },
     },
   });
+
+  // Karakter sayısı hesaplama
+  const currentLength = editor?.getText().length || 0;
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -475,6 +492,14 @@ export default function Step2() {
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {/* Character Counter */}
+            <div className="px-4 py-2 bg-gray-100 text-right text-sm text-gray-600">
+              {currentLength}/{MAX_DESCRIPTION_LENGTH} karakter
+              {currentLength >= MAX_DESCRIPTION_LENGTH && (
+                <span className="text-red-500 ml-2">Karakter sınırına ulaşıldı!</span>
+              )}
+            </div>
+            
             {/* TipTap Toolbar */}
             <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-1">
               {/* Format Buttons */}
@@ -499,12 +524,10 @@ export default function Step2() {
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`w-8 h-8 rounded border text-lg font-medium flex items-center justify-center underline ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title="Underline"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 17h12v1H4v-1zm6-1c3.31 0 6-2.69 6-6V4c0-.55-.45-1-1-1s-1 .45-1 1v6c0 2.21-1.79 4-4 4s-4-1.79-4-4V4c0-.55-.45-1-1-1s-1 .45-1 1v6c0 3.31 2.69 6 6 6z"/>
-                </svg>
+                U
               </button>
 
 
@@ -553,16 +576,19 @@ export default function Step2() {
                     const dropdown = document.getElementById('color-dropdown');
                     dropdown?.classList.toggle('hidden');
                   }}
-                  className="w-8 h-8 rounded border border-gray-200 bg-[#EC7830] hover:bg-[#d86a28] flex items-center justify-center"
+                  className="w-8 h-8 rounded border border-gray-200 hover:border-gray-300 flex items-center justify-center transition-colors"
+                  style={{
+                    backgroundColor: editor?.getAttributes('textStyle')?.color || '#000000'
+                  }}
                   title="Text Color"
                 >
-                  <div className="w-4 h-4 bg-white rounded-sm"></div>
+                  <div className="w-3 h-3 bg-white rounded-sm opacity-80"></div>
                 </button>
                 <div
                   id="color-dropdown"
-                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[140px]"
+                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[180px]"
                 >
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -617,6 +643,24 @@ export default function Step2() {
                       className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
                       title="Purple"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor?.chain().focus().setColor('#FACC15').run();
+                        document.getElementById('color-dropdown')?.classList.add('hidden');
+                      }}
+                      className="w-8 h-8 rounded border border-gray-200 bg-yellow-400 hover:scale-110 transition-transform"
+                      title="Yellow"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor?.chain().focus().setColor('#F97316').run();
+                        document.getElementById('color-dropdown')?.classList.add('hidden');
+                      }}
+                      className="w-8 h-8 rounded border border-gray-200 bg-orange-500 hover:scale-110 transition-transform"
+                      title="Orange 2"
+                    />
                   </div>
                   <div className="mt-3 border-t pt-2">
                     <button
@@ -625,9 +669,12 @@ export default function Step2() {
                         editor?.chain().focus().unsetColor().run();
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
-                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 flex items-center justify-center gap-2"
                       title="Clear Color"
                     >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
+                      </svg>
                       Clear
                     </button>
                   </div>
