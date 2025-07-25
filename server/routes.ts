@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import multer from "multer";
 import sharp from "sharp";
 import { optimizedImageProcessor } from "./utils/optimizedImageProcessor";
+import type { AuthenticatedRequest as OptimizedAuthRequest } from "./middleware/optimizedAuth";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
@@ -16,6 +17,7 @@ import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
 import { pool } from "./db";
 
 import { requireAuth, requireAdmin, requireCorporate, type AuthenticatedRequest } from "./middleware/auth";
+import { optimizedAuth, optimizedRequireAdmin } from "./middleware/optimizedAuth";
 
 // Extend Express Session type to include custom user properties
 declare module 'express-session' {
@@ -213,11 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", async (req, res) => {
+  app.get("/api/auth/me", optimizedAuth, async (req: any, res) => {
     const sessionUser = req.session?.user;
-    console.log('AUTH/ME - Session user:', sessionUser ? { id: sessionUser.id, username: sessionUser.username } : 'none');
-    console.log('AUTH/ME - Session ID:', req.sessionID);
-    console.log('AUTH/ME - Session store:', req.session ? 'exists' : 'none');
     
     if (!sessionUser) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -842,7 +841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Draft Listings API routes
   
   // Get draft listing by ID (Authentication required + ownership check)
-  app.get("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/draft-listings/:id", optimizedAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
@@ -869,7 +868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's draft listings
-  app.get("/api/draft-listings", async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/draft-listings", optimizedAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.session?.user?.id;
       if (!userId) {
@@ -893,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new draft listing
-  app.post("/api/draft-listings", async (req: AuthenticatedRequest, res: Response) => {
+  app.post("/api/draft-listings", optimizedAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.session?.user?.id;
       if (!userId) {
@@ -912,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update draft listing
-  app.patch("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
+  app.patch("/api/draft-listings/:id", optimizedAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
