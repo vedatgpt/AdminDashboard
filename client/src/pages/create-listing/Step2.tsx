@@ -42,6 +42,11 @@ export default function Step2() {
     extensions: [
       StarterKit.configure({
         link: false,
+        bold: {
+          HTMLAttributes: {
+            class: 'font-bold',
+          },
+        },
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
@@ -66,11 +71,23 @@ export default function Step2() {
         alignments: ['left', 'center', 'right'],
         defaultAlignment: 'left'
       }),
-      TextStyle,
+      TextStyle.configure({
+        HTMLAttributes: {
+          class: 'tiptap-textstyle',
+        },
+      }),
       Color.configure({
         types: ['textStyle'],
+        keepMarks: true,
+        HTMLAttributes: {
+          class: 'tiptap-color',
+        },
       }),
-      Underline,
+      Underline.configure({
+        HTMLAttributes: {
+          class: 'underline',
+        },
+      }),
     ],
     content: formData.customFields.description || '<p></p>',
     onUpdate: ({ editor }) => {
@@ -79,6 +96,18 @@ export default function Step2() {
       
       // Karakter sınırlaması kontrolü
       if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
+        // Draft'a kaydet
+        dispatch({
+          type: 'UPDATE_FORM_DATA',
+          payload: {
+            customFields: {
+              ...formData.customFields,
+              description: html
+            }
+          }
+        });
+        
+        // Database'e kaydet
         handleInputChange('description', html);
       } else {
         // Sınır aşıldığında geri al

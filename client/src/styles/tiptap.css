@@ -71,29 +71,47 @@
   text-align: left;
 }
 
-/* TipTap Bold + Color doğru implementasyonu */
+/* TipTap Bold + Color - SON ÇÖZÜM */
+
+/* Temel Bold styling */
 .ProseMirror strong {
-  font-weight: bold !important;
+  font-weight: 700 !important;
 }
 
-/* Color styles apply to any text, including bold */
-.ProseMirror [style*="color"] {
-  /* Color already applied inline via style attribute */
+/* TipTap TextStyle ile color extension */
+.ProseMirror span[style*="color"] {
+  /* Renk inline style ile uygulanıyor */
 }
 
-/* Bold text should remain bold even when color is applied */
-.ProseMirror strong[style*="color"] {
-  font-weight: bold !important;
+/* ANAHTAR: Bold + Color birlikte çalışması */
+.ProseMirror strong span[style*="color"] {
+  font-weight: 700 !important;
 }
 
-/* Nested combinations: strong inside color spans */
-.ProseMirror [style*="color"] strong {
-  font-weight: bold !important;
+.ProseMirror span[style*="color"] strong {
+  font-weight: 700 !important;  
 }
 
-/* Nested combinations: color spans inside strong */
-.ProseMirror strong [style*="color"] {
-  font-weight: bold !important;
+/* Nested durumlar için */
+.ProseMirror strong span[style*="color"] span,
+.ProseMirror span[style*="color"] strong span,
+.ProseMirror span span[style*="color"] strong {
+  font-weight: 700 !important;
+}
+
+/* Multiple nesting combinations */
+.ProseMirror strong > span[style*="color"],
+.ProseMirror span[style*="color"] > strong {
+  font-weight: 700 !important;
+}
+
+/* Keep marks birlikte çalıştırmak için */
+.ProseMirror .tiptap-textstyle {
+  /* TextStyle mark container */
+}
+
+.ProseMirror .tiptap-color {
+  /* Color mark container */
 }
 
 /* Resizable image styling */
