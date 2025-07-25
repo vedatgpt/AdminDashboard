@@ -481,23 +481,19 @@ export default function Step2() {
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`p-2 rounded border ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`px-3 py-2 rounded border text-lg font-bold ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title="Bold"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h6c1.7 0 3 1.3 3 3 0 .8-.3 1.5-.8 2 .5.5.8 1.2.8 2 0 1.7-1.3 3-3 3H6V4zm2 2v3h4c.6 0 1-.4 1-1s-.4-1-1-1H8zm0 5v3h4.5c.8 0 1.5-.7 1.5-1.5S13.3 11 12.5 11H8z"/>
-                </svg>
+                B
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={`p-2 rounded border ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`px-3 py-2 rounded border text-lg italic font-medium ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title="Italic"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.5 3a.5.5 0 00-.5.5V14a.5.5 0 00.5.5h3a.5.5 0 000-1H9.5V4H11a.5.5 0 000-1H8.5z"/>
-                </svg>
+                I
               </button>
 
               <button
@@ -579,15 +575,51 @@ export default function Step2() {
               {/* Divider */}
               <div className="w-px h-8 bg-gray-300 mx-2"></div>
 
-              {/* Color Picker */}
+              {/* Color Picker - Fixed Colors */}
               <div className="flex items-center gap-1">
-                <label className="text-sm text-gray-600">Color:</label>
-                <input
-                  type="color"
-                  onInput={(e) => editor?.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
-                  className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
-                  defaultValue="#000000"
+                {/* Black */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#000000').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-black hover:scale-110 transition-transform"
+                  title="Black"
                 />
+                {/* Red */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#DC2626').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-red-600 hover:scale-110 transition-transform"
+                  title="Red"
+                />
+                {/* Orange */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#EC7830').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-[#EC7830] hover:scale-110 transition-transform"
+                  title="Orange"
+                />
+                {/* Blue */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#2563EB').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-blue-600 hover:scale-110 transition-transform"
+                  title="Blue"
+                />
+                {/* Green */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#16A34A').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-green-600 hover:scale-110 transition-transform"
+                  title="Green"
+                />
+                {/* Purple */}
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#9333EA').run()}
+                  className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
+                  title="Purple"
+                />
+                {/* Clear Color */}
                 <button
                   type="button"
                   onClick={() => editor?.chain().focus().unsetColor().run()}
