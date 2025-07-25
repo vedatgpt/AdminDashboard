@@ -219,35 +219,33 @@ export default function CreateListingStep1() {
       // Ana kategori seçildiğinde - mevcut draft kontrolü yap
       console.log('🔍 DEPLOY FIX: Ana kategori seçildi, draft kontrol ediliyor...');
       
-      // DEPLOY FIX: Force refetch before checking drafts
-      refetchUserDrafts().then(() => {
-        console.log('🔄 DEPLOY FIX: Drafts yeniden yüklendi');
-        
-        // Ana kategori için draft var mı kontrol et
-        const mainCategoryDraft = checkForMainCategoryDraft(category);
-        
-        if (mainCategoryDraft && isAuthenticated) {
-          console.log('✅ DEPLOY FIX: Ana kategoride mevcut draft bulundu:', mainCategoryDraft.id);
-          // Modal'ı göster
-          setPendingCategory(category);
-          setPendingPath([category]);
-          setCurrentExistingDraft(mainCategoryDraft);
-          setShowDraftModal(true);
-          return; // Alt kategorileri yükleme, modal'a bekle
-        } else {
-          console.log('❌ DEPLOY FIX: Ana kategoride draft bulunamadı, normal flow devam ediyor');
-          // Eğer draft yoksa normal akışı devam ettir
-          const newPath = [category];
-          setCategoryPath(newPath);
-          dispatch({ 
-            type: 'SET_CATEGORY_WITH_PATH', 
-            payload: { 
-              category: hasChildren(category) ? null : category,
-              path: newPath 
-            } 
-          });
-        }
-      });
+      // INSTANT FIX: Prefetch edilmiş cache data kullan - API çağrısı yapma
+      console.log('⚡ INSTANT: Cache\'den draft kontrol ediliyor...');
+      
+      // Ana kategori için draft var mı kontrol et
+      const mainCategoryDraft = checkForMainCategoryDraft(category);
+      
+      if (mainCategoryDraft && isAuthenticated) {
+        console.log('✅ INSTANT: Ana kategoride mevcut draft bulundu:', mainCategoryDraft.id);
+        // Modal'ı göster
+        setPendingCategory(category);
+        setPendingPath([category]);
+        setCurrentExistingDraft(mainCategoryDraft);
+        setShowDraftModal(true);
+        return; // Alt kategorileri yükleme, modal'a bekle
+      } else {
+        console.log('❌ INSTANT: Ana kategoride draft bulunamadı, normal flow devam ediyor');
+        // Eğer draft yoksa normal akışı devam ettir
+        const newPath = [category];
+        setCategoryPath(newPath);
+        dispatch({ 
+          type: 'SET_CATEGORY_WITH_PATH', 
+          payload: { 
+            category: hasChildren(category) ? null : category,
+            path: newPath 
+          } 
+        });
+      }
       
       return; // Async işlem beklendiği için early return
     } else {
