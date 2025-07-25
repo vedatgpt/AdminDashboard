@@ -36,8 +36,8 @@ export default function Step2() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
   
-  // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ
-  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
+  // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
+  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
@@ -342,7 +342,8 @@ export default function Step2() {
   console.log('categoryIdForFields:', categoryIdForFields, 'draftData?.categoryId:', draftData?.categoryId, 'selectedCategory?.id:', selectedCategory?.id);
   const { data: customFields = [], isLoading: fieldsLoading } = useCategoryCustomFields(categoryIdForFields);
 
-  if (fieldsLoading) {
+  // FINAL LOADING CHECK: Auth, Draft VE Fields - HEPSI BİRLİKTE
+  if (authLoading || isDraftLoading || fieldsLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <IOSSpinner />

@@ -219,6 +219,7 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
                 src={logoPath}
                 loading="eager"
                 decoding="sync"
+
               />
             </Link>
           </div>

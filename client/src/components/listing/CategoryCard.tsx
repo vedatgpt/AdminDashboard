@@ -28,7 +28,7 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
               loading="eager"
               decoding="sync"
               crossOrigin="anonymous"
-              fetchPriority="high"
+
               onLoad={() => {
                 console.log(`📷 CategoryCard icon loaded: ${category.name}`);
               }}
