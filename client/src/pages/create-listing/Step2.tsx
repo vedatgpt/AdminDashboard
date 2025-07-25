@@ -8,8 +8,6 @@ import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
-import TextStyle from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -32,15 +30,13 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup
+  // TipTap Editor Setup - Basitleştirilmiş
   const editor = useEditor({
     extensions: [
       StarterKit,
       Link.configure({
         openOnClick: false,
       }),
-      TextStyle,
-      Color,
     ],
     content: formData.customFields.description || '<p></p>',
     onUpdate: ({ editor }) => {
