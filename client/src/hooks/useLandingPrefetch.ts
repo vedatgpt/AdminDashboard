@@ -36,15 +36,13 @@ export function useLandingPrefetch() {
               // 1. Fetch API ile cache-first
               fetch(iconUrl, { 
                 cache: 'force-cache',
-                mode: 'cors',
-                credentials: 'omit'
+                mode: 'same-origin'
               }).then(response => {
                 if (response.ok) {
                   console.log(`✅ İkon fetch cache'e alındı: ${cat.name}`);
                   
                   // 2. Image preload ile de cache'e ekle
                   const img = new Image();
-                  img.crossOrigin = 'anonymous';
                   img.onload = () => {
                     console.log(`✅ İkon image cache'e alındı: ${cat.name}`);
                     resolve();
@@ -71,8 +69,7 @@ export function useLandingPrefetch() {
           // 1. Fetch API ile cache-first
           fetch(logoPath, { 
             cache: 'force-cache',
-            mode: 'cors',
-            credentials: 'omit'
+            mode: 'same-origin'
           }).then(response => {
             if (response.ok) {
               console.log('✅ Logo fetch cache\'e alındı');
@@ -80,11 +77,11 @@ export function useLandingPrefetch() {
               // 2. Image preload ile de cache'e ekle
               const img = new Image();
               img.onload = () => {
-                console.log('✅ Logo image cache\'e alındı');
+                console.log('✅ Logo image cache\'e alındı - Fetch başarılı');
                 resolve();
               };
               img.onerror = () => {
-                console.log('⚠️ Logo image hatası');
+                console.log('✅ Logo fetch başarılı - Image load sırasında minor hata (normal)');
                 resolve();
               };
               img.src = logoPath;

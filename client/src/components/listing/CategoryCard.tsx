@@ -27,7 +27,7 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
               className="w-12 h-12 object-contain"
               loading="eager"
               decoding="sync"
-              crossOrigin="anonymous"
+              crossOrigin=""
               style={{ 
                 imageRendering: 'auto',
                 objectFit: 'contain',
