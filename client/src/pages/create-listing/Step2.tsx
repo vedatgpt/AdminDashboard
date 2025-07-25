@@ -13,6 +13,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Underline } from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
+import ImageResize from 'tiptap-extension-resize-image';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -53,10 +54,12 @@ export default function Step2() {
           class: 'text-[#EC7830] underline',
         },
       }),
-      Image.configure({
+      ImageResize.configure({
         HTMLAttributes: {
-          style: 'max-width: 100%; height: auto; margin: 8px 0; border-radius: 4px;',
+          style: 'margin: 8px 0; border-radius: 4px;',
         },
+        allowBase64: true,
+        inline: false,
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -589,10 +592,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#000000').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#000000').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#000000').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -602,10 +605,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#DC2626').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#DC2626').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#DC2626').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -615,10 +618,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#EC7830').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#EC7830').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#EC7830').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -628,10 +631,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#2563EB').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#2563EB').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#2563EB').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -641,10 +644,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#16A34A').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#16A34A').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#16A34A').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -654,10 +657,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#9333EA').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#9333EA').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#9333EA').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -667,10 +670,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#7C2D12').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#7C2D12').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#7C2D12').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -680,10 +683,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#BE185D').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#BE185D').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#BE185D').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
@@ -693,10 +696,10 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
-                        const wasBold = editor?.isActive('bold');
-                        editor?.chain().focus().setColor('#0F766E').run();
-                        if (wasBold) {
-                          editor?.chain().focus().toggleBold().run();
+                        if (editor?.isActive('bold')) {
+                          editor?.chain().focus().setColor('#0F766E').toggleBold().run();
+                        } else {
+                          editor?.chain().focus().setColor('#0F766E').run();
                         }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}

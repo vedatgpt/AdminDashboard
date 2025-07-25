@@ -99,6 +99,66 @@
   font-weight: bold !important;
 }
 
+/* Resizable image styling */
+.ProseMirror .img-resize-container {
+  position: relative;
+  display: inline-block;
+  margin: 8px 0;
+}
+
+.ProseMirror .img-resize-container img {
+  display: block;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ProseMirror .img-resize-container:hover img,
+.ProseMirror .img-resize-container.selected img {
+  outline: 2px solid #EC7830;
+  outline-offset: 2px;
+}
+
+/* Resize handles */
+.ProseMirror .img-resize-container .resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #EC7830;
+  border: 2px solid white;
+  border-radius: 2px;
+  display: none;
+  z-index: 10;
+}
+
+.ProseMirror .img-resize-container:hover .resize-handle,
+.ProseMirror .img-resize-container.selected .resize-handle {
+  display: block;
+}
+
+.ProseMirror .img-resize-container .resize-handle.nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.ProseMirror .img-resize-container .resize-handle.ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.ProseMirror .img-resize-container .resize-handle.sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.ProseMirror .img-resize-container .resize-handle.se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
 /* Image support for links */
 .ProseMirror img {
   max-width: 100%;
