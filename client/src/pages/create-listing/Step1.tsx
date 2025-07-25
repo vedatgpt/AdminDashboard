@@ -807,7 +807,6 @@ export default function CreateListingStep1() {
         {/* Performance indicator */}
         <PageLoadIndicator />
       </div>
-      </div>
       
       {/* Draft Continue Modal */}
       {currentExistingDraft && (
@@ -815,13 +814,7 @@ export default function CreateListingStep1() {
           draft={currentExistingDraft}
           isOpen={showDraftModal}
           onContinue={handleContinueWithDraft}
-          onCreateNew={handleCreateNewListing}
-          onClose={() => {
-            setShowDraftModal(false);
-            setCurrentExistingDraft(null);
-            setPendingCategory(null);
-            setPendingPath([]);
-          }}
+          onNewListing={handleCreateNewListing}
         />
       )}
     </div>
