@@ -15,7 +15,7 @@ import DraftContinueModal from '@/components/DraftContinueModal';
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import CategoryCard from '@/components/listing/CategoryCard';
-import CreateListingLayout from '@/components/CreateListingLayout';
+
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
 
@@ -540,8 +540,7 @@ export default function CreateListingStep1() {
   };
 
   return (
-    <CreateListingLayout stepNumber={1} customBackHandler={handleMobileBack}>
-      <div className="bg-white">
+    <div className="bg-white">
 
       {/* Mobile/Tablet Fixed Header/Breadcrumb */}
       <div className="lg:hidden fixed top-[56px] left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-2">
@@ -816,9 +815,15 @@ export default function CreateListingStep1() {
           draft={currentExistingDraft}
           isOpen={showDraftModal}
           onContinue={handleContinueWithDraft}
-          onNewListing={handleCreateNewListing}
+          onCreateNew={handleCreateNewListing}
+          onClose={() => {
+            setShowDraftModal(false);
+            setCurrentExistingDraft(null);
+            setPendingCategory(null);
+            setPendingPath([]);
+          }}
         />
       )}
-    </CreateListingLayout>
+    </div>
   );
 }
