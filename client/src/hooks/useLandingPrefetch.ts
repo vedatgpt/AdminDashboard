@@ -52,7 +52,7 @@ export function useLandingPrefetch() {
       }
 
       // 3. Auth verilerini de prefetch et
-      await queryClient.prefetchQuery({
+      const authData = await queryClient.fetchQuery({
         queryKey: ['/api/auth/me'],
         queryFn: async () => {
           const response = await fetch('/api/auth/me', {
@@ -65,7 +65,42 @@ export function useLandingPrefetch() {
         gcTime: 10 * 60 * 1000
       });
 
-      console.log('✅ Landing prefetch tamamlandı: Step-1 hazır!');
+      // 4. Eğer kullanıcı giriş yapmışsa draft modal için verileri prefetch et
+      if (authData && authData.id) {
+        console.log('👤 Kullanıcı giriş yapmış, draft modal verileri prefetch ediliyor...');
+        
+        // Draft listings prefetch
+        await queryClient.prefetchQuery({
+          queryKey: ['/api/draft-listings'],
+          queryFn: async () => {
+            const response = await fetch('/api/draft-listings', {
+              credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Draft listings prefetch failed');
+            return response.json();
+          },
+          staleTime: 1 * 60 * 1000, // 1 dakika
+          gcTime: 2 * 60 * 1000
+        });
+
+        // Categories tree prefetch (modal breadcrumb için)
+        await queryClient.prefetchQuery({
+          queryKey: ['/api/categories', 'tree'],
+          queryFn: async () => {
+            const response = await fetch('/api/categories', {
+              credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Categories tree prefetch failed');
+            return response.json();
+          },
+          staleTime: 10 * 60 * 1000, // 10 dakika
+          gcTime: 15 * 60 * 1000
+        });
+
+        console.log('✅ Draft modal verileri prefetch tamamlandı');
+      }
+
+      console.log('✅ Landing prefetch tamamlandı: Step-1 + Draft Modal hazır!');
     } catch (error) {
       console.error('Landing prefetch hatası:', error);
     }
