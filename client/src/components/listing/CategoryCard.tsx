@@ -4,9 +4,10 @@ interface CategoryCardProps {
   category: Category;
   onClick: () => void;
   hasSubcategories?: boolean;
+  onHover?: (category: Category) => void;
 }
 
-export default function CategoryCard({ category, onClick, hasSubcategories }: CategoryCardProps) {
+export default function CategoryCard({ category, onClick, hasSubcategories, onHover }: CategoryCardProps) {
   const iconUrl = category.icon 
     ? `${window.location.origin}/uploads/category-icons/${category.icon}`
     : null;
@@ -14,6 +15,7 @@ export default function CategoryCard({ category, onClick, hasSubcategories }: Ca
   return (
     <button
       onClick={onClick}
+      onMouseEnter={() => onHover?.(category)}
       className="w-full p-6 bg-white border border-gray-200 rounded-xl hover:border-[#EC7830] hover:shadow-md transition-all duration-200 text-left group"
     >
       <div className="flex items-center space-x-4">

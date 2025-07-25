@@ -5,6 +5,7 @@ import { useLocation } from 'wouter';
 import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserDraftForCategory, useDeleteDraftListing, useUserDraftListings, DraftListing } from '@/hooks/useDraftListing';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
+import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -20,6 +21,7 @@ export default function CreateListingStep1() {
   const { data: allCategories = [], isLoading } = useCategories();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { handleCategoryHover } = useSmartPrefetch();
 
   // Redirect to login if not authenticated - simplified
   useEffect(() => {
@@ -492,6 +494,7 @@ export default function CreateListingStep1() {
                     <div
                       key={category.id}
                       onClick={() => handleCategorySelect(category)}
+                      onMouseEnter={() => handleCategoryHover(category)}
                       className="bg-white border border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
                     >
                       <div className="flex flex-col items-center space-y-3">
@@ -530,6 +533,7 @@ export default function CreateListingStep1() {
                               <div
                                 key={category.id}
                                 onClick={() => handleCategorySelect(category)}
+                                onMouseEnter={() => handleCategoryHover(category)}
                                 className={`flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer transition-colors rounded text-sm ${
                                   isCurrentLevelSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                                 }`}
@@ -625,6 +629,7 @@ export default function CreateListingStep1() {
                 <div
                   key={category.id}
                   onClick={() => handleCategorySelect(category)}
+                  onMouseEnter={() => handleCategoryHover(category)}
                   className="bg-white border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                 >
                   <div className="flex items-center space-x-4 min-h-[24px]">
