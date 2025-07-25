@@ -30,12 +30,17 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Basitleştirilmiş
+  // TipTap Editor Setup - Duplicate link extension sorunu çözümü
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: false, // StarterKit'teki link'i devre dışı bırak
+      }),
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-[#EC7830] underline',
+        },
       }),
     ],
     content: formData.customFields.description || '<p></p>',
@@ -69,23 +74,23 @@ export default function Step2() {
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
-      console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
+
       
       // 403 Forbidden: Başka kullanıcının draft'ına erişim
       if (draftError.message?.includes('erişim yetkiniz yok')) {
-        console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
+
         // Güvenlik ihlali mesajı göster ve Step1'e yönlendir
         navigate('/create-listing/step-1');
       } 
       // 404 Not Found: Hiç var olmayan draft ID
       else if (draftError.message?.includes('bulunamadı')) {
-        console.log('ℹ️ Non-existent draft ID, redirecting to Step1 for new listing');
+
         // Sessizce Step1'e yönlendir (yeni ilan oluşturma akışı)
         navigate('/create-listing/step-1');
       }
       // Diğer hatalar
       else {
-        console.error('🚨 Unknown draft error:', draftError.message);
+
         navigate('/create-listing/step-1');
       }
     }
@@ -314,8 +319,7 @@ export default function Step2() {
       }, 100);
     }
 
-    console.log('✅ Test verileri dolduruldu:', testData);
-    console.log('📊 Custom fields sayısı:', customFields.length);
+
   };
 
   const nextStep = async () => {

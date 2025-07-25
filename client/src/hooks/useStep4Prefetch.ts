@@ -5,7 +5,7 @@ export function useStep4Prefetch() {
   const queryClient = useQueryClient();
 
   const prefetchStep4Data = useCallback(async (classifiedId: number, userId: number) => {
-    console.log('🔄 Step4 prefetch başlatılıyor...');
+
     
     try {
       // 1. Draft listing'i prefetch et (güncel fotoğraflar ve form verileriyle)

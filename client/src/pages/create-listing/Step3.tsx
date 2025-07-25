@@ -43,7 +43,7 @@ export default function Step3() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
 
-  console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
+
 
   // SECURITY FIX: Draft ownership verification
   const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);

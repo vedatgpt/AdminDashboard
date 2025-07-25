@@ -51,7 +51,7 @@ export function useUserDraftListings() {
   return useQuery({
     queryKey: ['/api/draft-listings'],
     queryFn: async () => {
-      console.log('🔍 DEPLOY FIX: User drafts fetch ediliyor...');
+  
       
       const response = await fetch('/api/draft-listings', {
         credentials: 'include', // Deploy fix: ensure session cookies
@@ -62,15 +62,14 @@ export function useUserDraftListings() {
       
       if (!response.ok) {
         if (response.status === 401) {
-          console.error('❌ DEPLOY ERROR: Unauthorized draft access');
+
           throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
         }
-        console.error('❌ DEPLOY ERROR: Draft fetch failed:', response.status);
+
         throw new Error('İlan taslakları alınamadı');
       }
       
       const drafts = await response.json() as DraftListing[];
-      console.log(`✅ DEPLOY SUCCESS: ${drafts.length} adet draft bulundu:`, drafts.map(d => `ID:${d.id}`));
       return drafts;
     },
     enabled: isAuthenticated, // Only run when authenticated

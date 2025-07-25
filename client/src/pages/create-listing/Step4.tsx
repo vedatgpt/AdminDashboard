@@ -86,13 +86,13 @@ export default function Step4() {
       } 
       // 404 Not Found: Hiç var olmayan draft ID - Normal akış
       else if (draftError.message?.includes('bulunamadı')) {
-        console.log('ℹ️ Non-existent draft ID, redirecting to Step1 for new listing');
+
         // Toast gösterme, sadece Step1'e yönlendir
         navigate('/create-listing/step-1');
       }
       // Diğer hatalar
       else {
-        console.error('🚨 Unknown draft error:', draftError.message);
+
         navigate('/create-listing/step-1');
       }
     }
@@ -114,10 +114,10 @@ export default function Step4() {
           // Order'a göre sırala
           const sortedPhotos = parsedPhotos.sort((a, b) => (a.order || 0) - (b.order || 0));
           setPhotosState(sortedPhotos);
-          console.log('Step4 - Photos updated:', sortedPhotos.map(p => ({ id: p.id, order: p.order })));
+
         }
       } catch (error) {
-        console.error('Photos parse error:', error);
+
         setPhotosState([]);
       }
     } else {

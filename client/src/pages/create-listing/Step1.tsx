@@ -387,8 +387,7 @@ export default function CreateListingStep1() {
     if (!currentExistingDraft || !pendingCategory) return;
     
     try {
-      console.log('🗑️ DEPLOY FIX: Yeni ilan oluşturuluyor, eski draft siliniyor...');
-      console.log('Silinecek draft ID:', currentExistingDraft.id);
+
       
       // DEPLOY FIX: Enhanced error handling for draft deletion
       const response = await fetch(`/api/draft-listings/${currentExistingDraft.id}`, {
@@ -405,7 +404,7 @@ export default function CreateListingStep1() {
         throw new Error(errorData.error || `HTTP ${response.status}: Draft silinemedi`);
       }
       
-      console.log('✅ Draft başarıyla silindi');
+
       
       // DEPLOY FIX: Force cache invalidation after successful deletion
       await refetchUserDrafts();
@@ -414,7 +413,7 @@ export default function CreateListingStep1() {
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
       
-      console.log('🔄 Context tamamen sıfırlanıyor...');
+
       
       // Tüm context'i sıfırla - eski form verilerini temizle
       dispatch({ type: 'RESET_LISTING' });
@@ -423,7 +422,7 @@ export default function CreateListingStep1() {
       const currentUrl = window.location.pathname;
       window.history.replaceState({}, '', currentUrl);
       
-      console.log('📂 Ana kategorinin alt kategorileri gösteriliyor...');
+
       
       // Ana kategori seçimini devam ettir - alt kategorileri göster
       const newPath = [pendingCategory];
@@ -442,10 +441,10 @@ export default function CreateListingStep1() {
       setPendingCategory(null);
       setPendingPath([]);
       
-      console.log('✅ Yeni ilan oluşturma işlemi tamamlandı');
+
       
     } catch (error) {
-      console.error('❌ DEPLOY ERROR - Eski draft silinirken hata:', error);
+
       const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Hata",
