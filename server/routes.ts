@@ -1056,73 +1056,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rotate image endpoint - FIXED WITH PROPER AUTH
-  app.post("/api/upload/images/:imageId/rotate", requireAuth, async (req: AuthenticatedRequest, res) => {
+  // Rotate image endpoint
+  app.post("/api/upload/images/:imageId/rotate", async (req, res) => {
     try {
       const { imageId } = req.params;
-      const userId = req.session.user!.id; // Use authenticated user ID
+      const userId = 1; // Temporary fixed user ID for development
       
-      console.log('🔄 SERVER ROTATION: Starting rotation for imageId:', imageId, 'userId:', userId);
-      
-      // Find image file in user's directory
+      // Find image file
       const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
-      
-      if (!fs.existsSync(userDir)) {
-        console.error('❌ SERVER ROTATION: User directory not found:', userDir);
-        return res.status(404).json({ error: "Kullanıcı resim klasörü bulunamadı" });
-      }
-      
       const files = fs.readdirSync(userDir).filter(file => file.startsWith(imageId));
       
       if (files.length === 0) {
-        console.error('❌ SERVER ROTATION: Image file not found for imageId:', imageId);
-        console.log('Available files:', fs.readdirSync(userDir));
-        return res.status(404).json({ error: "Resim dosyası bulunamadı" });
+        return res.status(404).json({ error: "Resim bulunamadı" });
       }
       
       const imageFile = files[0];
       const imagePath = path.join(userDir, imageFile);
       const thumbnailPath = path.join(userDir, `thumb_${imageFile}`);
       
-      console.log('🔄 SERVER ROTATION: Found image file:', imageFile);
-      console.log('📁 SERVER ROTATION: Image path:', imagePath);
-      
       // Rotate main image
       await sharp(imagePath)
         .rotate(90)
-        .jpeg({ quality: 95 })
+        .jpeg({ quality: 90 })
         .toFile(imagePath + '_temp');
       
       // Replace original with rotated
       fs.renameSync(imagePath + '_temp', imagePath);
-      console.log('✅ SERVER ROTATION: Main image rotated');
       
       // Rotate thumbnail if exists
       if (fs.existsSync(thumbnailPath)) {
         await sharp(thumbnailPath)
           .rotate(90)
-          .jpeg({ quality: 85 })
+          .jpeg({ quality: 90 })
           .toFile(thumbnailPath + '_temp');
         
-        // Replace thumbnail with rotated
         fs.renameSync(thumbnailPath + '_temp', thumbnailPath);
-        console.log('✅ SERVER ROTATION: Thumbnail rotated');
       }
       
-      // Return updated URLs with cache busting
-      const timestamp = Date.now();
-      const response = {
-        url: `/uploads/users/${userId}/temp-listings/${imageFile}?t=${timestamp}`,
-        thumbnail: `/uploads/users/${userId}/temp-listings/thumb_${imageFile}?t=${timestamp}`,
-        success: true,
-        imageId: imageId
-      };
-      
-      console.log('✅ SERVER ROTATION: Rotation completed successfully');
-      res.json(response);
+      res.json({
+        id: imageId,
+        url: `/uploads/users/${userId}/temp-listings/${imageFile}`,
+        thumbnail: `/uploads/users/${userId}/temp-listings/thumb_${imageFile}`
+      });
     } catch (error) {
-      console.error('❌ SERVER ROTATION ERROR:', error);
-      res.status(500).json({ error: "Resim döndürme hatası: " + (error instanceof Error ? error.message : 'Bilinmeyen hata') });
+
+      res.status(500).json({ error: "Resim döndürme hatası" });
     }
   });
 
@@ -1144,7 +1122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ message: "Resim silindi" });
     } catch (error) {
-      console.error('Delete image error:', error);
+
       res.status(500).json({ error: "Resim silme hatası" });
     }
   });

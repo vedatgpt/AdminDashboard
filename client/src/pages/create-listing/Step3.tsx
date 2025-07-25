@@ -19,7 +19,6 @@ interface UploadedImage {
   uploading?: boolean;
   progress?: number;
   order?: number;
-  rotating?: boolean; // ROTATION FIX: Add rotation state
 }
 
 // Import constants from config
@@ -61,30 +60,15 @@ export default function Step3() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }, []);
 
-  // ENHANCED: Cleanup blob URLs on unmount + comprehensive cleanup
+  // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
-      console.log('🗑️ UNMOUNT CLEANUP: Revoking all blob URLs');
       blobUrlsRef.current.forEach(url => {
         URL.revokeObjectURL(url);
-        console.log('🗑️ UNMOUNT: Blob URL revoked:', url);
       });
       blobUrlsRef.current.clear();
-      
-      // Force garbage collection of any orphaned blob URLs
-      if (images.length > 0) {
-        images.forEach(img => {
-          if (img.url.startsWith('blob:')) {
-            URL.revokeObjectURL(img.url);
-          }
-          if (img.thumbnail?.startsWith('blob:')) {
-            URL.revokeObjectURL(img.thumbnail);
-          }
-        });
-      }
-      console.log('🗑️ UNMOUNT CLEANUP: Complete');
     };
-  }, [images]);
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -96,46 +80,21 @@ export default function Step3() {
   // Load existing photos from draft when component mounts
   const { data: draftData } = useDraftListing(currentClassifiedId);
 
-  // Load photos from draft data when available - ENHANCED BLOB CLEANUP
+  // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
         const existingPhotos = JSON.parse(draftData.photos as string);
 
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
-          // CLEAN UP EXISTING BLOB URLS BEFORE LOADING NEW ONES
-          blobUrlsRef.current.forEach(blobUrl => {
-            URL.revokeObjectURL(blobUrl);
-          });
-          blobUrlsRef.current.clear();
-          console.log('🗑️ BLOB CLEANUP: All existing blob URLs cleared before loading draft');
-          
-          // Filter out any photos with blob URLs (they're invalid after page reload)
-          const validPhotos = existingPhotos.filter(photo => {
-            const isValid = photo.url && !photo.url.startsWith('blob:');
-            if (!isValid) {
-              console.log('🗑️ FILTERING: Removing invalid blob photo:', photo.id);
-            }
-            return isValid;
-          });
-          
           // Only set if images array is empty to avoid overriding current state
           setImages(prev => {
-            return prev.length === 0 ? validPhotos : prev;
+            return prev.length === 0 ? existingPhotos : prev;
           });
-          
-          console.log('✅ VALID PHOTOS LOADED:', validPhotos.length);
         }
       } catch (error) {
-        console.error('Draft photos parsing error:', error);
+        // Handle parsing error silently
       }
-    } else {
-      // No draft photos, clear everything
-      blobUrlsRef.current.forEach(blobUrl => {
-        URL.revokeObjectURL(blobUrl);
-      });
-      blobUrlsRef.current.clear();
-      console.log('🗑️ BLOB CLEANUP: No draft photos, cleared all blob URLs');
     }
   }, [draftData]);
 
@@ -272,44 +231,14 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (_, imageId) => {
-      console.log('✅ DELETE SUCCESS: Removing from state:', imageId);
-      
       setImages(prev => {
         const imageToDelete = prev.find(img => img.id === imageId);
-        
-        // COMPREHENSIVE BLOB URL CLEANUP
-        if (imageToDelete) {
-          console.log('🗑️ CLEANUP: Image found for deletion:', {
-            id: imageToDelete.id,
-            url: imageToDelete.url,
-            thumbnail: imageToDelete.thumbnail
-          });
-          
-          // Clean up main image blob URL
-          if (imageToDelete.url.startsWith('blob:')) {
-            URL.revokeObjectURL(imageToDelete.url);
-            blobUrlsRef.current.delete(imageToDelete.url);
-            console.log('🗑️ CLEANUP: Main blob URL revoked');
-          }
-          
-          // Clean up thumbnail blob URL
-          if (imageToDelete.thumbnail?.startsWith('blob:')) {
-            URL.revokeObjectURL(imageToDelete.thumbnail);
-            blobUrlsRef.current.delete(imageToDelete.thumbnail);
-            console.log('🗑️ CLEANUP: Thumbnail blob URL revoked');
-          }
+        if (imageToDelete?.url.startsWith('blob:')) {
+          URL.revokeObjectURL(imageToDelete.url);
+          blobUrlsRef.current.delete(imageToDelete.url);
         }
-        
-        const filtered = prev.filter(img => img.id !== imageId);
-        console.log('🗑️ CLEANUP: Images after filter:', filtered.length, 'remaining images');
-        return filtered;
+        return prev.filter(img => img.id !== imageId);
       });
-      
-      // FORCE REACT RE-RENDER
-      setTimeout(() => {
-        console.log('🔄 FORCE RE-RENDER: Triggering state update');
-        setImages(prev => [...prev]); // Force array reference change
-      }, 100);
       
       // Fotoğraf silindikten sonra Step4 prefetch tetikle
       if (currentClassifiedId && user?.id) {
@@ -325,237 +254,52 @@ export default function Step3() {
     }
   });
 
-  // ROTATION FIX v2: Server-side rotation endpoint kullanımı
-  const rotateImage = useCallback(async (imageId: string) => {
-    console.log('🔄 ROTATION FIX v2: Server-side rotation başlatılıyor:', imageId);
-    
-    try {
-      // Find the image to rotate
-      const imageToRotate = images.find(img => img.id === imageId);
-      if (!imageToRotate) {
-        console.error('❌ ROTATION ERROR: Image not found:', imageId);
-        return;
-      }
+  // Optimized rotate image function using requestIdleCallback
+  const rotateImage = useCallback((imageId: string) => {
+    setImages(prev => prev.map(img => {
+      if (img.id === imageId) {
+        // Use requestIdleCallback for non-blocking rotation
+        requestIdleCallback(() => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const imageElement = new Image();
 
-      // Show loading state immediately
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { ...img, rotating: true }
-          : img
-      ));
-
-      console.log('📡 ROTATION FIX v2: Calling server rotation endpoint...');
-      
-      // Call server-side rotation endpoint
-      const response = await fetch(`/api/upload/images/${imageId}/rotate`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Server rotation failed');
-      }
-
-      const result = await response.json();
-      console.log('✅ ROTATION FIX v2: Server rotation successful:', result);
-
-      // BLOB URL FIX: Clean up old blob URL before setting new server URL
-      const imageToUpdate = images.find(img => img.id === imageId);
-      if (imageToUpdate?.url.startsWith('blob:')) {
-        URL.revokeObjectURL(imageToUpdate.url);
-        blobUrlsRef.current.delete(imageToUpdate.url);
-        console.log('🗑️ ROTATION FIX: Old blob URL cleaned up');
-      }
-
-      // Update image URLs with rotated versions - SERVER URLS NO BLOB
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { 
-              ...img, 
-              url: result.url,  // Server URL with timestamp
-              thumbnail: result.thumbnail, // Server URL with timestamp
-              rotating: false 
-            }
-          : img
-      ));
-
-      console.log('✅ ROTATION SUCCESS v2: Image rotated via server');
-      
-      // Trigger Step4 prefetch after rotation
-      if (currentClassifiedId && user?.id) {
-        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme (server)');
-      }
-
-    } catch (error) {
-      console.error('❌ ROTATION ERROR v2: Server rotation failed:', error);
-      
-      // Remove loading state on error
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { ...img, rotating: false }
-          : img
-      ));
-      
-      // Show error message instead of fallback (server rotation should work)
-      toast({
-        title: "Döndürme Hatası",
-        description: "Server rotation failed: " + (error instanceof Error ? error.message : 'Unknown error'),
-        variant: "destructive"
-      });
-    }
-  }, [images, currentClassifiedId, user?.id, smartPrefetchStep4]);
-
-  // CLIENT-SIDE ROTATION FALLBACK: Enhanced blob URL handling
-  const clientSideRotateImage = useCallback(async (imageId: string) => {
-    console.log('🔄 CLIENT ROTATION: Fotoğraf döndürme başlatılıyor:', imageId);
-    
-    try {
-      // Find the image to rotate
-      const imageToRotate = images.find(img => img.id === imageId);
-      if (!imageToRotate) {
-        console.error('❌ CLIENT ROTATION ERROR: Image not found:', imageId);
-        return;
-      }
-
-      // Create canvas for rotation with proper error handling
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('Canvas context oluşturulamadı');
-      }
-
-      // Load image and perform rotation - ENHANCED BLOB URL HANDLING
-      const imageElement = new Image();
-      
-      const rotationPromise = new Promise<string>((resolve, reject) => {
-        // Enhanced error handling with timeout
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Resim yükleme zaman aşımı (5 saniye)'));
-        }, 5000);
-
-        imageElement.onload = () => {
-          clearTimeout(timeoutId);
-          try {
-            console.log('🖼️ ROTATION FIX: Image loaded successfully, dimensions:', imageElement.width, 'x', imageElement.height);
-            
-            // Validate image dimensions
-            if (imageElement.width === 0 || imageElement.height === 0) {
-              throw new Error('Geçersiz resim boyutları');
-            }
-            
+          imageElement.onload = () => {
             // Set canvas dimensions for 90-degree rotation
             canvas.width = imageElement.height;
             canvas.height = imageElement.width;
 
-            // Clear canvas to prevent artifacts
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Apply rotation transformation
-            ctx.save(); // Save context state
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(Math.PI / 2);
-            ctx.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
-            ctx.restore(); // Restore context state
+            // Apply rotation
+            ctx?.translate(canvas.width / 2, canvas.height / 2);
+            ctx?.rotate(Math.PI / 2);
+            ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
 
-            console.log('🔄 ROTATION FIX: Canvas drawing completed, creating blob...');
-
-            // Convert to high-quality blob
+            // Convert back to blob and update image
             canvas.toBlob((blob) => {
               if (blob) {
-                console.log('✅ ROTATION FIX: Blob created successfully, size:', blob.size);
-                
-                // Clean up old blob URL if it exists
-                if (imageToRotate.url.startsWith('blob:')) {
-                  URL.revokeObjectURL(imageToRotate.url);
-                  blobUrlsRef.current.delete(imageToRotate.url);
-                }
-                
                 const newUrl = URL.createObjectURL(blob);
                 blobUrlsRef.current.add(newUrl);
-                resolve(newUrl);
-              } else {
-                reject(new Error('Blob oluşturulamadı - canvas.toBlob() başarısız'));
+                setImages(prev => prev.map(prevImg => 
+                  prevImg.id === imageId 
+                    ? { ...prevImg, url: newUrl, thumbnail: newUrl }
+                    : prevImg
+                ));
+                
+                // Fotoğraf döndürme tamamlandıktan sonra Step4 prefetch tetikle
+                if (currentClassifiedId && user?.id) {
+                  smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
+                }
               }
-            }, 'image/jpeg', 0.95); // Higher quality for better visual result
-            
-          } catch (error) {
-            clearTimeout(timeoutId);
-            console.error('❌ ROTATION ERROR: Canvas operation failed:', error);
-            reject(error instanceof Error ? error : new Error('Canvas işlemi başarısız'));
-          }
-        };
+            }, 'image/jpeg', 0.9);
+          };
 
-        imageElement.onerror = (event) => {
-          clearTimeout(timeoutId);
-          console.error('❌ ROTATION ERROR: Image load failed:', event);
-          console.error('Failed URL:', imageToRotate.url);
-          reject(new Error('Resim dosyası yüklenemedi - corrupt veya invalid format'));
-        };
-
-        // Enhanced image loading for blob URLs
-        try {
-          console.log('🔄 ROTATION FIX: Starting image load:', imageToRotate.url.substring(0, 50) + '...');
-          
-          // For blob URLs, don't set crossOrigin (causes issues)
-          if (imageToRotate.url.startsWith('blob:')) {
-            imageElement.src = imageToRotate.url;
-          } else {
-            // For regular URLs, use crossOrigin
-            imageElement.crossOrigin = 'anonymous';
-            imageElement.src = imageToRotate.url;
-          }
-        } catch (error) {
-          clearTimeout(timeoutId);
-          reject(new Error('Resim URL\'si set edilemedi'));
-        }
-      });
-
-      // Wait for image processing
-      console.log('⏳ ROTATION FIX: Waiting for rotation to complete...');
-      const newUrl = await rotationPromise;
-      console.log('✅ ROTATION FIX: Rotation completed, new URL:', newUrl.substring(0, 50) + '...');
-
-      // Update state with new rotated image
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { 
-              ...img, 
-              url: newUrl, 
-              thumbnail: newUrl,
-              rotating: false 
-            }
-          : img
-      ));
-
-      console.log('✅ ROTATION SUCCESS: Image rotated successfully');
-      
-      // Trigger Step4 prefetch after rotation
-      if (currentClassifiedId && user?.id) {
-        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
+          imageElement.src = img.url;
+        });
+        return img;
       }
-
-    } catch (error) {
-      console.error('❌ ROTATION ERROR: Rotation failed:', error);
-      
-      // Remove loading state on error
-      setImages(prev => prev.map(img => 
-        img.id === imageId 
-          ? { ...img, rotating: false }
-          : img
-      ));
-      
-      toast({
-        title: "Döndürme Hatası",
-        description: error instanceof Error ? error.message : 'Fotoğraf döndürülemedi',
-        variant: "destructive"
-      });
-    }
-  }, [images, currentClassifiedId, user?.id, smartPrefetchStep4, toast]);
+      return img;
+    }));
+  }, []);
 
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
@@ -861,14 +605,9 @@ export default function Step3() {
                       {!image.uploading && (
                         <button
                           onClick={() => rotateImage(image.id)}
-                          disabled={image.rotating}
-                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center disabled:opacity-50"
+                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
                         >
-                          {image.rotating ? (
-                            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <RotateCw className="w-3 h-3" />
-                          )}
+                          <RotateCw className="w-3 h-3" />
                         </button>
                       )}
 
@@ -884,13 +623,6 @@ export default function Step3() {
                           src={image.uploading ? image.url : (image.thumbnail || image.url)}
                           alt={`Fotoğraf ${index + 1}`}
                           className="w-full h-full object-contain"
-                          onError={(e) => {
-                            console.error('❌ IMAGE LOAD ERROR:', image.id, 'URL:', image.url);
-                            // Fallback to main image if thumbnail fails
-                            if (image.thumbnail && e.currentTarget.src === image.thumbnail) {
-                              e.currentTarget.src = image.url;
-                            }
-                          }}
                         />
                       </div>
 
@@ -900,16 +632,6 @@ export default function Step3() {
                           <div className="text-center text-white">
                             <div className="w-6 h-6 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                             <div className="text-sm font-medium">{image.progress}%</div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Rotation Progress - ROTATION FIX */}
-                      {image.rotating && (
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <div className="w-6 h-6 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                            <div className="text-sm font-medium">Döndürülüyor...</div>
                           </div>
                         </div>
                       )}
