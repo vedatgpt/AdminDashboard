@@ -383,40 +383,24 @@ export class DatabaseStorage implements IStorage {
 
   async getCategoryCustomFieldsWithInheritance(categoryId: number): Promise<CategoryCustomField[]> {
     try {
-      // Optimized single query with CTE for hierarchy traversal
-      const query = `
-        WITH RECURSIVE category_hierarchy AS (
-          -- Base case: start with the given category
-          SELECT id, parent_id, 0 as level
-          FROM categories 
-          WHERE id = $1
-          
-          UNION ALL
-          
-          -- Recursive case: traverse up the parent hierarchy
-          SELECT c.id, c.parent_id, ch.level + 1
-          FROM categories c
-          INNER JOIN category_hierarchy ch ON c.id = ch.parent_id
-          WHERE ch.level < 10 -- Prevent infinite recursion
-        ),
-        fields_with_priority AS (
-          SELECT 
-            ccf.*,
-            ch.level,
-            ROW_NUMBER() OVER (PARTITION BY ccf.label ORDER BY ch.level ASC) as priority
-          FROM category_hierarchy ch
-          INNER JOIN category_custom_fields ccf ON ccf.category_id = ch.id
-        )
-        SELECT 
-          id, category_id, label, type, placeholder, options, required, 
-          sort_order, min_value, max_value, has_units, unit_options, default_unit, created_at
-        FROM fields_with_priority 
-        WHERE priority = 1  -- Only get the closest field (lowest level)
-        ORDER BY sort_order ASC, label ASC
-      `;
+      // Get direct fields first
+      const directFields = await db.select().from(categoryCustomFields)
+        .where(eq(categoryCustomFields.categoryId, categoryId))
+        .orderBy(asc(categoryCustomFields.sortOrder), asc(categoryCustomFields.label));
       
-      const result = await db.execute(sql.raw(query.replace('$1', categoryId.toString())));
-      return result.rows as CategoryCustomField[];
+      // If we have direct fields, return them
+      if (directFields.length > 0) {
+        return directFields as CategoryCustomField[];
+      }
+      
+      // No direct fields, check parent hierarchy
+      const category = await this.getCategoryById(categoryId);
+      if (!category?.parentId) {
+        return []; // No parent, no fields
+      }
+      
+      // Recursively check parent categories
+      return await this.getCategoryCustomFieldsWithInheritance(category.parentId);
     } catch (error: any) {
       console.error('Get custom fields with inheritance error:', error);
       return [];
