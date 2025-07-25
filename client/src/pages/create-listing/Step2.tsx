@@ -174,7 +174,8 @@ export default function Step2() {
                   Seçtiğiniz Araca Ait Bilgiler
                 </h3>
                 <BreadcrumbNav 
-                  categories={categoryPath}
+                  categoryPath={categoryPath || []}
+                  onCategoryClick={() => {}}
                   disableFirstCategory={true}
                 />
               </div>
