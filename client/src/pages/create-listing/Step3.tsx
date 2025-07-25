@@ -293,13 +293,13 @@ export default function Step3() {
       const result = await response.json();
       console.log('✅ ROTATION FIX v2: Server rotation successful:', result);
 
-      // Update image URLs with rotated versions
+      // Update image URLs with rotated versions - FIXED CACHING
       setImages(prev => prev.map(img => 
         img.id === imageId 
           ? { 
               ...img, 
-              url: result.url + `?t=${Date.now()}`,  // Add timestamp to force refresh
-              thumbnail: result.thumbnail + `?t=${Date.now()}`,
+              url: result.url,  // Server already adds timestamp
+              thumbnail: result.thumbnail, // Server already adds timestamp
               rotating: false 
             }
           : img
