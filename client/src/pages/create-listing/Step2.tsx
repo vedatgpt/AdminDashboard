@@ -39,11 +39,28 @@ export default function Step2() {
   const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
 
-  // SECURITY FIX: URL manipülasyonu koruması
+  // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
       console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-      navigate('/create-listing/step-1');
+      
+      // 403 Forbidden: Başka kullanıcının draft'ına erişim
+      if (draftError.message?.includes('erişim yetkiniz yok')) {
+        console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
+        // Güvenlik ihlali mesajı göster ve Step1'e yönlendir
+        navigate('/create-listing/step-1');
+      } 
+      // 404 Not Found: Hiç var olmayan draft ID
+      else if (draftError.message?.includes('bulunamadı')) {
+        console.log('ℹ️ Non-existent draft ID, redirecting to Step1 for new listing');
+        // Sessizce Step1'e yönlendir (yeni ilan oluşturma akışı)
+        navigate('/create-listing/step-1');
+      }
+      // Diğer hatalar
+      else {
+        console.error('🚨 Unknown draft error:', draftError.message);
+        navigate('/create-listing/step-1');
+      }
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate]);
   

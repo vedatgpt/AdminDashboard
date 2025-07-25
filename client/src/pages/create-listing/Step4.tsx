@@ -69,16 +69,32 @@ export default function Step4() {
     gcTime: 0, // No cache for immediate updates
   });
 
-  // SECURITY FIX: URL manipülasyonu koruması
+  // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic  
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
       console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-      toast({
-        title: "Güvenlik Hatası",
-        description: "İlgili ilan için yetkiniz bulunmamaktadır.",
-        variant: "destructive"
-      });
-      navigate('/create-listing/step-1');
+      
+      // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
+      if (draftError.message?.includes('erişim yetkiniz yok')) {
+        console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
+        toast({
+          title: "Güvenlik Hatası", 
+          description: "İlgili ilan için yetkiniz bulunmamaktadır.",
+          variant: "destructive"
+        });
+        navigate('/create-listing/step-1');
+      } 
+      // 404 Not Found: Hiç var olmayan draft ID - Normal akış
+      else if (draftError.message?.includes('bulunamadı')) {
+        console.log('ℹ️ Non-existent draft ID, redirecting to Step1 for new listing');
+        // Toast gösterme, sadece Step1'e yönlendir
+        navigate('/create-listing/step-1');
+      }
+      // Diğer hatalar
+      else {
+        console.error('🚨 Unknown draft error:', draftError.message);
+        navigate('/create-listing/step-1');
+      }
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
   const { data: categories } = useCategoriesTree();
