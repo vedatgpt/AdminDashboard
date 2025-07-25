@@ -27,44 +27,75 @@ export function useLandingPrefetch() {
       if (categories && categories.length > 0) {
         console.log(`📦 ${categories.length} kategori bulundu, ikonlar prefetch ediliyor...`);
         
-        // Icon prefetch - paralel olarak yükle VE cache'e zorla ekle
+        // Icon prefetch - AGGRESSIVE BROWSER CACHE
         const iconPromises = categories
           .filter(cat => cat.icon) // Sadece ikonu olan kategoriler
           .map(cat => {
             const iconUrl = `${window.location.origin}/uploads/category-icons/${cat.icon}`;
             return new Promise<void>((resolve) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous'; // CORS için
-              img.onload = () => {
-                console.log(`✅ İkon cache'e alındı: ${cat.name} - ${iconUrl}`);
-                // Force browser cache by fetching with cache headers
-                fetch(iconUrl, { 
-                  cache: 'force-cache',
-                  mode: 'cors' 
-                }).catch(() => {}); // Silent fail
+              // 1. Fetch API ile cache-first
+              fetch(iconUrl, { 
+                cache: 'force-cache',
+                mode: 'cors',
+                credentials: 'omit'
+              }).then(response => {
+                if (response.ok) {
+                  console.log(`✅ İkon fetch cache'e alındı: ${cat.name}`);
+                  
+                  // 2. Image preload ile de cache'e ekle
+                  const img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.onload = () => {
+                    console.log(`✅ İkon image cache'e alındı: ${cat.name}`);
+                    resolve();
+                  };
+                  img.onerror = () => {
+                    console.log(`⚠️ İkon image hatası: ${cat.name}`);
+                    resolve();
+                  };
+                  img.src = iconUrl;
+                } else {
+                  console.log(`❌ İkon fetch hatası: ${cat.name}`);
+                  resolve();
+                }
+              }).catch(() => {
+                console.log(`❌ İkon network hatası: ${cat.name}`);
                 resolve();
-              };
-              img.onerror = () => {
-                console.log(`❌ İkon yüklenemedi: ${cat.name} - ${iconUrl}`);
-                resolve(); // Error'da bile resolve et
-              };
-              img.src = iconUrl;
+              });
             });
           });
 
-        // Navbar logosu da prefetch et - Vite asset import path kullan
+        // Navbar logosu da AGGRESSIVE cache
         const logoPath = '/attached_assets/logo_1752808818099.png';
         const logoPromise = new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            console.log('✅ Navbar logosu cache\'e alındı');
+          // 1. Fetch API ile cache-first
+          fetch(logoPath, { 
+            cache: 'force-cache',
+            mode: 'cors',
+            credentials: 'omit'
+          }).then(response => {
+            if (response.ok) {
+              console.log('✅ Logo fetch cache\'e alındı');
+              
+              // 2. Image preload ile de cache'e ekle
+              const img = new Image();
+              img.onload = () => {
+                console.log('✅ Logo image cache\'e alındı');
+                resolve();
+              };
+              img.onerror = () => {
+                console.log('⚠️ Logo image hatası');
+                resolve();
+              };
+              img.src = logoPath;
+            } else {
+              console.log('❌ Logo fetch hatası');
+              resolve();
+            }
+          }).catch(() => {
+            console.log('❌ Logo network hatası');
             resolve();
-          };
-          img.onerror = () => {
-            console.log('❌ Navbar logosu yüklenemedi - path:', logoPath);
-            resolve();
-          };
-          img.src = logoPath;
+          });
         });
 
         // Tüm ikonları + logoyu paralel yükle

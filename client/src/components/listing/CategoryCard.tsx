@@ -28,9 +28,9 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
               loading="eager"
               decoding="sync"
               crossOrigin="anonymous"
-
+              style={{ imageRendering: 'optimizeQuality' as any }}
               onLoad={() => {
-                console.log(`📷 CategoryCard icon loaded: ${category.name}`);
+                console.log(`📷 CategoryCard icon loaded from cache: ${category.name}`);
               }}
               onError={(e) => {
                 console.log(`❌ CategoryCard icon failed: ${category.name}`);

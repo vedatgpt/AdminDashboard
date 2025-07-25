@@ -219,7 +219,7 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
                 src={logoPath}
                 loading="eager"
                 decoding="sync"
-
+                style={{ imageRendering: 'optimizeQuality' as any }}
               />
             </Link>
           </div>
