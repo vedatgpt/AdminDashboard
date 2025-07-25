@@ -1,0 +1,36 @@
+chunk-RPCDYKBN.js?v=1b8949e4:521 Warning: findDOMNode is deprecated and will be removed in the next major release. Instead, add a ref directly to the element you want to reference. Learn more about using refs safely here: https://reactjs.org/link/strict-mode-find-node
+    at ReactQuill2 (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-quill.js?v=1b8949e4:12915:30)
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at div
+    at Step2 (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/src/pages/create-listing/Step2.tsx:34:31)
+    at div
+    at CreateListingLayout (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/src/components/CreateListingLayout.tsx:22:47)
+    at Route (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1b8949e4:323:16)
+    at Switch (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1b8949e4:379:17)
+    at Switch (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1b8949e4:379:17)
+    at Router (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/src/App.tsx?v=mlydwM6VuNtwbumlcv78N:48:48)
+    at ListingProvider (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/src/contexts/ListingContext.tsx:81:35)
+    at QueryClientProvider (https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=1b8949e4:2805:3)
+    at App
+printWarning @ chunk-RPCDYKBN.js?v=1b8949e4:521
+error @ chunk-RPCDYKBN.js?v=1b8949e4:505
+findDOMNode @ chunk-RPCDYKBN.js?v=1b8949e4:21379
+ReactQuill2.getEditingArea @ react-quill.js?v=1b8949e4:13134
+ReactQuill2.instantiateEditor @ react-quill.js?v=1b8949e4:13023
+ReactQuill2.componentDidMount @ react-quill.js?v=1b8949e4:12993
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=1b8949e4:17030
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=1b8949e4:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=1b8949e4:17969
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=1b8949e4:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=1b8949e4:19353
+commitRoot @ chunk-RPCDYKBN.js?v=1b8949e4:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=1b8949e4:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=1b8949e4:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=1b8949e4:18627Understand this error
+react-quill.js?v=1b8949e4:5662 [Deprecation] Listener added for a 'DOMNodeInserted' mutation event. Support for this event type has been removed, and this event will no longer be fired. See https://chromestatus.com/feature/5083947249172480 for more information.
