@@ -5,10 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import '../../styles/quill-custom.css';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import TextStyle from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
+import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '../../components/iOSSpinner';
 import { useLocationsTree } from '@/hooks/useLocations';
@@ -23,6 +26,33 @@ export default function Step2() {
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { prefetchStep3Data } = useStep3Prefetch();
+
+  // Input handler 
+  const handleInputChange = (fieldName: string, value: any) => {
+    updateFormData({ [fieldName]: value });
+  };
+
+  // TipTap Editor Setup
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+      }),
+      TextStyle,
+      Color,
+    ],
+    content: formData.customFields.description || '<p></p>',
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      handleInputChange('description', html);
+    },
+    editorProps: {
+      attributes: {
+        class: 'focus:outline-none min-h-[200px] p-4',
+      },
+    },
+  });
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -353,14 +383,6 @@ export default function Step2() {
 
   // Custom fields yoksa da fiyat inputu gösterilmeli
 
-  const handleInputChange = (fieldName: string, value: any) => {
-    updateFormData({ [fieldName]: value });
-  };
-
-
-
-
-
   return (
     <div className="min-h-screen bg-white">
 
@@ -438,32 +460,43 @@ export default function Step2() {
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="quill-editor-wrapper">
-            <ReactQuill
-              theme="snow"
-              value={formData.customFields.description || ''}
-              onChange={(value) => handleInputChange('description', value)}
-              placeholder="Açıklama girin..."
-              onFocus={() => {
-                // Focus olduğunda placeholder'ı hemen temizle
-                const currentValue = formData.customFields.description || '';
-                const hasContent = currentValue && currentValue.replace(/<[^>]*>/g, '').trim();
-                
-                if (!hasContent) {
-                  // Boş bir paragraf ile değiştir ki cursor görünsün
-                  handleInputChange('description', '<p><br></p>');
-                }
-              }}
-              modules={{
-                toolbar: [
-                  ['bold', 'italic', 'underline'],
-                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                  [{ 'color': [] }, { 'background': [] }],
-                  ['link'],
-                  ['clean']
-                ],
-              }}
-            />
+          <div className="tiptap-editor-wrapper border border-gray-200 rounded-lg">
+            {/* Toolbar */}
+            <div className="border-b border-gray-200 p-2 flex gap-1 bg-gray-50">
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bold') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleItalic().run()}
+                className={`px-2 py-1 rounded text-sm italic ${editor?.isActive('italic') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                I
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bulletList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                •
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive('orderedList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              >
+                1.
+              </button>
+            </div>
+            
+            {/* Editor Content */}
+            <div className="min-h-[200px]">
+              <EditorContent editor={editor} />
+            </div>
           </div>
         </div>
 
