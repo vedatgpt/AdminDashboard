@@ -144,29 +144,60 @@ export default function CreateListingStep1() {
 
   // Check if there's a draft for the main category
   const checkForMainCategoryDraft = (category: Category): DraftListing | null => {
-    if (!isAuthenticated || !allUserDrafts) return null;
+    if (!isAuthenticated || !allUserDrafts) {
+      console.log('🔍 Draft kontrol: Auth yok veya draft listesi yok');
+      return null;
+    }
+    
+    console.log(`🔍 Ana kategori "${category.name}" (ID:${category.id}) için draft kontrol ediliyor...`);
+    console.log('📊 Mevcut drafts:', allUserDrafts.map(d => `ID:${d.id} categoryId:${d.categoryId}`));
+    console.log('📊 Flat categories count:', flatCategories.length);
     
     // Ana kategori için draft kontrolü - ana kategorinin alt kategorilerinde herhangi bir draft var mı?
     const mainCategoryDraft = allUserDrafts.find(draft => {
-      if (!draft.categoryId) return false;
+      if (!draft.categoryId) {
+        console.log(`❌ Draft ${draft.id}: categoryId yok`);
+        return false;
+      }
+      
+      console.log(`🔍 Draft ${draft.id} kontrol ediliyor (categoryId: ${draft.categoryId})`);
       
       // Draft'ın kategorisini bul
       const draftCategory = flatCategories.find(cat => cat.id === draft.categoryId);
-      if (!draftCategory) return false;
+      if (!draftCategory) {
+        console.log(`❌ Draft ${draft.id}: kategori bulunamadı (categoryId: ${draft.categoryId})`);
+        return false;
+      }
+      
+      console.log(`✅ Draft ${draft.id}: kategori bulundu: "${draftCategory.name}"`);
       
       // Draft'ın ana kategorisini bul (path'in en başındaki)
       let rootCategory = draftCategory;
+      const pathToRoot = [rootCategory.name];
+      
       while (rootCategory.parentId) {
         const parent = flatCategories.find(cat => cat.id === rootCategory.parentId);
         if (parent) {
           rootCategory = parent;
+          pathToRoot.unshift(parent.name);
         } else {
+          console.log(`❌ Parent kategori bulunamadı: ${rootCategory.parentId}`);
           break;
         }
       }
       
+      console.log(`📍 Draft ${draft.id} path: ${pathToRoot.join(' → ')}`);
+      console.log(`📍 Root kategori: "${rootCategory.name}" (ID:${rootCategory.id})`);
+      console.log(`🔍 Karşılaştırma: ${rootCategory.id} === ${category.id} = ${rootCategory.id === category.id}`);
+      
       return rootCategory.id === category.id;
     });
+    
+    if (mainCategoryDraft) {
+      console.log(`✅ DRAFT BULUNDU! Draft ID: ${mainCategoryDraft.id}`);
+    } else {
+      console.log('❌ Hiç draft bulunamadı');
+    }
     
     return mainCategoryDraft || null;
   };
