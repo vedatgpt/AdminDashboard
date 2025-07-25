@@ -61,15 +61,30 @@ export default function Step3() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }, []);
 
-  // Cleanup blob URLs on unmount
+  // ENHANCED: Cleanup blob URLs on unmount + comprehensive cleanup
   useEffect(() => {
     return () => {
+      console.log('🗑️ UNMOUNT CLEANUP: Revoking all blob URLs');
       blobUrlsRef.current.forEach(url => {
         URL.revokeObjectURL(url);
+        console.log('🗑️ UNMOUNT: Blob URL revoked:', url);
       });
       blobUrlsRef.current.clear();
+      
+      // Force garbage collection of any orphaned blob URLs
+      if (images.length > 0) {
+        images.forEach(img => {
+          if (img.url.startsWith('blob:')) {
+            URL.revokeObjectURL(img.url);
+          }
+          if (img.thumbnail?.startsWith('blob:')) {
+            URL.revokeObjectURL(img.thumbnail);
+          }
+        });
+      }
+      console.log('🗑️ UNMOUNT CLEANUP: Complete');
     };
-  }, []);
+  }, [images]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -81,21 +96,46 @@ export default function Step3() {
   // Load existing photos from draft when component mounts
   const { data: draftData } = useDraftListing(currentClassifiedId);
 
-  // Load photos from draft data when available (only once when component mounts)
+  // Load photos from draft data when available - ENHANCED BLOB CLEANUP
   useEffect(() => {
     if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
         const existingPhotos = JSON.parse(draftData.photos as string);
 
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
+          // CLEAN UP EXISTING BLOB URLS BEFORE LOADING NEW ONES
+          blobUrlsRef.current.forEach(blobUrl => {
+            URL.revokeObjectURL(blobUrl);
+          });
+          blobUrlsRef.current.clear();
+          console.log('🗑️ BLOB CLEANUP: All existing blob URLs cleared before loading draft');
+          
+          // Filter out any photos with blob URLs (they're invalid after page reload)
+          const validPhotos = existingPhotos.filter(photo => {
+            const isValid = photo.url && !photo.url.startsWith('blob:');
+            if (!isValid) {
+              console.log('🗑️ FILTERING: Removing invalid blob photo:', photo.id);
+            }
+            return isValid;
+          });
+          
           // Only set if images array is empty to avoid overriding current state
           setImages(prev => {
-            return prev.length === 0 ? existingPhotos : prev;
+            return prev.length === 0 ? validPhotos : prev;
           });
+          
+          console.log('✅ VALID PHOTOS LOADED:', validPhotos.length);
         }
       } catch (error) {
-        // Handle parsing error silently
+        console.error('Draft photos parsing error:', error);
       }
+    } else {
+      // No draft photos, clear everything
+      blobUrlsRef.current.forEach(blobUrl => {
+        URL.revokeObjectURL(blobUrl);
+      });
+      blobUrlsRef.current.clear();
+      console.log('🗑️ BLOB CLEANUP: No draft photos, cleared all blob URLs');
     }
   }, [draftData]);
 
@@ -232,14 +272,44 @@ export default function Step3() {
       return response.json();
     },
     onSuccess: (_, imageId) => {
+      console.log('✅ DELETE SUCCESS: Removing from state:', imageId);
+      
       setImages(prev => {
         const imageToDelete = prev.find(img => img.id === imageId);
-        if (imageToDelete?.url.startsWith('blob:')) {
-          URL.revokeObjectURL(imageToDelete.url);
-          blobUrlsRef.current.delete(imageToDelete.url);
+        
+        // COMPREHENSIVE BLOB URL CLEANUP
+        if (imageToDelete) {
+          console.log('🗑️ CLEANUP: Image found for deletion:', {
+            id: imageToDelete.id,
+            url: imageToDelete.url,
+            thumbnail: imageToDelete.thumbnail
+          });
+          
+          // Clean up main image blob URL
+          if (imageToDelete.url.startsWith('blob:')) {
+            URL.revokeObjectURL(imageToDelete.url);
+            blobUrlsRef.current.delete(imageToDelete.url);
+            console.log('🗑️ CLEANUP: Main blob URL revoked');
+          }
+          
+          // Clean up thumbnail blob URL
+          if (imageToDelete.thumbnail?.startsWith('blob:')) {
+            URL.revokeObjectURL(imageToDelete.thumbnail);
+            blobUrlsRef.current.delete(imageToDelete.thumbnail);
+            console.log('🗑️ CLEANUP: Thumbnail blob URL revoked');
+          }
         }
-        return prev.filter(img => img.id !== imageId);
+        
+        const filtered = prev.filter(img => img.id !== imageId);
+        console.log('🗑️ CLEANUP: Images after filter:', filtered.length, 'remaining images');
+        return filtered;
       });
+      
+      // FORCE REACT RE-RENDER
+      setTimeout(() => {
+        console.log('🔄 FORCE RE-RENDER: Triggering state update');
+        setImages(prev => [...prev]); // Force array reference change
+      }, 100);
       
       // Fotoğraf silindikten sonra Step4 prefetch tetikle
       if (currentClassifiedId && user?.id) {

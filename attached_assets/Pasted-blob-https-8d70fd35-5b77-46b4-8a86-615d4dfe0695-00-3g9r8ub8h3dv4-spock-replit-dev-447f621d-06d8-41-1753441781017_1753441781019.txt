@@ -1,0 +1,34 @@
+blob:https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/447f621d-06d8-41fa-8096-cba26578e663:1  GET blob:https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/447f621d-06d8-41fa-8096-cba26578e663 net::ERR_FILE_NOT_FOUND
+Image
+onError @ Step3.tsx:821
+callCallback2 @ chunk-RPCDYKBN.js?v=1b8949e4:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1b8949e4:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1b8949e4:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1b8949e4:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1b8949e4:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1b8949e4:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1b8949e4:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1b8949e4:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1b8949e4:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1b8949e4:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1b8949e4:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1b8949e4:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1b8949e4:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1b8949e4:5472Understand this error
+Step3.tsx:818 ❌ IMAGE LOAD ERROR: cf3ad949-9f89-4e87-b863-eb7feecf8159 URL: blob:https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/447f621d-06d8-41fa-8096-cba26578e663
+onError @ Step3.tsx:818
+callCallback2 @ chunk-RPCDYKBN.js?v=1b8949e4:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=1b8949e4:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=1b8949e4:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=1b8949e4:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=1b8949e4:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=1b8949e4:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=1b8949e4:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=1b8949e4:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=1b8949e4:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=1b8949e4:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=1b8949e4:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=1b8949e4:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=1b8949e4:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=1b8949e4:5472Understand this error
+blob:https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/447f621d-06d8-41fa-8096-cba26578e663:1  GET blob:https://8d70fd35-5b77-46b4-8a86-615d4dfe0695-00-3g9r8ub8h3dv4.spock.replit.dev/447f621d-06d8-41fa-8096-cba26578e663 net::ERR_FILE_NOT_FOUND
