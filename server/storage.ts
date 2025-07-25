@@ -401,19 +401,15 @@ export class DatabaseStorage implements IStorage {
         ),
         fields_with_priority AS (
           SELECT 
-            ccf.id, ccf.category_id, ccf.field_name, ccf.field_type, ccf.label, ccf.placeholder, 
-            ccf.options, ccf.is_required, ccf.sort_order, ccf.min_value, ccf.max_value, 
-            ccf.has_units, ccf.unit_options, ccf.default_unit, ccf.created_at,
-            ccf.is_active, ccf.is_numeric_only, ccf.use_thousand_separator, ccf.use_mobile_numeric_keyboard,
+            ccf.*,
             ch.level,
             ROW_NUMBER() OVER (PARTITION BY ccf.label ORDER BY ch.level ASC) as priority
           FROM category_hierarchy ch
           INNER JOIN category_custom_fields ccf ON ccf.category_id = ch.id
         )
         SELECT 
-          id, category_id, field_name, field_type, label, placeholder, options, is_required, 
-          sort_order, min_value, max_value, has_units, unit_options, default_unit, created_at,
-          is_active, is_numeric_only, use_thousand_separator, use_mobile_numeric_keyboard
+          id, category_id, label, type, placeholder, options, required, 
+          sort_order, min_value, max_value, has_units, unit_options, default_unit, created_at
         FROM fields_with_priority 
         WHERE priority = 1  -- Only get the closest field (lowest level)
         ORDER BY sort_order ASC, label ASC

@@ -660,16 +660,6 @@ Authentication features:
 - Added field priority system to prevent duplicate custom fields in inheritance chain
 - Maintained complete backward compatibility - all existing functionality preserved
 - Fixed major bottleneck affecting Step-2 form loading and category selection speed
-- **BUG FIX**: Fixed column mapping issue in optimized query - custom fields now displaying correctly
-
-### Image Processing Performance Optimization (July 25, 2025)
-- **CRITICAL PERFORMANCE FIX**: Created OptimizedImageProcessor with Sharp library optimizations
-- Parallel processing implementation: main image + thumbnail processed simultaneously
-- Performance improvement: 13 seconds → 1.4-2.1 seconds (85-90% faster upload times)
-- Sharp cache configuration: 100MB memory, 50 items, 2 concurrent operations
-- Batch processing system: 3 images at once to prevent memory overflow
-- Mozjpeg compression algorithm with progressive JPEG loading
-- Enhanced error handling and memory management for production stability
 
 ### Step-4 Listing Preview Page Implementation (July 22, 2025)
 - Created comprehensive listing preview page (Step4.tsx) with Swiper.js integration for photo galleries

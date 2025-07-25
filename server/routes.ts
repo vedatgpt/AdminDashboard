@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import sharp from "sharp";
-import { optimizedImageProcessor } from "./utils/optimizedImageProcessor";
+import { imageProcessor } from "./utils/imageProcessor";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import fs from "fs";
@@ -1003,16 +1003,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const imagePath = path.join(userDir, filename);
         
         try {
-          const processedImage = await optimizedImageProcessor.processImageOptimized(
+          const processedImage = await imageProcessor.processImage(
             file.buffer,
-            userDir,
-            filename,
+            imagePath,
             {
               maxWidth: 1920,
               maxHeight: 1080,
               quality: 85,
-              thumbnailWidth: 200,
-              thumbnailHeight: 150
+              watermark: true,
+              generateThumbnail: true
             }
           );
 
@@ -1020,14 +1019,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: imageId,
             filename: processedImage.filename,
             url: `/uploads/users/${userId}/temp-listings/${processedImage.filename}`,
-            thumbnail: `/uploads/users/${userId}/temp-listings/${path.basename(processedImage.thumbnailPath)}`,
+            thumbnail: processedImage.thumbnailPath 
+              ? `/uploads/users/${userId}/temp-listings/${path.basename(processedImage.thumbnailPath)}`
+              : undefined,
             size: processedImage.processedSize,
-            originalSize: processedImage.originalSize,
-            width: processedImage.width,
-            height: processedImage.height
+            originalSize: processedImage.originalSize
           });
         } catch (processError) {
-          console.error('Optimized image processing error:', processError);
+          console.error('Image processing error:', processError);
           continue; // Skip this image but continue with others
         }
       }
@@ -1104,7 +1103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageFile = files.find(file => file.startsWith(imageId));
       if (imageFile) {
         const imagePath = path.join(userDir, imageFile);
-        await optimizedImageProcessor.deleteImages(imagePath);
+        await imageProcessor.deleteImage(imagePath);
       }
 
       res.json({ message: "Resim silindi" });
