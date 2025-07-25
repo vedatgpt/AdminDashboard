@@ -20,13 +20,27 @@ export function useStep1Prefetch() {
         staleTime: 10 * 60 * 1000, // 10 dakika
       });
 
-      // 3. User auth verilerini prefetch et
+      // 3. CategoriesTree'yi prefetch et (DraftContinueModal için gerekli)
+      await queryClient.prefetchQuery({
+        queryKey: ['/api/categories', 'tree'],
+        queryFn: () => fetch('/api/categories').then(res => {
+          if (!res.ok) throw new Error('Failed to fetch categories');
+          return res.json();
+        }),
+        staleTime: 10 * 60 * 1000, // 10 dakika
+      });
+
+      // 4. User auth verilerini prefetch et
       await queryClient.prefetchQuery({
         queryKey: ['/api/auth/me'],
         staleTime: 5 * 60 * 1000, // 5 dakika
       });
 
-      console.log('✅ Step1 draft modal verileri prefetch edildi');
+      console.log('✅ Step1 draft modal verileri prefetch edildi:');
+      console.log('  - Draft listings cache: 1 dakika');
+      console.log('  - Categories cache: 10 dakika'); 
+      console.log('  - Categories tree cache: 10 dakika');
+      console.log('  - Auth data cache: 5 dakika');
     } catch (error) {
       console.error('❌ Step1 prefetch hatası:', error);
     }
