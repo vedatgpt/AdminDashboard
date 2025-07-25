@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
+import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -30,7 +31,8 @@ export default function Step3() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sortableRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { smartPrefetchStep4 } = useStep4Prefetch();
   const { toast } = useToast();
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +113,11 @@ export default function Step3() {
         xhr.onload = function() {
           if (xhr.status === 200) {
             console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
+            
+            // Sıralama kaydedildikten sonra Step4 prefetch tetikle (debounced)
+            if (user?.id) {
+              smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf sıralama');
+            }
           } else {
             console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
           }
@@ -170,6 +177,12 @@ export default function Step3() {
               }
               return newImages;
             });
+            
+            // Fotoğraf upload tamamlandıktan sonra Step4 prefetch tetikle
+            if (currentClassifiedId && user?.id) {
+              smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf yükleme');
+            }
+            
             resolve(data);
           } else {
             reject(new Error('Upload failed'));
@@ -226,6 +239,11 @@ export default function Step3() {
         }
         return prev.filter(img => img.id !== imageId);
       });
+      
+      // Fotoğraf silindikten sonra Step4 prefetch tetikle
+      if (currentClassifiedId && user?.id) {
+        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf silme');
+      }
     },
     onError: (error) => {
       toast({
@@ -266,6 +284,11 @@ export default function Step3() {
                     ? { ...prevImg, url: newUrl, thumbnail: newUrl }
                     : prevImg
                 ));
+                
+                // Fotoğraf döndürme tamamlandıktan sonra Step4 prefetch tetikle
+                if (currentClassifiedId && user?.id) {
+                  smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
+                }
               }
             }, 'image/jpeg', 0.9);
           };
@@ -465,6 +488,11 @@ export default function Step3() {
         // Wait a bit more to ensure server has processed the data
         await new Promise(resolve => setTimeout(resolve, 500));
 
+        // Son prefetch - Step4'e gitmeden önce
+        if (user?.id) {
+          smartPrefetchStep4(currentClassifiedId, user.id, 'Step4 navigation');
+        }
+        
         // Navigate to Step-4
         navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
       } catch (error) {
