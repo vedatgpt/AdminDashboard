@@ -900,13 +900,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
       
+      // CRITICAL FIX: Delete existing drafts before creating new one
+      const existingDrafts = await storage.getUserDraftListings(userId);
+      console.log(`📊 Kullanıcı ${userId} için ${existingDrafts.length} adet mevcut draft bulundu`);
+      
+      if (existingDrafts.length > 0) {
+        for (const existingDraft of existingDrafts) {
+          await storage.deleteDraftListing(existingDraft.id);
+          console.log(`🗑️ Eski draft silindi: ID ${existingDraft.id} (User ${userId})`);
+        }
+        console.log(`✅ Toplam ${existingDrafts.length} adet eski draft silme işlemi tamamlandı`);
+      }
+      
       const draft = await storage.createDraftListing({
         userId,
         status: "draft"
       });
       
+      console.log(`✅ Yeni draft oluşturuldu: ID ${draft.id} (User ${userId})`);
       res.status(201).json(draft);
     } catch (error) {
+      console.error('Draft oluşturma hatası:', error);
       res.status(500).json({ error: "İlan taslağı oluşturulurken hata oluştu" });
     }
   });
