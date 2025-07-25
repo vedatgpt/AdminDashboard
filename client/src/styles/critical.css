@@ -28,21 +28,22 @@
   }
 }
 
-/* Logo optimization */
+/* Logo optimization - HIGH QUALITY */
 .logo-optimized {
+  image-rendering: auto;
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  will-change: transform;
-  transform: translateZ(0);
+  image-rendering: smooth;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
-/* Icon optimization */
+/* Icon optimization - HIGH QUALITY */
 .icon-optimized {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  will-change: transform;
-  transform: translateZ(0);
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast; 
+  image-rendering: smooth;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Prevent layout shift */
