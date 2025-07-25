@@ -6,7 +6,7 @@ export function useLandingPrefetch() {
 
   const prefetchStep1Data = useCallback(async () => {
     try {
-      console.log('🚀 Landing prefetch başlatılıyor: Step-1 verileri + kategori ikonları');
+      console.log('🚀 Landing prefetch başlatılıyor: Step-1 verileri + kategori ikonları + navbar logosu');
       
       // 1. Kategori verilerini prefetch et
       await queryClient.prefetchQuery({
@@ -52,9 +52,24 @@ export function useLandingPrefetch() {
             });
           });
 
-        // Tüm ikonları paralel yükle
-        await Promise.allSettled(iconPromises);
-        console.log('🎯 Tüm kategori ikonları prefetch tamamlandı');
+        // Navbar logosu da prefetch et - Vite asset import path kullan
+        const logoPath = '/attached_assets/logo_1752808818099.png';
+        const logoPromise = new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            console.log('✅ Navbar logosu cache\'e alındı');
+            resolve();
+          };
+          img.onerror = () => {
+            console.log('❌ Navbar logosu yüklenemedi - path:', logoPath);
+            resolve();
+          };
+          img.src = logoPath;
+        });
+
+        // Tüm ikonları + logoyu paralel yükle
+        await Promise.allSettled([...iconPromises, logoPromise]);
+        console.log('🎯 Tüm kategori ikonları + navbar logosu prefetch tamamlandı');
       }
 
       // 3. Auth verilerini de prefetch et
