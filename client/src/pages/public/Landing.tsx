@@ -43,7 +43,7 @@ export default function Landing() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/create-listing/step-1">
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+              <button className="bg-[#EC7830] hover:bg-[#d6691f] text-white font-bold py-3 px-8 rounded-lg transition-colors">
                 İlan Ver
               </button>
             </Link>
