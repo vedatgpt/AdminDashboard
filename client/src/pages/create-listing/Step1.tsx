@@ -465,20 +465,7 @@ export default function CreateListingStep1() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Navbar spacing: px-4 sm:px-6 lg:px-8 */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-96">
-            <div className="animate-spin inline-block size-6 border-3 border-current border-t-transparent text-orange-600 rounded-full" role="status" aria-label="loading">
-              <span className="sr-only">Loading...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   // Build category levels for horizontal boxes
   const getCategoryLevels = () => {
