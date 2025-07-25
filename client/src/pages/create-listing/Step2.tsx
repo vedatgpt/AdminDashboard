@@ -8,6 +8,10 @@ import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Underline } from '@tiptap/extension-underline';
+import { Highlight } from '@tiptap/extension-highlight';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -30,27 +34,36 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Duplicate link extension sorunu çözümü
+  // TipTap Editor Setup - Gelişmiş özelliklerle, duplicate extension fix
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        link: false, // StarterKit'teki link'i devre dışı bırak
+        link: false, // Duplicate önlemek için StarterKit link'ini devre dışı bırak
+        underline: false, // Duplicate önlemek için StarterKit underline'ını devre dışı bırak
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-[#EC7830] underline',
+          class: 'text-[#EC7830] underline hover:text-[#d66628] transition-colors',
         },
       }),
+      TextStyle,
+      Color.configure({
+        types: ['textStyle'],
+      }),
+      Underline,
+      Highlight.configure({
+        multicolor: true,
+      }),
     ],
-    content: formData.customFields.description || '<p></p>',
+    content: formData.customFields.description || '<p>Ürününüzün detaylı açıklamasını yazınız...</p>',
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       handleInputChange('description', html);
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] p-4',
+        class: 'focus:outline-none min-h-[200px] p-4 border border-gray-200 rounded-lg',
       },
     },
   });
@@ -461,36 +474,115 @@ export default function Step2() {
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="tiptap-editor-wrapper border border-gray-200 rounded-lg">
-            {/* Toolbar */}
-            <div className="border-b border-gray-200 p-2 flex gap-1 bg-gray-50">
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bold') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-              >
-                B
-              </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={`px-2 py-1 rounded text-sm italic ${editor?.isActive('italic') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-              >
-                I
-              </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bulletList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-              >
-                •
-              </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('orderedList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-              >
-                1.
-              </button>
+            {/* Gelişmiş Toolbar */}
+            <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-2">
+              {/* Formatting Buttons */}
+              <div className="flex gap-1 border-r border-gray-300 pr-2">
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                  className={`px-3 py-1.5 rounded text-sm font-bold border transition-colors ${
+                    editor?.isActive('bold')
+                      ? 'bg-[#EC7830] text-white border-[#EC7830]'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+                  }`}
+                  title="Kalın"
+                >
+                  B
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  className={`px-3 py-1.5 rounded text-sm italic border transition-colors ${
+                    editor?.isActive('italic')
+                      ? 'bg-[#EC7830] text-white border-[#EC7830]'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+                  }`}
+                  title="İtalik"
+                >
+                  I
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                  className={`px-3 py-1.5 rounded text-sm underline border transition-colors ${
+                    editor?.isActive('underline')
+                      ? 'bg-[#EC7830] text-white border-[#EC7830]'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+                  }`}
+                  title="Altı Çizgili"
+                >
+                  U
+                </button>
+              </div>
+
+              {/* List Buttons */}
+              <div className="flex gap-1 border-r border-gray-300 pr-2">
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                  className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                    editor?.isActive('bulletList')
+                      ? 'bg-[#EC7830] text-white border-[#EC7830]'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+                  }`}
+                  title="Madde İşaretli Liste"
+                >
+                  •
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                  className={`px-3 py-1.5 rounded text-sm border transition-colors ${
+                    editor?.isActive('orderedList')
+                      ? 'bg-[#EC7830] text-white border-[#EC7830]'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+                  }`}
+                  title="Numaralı Liste"
+                >
+                  1.
+                </button>
+              </div>
+
+              {/* Color Buttons */}
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#EC7830').run()}
+                  className="w-8 h-8 rounded border-2 border-gray-300 transition-transform hover:scale-110 shadow-sm"
+                  style={{ backgroundColor: '#EC7830' }}
+                  title="Turuncu Renk"
+                />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#dc2626').run()}
+                  className="w-8 h-8 rounded border-2 border-gray-300 transition-transform hover:scale-110 shadow-sm"
+                  style={{ backgroundColor: '#dc2626' }}
+                  title="Kırmızı Renk"
+                />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#16a34a').run()}
+                  className="w-8 h-8 rounded border-2 border-gray-300 transition-transform hover:scale-110 shadow-sm"
+                  style={{ backgroundColor: '#16a34a' }}
+                  title="Yeşil Renk"
+                />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().setColor('#2563eb').run()}
+                  className="w-8 h-8 rounded border-2 border-gray-300 transition-transform hover:scale-110 shadow-sm"
+                  style={{ backgroundColor: '#2563eb' }}
+                  title="Mavi Renk"
+                />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().unsetColor().run()}
+                  className="w-8 h-8 rounded border-2 border-gray-300 bg-gray-100 transition-transform hover:scale-110 shadow-sm flex items-center justify-center text-xs font-bold text-gray-600"
+                  title="Rengi Kaldır"
+                >
+                  A
+                </button>
+              </div>
             </div>
             
             {/* Editor Content */}
