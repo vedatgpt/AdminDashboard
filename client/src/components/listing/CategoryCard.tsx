@@ -24,11 +24,15 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
             <img 
               src={iconUrl} 
               alt={category.name}
-              className="w-12 h-12 object-contain"
+              className="w-12 h-12 object-contain icon-optimized no-layout-shift"
               loading="eager"
               decoding="sync"
               crossOrigin="anonymous"
-              style={{ imageRendering: 'optimizeQuality' as any }}
+              style={{ 
+                imageRendering: 'optimizeQuality' as any,
+                willChange: 'transform',
+                transform: 'translateZ(0)'
+              }}
               onLoad={() => {
                 console.log(`📷 CategoryCard icon loaded from cache: ${category.name}`);
               }}

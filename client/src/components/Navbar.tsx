@@ -214,12 +214,16 @@ export default function ModernNavbar({ onSearch }: ModernNavbarProps) {
           <div className="flex items-center flex-shrink-0">
             <Link href="/">
               <img
-                className="w-[140px] h-8 flex-shrink-0 cursor-pointer transition-opacity duration-200 hover:opacity-80"
+                className="w-[140px] h-8 flex-shrink-0 cursor-pointer transition-opacity duration-200 hover:opacity-80 logo-optimized no-layout-shift"
                 alt="Logo"
                 src={logoPath}
                 loading="eager"
                 decoding="sync"
-                style={{ imageRendering: 'optimizeQuality' as any }}
+                style={{ 
+                  imageRendering: 'optimizeQuality' as any,
+                  willChange: 'transform',
+                  transform: 'translateZ(0)'
+                }}
               />
             </Link>
           </div>

@@ -1,0 +1,51 @@
+/* CRITICAL CSS - LOGO VE İKONLAR İÇİN INSTANT LOADING */
+
+/* Logo container */
+.navbar-logo-container {
+  width: 140px;
+  height: 32px;
+  background: linear-gradient(90deg, #f3f4f6 25%, transparent 25%);
+  background-size: 20px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Category icon container */
+.category-icon-container {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(90deg, #f3f4f6 25%, transparent 25%);
+  background-size: 20px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Shimmer loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+/* Logo optimization */
+.logo-optimized {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Icon optimization */
+.icon-optimized {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Prevent layout shift */
+.no-layout-shift {
+  contain: layout style;
+}
