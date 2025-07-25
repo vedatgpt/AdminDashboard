@@ -4,6 +4,7 @@ import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing'
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
+import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/quill-custom.css';
@@ -19,7 +20,8 @@ export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath, classifiedId } = state;
   const [, navigate] = useLocation();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { prefetchStep3Data } = useStep3Prefetch();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -243,6 +245,11 @@ export default function Step2() {
           id: currentClassifiedId,
           data: draftData
         });
+        
+        // Step3 verilerini prefetch et - Step3'e geçmeden önce
+        if (user?.id) {
+          prefetchStep3Data(currentClassifiedId, user.id);
+        }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
       }
