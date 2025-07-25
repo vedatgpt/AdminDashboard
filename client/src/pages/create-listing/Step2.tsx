@@ -83,8 +83,7 @@ export default function Step2() {
     },
   });
 
-  // Karakter sayısı hesaplama
-  const currentLength = editor?.getText().length || 0;
+
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -492,14 +491,6 @@ export default function Step2() {
             <span className="text-red-500 ml-1">*</span>
           </label>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            {/* Character Counter */}
-            <div className="px-4 py-2 bg-gray-100 text-right text-sm text-gray-600">
-              {currentLength}/{MAX_DESCRIPTION_LENGTH} karakter
-              {currentLength >= MAX_DESCRIPTION_LENGTH && (
-                <span className="text-red-500 ml-2">Karakter sınırına ulaşıldı!</span>
-              )}
-            </div>
-            
             {/* TipTap Toolbar */}
             <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-1">
               {/* Format Buttons */}
@@ -512,14 +503,7 @@ export default function Step2() {
                 B
               </button>
               
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={`w-8 h-8 rounded border text-lg italic font-medium flex items-center justify-center ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Italic"
-              >
-                I
-              </button>
+
 
               <button
                 type="button"
@@ -582,13 +566,15 @@ export default function Step2() {
                   }}
                   title="Text Color"
                 >
-                  <div className="w-3 h-3 bg-white rounded-sm opacity-80"></div>
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                  </svg>
                 </button>
                 <div
                   id="color-dropdown"
-                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[180px]"
+                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[150px]"
                 >
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -642,24 +628,6 @@ export default function Step2() {
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
                       title="Purple"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#FACC15').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-yellow-400 hover:scale-110 transition-transform"
-                      title="Yellow"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#F97316').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-orange-500 hover:scale-110 transition-transform"
-                      title="Orange 2"
                     />
                   </div>
                   <div className="mt-3 border-t pt-2">
