@@ -71,31 +71,28 @@
   text-align: left;
 }
 
-/* Color support with formatting combinations - FİX EDİLDİ */
-.ProseMirror span[style*="color"] {
-  /* Color styles are applied inline */
-}
-
+/* TipTap Bold + Color doğru implementasyonu */
 .ProseMirror strong {
   font-weight: bold !important;
 }
 
-.ProseMirror strong span[style*="color"] {
-  font-weight: bold !important;
+/* Color styles apply to any text, including bold */
+.ProseMirror [style*="color"] {
+  /* Color already applied inline via style attribute */
 }
 
-.ProseMirror span[style*="color"] strong {
-  font-weight: bold !important;
-}
-
+/* Bold text should remain bold even when color is applied */
 .ProseMirror strong[style*="color"] {
   font-weight: bold !important;
 }
 
-/* Bold text with color combination */
-.ProseMirror strong[style*="color"],
-.ProseMirror span[style*="color"] strong,
-.ProseMirror strong span[style*="color"] {
+/* Nested combinations: strong inside color spans */
+.ProseMirror [style*="color"] strong {
+  font-weight: bold !important;
+}
+
+/* Nested combinations: color spans inside strong */
+.ProseMirror strong [style*="color"] {
   font-weight: bold !important;
 }
 
