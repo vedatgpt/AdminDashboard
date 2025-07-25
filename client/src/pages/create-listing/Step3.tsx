@@ -19,6 +19,7 @@ interface UploadedImage {
   uploading?: boolean;
   progress?: number;
   order?: number;
+  rotating?: boolean; // ROTATION FIX: Add rotation state
 }
 
 // Import constants from config
@@ -254,52 +255,125 @@ export default function Step3() {
     }
   });
 
-  // Optimized rotate image function using requestIdleCallback
-  const rotateImage = useCallback((imageId: string) => {
-    setImages(prev => prev.map(img => {
-      if (img.id === imageId) {
-        // Use requestIdleCallback for non-blocking rotation
-        requestIdleCallback(() => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const imageElement = new Image();
+  // PHOTO ROTATION FIX: Stable rotation function with proper memory management
+  const rotateImage = useCallback(async (imageId: string) => {
+    console.log('🔄 ROTATION FIX: Fotoğraf döndürme başlatılıyor:', imageId);
+    
+    try {
+      // Find the image to rotate
+      const imageToRotate = images.find(img => img.id === imageId);
+      if (!imageToRotate) {
+        console.error('❌ ROTATION ERROR: Image not found:', imageId);
+        return;
+      }
 
-          imageElement.onload = () => {
+      // Show loading state immediately
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { ...img, rotating: true }
+          : img
+      ));
+
+      // Create canvas for rotation with proper error handling
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Canvas context oluşturulamadı');
+      }
+
+      // Load image and perform rotation
+      const imageElement = new Image();
+      imageElement.crossOrigin = 'anonymous'; // CORS fix for blob URLs
+      
+      const rotationPromise = new Promise<string>((resolve, reject) => {
+        imageElement.onload = () => {
+          try {
+            console.log('🖼️ ROTATION FIX: Image loaded, performing rotation...');
+            
             // Set canvas dimensions for 90-degree rotation
             canvas.width = imageElement.height;
             canvas.height = imageElement.width;
 
-            // Apply rotation
-            ctx?.translate(canvas.width / 2, canvas.height / 2);
-            ctx?.rotate(Math.PI / 2);
-            ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
+            // Clear canvas to prevent artifacts
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply rotation transformation
+            ctx.save(); // Save context state
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(Math.PI / 2);
+            ctx.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
+            ctx.restore(); // Restore context state
 
-            // Convert back to blob and update image
+            // Convert to high-quality blob
             canvas.toBlob((blob) => {
               if (blob) {
+                // Clean up old blob URL if it exists
+                if (imageToRotate.url.startsWith('blob:')) {
+                  URL.revokeObjectURL(imageToRotate.url);
+                  blobUrlsRef.current.delete(imageToRotate.url);
+                }
+                
                 const newUrl = URL.createObjectURL(blob);
                 blobUrlsRef.current.add(newUrl);
-                setImages(prev => prev.map(prevImg => 
-                  prevImg.id === imageId 
-                    ? { ...prevImg, url: newUrl, thumbnail: newUrl }
-                    : prevImg
-                ));
-                
-                // Fotoğraf döndürme tamamlandıktan sonra Step4 prefetch tetikle
-                if (currentClassifiedId && user?.id) {
-                  smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
-                }
+                resolve(newUrl);
+              } else {
+                reject(new Error('Blob oluşturulamadı'));
               }
-            }, 'image/jpeg', 0.9);
-          };
+            }, 'image/jpeg', 0.95); // Higher quality for better visual result
+            
+          } catch (error) {
+            console.error('❌ ROTATION ERROR: Canvas operation failed:', error);
+            reject(error);
+          }
+        };
 
-          imageElement.src = img.url;
-        });
-        return img;
+        imageElement.onerror = () => {
+          console.error('❌ ROTATION ERROR: Image load failed');
+          reject(new Error('Resim yüklenemedi'));
+        };
+      });
+
+      // Set image source and wait for completion
+      imageElement.src = imageToRotate.url;
+      const newUrl = await rotationPromise;
+
+      // Update state with new rotated image
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { 
+              ...img, 
+              url: newUrl, 
+              thumbnail: newUrl,
+              rotating: false 
+            }
+          : img
+      ));
+
+      console.log('✅ ROTATION SUCCESS: Image rotated successfully');
+      
+      // Trigger Step4 prefetch after rotation
+      if (currentClassifiedId && user?.id) {
+        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
       }
-      return img;
-    }));
-  }, []);
+
+    } catch (error) {
+      console.error('❌ ROTATION ERROR: Rotation failed:', error);
+      
+      // Remove loading state on error
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { ...img, rotating: false }
+          : img
+      ));
+      
+      toast({
+        title: "Döndürme Hatası",
+        description: error instanceof Error ? error.message : 'Fotoğraf döndürülemedi',
+        variant: "destructive"
+      });
+    }
+  }, [images, currentClassifiedId, user?.id, smartPrefetchStep4, toast]);
 
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
@@ -605,9 +679,14 @@ export default function Step3() {
                       {!image.uploading && (
                         <button
                           onClick={() => rotateImage(image.id)}
-                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
+                          disabled={image.rotating}
+                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center disabled:opacity-50"
                         >
-                          <RotateCw className="w-3 h-3" />
+                          {image.rotating ? (
+                            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <RotateCw className="w-3 h-3" />
+                          )}
                         </button>
                       )}
 
@@ -632,6 +711,16 @@ export default function Step3() {
                           <div className="text-center text-white">
                             <div className="w-6 h-6 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                             <div className="text-sm font-medium">{image.progress}%</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Rotation Progress - ROTATION FIX */}
+                      {image.rotating && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <div className="w-6 h-6 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <div className="text-sm font-medium">Döndürülüyor...</div>
                           </div>
                         </div>
                       )}
