@@ -28,17 +28,14 @@ import CreateListingStep4 from "@/pages/create-listing/Step4";
 import CreateListingLayout from "@/components/CreateListingLayout";
 import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
+import LogoLoader from "@/components/LogoLoader";
 
 function Router() {
   const { isAuthenticated, user, isLoading } = useAuth();
 
   // Loading state should be very brief
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-lg">Yükleniyor...</div>
-      </div>
-    );
+    return <LogoLoader />;
   }
 
   return (
