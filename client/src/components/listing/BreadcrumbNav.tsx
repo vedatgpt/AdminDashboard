@@ -8,7 +8,7 @@ interface BreadcrumbNavProps {
 }
 
 export default function BreadcrumbNav({ categoryPath, onCategoryClick, disableFirstCategory = false }: BreadcrumbNavProps) {
-  if (!categoryPath || categoryPath.length === 0) {
+  if (categoryPath.length === 0) {
     return null; // Don't show breadcrumb for main categories
   }
 
