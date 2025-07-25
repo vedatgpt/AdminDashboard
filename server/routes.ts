@@ -857,31 +857,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
       
-      // ENHANCED SECURITY: Multiple verification layers
-      // 1. Ownership verification - user can only access their own drafts
+      // Verify ownership - user can only access their own drafts
       if (draft.userId !== userId) {
         return res.status(403).json({ error: "Bu ilan taslağına erişim yetkiniz yok" });
       }
       
-      // 2. Status verification - only active drafts are accessible
-      if (draft.status !== 'draft') {
-        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
-      }
-      
-      // 3. CRITICAL SECURITY: Verify draft is in user's current active draft list
-      const userActiveDrafts = await storage.getUserDraftListings(userId);
-      const isDraftCurrentlyActive = userActiveDrafts.some(activeDraft => 
-        activeDraft.id === id && activeDraft.status === 'draft'
-      );
-      
-      if (!isDraftCurrentlyActive) {
-        console.log(`🚨 SECURITY: User ${userId} attempted to access inactive/deleted draft ${id}`);
-        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
-      }
-      
       res.json(draft);
     } catch (error) {
-      console.error('Draft erişim hatası:', error);
       res.status(500).json({ error: "İlan taslağı alınırken hata oluştu" });
     }
   });
