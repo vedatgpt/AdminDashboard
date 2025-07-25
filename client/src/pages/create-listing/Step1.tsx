@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
 import { useStep2Prefetch } from '@/hooks/useStep2Prefetch';
 import { useStep1Prefetch } from '@/hooks/useStep1Prefetch';
+import { useQueryClient } from '@tanstack/react-query';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -61,7 +62,8 @@ export default function CreateListingStep1() {
   const [pendingPath, setPendingPath] = useState<Category[]>([]);
   
   // Get all user drafts for checking main categories
-  const { data: allUserDrafts = [] } = useUserDraftListings();
+  // DEPLOY FIX: Enhanced draft listing with shorter cache for modal system
+  const { data: allUserDrafts = [], refetch: refetchUserDrafts } = useUserDraftListings();
 
   // Build flat categories array for easy lookup - optimized
   const flatCategories = React.useMemo(() => {
@@ -202,9 +204,10 @@ export default function CreateListingStep1() {
     return mainCategoryDraft || null;
   };
 
-  // Handle category selection
+  // Handle category selection - DEPLOY FIX VERSION
   const handleCategorySelect = (category: Category) => {
-    console.log('Kategori seçildi:', category.name, 'Parent ID:', category.parentId);
+    console.log('🔍 DEPLOY FIX: Kategori seçildi:', category.name, 'Parent ID:', category.parentId);
+    console.log('📊 Kullanıcı drafts:', allUserDrafts.map(d => `ID:${d.id} categoryId:${d.categoryId}`));
     
     // Check if this is a root level category (no parent)
     const isRootCategory = !category.parentId;
@@ -213,22 +216,39 @@ export default function CreateListingStep1() {
     
     if (isRootCategory) {
       // Ana kategori seçildiğinde - mevcut draft kontrolü yap
-      console.log('Ana kategori seçildi, draft kontrol ediliyor...');
+      console.log('🔍 DEPLOY FIX: Ana kategori seçildi, draft kontrol ediliyor...');
       
-      // Ana kategori için draft var mı kontrol et
-      const mainCategoryDraft = checkForMainCategoryDraft(category);
+      // DEPLOY FIX: Force refetch before checking drafts
+      refetchUserDrafts().then(() => {
+        console.log('🔄 DEPLOY FIX: Drafts yeniden yüklendi');
+        
+        // Ana kategori için draft var mı kontrol et
+        const mainCategoryDraft = checkForMainCategoryDraft(category);
+        
+        if (mainCategoryDraft && isAuthenticated) {
+          console.log('✅ DEPLOY FIX: Ana kategoride mevcut draft bulundu:', mainCategoryDraft.id);
+          // Modal'ı göster
+          setPendingCategory(category);
+          setPendingPath([category]);
+          setCurrentExistingDraft(mainCategoryDraft);
+          setShowDraftModal(true);
+          return; // Alt kategorileri yükleme, modal'a bekle
+        } else {
+          console.log('❌ DEPLOY FIX: Ana kategoride draft bulunamadı, normal flow devam ediyor');
+          // Eğer draft yoksa normal akışı devam ettir
+          const newPath = [category];
+          setCategoryPath(newPath);
+          dispatch({ 
+            type: 'SET_CATEGORY_WITH_PATH', 
+            payload: { 
+              category: hasChildren(category) ? null : category,
+              path: newPath 
+            } 
+          });
+        }
+      });
       
-      if (mainCategoryDraft && isAuthenticated) {
-        console.log('Ana kategoride mevcut draft bulundu:', mainCategoryDraft.id);
-        // Modal'ı göster
-        setPendingCategory(category);
-        setPendingPath([category]);
-        setCurrentExistingDraft(mainCategoryDraft);
-        setShowDraftModal(true);
-        return; // Alt kategorileri yükleme, modal'a bekle
-      }
-      
-      newPath = [category];
+      return; // Async işlem beklendiği için early return
     } else {
       // Find which level this category belongs to
       const currentLevel = getCategoryLevels().findIndex(levelCategories => 
@@ -377,16 +397,34 @@ export default function CreateListingStep1() {
     if (!currentExistingDraft || !pendingCategory) return;
     
     try {
-      console.log('Yeni ilan oluşturuluyor, eski draft siliniyor...');
+      console.log('🗑️ DEPLOY FIX: Yeni ilan oluşturuluyor, eski draft siliniyor...');
+      console.log('Silinecek draft ID:', currentExistingDraft.id);
       
-      // Delete existing draft
-      await deleteDraftMutation.mutateAsync(currentExistingDraft.id);
+      // DEPLOY FIX: Enhanced error handling for draft deletion
+      const response = await fetch(`/api/draft-listings/${currentExistingDraft.id}`, {
+        method: 'DELETE',
+        credentials: 'include', // Deploy fix: ensure cookies sent
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+        console.error('Draft silme hatası:', response.status, errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Draft silinemedi`);
+      }
+      
+      console.log('✅ Draft başarıyla silindi');
+      
+      // DEPLOY FIX: Force cache invalidation after successful deletion
+      await refetchUserDrafts();
       
       // Modal'ı kapat
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
       
-      console.log('Eski draft silindi, context tamamen sıfırlanıyor...');
+      console.log('🔄 Context tamamen sıfırlanıyor...');
       
       // Tüm context'i sıfırla - eski form verilerini temizle
       dispatch({ type: 'RESET_LISTING' });
@@ -395,7 +433,7 @@ export default function CreateListingStep1() {
       const currentUrl = window.location.pathname;
       window.history.replaceState({}, '', currentUrl);
       
-      console.log('Ana kategorinin alt kategorileri gösteriliyor...');
+      console.log('📂 Ana kategorinin alt kategorileri gösteriliyor...');
       
       // Ana kategori seçimini devam ettir - alt kategorileri göster
       const newPath = [pendingCategory];
@@ -414,11 +452,14 @@ export default function CreateListingStep1() {
       setPendingCategory(null);
       setPendingPath([]);
       
+      console.log('✅ Yeni ilan oluşturma işlemi tamamlandı');
+      
     } catch (error) {
-      console.error('Eski draft silinirken hata:', error);
+      console.error('❌ DEPLOY ERROR - Eski draft silinirken hata:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Hata",
-        description: 'Eski taslak silinirken bir hata oluştu. Lütfen tekrar deneyin.',
+        description: `Eski taslak silinirken hata: ${errorMessage}`,
         variant: "destructive"
       });
     }

@@ -44,24 +44,38 @@ export function useDraftListing(id?: number) {
   });
 }
 
-// Hook for fetching user's draft listings (authentication required)
+// Hook for fetching user's draft listings (authentication required) - DEPLOY FIX VERSION
 export function useUserDraftListings() {
   const { isAuthenticated } = useAuth();
   
   return useQuery({
     queryKey: ['/api/draft-listings'],
     queryFn: async () => {
-      const response = await fetch('/api/draft-listings');
+      console.log('🔍 DEPLOY FIX: User drafts fetch ediliyor...');
+      
+      const response = await fetch('/api/draft-listings', {
+        credentials: 'include', // Deploy fix: ensure session cookies
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
       if (!response.ok) {
         if (response.status === 401) {
+          console.error('❌ DEPLOY ERROR: Unauthorized draft access');
           throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
         }
+        console.error('❌ DEPLOY ERROR: Draft fetch failed:', response.status);
         throw new Error('İlan taslakları alınamadı');
       }
-      return response.json() as Promise<DraftListing[]>;
+      
+      const drafts = await response.json() as DraftListing[];
+      console.log(`✅ DEPLOY SUCCESS: ${drafts.length} adet draft bulundu:`, drafts.map(d => `ID:${d.id}`));
+      return drafts;
     },
     enabled: isAuthenticated, // Only run when authenticated
-    staleTime: 2 * 60 * 1000, // 2 minutes for better performance
+    staleTime: 30 * 1000, // DEPLOY FIX: Reduced to 30 seconds for modal system
+    refetchOnWindowFocus: true, // DEPLOY FIX: Refresh when window gains focus
   });
 }
 
@@ -109,19 +123,46 @@ export function useUpdateDraftListing() {
   });
 }
 
-// Hook for deleting a draft listing
+// Hook for deleting a draft listing - DEPLOY FIX VERSION
 export function useDeleteDraftListing() {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/draft-listings/${id}`, {
+      // DEPLOY FIX: Enhanced error handling and debug logging
+      console.log(`🗑️ DEPLOY FIX: Draft ${id} siliniyor...`);
+      
+      const response = await fetch(`/api/draft-listings/${id}`, {
         method: 'DELETE',
+        credentials: 'include', // Deploy fix: ensure session cookies
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+        console.error('❌ DEPLOY ERROR - Draft silme başarısız:', response.status, errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: Draft silinemedi`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ DEPLOY SUCCESS - Draft silindi:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
+      console.log(`🔄 DEPLOY FIX: Cache invalidation başlatılıyor - Draft ${id} silindi`);
+      
+      // Force cache invalidation with multiple strategies
       queryClient.invalidateQueries({ queryKey: ['/api/draft-listings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/draft-listings', id] });
+      queryClient.refetchQueries({ queryKey: ['/api/draft-listings'] });
+      
+      console.log('✅ DEPLOY SUCCESS - Cache temizlendi');
     },
+    onError: (error, id) => {
+      console.error(`❌ DEPLOY ERROR - Draft ${id} silme mutation hatası:`, error);
+    }
   });
 }
 
