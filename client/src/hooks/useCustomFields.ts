@@ -9,14 +9,16 @@ export function useCategoryCustomFields(categoryId: number) {
       return res.json();
     }),
     enabled: !!categoryId,
-    staleTime: 10 * 60 * 1000, // 10 minutes - better performance for stable data
-    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 30 * 60 * 1000, // 30 minutes - custom fields rarely change
+    gcTime: 60 * 60 * 1000, // 1 hour cache for better performance
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on mount if data exists
   });
 }
 
 export function useCreateCustomField(categoryId: number) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: Omit<InsertCustomField, 'categoryId'>) => 
       fetch(`/api/categories/${categoryId}/custom-fields`, {
@@ -38,7 +40,7 @@ export function useCreateCustomField(categoryId: number) {
 
 export function useUpdateCustomField(categoryId: number) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ fieldId, data }: { fieldId: number; data: Partial<InsertCustomField> }) =>
       fetch(`/api/categories/custom-fields/${fieldId}`, {
@@ -60,7 +62,7 @@ export function useUpdateCustomField(categoryId: number) {
 
 export function useDeleteCustomField(categoryId: number) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (fieldId: number) =>
       fetch(`/api/categories/custom-fields/${fieldId}`, {

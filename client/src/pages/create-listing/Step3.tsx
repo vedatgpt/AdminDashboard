@@ -483,7 +483,7 @@ export default function Step3() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Fotoğraf Yükleme Kutusu */}
       <div className="mb-6 lg:mt-0 mt-3">
-        <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="w-full">
             <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
               Fotoğraf
@@ -552,7 +552,7 @@ export default function Step3() {
 
                 <div ref={sortableRef} className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {images.map((image, index) => (
-                    <div key={image.id} className={`relative group bg-white border-2 border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
+                    <div key={image.id} className={`relative group bg-white border border-gray-200 overflow-hidden shadow-sm ${image.uploading ? 'uploading-item' : ''}`} style={{ aspectRatio: '4/3' }}>
                       {/* Image Order Badge - Sol üst */}
                       <div className="absolute top-1 left-1 bg-gray-800 bg-opacity-80 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-medium z-10">
                         {index + 1}
@@ -602,7 +602,7 @@ export default function Step3() {
                       {image.uploading && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                           <div className="text-center text-white">
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <div className="w-6 h-6 border border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                             <div className="text-sm font-medium">{image.progress}%</div>
                           </div>
                         </div>

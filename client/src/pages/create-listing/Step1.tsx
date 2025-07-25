@@ -492,7 +492,7 @@ export default function CreateListingStep1() {
                     <div
                       key={category.id}
                       onClick={() => handleCategorySelect(category)}
-                      className="bg-white border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
+                      className="bg-white border border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-lg transition-all duration-200 group h-32 flex flex-col justify-center"
                     >
                       <div className="flex flex-col items-center space-y-3">
                         {category.icon && (
@@ -554,7 +554,7 @@ export default function CreateListingStep1() {
                   
                   {/* Desktop Completion box */}
                   {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
-                    <div className="flex-shrink-0 w-60 bg-green-50 border-2 border-green-200 rounded-lg overflow-hidden">
+                    <div className="flex-shrink-0 w-60 bg-green-50 border border-green-200 rounded-lg overflow-hidden">
                       <div className="p-4 flex flex-col items-center justify-center h-80 text-center space-y-4">
                         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                           <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -653,7 +653,7 @@ export default function CreateListingStep1() {
               
               {/* Mobile Completion */}
               {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
-                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center space-y-4">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                     <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
