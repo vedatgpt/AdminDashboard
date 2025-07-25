@@ -12,6 +12,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import { Underline } from '@tiptap/extension-underline';
+import Image from '@tiptap/extension-image';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -50,6 +51,11 @@ export default function Step2() {
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-[#EC7830] underline',
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          style: 'max-width: 100%; height: auto; margin: 8px 0; border-radius: 4px;',
         },
       }),
       TextAlign.configure({
@@ -583,7 +589,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#000000').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-black hover:scale-110 transition-transform"
@@ -592,7 +602,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#DC2626').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-red-600 hover:scale-110 transition-transform"
@@ -601,7 +615,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#EC7830').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-[#EC7830] hover:scale-110 transition-transform"
@@ -610,7 +628,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#2563EB').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-blue-600 hover:scale-110 transition-transform"
@@ -619,7 +641,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#16A34A').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-green-600 hover:scale-110 transition-transform"
@@ -628,7 +654,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#9333EA').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
@@ -637,7 +667,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#7C2D12').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-amber-800 hover:scale-110 transition-transform"
@@ -646,7 +680,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#BE185D').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-pink-600 hover:scale-110 transition-transform"
@@ -655,7 +693,11 @@ export default function Step2() {
                     <button
                       type="button"
                       onClick={() => {
+                        const wasBold = editor?.isActive('bold');
                         editor?.chain().focus().setColor('#0F766E').run();
+                        if (wasBold) {
+                          editor?.chain().focus().toggleBold().run();
+                        }
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
                       className="w-8 h-8 rounded border border-gray-200 bg-teal-600 hover:scale-110 transition-transform"
@@ -691,9 +733,8 @@ export default function Step2() {
                     if (url) {
                       // Resim URL'si kontrolü
                       if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-                        // Resim olarak ekle
-                        const html = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; margin: 8px 0; border-radius: 4px;" />`;
-                        editor?.chain().focus().insertContent(html).run();
+                        // TipTap Image extension kullanarak resim ekle
+                        editor?.chain().focus().setImage({ src: url }).run();
                       } else {
                         // Normal link olarak ekle
                         editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();

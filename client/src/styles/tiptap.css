@@ -71,9 +71,13 @@
   text-align: left;
 }
 
-/* Color support with formatting combinations */
+/* Color support with formatting combinations - FİX EDİLDİ */
 .ProseMirror span[style*="color"] {
   /* Color styles are applied inline */
+}
+
+.ProseMirror strong {
+  font-weight: bold !important;
 }
 
 .ProseMirror strong span[style*="color"] {
@@ -85,6 +89,13 @@
 }
 
 .ProseMirror strong[style*="color"] {
+  font-weight: bold !important;
+}
+
+/* Bold text with color combination */
+.ProseMirror strong[style*="color"],
+.ProseMirror span[style*="color"] strong,
+.ProseMirror strong span[style*="color"] {
   font-weight: bold !important;
 }
 
