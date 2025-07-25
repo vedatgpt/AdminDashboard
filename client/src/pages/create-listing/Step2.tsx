@@ -344,12 +344,8 @@ export default function Step2() {
 
   if (fieldsLoading) {
     return (
-      <div className="min-h-screen bg-white p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-center items-center py-8">
-            <IOSSpinner />
-          </div>
-        </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <IOSSpinner />
       </div>
     );
   }

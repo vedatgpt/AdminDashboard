@@ -25,6 +25,11 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
               src={iconUrl} 
               alt={category.name}
               className="w-12 h-12 object-contain"
+              loading="eager"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         )}
