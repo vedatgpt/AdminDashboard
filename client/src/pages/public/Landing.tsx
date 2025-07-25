@@ -2,11 +2,24 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import ModernNavbar from "@/components/Navbar";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { useLandingPrefetch } from '@/hooks/useLandingPrefetch';
+import { useEffect } from 'react';
 import logoPath from "@assets/logo_1752808818099.png";
 
 export default function Landing() {
   const { isAuthenticated, user, logout } = useAuth();
   const [, navigate] = useLocation();
+  const { prefetchStep1Data } = useLandingPrefetch();
+
+  // Landing sayfası açılır açılmaz Step-1 verilerini ve ikonları prefetch et
+  useEffect(() => {
+    // 2 saniye bekle ki sayfa tamamen yüklensin, sonra prefetch başlat
+    const timer = setTimeout(() => {
+      prefetchStep1Data();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [prefetchStep1Data]);
 
   const handleLogout = async () => {
     await logout();
