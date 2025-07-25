@@ -5,17 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import { Underline } from '@tiptap/extension-underline';
-import Image from '@tiptap/extension-image';
-import ImageResize from 'tiptap-extension-resize-image';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
-import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '../../components/iOSSpinner';
 import { useLocationsTree } from '@/hooks/useLocations';
@@ -36,1059 +26,399 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Tam featured setup
-  const MAX_DESCRIPTION_LENGTH = 2000;
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        link: false,
-        bold: {
-          HTMLAttributes: {
-            class: 'font-bold',
-          },
-        },
-        paragraph: {
-          HTMLAttributes: {
-            style: 'margin: 0; line-height: 1.4;',
-          },
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-[#EC7830] underline',
-        },
-      }),
-      ImageResize.configure({
-        HTMLAttributes: {
-          style: 'margin: 8px 0; border-radius: 4px;',
-        },
-        allowBase64: true,
-        inline: false,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right'],
-        defaultAlignment: 'left'
-      }),
-      TextStyle.configure({
-        HTMLAttributes: {
-          class: 'tiptap-textstyle',
-        },
-      }),
-      Color.configure({
-        types: ['textStyle'],
-        keepMarks: true,
-        HTMLAttributes: {
-          class: 'tiptap-color',
-        },
-      }),
-      Underline.configure({
-        HTMLAttributes: {
-          class: 'underline',
-        },
-      }),
-    ],
-    content: formData.customFields.description || '<p></p>',
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      const textContent = editor.getText();
-      
-      // Karakter sınırlaması kontrolü
-      if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
-        // Draft'a kaydet
-        dispatch({
-          type: 'UPDATE_FORM_DATA',
-          payload: {
-            customFields: {
-              ...formData.customFields,
-              description: html
-            }
-          }
-        });
-        
-        // Database'e kaydet
-        handleInputChange('description', html);
-      } else {
-        // Sınır aşıldığında geri al
-        const currentContent = editor.getHTML();
-        setTimeout(() => {
-          if (editor && currentContent !== formData.customFields.description) {
-            editor.commands.setContent(formData.customFields.description || '<p></p>');
-          }
-        }, 100);
+  // Description change handler with proper sync
+  const handleDescriptionChange = (text: string) => {
+    // Önce local state'i güncelle
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        customFields: {
+          ...formData.customFields,
+          description: text
+        }
       }
-    },
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none min-h-[200px] max-h-[300px] overflow-y-auto p-4 prose prose-sm max-w-none',
-      },
-    },
-  });
-
-
+    });
+    
+    // Sonra database'e kaydet
+    handleInputChange('description', text);
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/auth/login');
+      return;
     }
-  }, [authLoading, isAuthenticated]);
-  
-  // URL parameter support
-  const urlParams = new URLSearchParams(window.location.search);
-  const classifiedIdParam = urlParams.get('classifiedId');
-  const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
-  
-  // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
-  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
-  const updateDraftMutation = useUpdateDraftListing();
+  }, [isAuthenticated, authLoading, navigate]);
 
-  // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
-  useEffect(() => {
-    if (isDraftError && draftError && currentClassifiedId) {
+  // Ürün özel alan verilerini çek
+  const { data: customFields, isLoading: customFieldsLoading } = useCategoryCustomFields(
+    selectedCategory?.id || 0,
+    !!selectedCategory?.id
+  );
 
-      
-      // 403 Forbidden: Başka kullanıcının draft'ına erişim
-      if (draftError.message?.includes('erişim yetkiniz yok')) {
-
-        // Güvenlik ihlali mesajı göster ve Step1'e yönlendir
-        navigate('/create-listing/step-1');
-      } 
-      // 404 Not Found: Hiç var olmayan draft ID
-      else if (draftError.message?.includes('bulunamadı')) {
-
-        // Sessizce Step1'e yönlendir (yeni ilan oluşturma akışı)
-        navigate('/create-listing/step-1');
-      }
-      // Diğer hatalar
-      else {
-
-        navigate('/create-listing/step-1');
-      }
-    }
-  }, [isDraftError, draftError, currentClassifiedId, navigate]);
-  
-  // Location selection state
+  // Location state
   const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
   const [selectedCity, setSelectedCity] = useState<Location | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
-  
-  // Fetch data
-  const { data: locations = [] } = useLocationsTree();
-  const { data: locationSettings } = useLocationSettings();
-  const { data: allCategories = [] } = useCategoriesTree();
-  
-  // Build flat categories array for path building
-  const flatCategories = useMemo(() => {
-    const flatten = (categories: Category[]): Category[] => {
-      const result: Category[] = [];
-      for (const category of categories) {
-        result.push(category);
-        if (category.children && category.children.length > 0) {
-          result.push(...flatten(category.children));
-        }
-      }
-      return result;
-    };
-    return flatten(allCategories);
-  }, [allCategories]);
-  
-  // Initialize classifiedId from URL on component mount
-  useEffect(() => {
-    if (currentClassifiedId && !state.classifiedId) {
-      dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentClassifiedId });
-      dispatch({ type: 'SET_IS_DRAFT', payload: true });
-    }
-  }, [currentClassifiedId, state.classifiedId, dispatch]);
 
-  // Load draft data when available and rebuild category path
-  useEffect(() => {
-    if (draftData && state.classifiedId && allCategories.length > 0) {
-      // Load draft data into context
-      dispatch({ 
-        type: 'LOAD_DRAFT', 
-        payload: { 
-          classifiedId: state.classifiedId, 
-          draft: draftData 
-        } 
-      });
-      
-      // Load form data from draft
-      if (draftData.customFields) {
-        try {
-          const customFields = JSON.parse(draftData.customFields);
-          dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
-        } catch (error) {
-          console.error('Custom fields parse error:', error);
-        }
-      }
-      
-      // Rebuild category path from draft categoryId
-      if (draftData.categoryId) {
-        const buildCategoryPath = (categoryId: number): Category[] => {
-          const path: Category[] = [];
-          let currentId = categoryId;
-          
-          while (currentId) {
-            const category = flatCategories.find(c => c.id === currentId);
-            if (category) {
-              path.unshift(category);
-              currentId = category.parentId || 0;
-            } else {
-              break;
-            }
-          }
-          return path;
-        };
-        
-        const category = flatCategories.find(c => c.id === draftData.categoryId);
-        const path = buildCategoryPath(draftData.categoryId);
-        
-        if (category && path.length > 0) {
-          dispatch({ 
-            type: 'SET_CATEGORY', 
-            payload: { category, path } 
-          });
-        }
-      }
-      
-      // Load location data from draft
-      if (draftData.locationData) {
-        try {
-          const locationData = JSON.parse(draftData.locationData);
-          if (locationData.country) setSelectedCountry(locationData.country);
-          if (locationData.city) setSelectedCity(locationData.city);
-          if (locationData.district) setSelectedDistrict(locationData.district);
-          if (locationData.neighborhood) setSelectedNeighborhood(locationData.neighborhood);
-        } catch (error) {
-          console.error('Location data parse error:', error);
-        }
-      }
-    }
-  }, [draftData, state.classifiedId, allCategories, flatCategories, dispatch]);
-  
-  // Get available locations based on selection
+  // Location hooks
+  const { data: locationsTree, isLoading: locationsLoading } = useLocationsTree();
+  const { data: locationSettings } = useLocationSettings();
+
+  // Draft listing operations
+  const { data: existingDraft, isLoading: draftLoading } = useDraftListing(classifiedId);
+  const updateDraft = useUpdateDraftListing();
+
+  // Location data processing
   const availableCountries = useMemo(() => {
-    return locations.filter(loc => loc.type === 'country');
-  }, [locations]);
-  
+    if (!locationsTree) return [];
+    return locationsTree.filter(loc => loc.level === 1);
+  }, [locationsTree]);
+
   const availableCities = useMemo(() => {
-    if (!selectedCountry) return [];
-    const findChildren = (locs: any[], parentId: number): any[] => {
-      for (const loc of locs) {
-        if (loc.id === parentId) {
-          return loc.children || [];
-        }
-        if (loc.children) {
-          const found = findChildren(loc.children, parentId);
-          if (found.length > 0) return found;
-        }
-      }
-      return [];
-    };
-    return findChildren(locations, selectedCountry.id).filter((loc: any) => loc.type === 'city');
-  }, [locations, selectedCountry]);
-  
+    if (!locationsTree || !selectedCountry) return [];
+    return locationsTree.filter(loc => 
+      loc.level === 2 && loc.parentId === selectedCountry.id
+    );
+  }, [locationsTree, selectedCountry]);
+
   const availableDistricts = useMemo(() => {
-    if (!selectedCity) return [];
-    const findChildren = (locs: any[], parentId: number): any[] => {
-      for (const loc of locs) {
-        if (loc.id === parentId) {
-          return loc.children || [];
-        }
-        if (loc.children) {
-          const found = findChildren(loc.children, parentId);
-          if (found.length > 0) return found;
-        }
-      }
-      return [];
-    };
-    return findChildren(locations, selectedCity.id).filter((loc: any) => loc.type === 'district');
-  }, [locations, selectedCity]);
+    if (!locationsTree || !selectedCity) return [];
+    return locationsTree.filter(loc => 
+      loc.level === 3 && loc.parentId === selectedCity.id
+    );
+  }, [locationsTree, selectedCity]);
 
   const availableNeighborhoods = useMemo(() => {
-    if (!selectedDistrict) return [];
-    const findChildren = (locs: any[], parentId: number): any[] => {
-      for (const loc of locs) {
-        if (loc.id === parentId) {
-          return loc.children || [];
-        }
-        if (loc.children) {
-          const found = findChildren(loc.children, parentId);
-          if (found.length > 0) return found;
-        }
-      }
-      return [];
-    };
-    return findChildren(locations, selectedDistrict.id).filter((loc: any) => loc.type === 'neighborhood');
-  }, [locations, selectedDistrict]);
-  
+    if (!locationsTree || !selectedDistrict) return [];
+    return locationsTree.filter(loc => 
+      loc.level === 4 && loc.parentId === selectedDistrict.id
+    );
+  }, [locationsTree, selectedDistrict]);
 
-
-  // Ülke görünürlüğü kapalıyken otomatik ilk ülkeyi seç
+  // Initialize location data from draft
   useEffect(() => {
-    if (locationSettings && !locationSettings.showCountry && availableCountries.length > 0 && !selectedCountry) {
-      const defaultCountry = availableCountries[0];
-      setSelectedCountry(defaultCountry);
-      updateFormData({
-        location: {
-          country: defaultCountry,
-          city: null,
-          district: null
-        }
-      });
+    if (existingDraft?.locationData) {
+      const locationData = existingDraft.locationData;
+      if (locationData.country) setSelectedCountry(locationData.country);
+      if (locationData.city) setSelectedCity(locationData.city);
+      if (locationData.district) setSelectedDistrict(locationData.district);
+      if (locationData.neighborhood) setSelectedNeighborhood(locationData.neighborhood);
     }
-  }, [locationSettings, availableCountries, selectedCountry]);
-  
-  const updateFormData = (newData: any) => {
-    dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
-  };
-  
-  // Test verilerini doldur fonksiyonu
-  const fillTestData = () => {
-    const testData = {
-      // Universal fields
-      title: 'Test BMW 3.20d Sedan - Galeriden Temiz',
-      description: '<p><strong>Temiz ve bakımlı araç!</strong></p><p>• Motor hacmi: 2000cc</p><p>• Yakıt türü: Dizel</p><p>• Vites: Manuel</p><p>• Renk: Beyaz</p><p>• Kilometre: 125.000km</p><p>• Hasar durumu: Boyasız</p>',
-      price: { value: '485000', unit: 'TL' },
-      
-      // Custom fields with exact API field names
-      'Yıl': '2023',
-      'Yakıt Tipi': 'Dizel',
-      'Vites': 'Manuel',
-      'Araç Durumu': 'İkinci El',
-      'Kilometre': { value: '125000', unit: 'km' },
-      'Kasa Tipi': 'Sedan',
-      'Motor Gücü': { value: '190', unit: 'hp' },
-      'Motor Hacmi': { value: '2000', unit: 'cc' },
-      'Çekiş': 'Önden Çekiş',
-      'Direksiyon Yönü': 'Sol',
-      'Renk': 'Beyaz',
-      'Takaslı': 'Hayır'
-    };
+  }, [existingDraft]);
 
-    // Form verilerini güncelle
-    dispatch({ 
-      type: 'SET_CUSTOM_FIELDS', 
-      payload: { 
-        ...formData.customFields, 
-        ...testData 
-      } 
+  const updateFormData = (updates: any) => {
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: updates
     });
 
-    // Lokasyon verilerini de doldur
-    if (availableCountries.length > 0) {
-      const testCountry = availableCountries[0];
-      setSelectedCountry(testCountry);
-      
-      // İlk şehri seç
-      setTimeout(() => {
-        const testCity = availableCities.length > 0 ? availableCities[0] : null;
-        if (testCity) {
-          setSelectedCity(testCity);
-        }
-      }, 100);
-    }
-
-
-  };
-
-  const nextStep = async () => {
-    // Update draft with current form data before navigating
-    if (currentClassifiedId) {
-      const draftData = {
-        title: formData.customFields.title || null,
-        description: formData.customFields.description || null,
-        price: formData.customFields.price ? JSON.stringify(formData.customFields.price) : null,
-        customFields: JSON.stringify(formData.customFields),
-        locationData: JSON.stringify({
+    // Auto-save to draft database
+    if (classifiedId) {
+      const newFormData = { ...formData, ...updates };
+      updateDraft.mutate({
+        id: classifiedId,
+        title: newFormData.customFields?.title || '',
+        description: newFormData.customFields?.description || '',
+        price: newFormData.customFields?.price || null,
+        customFields: newFormData.customFields || {},
+        locationData: {
           country: selectedCountry,
           city: selectedCity,
           district: selectedDistrict,
-          neighborhood: selectedNeighborhood,
-          location: {
-            country: selectedCountry,
-            city: selectedCity,
-            district: selectedDistrict,
-            neighborhood: selectedNeighborhood
-          }
-        })
-      };
-      
-      // Data saved successfully
-      
-      try {
-        await updateDraftMutation.mutateAsync({
-          id: currentClassifiedId,
-          data: draftData
-        });
-        
-        // Step3 verilerini prefetch et - Step3'e geçmeden önce
-        if (user?.id) {
-          prefetchStep3Data(currentClassifiedId, user.id);
+          neighborhood: selectedNeighborhood
         }
-      } catch (error) {
-        console.error('Draft güncellenemedi:', error);
-      }
+      });
     }
-    
-    dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-    const url = currentClassifiedId ? 
-      `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
-      '/create-listing/step-3';
-    navigate(url);
   };
-  // Get categoryId from draft or selected category for custom fields
-  const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
 
-  const { data: customFields = [], isLoading: fieldsLoading } = useCategoryCustomFields(categoryIdForFields);
+  // Navigation handlers
+  const handleBackClick = () => {
+    navigate('/create-listing/step-1');
+  };
 
-  // FINAL LOADING CHECK: Auth, Draft VE Fields - HEPSI BİRLİKTE
-  if (authLoading || isDraftLoading || fieldsLoading) {
+  const handleNextStep = () => {
+    prefetchStep3Data(classifiedId);
+    navigate(`/create-listing/step-3?classifiedId=${classifiedId}`);
+  };
+
+  // Loading state
+  if (authLoading || draftLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <IOSSpinner />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <IOSSpinner size="large" />
       </div>
     );
   }
 
-  // Custom fields yoksa da fiyat inputu gösterilmeli
+  if (!selectedCategory) {
+    navigate('/create-listing/step-1');
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-white">
-
-      {/* Main content with dynamic padding based on breadcrumb presence */}
-      <div className="lg:pt-6 pt-[64px]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
+    <div className="min-h-screen bg-gray-50">
+      <PageLoadIndicator />
+      
+      {/* Desktop ve Mobile Layout */}
+      <div className="pt-[60px] lg:pt-0">
+        <div className="max-w-4xl mx-auto p-6">
           
-         
-
-          {/* Kategori Bilgi Kutusu */}
-          <div className="mb-6 lg:mt-0 mt-3">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900 text-md leading-tight">
-                    Seçtiğiniz Kategori Bilgileri
-                  </h3>
-                  {/* Breadcrumb kutunun içinde alt sol kısmında */}
-                  <div className="mt-3">
-                    {categoryPath && categoryPath.length > 0 && (
-                      <BreadcrumbNav 
-                        categoryPath={categoryPath}
-                        onCategoryClick={() => {}}
-                        disableFirstCategory={true}
-                      />
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => navigate('/create-listing/step-1')}
-                  className="text-orange-500 text-sm font-medium hover:text-orange-600 hover:underline transition-colors"
-                >
-                  Değiştir
-                </button>
-              </div>
-            </div>
-          </div>
-
-   
-
-          {/* İlan Detayları Kutusu */}
-          <div className="mb-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="w-full">
-
-                <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
-                  İlan Detayları
+          {/* Category info box */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 text-sm mb-3">
+                  Seçtiğiniz Araca Ait Bilgiler
                 </h3>
-
-                
-        {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
-            İlan Başlığı
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.customFields.title || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.length <= 64) {
-                handleInputChange('title', value);
-              }
-            }}
-            placeholder="İlanınız için başlık yazınız"
-            maxLength={64}
-            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-          />
-        </div>
-
-        {/* Açıklama Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
-            Açıklama
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            {/* TipTap Toolbar */}
-            <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-1">
-              {/* Format Buttons */}
+                <BreadcrumbNav 
+                  categories={categoryPath}
+                  disableFirstCategory={true}
+                />
+              </div>
               <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`w-8 h-8 rounded border text-lg font-bold flex items-center justify-center ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Bold"
+                onClick={handleBackClick}
+                className="text-orange-500 hover:text-orange-600 text-sm font-medium hover:underline"
               >
-                B
+                Değiştir
               </button>
-              
+            </div>
+          </div>
 
+          {/* Desktop title */}
+          <div className="hidden lg:block mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">İlan Detayları</h1>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                className={`w-8 h-8 rounded border text-lg font-medium flex items-center justify-center underline ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Underline"
-              >
-                U
-              </button>
+          {/* Form container */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="w-full">
+              <h3 className="font-medium text-gray-900 text-md leading-tight mb-6">
+                İlan Detayları
+              </h3>
 
-
-
-              {/* Text Alignment */}
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'left' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Left"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 8a1 1 0 011-1h9a1 1 0 110 2H3a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 16a1 1 0 011-1h6a1 1 0 110 2H3a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'center' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Center"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM5 8a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM7 16a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'right' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Right"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM8 8a1 1 0 011-1h8a1 1 0 110 2H9a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM11 16a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-
-
-              {/* Color Dropdown */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const dropdown = document.getElementById('color-dropdown');
-                    dropdown?.classList.toggle('hidden');
+              {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
+              <div className="space-y-2 mb-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  İlan Başlığı
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.customFields.title || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 64) {
+                      handleInputChange('title', value);
+                    }
                   }}
-                  className="w-8 h-8 rounded border border-gray-200 hover:border-gray-300 flex items-center justify-center transition-colors"
-                  style={{
-                    backgroundColor: editor?.getAttributes('textStyle')?.color || '#000000'
-                  }}
-                  title="Text Color"
-                >
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                  </svg>
-                </button>
-                <div
-                  id="color-dropdown"
-                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[150px]"
-                >
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#000000').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-black hover:scale-110 transition-transform"
-                      title="Black"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#DC2626').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-red-600 hover:scale-110 transition-transform"
-                      title="Red"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#EC7830').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-[#EC7830] hover:scale-110 transition-transform"
-                      title="Orange"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#2563EB').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-blue-600 hover:scale-110 transition-transform"
-                      title="Blue"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#16A34A').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-green-600 hover:scale-110 transition-transform"
-                      title="Green"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#9333EA').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
-                      title="Purple"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#7C2D12').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-amber-800 hover:scale-110 transition-transform"
-                      title="Brown"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#BE185D').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-pink-600 hover:scale-110 transition-transform"
-                      title="Pink"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#0F766E').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-teal-600 hover:scale-110 transition-transform"
-                      title="Teal"
-                    />
-                  </div>
-                  <div className="mt-3 border-t pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().unsetColor().run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 flex items-center justify-center"
-                      title="Clear Color"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
-                      </svg>
-                    </button>
-                  </div>
+                  placeholder="İlanınız için başlık yazınız"
+                  maxLength={64}
+                  className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                />
+                <div className="text-xs text-gray-500 text-right">
+                  {(formData.customFields.title || '').length} / 64 karakter
                 </div>
               </div>
 
-              {/* Link Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (editor?.isActive('link')) {
-                    editor?.chain().focus().unsetLink().run();
-                  } else {
-                    const url = window.prompt('Link veya resim URL\'sini giriniz:');
-                    if (url) {
-                      // Resim URL'si kontrolü
-                      if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-                        // TipTap Image extension kullanarak resim ekle
-                        editor?.chain().focus().setImage({ src: url }).run();
-                      } else {
-                        // Normal link olarak ekle
-                        editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-                      }
-                    }
-                  }
-                }}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title={editor?.isActive('link') ? 'Remove Link' : 'Add Link/Image'}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
-                  <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Editor Content */}
-            <div className="min-h-[200px] bg-white">
-              <EditorContent editor={editor} />
-            </div>
-          </div>
-        </div>
-
-        {/* Fiyat Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
-            Fiyat
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative lg:w-[30%] w-full">
-            <input
-              type="text"
-              value={(() => {
-                const priceValue = formData.customFields.price || '';
-                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
-                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
-              })()}
-              onChange={(e) => {
-                let processedValue = e.target.value.replace(/\D/g, '');
-                const currentPrice = formData.customFields.price || {};
-                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
-              }}
-              placeholder="Fiyat giriniz"
-              inputMode="numeric"
-              className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-            />
-            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-              <select
-                value={(() => {
-                  const currentPrice = formData.customFields.price || {};
-                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                })()}
-                onChange={(e) => {
-                  const currentPrice = formData.customFields.price || {};
-                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
-                  handleInputChange('price', { value, unit: e.target.value });
-                }}
-                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="TL">TL</option>
-                <option value="GBP">GBP</option>
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {customFields && customFields.length > 0 && (
-          <div className="space-y-6">
-            {customFields.map((field) => {
-            const currentValue = formData.customFields[field.fieldName] || '';
-            
-            return (
-              <div key={field.id} className="space-y-2">
+              {/* Açıklama Input - Tüm kategoriler için geçerli */}
+              <div className="space-y-2 mb-6">
                 <label className="block text-sm font-medium text-gray-700">
-                  {field.label}
-                  {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                  Açıklama
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
-                
-                {field.fieldType === 'text' && (
-                  field.hasUnits && field.unitOptions ? (
-                    (() => {
-                      const unitOptions = JSON.parse(field.unitOptions || '[]');
-                      const selectedUnit = typeof currentValue === 'object' 
-                        ? currentValue.unit || field.defaultUnit || unitOptions[0]
-                        : field.defaultUnit || unitOptions[0];
-                      
-                      if (unitOptions.length <= 1) {
-                        return (
-                          <div className="relative lg:w-[30%] w-full">
-                            <input
-                              type="text"
-                              value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
-                              onChange={(e) => {
-                                handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
-                              }}
-                              placeholder={field.placeholder || ''}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
-                            />
-                            <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
-                              <span className="text-gray-500">{selectedUnit}</span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <div className="relative lg:w-[30%] w-full">
-                          <input
-                            type="text"
-                            value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
-                            onChange={(e) => {
-                              handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
-                            }}
-                            placeholder={field.placeholder || ''}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                          <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-                            <select
-                              value={selectedUnit}
-                              onChange={(e) => {
-                                const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
-                                handleInputChange(field.fieldName, { value, unit: e.target.value });
-                              }}
-                              className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                            >
-                              {unitOptions.map((unit: string, index: number) => (
-                                <option key={index} value={unit}>{unit}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <input
-                      type="text"
-                      value={currentValue}
-                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                      placeholder={field.placeholder || ''}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  )
-                )}
+                <textarea
+                  value={formData.customFields.description || ''}
+                  onChange={(e) => handleDescriptionChange(e.target.value)}
+                  placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+                  rows={8}
+                  maxLength={2000}
+                  className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                />
+                <div className="text-xs text-gray-500 text-right">
+                  {(formData.customFields.description || '').length} / 2000 karakter
+                </div>
+              </div>
 
-                {field.fieldType === 'number' && (
-                  field.hasUnits && field.unitOptions ? (
-                    (() => {
-                      const unitOptions = JSON.parse(field.unitOptions || '[]');
-                      const selectedUnit = typeof currentValue === 'object' 
-                        ? currentValue.unit || field.defaultUnit || unitOptions[0]
-                        : field.defaultUnit || unitOptions[0];
-                      
-                      if (unitOptions.length <= 1) {
-                        return (
-                          <div className="relative lg:w-[30%] w-full">
-                            <input
-                              type="text"
-                              value={(() => {
-                                const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
-                                return field.useThousandSeparator ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
-                              })()}
-                              onChange={(e) => {
-                                let processedValue = e.target.value.replace(/\D/g, '');
-                                
-                                if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
-                                  return;
-                                }
-                                if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
-                                  return;
-                                }
-                                
-                                handleInputChange(field.fieldName, { value: processedValue, unit: selectedUnit });
-                              }}
-                              placeholder={field.placeholder || ''}
-                              inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
-                            />
-                            <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
-                              <span className="text-gray-500">{selectedUnit}</span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <div className="relative lg:w-[30%] w-full">
-                          <input
-                            type="text"
-                            value={(() => {
-                              const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
-                              return field.useThousandSeparator ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
-                            })()}
-                            onChange={(e) => {
-                              let processedValue = e.target.value.replace(/\D/g, '');
-                              
-                              if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
-                                return;
-                              }
-                              if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
-                                return;
-                              }
-                              
-                              handleInputChange(field.fieldName, { value: processedValue, unit: selectedUnit });
-                            }}
-                            placeholder={field.placeholder || ''}
-                            inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                          <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-                            <select
-                              value={selectedUnit}
-                              onChange={(e) => {
-                                const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
-                                handleInputChange(field.fieldName, { value, unit: e.target.value });
-                              }}
-                              className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                            >
-                              {unitOptions.map((unit: string, index: number) => (
-                                <option key={index} value={unit}>{unit}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <input
-                      type="text"
+              {/* Fiyat Input - Tüm kategoriler için geçerli */}
+              <div className="space-y-2 mb-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  Fiyat
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <div className="relative lg:w-[30%] w-full">
+                  <input
+                    type="text"
+                    value={(() => {
+                      const priceValue = formData.customFields.price || '';
+                      const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
+                      return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+                    })()}
+                    onChange={(e) => {
+                      let processedValue = e.target.value.replace(/\D/g, '');
+                      const currentPrice = formData.customFields.price || {};
+                      const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                      handleInputChange('price', { value: processedValue, unit: selectedCurrency });
+                    }}
+                    placeholder="Fiyat giriniz"
+                    inputMode="numeric"
+                    className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                  />
+                  <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+                    <select
                       value={(() => {
-                        const value = currentValue || '';
-                        return field.useThousandSeparator ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : value;
+                        const currentPrice = formData.customFields.price || {};
+                        return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
                       })()}
                       onChange={(e) => {
-                        let processedValue = e.target.value.replace(/\D/g, '');
-                        
-                        if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
-                          return;
-                        }
-                        if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
-                          return;
-                        }
-                        
-                        handleInputChange(field.fieldName, processedValue);
+                        const currentPrice = formData.customFields.price || {};
+                        const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
+                        handleInputChange('price', { value, unit: e.target.value });
                       }}
-                      placeholder={field.placeholder || ''}
-                      inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                      min={field.minValue || undefined}
-                      max={field.maxValue || undefined}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  )
-                )}
-
-                {field.fieldType === 'select' && (
-                  field.hasUnits && field.unitOptions ? (
-                    <div className="relative lg:w-[30%] w-full">
-                      <select
-                        value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue}
-                        onChange={(e) => {
-                          const unitOptions = JSON.parse(field.unitOptions || '[]');
-                          const selectedUnit = typeof currentValue === 'object' 
-                            ? currentValue.unit || field.defaultUnit || unitOptions[0]
-                            : field.defaultUnit || unitOptions[0];
-                          handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
-                        }}
-                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-                      >
-                        <option value="">{field.placeholder || "Seçiniz"}</option>
-                        {field.options && JSON.parse(field.options).map((option: string, index: number) => (
-                          <option key={index} value={option}>{option}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-                        <select
-                          value={typeof currentValue === 'object' ? currentValue.unit || field.defaultUnit : field.defaultUnit}
-                          onChange={(e) => {
-                            const value = typeof currentValue === 'object' ? currentValue.value || '' : currentValue || '';
-                            handleInputChange(field.fieldName, { value, unit: e.target.value });
-                          }}
-                          className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-                        >
-                          {JSON.parse(field.unitOptions || '[]').map((unit: string, index: number) => (
-                            <option key={index} value={unit}>{unit}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  ) : (
-                    <select
-                      value={currentValue}
-                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                      className="py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
                     >
-                      <option value="">{field.placeholder || "Seçiniz"}</option>
-                      {field.options && JSON.parse(field.options).map((option: string, index: number) => (
-                        <option key={index} value={option}>{option}</option>
-                      ))}
+                      <option value="TL">TL</option>
+                      <option value="GBP">GBP</option>
+                      <option value="EUR">EUR</option>
+                      <option value="USD">USD</option>
                     </select>
-                  )
-                )}
-
-                {field.fieldType === 'checkbox' && field.options && (
-                  <div className="space-y-2">
-                    {JSON.parse(field.options).map((option: string, index: number) => {
-                      const selectedValues = Array.isArray(currentValue) ? currentValue : [];
-                      return (
-                        <label key={index} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedValues.includes(option)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                handleInputChange(field.fieldName, [...selectedValues, option]);
-                              } else {
-                                handleInputChange(field.fieldName, selectedValues.filter((v: string) => v !== option));
-                              }
-                            }}
-                            className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">{option}</span>
-                        </label>
-                      );
-                    })}
                   </div>
-                )}
-
-                {field.fieldType === 'boolean' && (
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={currentValue === true}
-                      onChange={(e) => handleInputChange(field.fieldName, e.target.checked)}
-                      className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">{field.label}</span>
-                  </label>
-                )}
-                
-
-                
-                {field.fieldType === 'number' && field.minValue !== null && field.maxValue !== null && (
-                  <p className="text-sm text-gray-500">
-                    {field.minValue} - {field.maxValue} arasında
-                  </p>
-                )}
+                </div>
               </div>
-            );
-            })}
-          </div>
-        )}
 
+              {/* Custom Fields */}
+              {customFields && customFields.length > 0 && (
+                <div className="space-y-6 mb-6">
+                  <h4 className="font-medium text-gray-900 text-sm">
+                    Ürün Özellikleri
+                  </h4>
+                  
+                  {customFields.map((field) => {
+                    const currentValue = formData.customFields[field.fieldName];
+                    
+                    return (
+                      <div key={field.id} className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          {field.label}
+                          {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                        </label>
 
+                        {/* Text Field */}
+                        {field.fieldType === 'text' && (
+                          <div className="relative lg:w-[30%] w-full">
+                            <input
+                              type="text"
+                              value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue || ''}
+                              onChange={(e) => {
+                                if (field.hasUnits && field.unitOptions) {
+                                  const unitOptions = JSON.parse(field.unitOptions || '[]');
+                                  const selectedUnit = typeof currentValue === 'object' 
+                                    ? currentValue.unit || field.defaultUnit || unitOptions[0]
+                                    : field.defaultUnit || unitOptions[0];
+                                  handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
+                                } else {
+                                  handleInputChange(field.fieldName, e.target.value);
+                                }
+                              }}
+                              placeholder={field.placeholder || ''}
+                              className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                            />
+                          </div>
+                        )}
 
-              </div>
+                        {/* Number Field */}
+                        {field.fieldType === 'number' && (
+                          <div className="relative lg:w-[30%] w-full">
+                            <input
+                              type="number"
+                              value={typeof currentValue === 'object' ? currentValue.value || '' : currentValue || ''}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 0;
+                                if (field.minValue !== null && value < field.minValue) return;
+                                if (field.maxValue !== null && value > field.maxValue) return;
+                                
+                                if (field.hasUnits && field.unitOptions) {
+                                  const unitOptions = JSON.parse(field.unitOptions || '[]');
+                                  const selectedUnit = typeof currentValue === 'object' 
+                                    ? currentValue.unit || field.defaultUnit || unitOptions[0]
+                                    : field.defaultUnit || unitOptions[0];
+                                  handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
+                                } else {
+                                  handleInputChange(field.fieldName, e.target.value);
+                                }
+                              }}
+                              placeholder={field.placeholder || ''}
+                              className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                            />
+                          </div>
+                        )}
+
+                        {/* Select Field */}
+                        {field.fieldType === 'select' && field.options && (
+                          <div className="lg:w-[30%] w-full">
+                            <select
+                              value={currentValue || ''}
+                              onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                              className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                            >
+                              <option value="">Seçiniz</option>
+                              {JSON.parse(field.options).map((option: string) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Checkbox Field */}
+                        {field.fieldType === 'checkbox' && field.options && (
+                          <div className="space-y-2">
+                            {JSON.parse(field.options).map((option: string) => (
+                              <label key={option} className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={(currentValue || []).includes(option)}
+                                  onChange={(e) => {
+                                    const currentValues = currentValue || [];
+                                    if (e.target.checked) {
+                                      handleInputChange(field.fieldName, [...currentValues, option]);
+                                    } else {
+                                      handleInputChange(field.fieldName, currentValues.filter((v: string) => v !== option));
+                                    }
+                                  }}
+                                  className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Boolean Field */}
+                        {field.fieldType === 'boolean' && (
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={currentValue === true}
+                              onChange={(e) => handleInputChange(field.fieldName, e.target.checked)}
+                              className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">{field.label}</span>
+                          </label>
+                        )}
+
+                        {/* Min/Max validation display */}
+                        {field.fieldType === 'number' && field.minValue !== null && field.maxValue !== null && (
+                          <p className="text-sm text-gray-500">
+                            {field.minValue} - {field.maxValue} arasında
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1140,11 +470,11 @@ export default function Step2() {
                     </div>
                   )}
 
-                  {/* İl/Şehir Seçimi - Sadece aktifse göster */}
+                  {/* Şehir Seçimi - Sadece aktifse göster */}
                   {locationSettings?.showCity && (
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
-                        İl
+                        Şehir
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <select
@@ -1157,19 +487,17 @@ export default function Step2() {
                           setSelectedNeighborhood(null);
                           updateFormData({
                             location: {
-                              country: selectedCountry,
+                              ...formData.location,
                               city: city || null,
                               district: null,
                               neighborhood: null
                             }
                           });
                         }}
-                        disabled={locationSettings?.showCountry ? !selectedCountry : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        disabled={!selectedCountry && locationSettings?.showCountry}
+                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-100"
                       >
-                        <option value="">
-                          {(locationSettings?.showCountry && !selectedCountry) ? "Önce ülke seçiniz" : "İl seçiniz"}
-                        </option>
+                        <option value="">Şehir seçiniz</option>
                         {availableCities.map((city) => (
                           <option key={city.id} value={city.id}>
                             {city.name}
@@ -1195,19 +523,16 @@ export default function Step2() {
                           setSelectedNeighborhood(null);
                           updateFormData({
                             location: {
-                              country: selectedCountry,
-                              city: selectedCity,
+                              ...formData.location,
                               district: district || null,
                               neighborhood: null
                             }
                           });
                         }}
-                        disabled={locationSettings?.showCity ? !selectedCity : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        disabled={!selectedCity}
+                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-100"
                       >
-                        <option value="">
-                          {(locationSettings?.showCity && !selectedCity) ? "Önce il seçiniz" : "İlçe seçiniz"}
-                        </option>
+                        <option value="">İlçe seçiniz</option>
                         {availableDistricts.map((district) => (
                           <option key={district.id} value={district.id}>
                             {district.name}
@@ -1232,19 +557,15 @@ export default function Step2() {
                           setSelectedNeighborhood(neighborhood || null);
                           updateFormData({
                             location: {
-                              country: selectedCountry,
-                              city: selectedCity,
-                              district: selectedDistrict,
+                              ...formData.location,
                               neighborhood: neighborhood || null
                             }
                           });
                         }}
-                        disabled={locationSettings?.showDistrict ? !selectedDistrict : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        disabled={!selectedDistrict}
+                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-100"
                       >
-                        <option value="">
-                          {(locationSettings?.showDistrict && !selectedDistrict) ? "Önce ilçe seçiniz" : "Mahalle seçiniz"}
-                        </option>
+                        <option value="">Mahalle seçiniz</option>
                         {availableNeighborhoods.map((neighborhood) => (
                           <option key={neighborhood.id} value={neighborhood.id}>
                             {neighborhood.name}
@@ -1253,34 +574,28 @@ export default function Step2() {
                       </select>
                     </div>
                   )}
-
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Butonlar - Kutu Dışında */}
-          <div className="mb-6 space-y-3">
-            {/* Test Verileri Doldur Butonu */}
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center">
             <button
-              onClick={fillTestData}
-              className="w-full bg-gray-500 text-white py-2.5 px-4 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+              onClick={handleBackClick}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              🧪 Tüm Verileri Doldur (Test)
+              ← Önceki Adım
             </button>
             
-            {/* Sonraki Adım Butonu */}
             <button
-              onClick={nextStep}
-              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+              onClick={handleNextStep}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
             >
-              Sonraki Adım
+              Sonraki Adım →
             </button>
           </div>
         </div>
-        
-        {/* Performance indicator */}
-        <PageLoadIndicator />
       </div>
     </div>
   );
