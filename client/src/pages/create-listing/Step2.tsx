@@ -53,9 +53,7 @@ export default function Step2() {
         defaultAlignment: 'left'
       }),
       TextStyle,
-      Color.configure({
-        types: ['textStyle'],
-      }),
+      Color,
       Underline,
     ],
     content: formData.customFields.description || '<p></p>',
@@ -629,6 +627,33 @@ export default function Step2() {
                       className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
                       title="Purple"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor?.chain().focus().setColor('#7C2D12').run();
+                        document.getElementById('color-dropdown')?.classList.add('hidden');
+                      }}
+                      className="w-8 h-8 rounded border border-gray-200 bg-amber-800 hover:scale-110 transition-transform"
+                      title="Brown"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor?.chain().focus().setColor('#BE185D').run();
+                        document.getElementById('color-dropdown')?.classList.add('hidden');
+                      }}
+                      className="w-8 h-8 rounded border border-gray-200 bg-pink-600 hover:scale-110 transition-transform"
+                      title="Pink"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor?.chain().focus().setColor('#0F766E').run();
+                        document.getElementById('color-dropdown')?.classList.add('hidden');
+                      }}
+                      className="w-8 h-8 rounded border border-gray-200 bg-teal-600 hover:scale-110 transition-transform"
+                      title="Teal"
+                    />
                   </div>
                   <div className="mt-3 border-t pt-2">
                     <button
@@ -637,13 +662,12 @@ export default function Step2() {
                         editor?.chain().focus().unsetColor().run();
                         document.getElementById('color-dropdown')?.classList.add('hidden');
                       }}
-                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 flex items-center justify-center gap-2"
+                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 flex items-center justify-center"
                       title="Clear Color"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
                       </svg>
-                      Clear
                     </button>
                   </div>
                 </div>
