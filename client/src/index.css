@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS-style Spinner CSS */
+@import './styles/spinner.css';
+
 /* Global Layout Fix - Prevents layout shift between pages with/without scroll */
 html {
   overflow-y: scroll !important; /* Instagram method - always show scrollbar */
@@ -46,3 +49,11 @@ body {
   border-color: #EC7830 !important;
   border-width: 2px !important;
 }
+
+
+
+
+
+
+
+
