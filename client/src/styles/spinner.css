@@ -70,10 +70,3 @@
   100% {
     opacity: 0.25; } }
 
-/* Orange theme variant */
-.ispinner.ispinner-orange .ispinner-blade {
-  background-color: #EC7830; }
-
-/* White variant for dark backgrounds */
-.ispinner.ispinner-white .ispinner-blade {
-  background-color: #ffffff; }

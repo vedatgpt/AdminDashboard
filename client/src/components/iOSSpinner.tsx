@@ -1,19 +1,16 @@
-interface iOSSpinnerProps {
+interface IOSSpinnerProps {
   size?: 'small' | 'large';
-  variant?: 'default' | 'orange' | 'white';
   className?: string;
 }
 
-export function iOSSpinner({ 
+export function IOSSpinner({ 
   size = 'large', 
-  variant = 'default', 
   className = '' 
-}: iOSSpinnerProps) {
+}: IOSSpinnerProps) {
   const sizeClass = size === 'large' ? 'ispinner-large' : '';
-  const variantClass = variant === 'orange' ? 'ispinner-orange' : variant === 'white' ? 'ispinner-white' : '';
   
   return (
-    <div className={`ispinner ${sizeClass} ${variantClass} ${className}`}>
+    <div className={`ispinner ${sizeClass} ${className}`}>
       <div className="ispinner-blade"></div>
       <div className="ispinner-blade"></div>
       <div className="ispinner-blade"></div>
