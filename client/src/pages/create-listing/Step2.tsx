@@ -216,6 +216,44 @@ export default function Step2() {
     dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
   };
   
+  // Test verilerini doldur fonksiyonu
+  const fillTestData = () => {
+    const testData = {
+      title: 'Test BMW 3.20d Sedan - Galeriden Temiz',
+      description: '<p><strong>Temiz ve bakımlı araç!</strong></p><p>• Motor hacmi: 2000cc</p><p>• Yakıt türü: Dizel</p><p>• Vites: Manuel</p><p>• Renk: Siyah</p><p>• Hasar durumu: Boyasız</p>',
+      price: { value: '485000', unit: 'TL' },
+      motor_hacmi: { value: '2000', unit: 'cc' },
+      motor_gucu: { value: '190', unit: 'hp' },
+      yakit_turu: 'Dizel',
+      vites: 'Manuel'
+    };
+
+    // Form verilerini güncelle
+    dispatch({ 
+      type: 'SET_CUSTOM_FIELDS', 
+      payload: { 
+        ...formData.customFields, 
+        ...testData 
+      } 
+    });
+
+    // Lokasyon verilerini de doldur
+    if (availableCountries.length > 0) {
+      const testCountry = availableCountries[0];
+      setSelectedCountry(testCountry);
+      
+      // İlk şehri seç
+      setTimeout(() => {
+        const testCity = availableCities.length > 0 ? availableCities[0] : null;
+        if (testCity) {
+          setSelectedCity(testCity);
+        }
+      }, 100);
+    }
+
+    console.log('✅ Test verileri dolduruldu');
+  };
+
   const nextStep = async () => {
     // Update draft with current form data before navigating
     if (currentClassifiedId) {
@@ -896,11 +934,20 @@ export default function Step2() {
             </div>
           </div>
 
-          {/* Sonraki Adım Butonu - Kutu Dışında */}
-          <div className="mb-6">
+          {/* Butonlar - Kutu Dışında */}
+          <div className="mb-6 space-y-3">
+            {/* Test Verileri Doldur Butonu */}
+            <button
+              onClick={fillTestData}
+              className="w-full bg-gray-500 text-white py-2.5 px-4 rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+            >
+              🧪 Tüm Verileri Doldur (Test)
+            </button>
+            
+            {/* Sonraki Adım Butonu */}
             <button
               onClick={nextStep}
-              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >
               Sonraki Adım
             </button>
