@@ -293,13 +293,21 @@ export default function Step3() {
       const result = await response.json();
       console.log('✅ ROTATION FIX v2: Server rotation successful:', result);
 
-      // Update image URLs with rotated versions - FIXED CACHING
+      // BLOB URL FIX: Clean up old blob URL before setting new server URL
+      const imageToUpdate = images.find(img => img.id === imageId);
+      if (imageToUpdate?.url.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToUpdate.url);
+        blobUrlsRef.current.delete(imageToUpdate.url);
+        console.log('🗑️ ROTATION FIX: Old blob URL cleaned up');
+      }
+
+      // Update image URLs with rotated versions - SERVER URLS NO BLOB
       setImages(prev => prev.map(img => 
         img.id === imageId 
           ? { 
               ...img, 
-              url: result.url,  // Server already adds timestamp
-              thumbnail: result.thumbnail, // Server already adds timestamp
+              url: result.url,  // Server URL with timestamp
+              thumbnail: result.thumbnail, // Server URL with timestamp
               rotating: false 
             }
           : img
@@ -315,9 +323,19 @@ export default function Step3() {
     } catch (error) {
       console.error('❌ ROTATION ERROR v2: Server rotation failed:', error);
       
-      // Fallback to client-side rotation if server fails
-      console.log('🔄 ROTATION FIX v2: Trying client-side fallback...');
-      await clientSideRotateImage(imageId);
+      // Remove loading state on error
+      setImages(prev => prev.map(img => 
+        img.id === imageId 
+          ? { ...img, rotating: false }
+          : img
+      ));
+      
+      // Show error message instead of fallback (server rotation should work)
+      toast({
+        title: "Döndürme Hatası",
+        description: "Server rotation failed: " + (error instanceof Error ? error.message : 'Unknown error'),
+        variant: "destructive"
+      });
     }
   }, [images, currentClassifiedId, user?.id, smartPrefetchStep4]);
 
@@ -796,6 +814,13 @@ export default function Step3() {
                           src={image.uploading ? image.url : (image.thumbnail || image.url)}
                           alt={`Fotoğraf ${index + 1}`}
                           className="w-full h-full object-contain"
+                          onError={(e) => {
+                            console.error('❌ IMAGE LOAD ERROR:', image.id, 'URL:', image.url);
+                            // Fallback to main image if thumbnail fails
+                            if (image.thumbnail && e.currentTarget.src === image.thumbnail) {
+                              e.currentTarget.src = image.url;
+                            }
+                          }}
                         />
                       </div>
 
