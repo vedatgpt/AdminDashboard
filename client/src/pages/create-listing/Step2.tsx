@@ -9,6 +9,9 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+import { Underline } from '@tiptap/extension-underline';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -31,11 +34,11 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Yeniden kurulum + metin hizalama
+  // TipTap Editor Setup - Tam featured setup
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        link: false, // StarterKit'teki link'i devre dışı bırak
+        link: false,
       }),
       Link.configure({
         openOnClick: false,
@@ -48,6 +51,11 @@ export default function Step2() {
         alignments: ['left', 'center', 'right', 'justify'],
         defaultAlignment: 'left'
       }),
+      TextStyle,
+      Color.configure({
+        types: ['textStyle'],
+      }),
+      Underline,
     ],
     content: formData.customFields.description || '<p></p>',
     onUpdate: ({ editor }) => {
@@ -56,7 +64,7 @@ export default function Step2() {
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[200px] p-4',
+        class: 'focus:outline-none min-h-[200px] p-4 prose prose-sm max-w-none',
       },
     },
   });
@@ -466,79 +474,115 @@ export default function Step2() {
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="tiptap-editor-wrapper border border-gray-200 rounded-lg">
-            {/* Toolbar */}
-            <div className="border-b border-gray-200 p-2 flex gap-1 bg-gray-50">
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {/* TipTap Toolbar */}
+            <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-1">
+              {/* Format Buttons */}
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bold') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 rounded text-sm font-medium border ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                B
+                Bold
               </button>
+              
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={`px-2 py-1 rounded text-sm italic ${editor?.isActive('italic') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                I
+                Italic
               </button>
+
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+              >
+                Underline
+              </button>
+
+              {/* Divider */}
+              <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+              {/* List Buttons */}
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('bulletList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('bulletList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                •
+                Bullet List
               </button>
+              
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('orderedList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('orderedList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                1.
+                Numbered List
               </button>
-              
-              {/* Ayırıcı */}
-              <div className="w-px h-6 bg-gray-300 mx-1"></div>
-              
-              {/* Metin Hizalama Butonları */}
+
+              {/* Divider */}
+              <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+              {/* Text Alignment */}
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'left' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                title="Sola Hizala"
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'left' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                ⬅
+                Left
               </button>
+              
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'center' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                title="Ortala"
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'center' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                ↔
+                Center
               </button>
+              
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'right' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                title="Sağa Hizala"
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'right' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                ➡
+                Right
               </button>
+              
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                title="İki Yana Yasla"
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                ↕
+                Justify
               </button>
-              
-              {/* Ayırıcı */}
-              <div className="w-px h-6 bg-gray-300 mx-1"></div>
-              
-              {/* Link Butonu */}
+
+              {/* Divider */}
+              <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+              {/* Color Picker */}
+              <div className="flex items-center gap-1">
+                <label className="text-sm text-gray-600">Color:</label>
+                <input
+                  type="color"
+                  onInput={(e) => editor?.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
+                  className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                  defaultValue="#000000"
+                />
+                <button
+                  type="button"
+                  onClick={() => editor?.chain().focus().unsetColor().run()}
+                  className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                >
+                  Clear
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+              {/* Link Button */}
               <button
                 type="button"
                 onClick={() => {
@@ -547,15 +591,14 @@ export default function Step2() {
                     editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
                   }
                 }}
-                className={`px-2 py-1 rounded text-sm ${editor?.isActive('link') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                title="Link Ekle"
+                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
               >
-                🔗
+                Add Link
               </button>
             </div>
             
             {/* Editor Content */}
-            <div className="min-h-[200px]">
+            <div className="min-h-[200px] bg-white">
               <EditorContent editor={editor} />
             </div>
           </div>

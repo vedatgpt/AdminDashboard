@@ -3,15 +3,25 @@
   outline: none;
   padding: 1rem;
   min-height: 200px;
+  line-height: 1.6;
 }
 
 .ProseMirror p {
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
 }
 
-.ProseMirror ul, .ProseMirror ol {
+.ProseMirror p:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
   padding-left: 1.5rem;
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
 }
 
 .ProseMirror li {
@@ -26,11 +36,47 @@
   font-style: italic;
 }
 
+.ProseMirror u {
+  text-decoration: underline;
+}
+
 .ProseMirror a {
   color: #EC7830;
   text-decoration: underline;
 }
 
+.ProseMirror a:hover {
+  color: #d86a28;
+}
+
+/* Text alignment styles */
+.ProseMirror p[style*="text-align: center"] {
+  text-align: center;
+}
+
+.ProseMirror p[style*="text-align: right"] {
+  text-align: right;
+}
+
+.ProseMirror p[style*="text-align: justify"] {
+  text-align: justify;
+}
+
+.ProseMirror p[style*="text-align: left"] {
+  text-align: left;
+}
+
+/* Color support */
+.ProseMirror span[style*="color"] {
+  /* Color styles are applied inline */
+}
+
+/* Focus styles */
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Empty editor placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
