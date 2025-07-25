@@ -1,6 +1,6 @@
 import { DraftListing } from '@/hooks/useDraftListing';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
-import { useCategoriesTree } from '@/hooks/useCategories';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { Category } from '@shared/schema';
 
@@ -17,7 +17,12 @@ export default function DraftContinueModal({
   onContinue, 
   onNewListing 
 }: DraftContinueModalProps) {
-  const { data: allCategories = [] } = useCategoriesTree();
+  // CACHE FIX: Prefetch edilmiş data'yı kullan - API çağrısı yapmaz
+  const { data: allCategories = [] } = useQuery<Category[]>({
+    queryKey: ['/api/categories'],
+    enabled: false, // Sadece cache'den oku, yeni istek yapma
+    staleTime: Infinity, // Cache'deki data fresh kabul et
+  });
   
   // Build flat categories array for path building
   const flatCategories = useMemo(() => {
