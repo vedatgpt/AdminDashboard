@@ -1,0 +1,136 @@
+2025-07-25 11:24:59.08
+4daa6dcf
+System
+starting up user application
+2025-07-25 11:24:59.29
+4daa6dcf
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-07-25 11:25:00.70
+4daa6dcf
+User
+> rest-express@1.0.0 start
+2025-07-25 11:25:00.70
+4daa6dcf
+User
+> NODE_ENV=production node dist/index.js
+2025-07-25 11:25:02.17
+4daa6dcf
+User
+8:25:02 AM [express] serving on port 5000
+2025-07-25 11:25:32.47
+ae08ac65
+System
+system: received signal terminated
+2025-07-25 11:25:54.78
+4daa6dcf
+User
+AUTH/ME - Session user: { id: 3, username: 'cemalotoz' }
+2025-07-25 11:25:54.78
+4daa6dcf
+User
+AUTH/ME - Session ID: kKvtSsIDWfZV68ucC3lXRpVHVzRYWC6P
+2025-07-25 11:25:54.78
+4daa6dcf
+User
+AUTH/ME - Session store: exists
+2025-07-25 11:25:55.28
+4daa6dcf
+User
+8:25:55 AM [express] GET /api/auth/me 304 in 615ms :: {"id":3,"username":"cemalotoz","email":"cemal@…
+2025-07-25 11:25:57.43
+4daa6dcf
+User
+8:25:57 AM [express] GET /api/draft-listings 200 in 496ms :: [{"id":40,"userId":3,"categoryId":15,"t…
+2025-07-25 11:25:58.77
+4daa6dcf
+User
+8:25:58 AM [express] GET /api/categories/2/children 304 in 348ms :: [{"id":11,"name":"Otomobil","des…
+2025-07-25 11:25:59.90
+4daa6dcf
+User
+8:25:59 AM [express] GET /api/categories 304 in 373ms :: [{"id":1,"name":"Emlak","description":null,…
+2025-07-25 11:26:02.42
+4daa6dcf
+User
+8:26:02 AM [express] DELETE /api/draft-listings/40 200 in 477ms :: {"message":"İlan taslağı silindi"}
+2025-07-25 11:26:03.13
+4daa6dcf
+User
+8:26:03 AM [express] GET /api/draft-listings 200 in 462ms :: [{"id":35,"userId":3,"categoryId":null,…
+2025-07-25 11:26:03.73
+4daa6dcf
+User
+8:26:03 AM [express] GET /api/categories/11/children 304 in 348ms :: [{"id":12,"name":"BMW","descrip…
+2025-07-25 11:26:04.57
+4daa6dcf
+User
+8:26:04 AM [express] GET /api/categories/12/children 304 in 350ms :: [{"id":13,"name":"3 Serisi","de…
+2025-07-25 11:26:05.11
+4daa6dcf
+User
+8:26:05 AM [express] GET /api/categories/13/children 304 in 356ms :: [{"id":14,"name":"320d","descri…
+2025-07-25 11:26:05.61
+4daa6dcf
+User
+8:26:05 AM [express] GET /api/categories/14/children 304 in 346ms :: [{"id":15,"name":"M Sport","des…
+2025-07-25 11:26:06.56
+4daa6dcf
+User
+8:26:06 AM [express] GET /api/locations 304 in 368ms :: [{"id":1,"name":"KKTC","type":"country","par…
+2025-07-25 11:26:06.79
+4daa6dcf
+User
+8:26:06 AM [express] GET /api/location-settings/public 304 in 582ms :: {"id":1,"showCountry":false,"…
+2025-07-25 11:26:07.73
+4daa6dcf
+User
+8:26:07 AM [express] GET /api/categories/15/custom-fields 304 in 1542ms :: [{"id":1,"categoryId":11,…
+2025-07-25 11:26:08.06
+4daa6dcf
+User
+8:26:08 AM [express] POST /api/draft-listings 201 in 359ms :: {"id":44,"userId":3,"categoryId":null,…
+2025-07-25 11:26:08.72
+4daa6dcf
+User
+8:26:08 AM [express] GET /api/draft-listings 200 in 459ms :: [{"id":44,"userId":3,"categoryId":null,…
+2025-07-25 11:26:08.73
+4daa6dcf
+User
+8:26:08 AM [express] PATCH /api/draft-listings/44 200 in 472ms :: {"id":44,"userId":3,"categoryId":1…
+2025-07-25 11:26:09.06
+4daa6dcf
+User
+AUTH/ME - Session user: { id: 3, username: 'cemalotoz' }
+2025-07-25 11:26:09.06
+4daa6dcf
+User
+AUTH/ME - Session ID: kKvtSsIDWfZV68ucC3lXRpVHVzRYWC6P
+2025-07-25 11:26:09.06
+4daa6dcf
+User
+AUTH/ME - Session store: exists
+2025-07-25 11:26:09.34
+4daa6dcf
+User
+8:26:09 AM [express] GET /api/draft-listings/44 200 in 362ms :: {"id":44,"userId":3,"categoryId":15,…
+2025-07-25 11:26:09.41
+4daa6dcf
+User
+8:26:09 AM [express] GET /api/draft-listings 200 in 458ms :: [{"id":44,"userId":3,"categoryId":15,"t…
+2025-07-25 11:26:09.53
+4daa6dcf
+User
+8:26:09 AM [express] GET /api/auth/me 304 in 584ms :: {"id":3,"username":"cemalotoz","email":"cemal@…
+2025-07-25 11:26:21.17
+4daa6dcf
+User
+AUTH/ME - Session user: { id: 3, username: 'cemalotoz' }
+2025-07-25 11:26:21.17
+4daa6dcf
+User
+AUTH/ME - Session ID: aMD9tcPrVsgwlp095YtCfSAOGr2agZIr
+2025-07-25 11:26:21.17
+4daa6dcf
+User
+AUTH/ME - Session store: exists
