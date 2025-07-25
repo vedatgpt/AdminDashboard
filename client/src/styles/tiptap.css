@@ -7,7 +7,12 @@
 }
 
 .ProseMirror p {
-  margin: 0.75rem 0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ProseMirror p + p {
+  margin-top: 0.5rem;
 }
 
 .ProseMirror p:first-child {
@@ -72,11 +77,23 @@
 }
 
 .ProseMirror strong span[style*="color"] {
-  font-weight: bold;
+  font-weight: bold !important;
 }
 
 .ProseMirror span[style*="color"] strong {
-  font-weight: bold;
+  font-weight: bold !important;
+}
+
+.ProseMirror strong[style*="color"] {
+  font-weight: bold !important;
+}
+
+/* Image support for links */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  margin: 8px 0;
+  border-radius: 4px;
 }
 
 /* Focus styles */

@@ -40,6 +40,11 @@ export default function Step2() {
     extensions: [
       StarterKit.configure({
         link: false,
+        paragraph: {
+          HTMLAttributes: {
+            style: 'margin: 0; line-height: 1.4;',
+          },
+        },
       }),
       Link.configure({
         openOnClick: false,
@@ -53,7 +58,9 @@ export default function Step2() {
         defaultAlignment: 'left'
       }),
       TextStyle,
-      Color,
+      Color.configure({
+        types: ['textStyle'],
+      }),
       Underline,
     ],
     content: formData.customFields.description || '<p></p>',
@@ -680,14 +687,22 @@ export default function Step2() {
                   if (editor?.isActive('link')) {
                     editor?.chain().focus().unsetLink().run();
                   } else {
-                    const url = window.prompt('Link URL giriniz:');
+                    const url = window.prompt('Link veya resim URL\'sini giriniz:');
                     if (url) {
-                      editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                      // Resim URL'si kontrolü
+                      if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+                        // Resim olarak ekle
+                        const html = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto; margin: 8px 0; border-radius: 4px;" />`;
+                        editor?.chain().focus().insertContent(html).run();
+                      } else {
+                        // Normal link olarak ekle
+                        editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                      }
                     }
                   }
                 }}
                 className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title={editor?.isActive('link') ? 'Remove Link' : 'Add Link'}
+                title={editor?.isActive('link') ? 'Remove Link' : 'Add Link/Image'}
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
