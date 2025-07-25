@@ -34,11 +34,7 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
                 maxWidth: '100%',
                 height: 'auto'
               }}
-              onLoad={() => {
-                console.log(`📷 CategoryCard icon loaded from cache: ${category.name}`);
-              }}
               onError={(e) => {
-                console.log(`❌ CategoryCard icon failed: ${category.name}`);
                 e.currentTarget.style.display = 'none';
               }}
             />

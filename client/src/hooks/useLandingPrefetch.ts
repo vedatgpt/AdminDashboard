@@ -6,7 +6,7 @@ export function useLandingPrefetch() {
 
   const prefetchStep1Data = useCallback(async () => {
     try {
-      console.log('🚀 Landing prefetch başlatılıyor: Step-1 verileri + kategori ikonları + navbar logosu');
+
       
       // 1. Kategori verilerini prefetch et
       await queryClient.prefetchQuery({
@@ -25,7 +25,7 @@ export function useLandingPrefetch() {
       // 2. Kategorileri al ve ikonları prefetch et
       const categories = queryClient.getQueryData(['/api/categories']) as any[];
       if (categories && categories.length > 0) {
-        console.log(`📦 ${categories.length} kategori bulundu, ikonlar prefetch ediliyor...`);
+
         
         // Icon prefetch - AGGRESSIVE BROWSER CACHE
         const iconPromises = categories
@@ -39,25 +39,25 @@ export function useLandingPrefetch() {
                 mode: 'same-origin'
               }).then(response => {
                 if (response.ok) {
-                  console.log(`✅ İkon fetch cache'e alındı: ${cat.name}`);
+
                   
                   // 2. Image preload ile de cache'e ekle
                   const img = new Image();
                   img.onload = () => {
-                    console.log(`✅ İkon image cache'e alındı: ${cat.name}`);
+
                     resolve();
                   };
                   img.onerror = () => {
-                    console.log(`⚠️ İkon image hatası: ${cat.name}`);
+
                     resolve();
                   };
                   img.src = iconUrl;
                 } else {
-                  console.log(`❌ İkon fetch hatası: ${cat.name}`);
+
                   resolve();
                 }
               }).catch(() => {
-                console.log(`❌ İkon network hatası: ${cat.name}`);
+
                 resolve();
               });
             });
@@ -72,32 +72,32 @@ export function useLandingPrefetch() {
             mode: 'same-origin'
           }).then(response => {
             if (response.ok) {
-              console.log('✅ Logo fetch cache\'e alındı');
+
               
               // 2. Image preload ile de cache'e ekle
               const img = new Image();
               img.onload = () => {
-                console.log('✅ Logo image cache\'e alındı - Fetch başarılı');
+
                 resolve();
               };
               img.onerror = () => {
-                console.log('✅ Logo fetch başarılı - Image load sırasında minor hata (normal)');
+
                 resolve();
               };
               img.src = logoPath;
             } else {
-              console.log('❌ Logo fetch hatası');
+  
               resolve();
             }
           }).catch(() => {
-            console.log('❌ Logo network hatası');
+
             resolve();
           });
         });
 
         // Tüm ikonları + logoyu paralel yükle
         await Promise.allSettled([...iconPromises, logoPromise]);
-        console.log('🎯 Tüm kategori ikonları + navbar logosu prefetch tamamlandı');
+
       }
 
       // 3. Auth verilerini de prefetch et
@@ -116,7 +116,7 @@ export function useLandingPrefetch() {
 
       // 4. Eğer kullanıcı giriş yapmışsa draft modal için verileri prefetch et
       if (authData && authData.id) {
-        console.log('👤 Kullanıcı giriş yapmış, draft modal verileri prefetch ediliyor...');
+
         
         // Draft listings prefetch
         await queryClient.prefetchQuery({
@@ -146,12 +146,12 @@ export function useLandingPrefetch() {
           gcTime: 15 * 60 * 1000
         });
 
-        console.log('✅ Draft modal verileri prefetch tamamlandı');
+
       }
 
-      console.log('✅ Landing prefetch tamamlandı: Step-1 + Draft Modal hazır!');
+
     } catch (error) {
-      console.error('Landing prefetch hatası:', error);
+
     }
   }, [queryClient]);
 

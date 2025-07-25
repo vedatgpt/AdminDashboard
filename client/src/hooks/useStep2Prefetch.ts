@@ -44,10 +44,10 @@ export function useStep2Prefetch() {
         staleTime: 5 * 60 * 1000, // 5 dakika cache
       });
 
-      console.log(`✅ Step2 verileri prefetch edildi (categoryId: ${categoryId})`);
+
     } catch (error) {
       // Silent fail - prefetch hatası kullanıcı deneyimini bozmasın
-      console.log(`⚠️ Step2 prefetch hatası: ${error}`);
+
     }
   };
 

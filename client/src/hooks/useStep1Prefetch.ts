@@ -5,7 +5,7 @@ export function useStep1Prefetch() {
   const queryClient = useQueryClient();
 
   const prefetchStep1Data = useCallback(async (userId: number) => {
-    console.log('🔄 Step1 draft modal prefetch başlatılıyor...');
+
     
     try {
       // 1. Mevcut draft'ları prefetch et
@@ -36,18 +36,14 @@ export function useStep1Prefetch() {
         staleTime: 5 * 60 * 1000, // 5 dakika
       });
 
-      console.log('✅ Step1 draft modal verileri prefetch edildi:');
-      console.log('  - Draft listings cache: 1 dakika');
-      console.log('  - Categories cache: 10 dakika'); 
-      console.log('  - Categories tree cache: 10 dakika');
-      console.log('  - Auth data cache: 5 dakika');
+
     } catch (error) {
-      console.error('❌ Step1 prefetch hatası:', error);
+
     }
   }, [queryClient]);
 
   const smartPrefetchStep1 = useCallback((userId: number, reason: string) => {
-    console.log(`🎯 Step1 prefetch tetiklendi: ${reason}`);
+
     
     // Prefetch işlemini başlat
     prefetchStep1Data(userId);

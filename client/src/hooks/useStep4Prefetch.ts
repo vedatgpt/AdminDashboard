@@ -44,14 +44,14 @@ export function useStep4Prefetch() {
         staleTime: 10 * 60 * 1000, // 10 dakika cache
       });
 
-      console.log('✅ Step4 verileri prefetch edildi');
+
     } catch (error) {
-      console.error('❌ Step4 prefetch hatası:', error);
+
     }
   }, [queryClient]);
 
   const smartPrefetchStep4 = useCallback((classifiedId: number, userId: number, reason: string) => {
-    console.log(`🎯 Step4 prefetch tetiklendi: ${reason}`);
+
     
     // Cache'i temizle - güncel verileri al
     queryClient.removeQueries({ queryKey: ['/api/draft-listings', classifiedId] });
