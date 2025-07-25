@@ -66,9 +66,17 @@
   text-align: left;
 }
 
-/* Color support */
+/* Color support with formatting combinations */
 .ProseMirror span[style*="color"] {
   /* Color styles are applied inline */
+}
+
+.ProseMirror strong span[style*="color"] {
+  font-weight: bold;
+}
+
+.ProseMirror span[style*="color"] strong {
+  font-weight: bold;
 }
 
 /* Focus styles */

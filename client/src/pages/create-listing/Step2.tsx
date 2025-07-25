@@ -48,7 +48,7 @@ export default function Step2() {
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right', 'justify'],
+        alignments: ['left', 'center', 'right'],
         defaultAlignment: 'left'
       }),
       TextStyle,
@@ -484,8 +484,8 @@ export default function Step2() {
                 className={`p-2 rounded border ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 title="Bold"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h6.5a3.5 3.5 0 001.545-6.645A3.5 3.5 0 0011.5 3H5zm2 3h4.5a1.5 1.5 0 010 3H7V6zm0 5h5.5a1.5 1.5 0 010 3H7v-3z"/>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 4h6c1.7 0 3 1.3 3 3 0 .8-.3 1.5-.8 2 .5.5.8 1.2.8 2 0 1.7-1.3 3-3 3H6V4zm2 2v3h4c.6 0 1-.4 1-1s-.4-1-1-1H8zm0 5v3h4.5c.8 0 1.5-.7 1.5-1.5S13.3 11 12.5 11H8z"/>
                 </svg>
               </button>
               
@@ -574,16 +574,7 @@ export default function Step2() {
                 </svg>
               </button>
               
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
-                className={`p-2 rounded border ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Justify"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 8a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 16a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
+
 
               {/* Divider */}
               <div className="w-px h-8 bg-gray-300 mx-2"></div>
@@ -600,9 +591,12 @@ export default function Step2() {
                 <button
                   type="button"
                   onClick={() => editor?.chain().focus().unsetColor().run()}
-                  className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                  className="p-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+                  title="Clear Color"
                 >
-                  Clear
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
+                  </svg>
                 </button>
               </div>
 
