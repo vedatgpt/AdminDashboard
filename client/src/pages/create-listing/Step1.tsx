@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
 import { useStep2Prefetch } from '@/hooks/useStep2Prefetch';
+import { useStep1Prefetch } from '@/hooks/useStep1Prefetch';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -24,6 +25,7 @@ export default function CreateListingStep1() {
   const { toast } = useToast();
   const { handleCategoryHover } = useSmartPrefetch();
   const { prefetchStep2Data } = useStep2Prefetch();
+  const { smartPrefetchStep1 } = useStep1Prefetch();
 
   // Redirect to login if not authenticated - simplified
   useEffect(() => {
@@ -31,6 +33,13 @@ export default function CreateListingStep1() {
       navigate('/auth/login');
     }
   }, [authLoading, isAuthenticated]);
+
+  // Step1 prefetch - sayfa açılır açılmaz draft modal için veri prefetch'i
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user?.id) {
+      smartPrefetchStep1(user.id, 'Step1 sayfa açılışı');
+    }
+  }, [authLoading, isAuthenticated, user?.id, smartPrefetchStep1]);
   
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
