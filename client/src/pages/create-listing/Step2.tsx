@@ -481,25 +481,34 @@ export default function Step2() {
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`px-3 py-1.5 rounded text-sm font-medium border ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Bold"
               >
-                Bold
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h6.5a3.5 3.5 0 001.545-6.645A3.5 3.5 0 0011.5 3H5zm2 3h4.5a1.5 1.5 0 010 3H7V6zm0 5h5.5a1.5 1.5 0 010 3H7v-3z"/>
+                </svg>
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('italic') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Italic"
               >
-                Italic
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8.5 3a.5.5 0 00-.5.5V14a.5.5 0 00.5.5h3a.5.5 0 000-1H9.5V4H11a.5.5 0 000-1H8.5z"/>
+                </svg>
               </button>
 
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Underline"
               >
-                Underline
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 17h12v1H4v-1zm6-1c3.31 0 6-2.69 6-6V4c0-.55-.45-1-1-1s-1 .45-1 1v6c0 2.21-1.79 4-4 4s-4-1.79-4-4V4c0-.55-.45-1-1-1s-1 .45-1 1v6c0 3.31 2.69 6 6 6z"/>
+                </svg>
               </button>
 
               {/* Divider */}
@@ -509,17 +518,23 @@ export default function Step2() {
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('bulletList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('bulletList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Bullet List"
               >
-                Bullet List
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h.01a1 1 0 110 2H4a1 1 0 01-1-1zM3 8a1 1 0 011-1h.01a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h.01a1 1 0 110 2H4a1 1 0 01-1-1zM7 4h10a1 1 0 010 2H7a1 1 0 010-2zM7 8h10a1 1 0 010 2H7a1 1 0 010-2zM7 12h10a1 1 0 010 2H7a1 1 0 010-2z"/>
+                </svg>
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('orderedList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('orderedList') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Numbered List"
               >
-                Numbered List
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 5h1v1H3V5zM3 7h1v1H3V7zM3 9h1v1H3V9zM3 11h1v1H3v-1zM7 5h10a1 1 0 010 2H7a1 1 0 010-2zM7 9h10a1 1 0 010 2H7a1 1 0 010-2zM7 13h10a1 1 0 010 2H7a1 1 0 010-2z"/>
+                </svg>
               </button>
 
               {/* Divider */}
@@ -529,33 +544,45 @@ export default function Step2() {
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'left' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive({ textAlign: 'left' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Align Left"
               >
-                Left
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 8a1 1 0 011-1h9a1 1 0 110 2H3a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 16a1 1 0 011-1h6a1 1 0 110 2H3a1 1 0 01-1-1z"/>
+                </svg>
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'center' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive({ textAlign: 'center' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Align Center"
               >
-                Center
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM5 8a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM7 16a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z"/>
+                </svg>
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'right' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive({ textAlign: 'right' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Align Right"
               >
-                Right
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM8 8a1 1 0 011-1h8a1 1 0 110 2H9a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM11 16a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z"/>
+                </svg>
               </button>
               
               <button
                 type="button"
                 onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Justify"
               >
-                Justify
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 8a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 16a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1z"/>
+                </svg>
               </button>
 
               {/* Divider */}
@@ -582,7 +609,7 @@ export default function Step2() {
               {/* Divider */}
               <div className="w-px h-8 bg-gray-300 mx-2"></div>
 
-              {/* Link Button */}
+              {/* Link Buttons */}
               <button
                 type="button"
                 onClick={() => {
@@ -591,9 +618,24 @@ export default function Step2() {
                     editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
                   }
                 }}
-                className={`px-3 py-1.5 rounded text-sm border ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`p-2 rounded border ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                title="Add Link"
               >
-                Add Link
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
+                  <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/>
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().unsetLink().run()}
+                className="p-2 rounded border bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                title="Remove Link"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
+                </svg>
               </button>
             </div>
             
