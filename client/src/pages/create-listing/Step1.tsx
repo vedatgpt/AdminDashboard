@@ -148,31 +148,29 @@ export default function CreateListingStep1() {
   // Check if there's a draft for the main category
   const checkForMainCategoryDraft = (category: Category): DraftListing | null => {
     if (!isAuthenticated || !allUserDrafts) {
-      console.log('🔍 Draft kontrol: Auth yok veya draft listesi yok');
+
       return null;
     }
     
-    console.log(`🔍 Ana kategori "${category.name}" (ID:${category.id}) için draft kontrol ediliyor...`);
-    console.log('📊 Mevcut drafts:', allUserDrafts.map(d => `ID:${d.id} categoryId:${d.categoryId}`));
-    console.log('📊 Flat categories count:', flatCategories.length);
+
     
     // Ana kategori için draft kontrolü - ana kategorinin alt kategorilerinde herhangi bir draft var mı?
     const mainCategoryDraft = allUserDrafts.find(draft => {
       if (!draft.categoryId) {
-        console.log(`❌ Draft ${draft.id}: categoryId yok`);
+
         return false;
       }
       
-      console.log(`🔍 Draft ${draft.id} kontrol ediliyor (categoryId: ${draft.categoryId})`);
+
       
       // Draft'ın kategorisini bul
       const draftCategory = flatCategories.find(cat => cat.id === draft.categoryId);
       if (!draftCategory) {
-        console.log(`❌ Draft ${draft.id}: kategori bulunamadı (categoryId: ${draft.categoryId})`);
+
         return false;
       }
       
-      console.log(`✅ Draft ${draft.id}: kategori bulundu: "${draftCategory.name}"`);
+
       
       // Draft'ın ana kategorisini bul (path'in en başındaki)
       let rootCategory = draftCategory;
@@ -184,31 +182,24 @@ export default function CreateListingStep1() {
           rootCategory = parent;
           pathToRoot.unshift(parent.name);
         } else {
-          console.log(`❌ Parent kategori bulunamadı: ${rootCategory.parentId}`);
+
           break;
         }
       }
       
-      console.log(`📍 Draft ${draft.id} path: ${pathToRoot.join(' → ')}`);
-      console.log(`📍 Root kategori: "${rootCategory.name}" (ID:${rootCategory.id})`);
-      console.log(`🔍 Karşılaştırma: ${rootCategory.id} === ${category.id} = ${rootCategory.id === category.id}`);
+
       
       return rootCategory.id === category.id;
     });
     
-    if (mainCategoryDraft) {
-      console.log(`✅ DRAFT BULUNDU! Draft ID: ${mainCategoryDraft.id}`);
-    } else {
-      console.log('❌ Hiç draft bulunamadı');
-    }
+
     
     return mainCategoryDraft || null;
   };
 
   // Handle category selection - DEPLOY FIX VERSION
   const handleCategorySelect = (category: Category) => {
-    console.log('🔍 DEPLOY FIX: Kategori seçildi:', category.name, 'Parent ID:', category.parentId);
-    console.log('📊 Kullanıcı drafts:', allUserDrafts.map(d => `ID:${d.id} categoryId:${d.categoryId}`));
+
     
     // Check if this is a root level category (no parent)
     const isRootCategory = !category.parentId;
@@ -217,16 +208,16 @@ export default function CreateListingStep1() {
     
     if (isRootCategory) {
       // Ana kategori seçildiğinde - mevcut draft kontrolü yap
-      console.log('🔍 DEPLOY FIX: Ana kategori seçildi, draft kontrol ediliyor...');
+
       
       // INSTANT FIX: Prefetch edilmiş cache data kullan - API çağrısı yapma
-      console.log('⚡ INSTANT: Cache\'den draft kontrol ediliyor...');
+
       
       // Ana kategori için draft var mı kontrol et
       const mainCategoryDraft = checkForMainCategoryDraft(category);
       
       if (mainCategoryDraft && isAuthenticated) {
-        console.log('✅ INSTANT: Ana kategoride mevcut draft bulundu:', mainCategoryDraft.id);
+
         // Modal'ı göster
         setPendingCategory(category);
         setPendingPath([category]);
@@ -234,7 +225,7 @@ export default function CreateListingStep1() {
         setShowDraftModal(true);
         return; // Alt kategorileri yükleme, modal'a bekle
       } else {
-        console.log('❌ INSTANT: Ana kategoride draft bulunamadı, normal flow devam ediyor');
+
         // Eğer draft yoksa normal akışı devam ettir
         const newPath = [category];
         setCategoryPath(newPath);
