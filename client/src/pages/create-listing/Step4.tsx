@@ -44,14 +44,16 @@ export default function Step4() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
-  // Draft listing data with cache bypass for immediate updates
-  const { data: draftData, refetch: refetchDraft } = useQuery({
+  // SECURITY FIX: Draft listing data with ownership verification
+  const { data: draftData, error: draftError, isError: isDraftError, refetch: refetchDraft } = useQuery({
     queryKey: ['/api/draft-listings', currentClassifiedId],
     queryFn: async () => {
       if (!currentClassifiedId) return null;
       const response = await fetch(`/api/draft-listings/${currentClassifiedId}?t=${Date.now()}`);
       if (!response.ok) {
-        if (response.status === 404) return null;
+        if (response.status === 404) {
+          throw new Error('İlan taslağı bulunamadı');
+        }
         if (response.status === 401) {
           throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
         }
@@ -66,6 +68,19 @@ export default function Step4() {
     staleTime: 0, // No cache for immediate updates
     gcTime: 0, // No cache for immediate updates
   });
+
+  // SECURITY FIX: URL manipülasyonu koruması
+  useEffect(() => {
+    if (isDraftError && draftError && currentClassifiedId) {
+      console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
+      toast({
+        title: "Güvenlik Hatası",
+        description: "İlgili ilan için yetkiniz bulunmamaktadır.",
+        variant: "destructive"
+      });
+      navigate('/create-listing/step-1');
+    }
+  }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
@@ -495,8 +510,8 @@ export default function Step4() {
 
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
-                            if (value.value !== undefined) {
-                              displayValue = `${value.value} ${value.unit || ''}`.trim();
+                            if ((value as any).value !== undefined) {
+                              displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
                             } else {
                               // Don't show complex JSON objects in details table
                               return null;
@@ -587,8 +602,8 @@ export default function Step4() {
 
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
-                        if (value.value !== undefined) {
-                          displayValue = `${value.value} ${value.unit || ''}`.trim();
+                        if ((value as any).value !== undefined) {
+                          displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Skip complex objects that don't have value/unit structure
                           return null;
@@ -618,8 +633,8 @@ export default function Step4() {
 
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
-                        if (value.value !== undefined) {
-                          displayValue = `${value.value} ${value.unit || ''}`.trim();
+                        if ((value as any).value !== undefined) {
+                          displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Don't show complex JSON objects in details table
                           return null;

@@ -35,9 +35,17 @@ export default function Step2() {
   const classifiedIdParam = urlParams.get('classifiedId');
   const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
   
-  // Draft listing hooks
-  const { data: draftData } = useDraftListing(currentClassifiedId);
+  // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ
+  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
+
+  // SECURITY FIX: URL manipülasyonu koruması
+  useEffect(() => {
+    if (isDraftError && draftError && currentClassifiedId) {
+      console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
+      navigate('/create-listing/step-1');
+    }
+  }, [isDraftError, draftError, currentClassifiedId, navigate]);
   
   // Location selection state
   const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);

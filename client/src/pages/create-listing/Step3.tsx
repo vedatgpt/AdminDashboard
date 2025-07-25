@@ -45,6 +45,22 @@ export default function Step3() {
 
   console.log('Step3 yüklendi - currentClassifiedId:', currentClassifiedId);
 
+  // SECURITY FIX: Draft ownership verification
+  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
+
+  // SECURITY FIX: URL manipülasyonu koruması
+  useEffect(() => {
+    if (isDraftError && draftError && currentClassifiedId) {
+      console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
+      toast({
+        title: "Güvenlik Hatası",
+        description: "İlgili ilan için yetkiniz bulunmamaktadır.",
+        variant: "destructive"
+      });
+      navigate('/create-listing/step-1');
+    }
+  }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
+
   // Memoized filtered images for Sortable.js
   const nonUploadingImages = useMemo(() => 
     images.filter(img => !img.uploading), 
@@ -78,7 +94,7 @@ export default function Step3() {
   }, [authLoading, isAuthenticated]);
 
   // Load existing photos from draft when component mounts
-  const { data: draftData } = useDraftListing(currentClassifiedId);
+  // Note: draftData already defined above for security check
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
