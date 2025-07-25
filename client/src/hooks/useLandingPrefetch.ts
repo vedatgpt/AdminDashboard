@@ -27,19 +27,25 @@ export function useLandingPrefetch() {
       if (categories && categories.length > 0) {
         console.log(`📦 ${categories.length} kategori bulundu, ikonlar prefetch ediliyor...`);
         
-        // Icon prefetch - paralel olarak yükle
+        // Icon prefetch - paralel olarak yükle VE cache'e zorla ekle
         const iconPromises = categories
           .filter(cat => cat.icon) // Sadece ikonu olan kategoriler
           .map(cat => {
             const iconUrl = `${window.location.origin}/uploads/category-icons/${cat.icon}`;
             return new Promise<void>((resolve) => {
               const img = new Image();
+              img.crossOrigin = 'anonymous'; // CORS için
               img.onload = () => {
-                console.log(`✅ İkon yüklendi: ${cat.name}`);
+                console.log(`✅ İkon cache'e alındı: ${cat.name} - ${iconUrl}`);
+                // Force browser cache by fetching with cache headers
+                fetch(iconUrl, { 
+                  cache: 'force-cache',
+                  mode: 'cors' 
+                }).catch(() => {}); // Silent fail
                 resolve();
               };
               img.onerror = () => {
-                console.log(`❌ İkon yüklenemedi: ${cat.name}`);
+                console.log(`❌ İkon yüklenemedi: ${cat.name} - ${iconUrl}`);
                 resolve(); // Error'da bile resolve et
               };
               img.src = iconUrl;

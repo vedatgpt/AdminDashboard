@@ -26,8 +26,13 @@ export default function CategoryCard({ category, onClick, hasSubcategories, onHo
               alt={category.name}
               className="w-12 h-12 object-contain"
               loading="eager"
-              decoding="async"
+              decoding="sync"
+              crossOrigin="anonymous"
+              onLoad={() => {
+                console.log(`📷 CategoryCard icon loaded: ${category.name}`);
+              }}
               onError={(e) => {
+                console.log(`❌ CategoryCard icon failed: ${category.name}`);
                 e.currentTarget.style.display = 'none';
               }}
             />
