@@ -8,6 +8,7 @@ import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -30,7 +31,7 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Duplicate link extension sorunu çözümü
+  // TipTap Editor Setup - Yeniden kurulum + metin hizalama
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -41,6 +42,11 @@ export default function Step2() {
         HTMLAttributes: {
           class: 'text-[#EC7830] underline',
         },
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+        alignments: ['left', 'center', 'right', 'justify'],
+        defaultAlignment: 'left'
       }),
     ],
     content: formData.customFields.description || '<p></p>',
@@ -490,6 +496,61 @@ export default function Step2() {
                 className={`px-2 py-1 rounded text-sm ${editor?.isActive('orderedList') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
               >
                 1.
+              </button>
+              
+              {/* Ayırıcı */}
+              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              
+              {/* Metin Hizalama Butonları */}
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'left' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                title="Sola Hizala"
+              >
+                ⬅
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'center' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                title="Ortala"
+              >
+                ↔
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'right' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                title="Sağa Hizala"
+              >
+                ➡
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                title="İki Yana Yasla"
+              >
+                ↕
+              </button>
+              
+              {/* Ayırıcı */}
+              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              
+              {/* Link Butonu */}
+              <button
+                type="button"
+                onClick={() => {
+                  const url = window.prompt('Link URL giriniz:');
+                  if (url) {
+                    editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                  }
+                }}
+                className={`px-2 py-1 rounded text-sm ${editor?.isActive('link') ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                title="Link Ekle"
+              >
+                🔗
               </button>
             </div>
             
