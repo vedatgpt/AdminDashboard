@@ -219,13 +219,24 @@ export default function Step2() {
   // Test verilerini doldur fonksiyonu
   const fillTestData = () => {
     const testData = {
+      // Universal fields
       title: 'Test BMW 3.20d Sedan - Galeriden Temiz',
-      description: '<p><strong>Temiz ve bakımlı araç!</strong></p><p>• Motor hacmi: 2000cc</p><p>• Yakıt türü: Dizel</p><p>• Vites: Manuel</p><p>• Renk: Siyah</p><p>• Hasar durumu: Boyasız</p>',
+      description: '<p><strong>Temiz ve bakımlı araç!</strong></p><p>• Motor hacmi: 2000cc</p><p>• Yakıt türü: Dizel</p><p>• Vites: Manuel</p><p>• Renk: Beyaz</p><p>• Kilometre: 125.000km</p><p>• Hasar durumu: Boyasız</p>',
       price: { value: '485000', unit: 'TL' },
-      motor_hacmi: { value: '2000', unit: 'cc' },
-      motor_gucu: { value: '190', unit: 'hp' },
-      yakit_turu: 'Dizel',
-      vites: 'Manuel'
+      
+      // Custom fields with exact API field names
+      'Yıl': '2023',
+      'Yakıt Tipi': 'Dizel',
+      'Vites': 'Manuel',
+      'Araç Durumu': 'İkinci El',
+      'Kilometre': { value: '125000', unit: 'km' },
+      'Kasa Tipi': 'Sedan',
+      'Motor Gücü': { value: '190', unit: 'hp' },
+      'Motor Hacmi': { value: '2000', unit: 'cc' },
+      'Çekiş': 'Önden Çekiş',
+      'Direksiyon Yönü': 'Sol',
+      'Renk': 'Beyaz',
+      'Takaslı': 'Hayır'
     };
 
     // Form verilerini güncelle
@@ -251,7 +262,8 @@ export default function Step2() {
       }, 100);
     }
 
-    console.log('✅ Test verileri dolduruldu');
+    console.log('✅ Test verileri dolduruldu:', testData);
+    console.log('📊 Custom fields sayısı:', customFields.length);
   };
 
   const nextStep = async () => {
