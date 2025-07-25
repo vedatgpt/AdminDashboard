@@ -6,6 +6,7 @@ import { useDraftListing, useCreateDraftListing, useUpdateDraftListing, useUserD
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
+import { useStep2Prefetch } from '@/hooks/useStep2Prefetch';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -22,6 +23,7 @@ export default function CreateListingStep1() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { handleCategoryHover } = useSmartPrefetch();
+  const { prefetchStep2Data } = useStep2Prefetch();
 
   // Redirect to login if not authenticated - simplified
   useEffect(() => {
@@ -234,6 +236,9 @@ export default function CreateListingStep1() {
         type: 'SET_CATEGORY',
         payload: { category, path: newPath }
       });
+      
+      // Step2 verilerini prefetch et - final kategori seçildiği anda
+      prefetchStep2Data(category.id);
     }
   };
 
@@ -288,6 +293,9 @@ export default function CreateListingStep1() {
         } 
       });
       
+      // Step2 verilerini prefetch et - yeni draft oluşturulurken
+      prefetchStep2Data(pendingCategory.id);
+      
       // Navigate to step 2
       navigate(`/create-listing/step-2?classifiedId=${draftId}`);
     } catch (error) {
@@ -302,7 +310,7 @@ export default function CreateListingStep1() {
 
   // Modal handlers
   const handleContinueWithDraft = () => {
-    if (!currentExistingDraft) return;
+    if (!currentExistingDraft || !pendingCategory) return;
     
     setShowDraftModal(false);
     setCurrentExistingDraft(null);
@@ -313,10 +321,13 @@ export default function CreateListingStep1() {
     dispatch({ 
       type: 'SET_CATEGORY', 
       payload: { 
-        category: pendingCategory!, 
+        category: pendingCategory, 
         path: pendingPath 
       } 
     });
+    
+    // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
+    prefetchStep2Data(pendingCategory.id);
     
     // Navigate to step 2
     navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
