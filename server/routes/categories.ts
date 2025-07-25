@@ -94,6 +94,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// GET /api/categories/:id/children - Get child categories (public endpoint for prefetch)
+router.get('/:id/children', async (req, res) => {
+  try {
+    const parentId = parseInt(req.params.id);
+    if (isNaN(parentId)) {
+      return res.status(400).json({ error: 'Invalid parent ID' });
+    }
+
+    const children = await storage.getChildCategories(parentId);
+    res.json(children);
+  } catch (error) {
+    console.error('Get child categories error:', error);
+    res.status(500).json({ error: 'Failed to get child categories' });
+  }
+});
+
 // GET /api/categories/:id/custom-fields - Get custom fields for a category (public endpoint)
 router.get('/:id/custom-fields', async (req, res) => {
   try {
