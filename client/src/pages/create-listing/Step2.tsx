@@ -404,45 +404,61 @@ export default function Step2() {
     setIsSubmitting(true);
     
     try {
-      // SIMPLIFIED VALIDATION: Direct field checks without DOM queries
+      // ENHANCED VALIDATION: Check both context formData AND draft data as fallback
       const errors: { [key: string]: string } = {};
-    
-    // Title validation
-    if (!formData.customFields.title?.trim()) {
-      errors.title = 'İlan başlığı zorunludur';
-    }
-    
-    // Description validation
-    if (!formData.customFields.description?.trim()) {
-      errors.description = 'Açıklama zorunludur';
-    }
-    
-    // Price validation
-    if (!formData.customFields.price?.value?.trim()) {
-      errors.price = 'Fiyat zorunludur';
-    }
-    
-    // Custom fields validation (from form state, not DOM)
-    customFields?.forEach(field => {
-      const fieldValue = formData.customFields[field.fieldName];
-      if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
-        errors[field.fieldName] = `${field.label} alanı zorunludur`;
+      
+      // Parse draft data for validation fallback
+      const draftCustomFields = draftData?.customFields ? JSON.parse(draftData.customFields) : {};
+      
+      // Title validation - check context first, then draft data
+      const titleValue = formData.customFields.title?.trim() || draftCustomFields.title?.trim() || draftData?.title?.trim();
+      if (!titleValue) {
+        errors.title = 'İlan başlığı zorunludur';
       }
-    });
+      
+      // Description validation - check context first, then draft data  
+      const descriptionValue = formData.customFields.description?.trim() || draftCustomFields.description?.trim() || draftData?.description?.trim();
+      if (!descriptionValue) {
+        errors.description = 'Açıklama zorunludur';
+      }
+      
+      // Price validation - check context first, then draft data
+      const priceValue = formData.customFields.price?.value?.trim() || 
+                        (draftCustomFields.price?.value?.trim()) ||
+                        (typeof draftCustomFields.price === 'string' && draftCustomFields.price.trim()) ||
+                        (draftData?.price && JSON.parse(draftData.price)?.value?.trim());
+      if (!priceValue) {
+        errors.price = 'Fiyat zorunludur';
+      }
     
-    // Location validation
-    if (locationSettings?.showCountry && !selectedCountry) {
-      errors.country = 'Ülke seçimi zorunludur';
-    }
-    if (locationSettings?.showCity && !selectedCity) {
-      errors.city = 'İl seçimi zorunludur';
-    }
-    if (locationSettings?.showDistrict && !selectedDistrict) {
-      errors.district = 'İlçe seçimi zorunludur';
-    }
-    if (locationSettings?.showNeighborhood && !selectedNeighborhood) {
-      errors.neighborhood = 'Mahalle seçimi zorunludur';
-    }
+      // Custom fields validation - check context first, then draft data
+      customFields?.forEach(field => {
+        const contextValue = formData.customFields[field.fieldName];
+        const draftValue = draftCustomFields[field.fieldName];
+        
+        // Check both sources for field value
+        const fieldValue = contextValue || draftValue;
+        
+        if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
+        }
+      });
+    
+      // Location validation - check current selections and draft data
+      const draftLocationData = draftData?.locationData ? JSON.parse(draftData.locationData) : {};
+      
+      if (locationSettings?.showCountry && !selectedCountry && !draftLocationData.country) {
+        errors.country = 'Ülke seçimi zorunludur';
+      }
+      if (locationSettings?.showCity && !selectedCity && !draftLocationData.city) {
+        errors.city = 'İl seçimi zorunludur';
+      }
+      if (locationSettings?.showDistrict && !selectedDistrict && !draftLocationData.district) {
+        errors.district = 'İlçe seçimi zorunludur';
+      }
+      if (locationSettings?.showNeighborhood && !selectedNeighborhood && !draftLocationData.neighborhood) {
+        errors.neighborhood = 'Mahalle seçimi zorunludur';
+      }
     
       // Show validation errors if any exist
       if (Object.keys(errors).length > 0) {
