@@ -29,7 +29,6 @@ export default function RichTextEditor({
     bulletList: false,
     orderedList: false,
     textAlign: 'left',
-    heading1: false,
     heading2: false,
     heading3: false
   })
@@ -51,7 +50,7 @@ export default function RichTextEditor({
         },
       }),
       Heading.configure({
-        levels: [1, 2, 3],
+        levels: [2, 3],
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -94,7 +93,6 @@ export default function RichTextEditor({
         highlight: editor.isActive('highlight'),
         bulletList: editor.isActive('bulletList'),
         orderedList: editor.isActive('orderedList'),
-        heading1: editor.isActive('heading', { level: 1 }),
         heading2: editor.isActive('heading', { level: 2 }),
         heading3: editor.isActive('heading', { level: 3 }),
         textAlign: editor.isActive({ textAlign: 'center' }) ? 'center' : 
@@ -167,54 +165,52 @@ export default function RichTextEditor({
             U
           </button>
 
-          {/* Heading Buttons */}
-          <button
-            type="button"
-            onClick={() => {
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-              setActiveStates(prev => ({ ...prev, heading1: !prev.heading1 }))
-            }}
-            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
-              activeStates.heading1 
-                ? 'bg-white text-orange-500 border-orange-500' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            title="Başlık 1"
-          >
-            H1
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-              setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
-            }}
-            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
-              activeStates.heading2 
-                ? 'bg-white text-orange-500 border-orange-500' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            title="Başlık 2"
-          >
-            H2
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-              setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
-            }}
-            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
-              activeStates.heading3 
-                ? 'bg-white text-orange-500 border-orange-500' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            title="Başlık 3"
-          >
-            H3
-          </button>
+          {/* Heading Dropdown */}
+          <div className="relative group">
+            <button
+              type="button"
+              className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
+                activeStates.heading2 || activeStates.heading3
+                  ? 'bg-white text-orange-500 border-orange-500' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+              }`}
+              title="Başlık"
+            >
+              T
+            </button>
+            
+            {/* Dikey Dropdown Menu */}
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="p-2 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
+                  }}
+                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
+                    activeStates.heading2 ? 'text-orange-500' : 'text-gray-700'
+                  }`}
+                  title="Başlık 2"
+                >
+                  H2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    editor.chain().focus().toggleHeading({ level: 3 }).run()
+                    setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
+                  }}
+                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
+                    activeStates.heading3 ? 'text-orange-500' : 'text-gray-700'
+                  }`}
+                  title="Başlık 3"
+                >
+                  H3
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Text Alignment - TipTap Resmi İkonlar */}
           <button
@@ -276,9 +272,8 @@ export default function RichTextEditor({
               title="Vurgula"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18.5 4l-1.16-1.16a3 3 0 0 0-4.24 0L5 10.94a1 1 0 0 0 0 1.41l2.65 2.65a1 1 0 0 0 1.41 0L17.16 6.84a3 3 0 0 0 0-4.24L18.5 4z" fill="currentColor"/>
-                <path d="M3.5 17.5l3-3L9 17l-3 3a1 1 0 0 1-1.41 0l-.09-.09a1 1 0 0 1 0-1.41z" fill="currentColor"/>
-                <path d="M2 22h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="m21.174 6.812-1.986-1.987a1.625 1.625 0 0 0-2.299 0l-9.188 9.188a.75.75 0 0 0-.194.325l-1.65 5.95a.375.375 0 0 0 .47.47l5.95-1.65a.75.75 0 0 0 .325-.194l9.188-9.188a1.625 1.625 0 0 0 0-2.299l-1.987-1.987a1.625 1.625 0 0 0-2.299 0zm-10.436 13.436L9.188 18.688a.375.375 0 0 1-.47-.47l1.56-5.618 4.34 4.34-1.56 5.618a.375.375 0 0 1-.47.47z" fill="currentColor"/>
+                <path d="M19.513 8.199 15.801 4.487a.75.75 0 0 0-1.061 1.061l3.712 3.713a.75.75 0 0 0 1.061-1.062z" fill="currentColor"/>
               </svg>
             </button>
             
