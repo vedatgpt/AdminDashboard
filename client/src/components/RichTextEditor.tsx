@@ -73,7 +73,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`px-3 py-1 text-sm font-bold border rounded ${
+            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
               editor.isActive('bold') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -86,7 +86,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`px-3 py-1 text-sm italic border rounded ${
+            className={`w-8 h-8 text-sm italic border rounded flex items-center justify-center ${
               editor.isActive('italic') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -98,7 +98,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`px-3 py-1 text-sm underline border rounded ${
+            className={`w-8 h-8 text-sm underline border rounded flex items-center justify-center ${
               editor.isActive('underline') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -107,14 +107,11 @@ export default function RichTextEditor({
             U
           </button>
 
-          {/* Separator */}
-          <div className="w-px h-8 bg-gray-300"></div>
-
           {/* Text Alignment - TipTap Resmi İkonlar */}
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-3 py-1 text-sm border rounded flex items-center ${
+            className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'left' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -129,7 +126,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-3 py-1 text-sm border rounded flex items-center ${
+            className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'center' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -144,7 +141,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-3 py-1 text-sm border rounded flex items-center ${
+            className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'right' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -156,18 +153,15 @@ export default function RichTextEditor({
             </svg>
           </button>
 
-          {/* Separator */}
-          <div className="w-px h-8 bg-gray-300"></div>
-
 
 
           {/* Highlight Dropdown - Dikey Liste */}
           <div className="relative group">
             <button
               type="button"
-              className={`px-3 py-1 text-sm border rounded flex items-center h-8 ${
+              className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
                 editor.isActive('highlight') 
-                  ? 'bg-yellow-300 text-black border-yellow-400' 
+                  ? 'bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-400 text-white border-purple-400' 
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
               title="Vurgula"
@@ -184,12 +178,6 @@ export default function RichTextEditor({
               <div className="p-2 space-y-1">
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleHighlight().run()}
-                  className="w-6 h-6 bg-yellow-300 rounded hover:scale-110 transition-transform block"
-                  title="Sarı"
-                ></button>
-                <button
-                  type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
                   className="w-6 h-6 rounded hover:scale-110 transition-transform block"
                   style={{ backgroundColor: '#ffc078' }}
@@ -204,17 +192,17 @@ export default function RichTextEditor({
                 ></button>
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#a3d9ff' }).run()}
                   className="w-6 h-6 rounded hover:scale-110 transition-transform block"
-                  style={{ backgroundColor: '#74c0fc' }}
-                  title="Mavi"
+                  style={{ backgroundColor: '#a3d9ff' }}
+                  title="Açık Mavi"
                 ></button>
                 <button
                   type="button"
-                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#d4a5ff' }).run()}
                   className="w-6 h-6 rounded hover:scale-110 transition-transform block"
-                  style={{ backgroundColor: '#b197fc' }}
-                  title="Mor"
+                  style={{ backgroundColor: '#d4a5ff' }}
+                  title="Açık Mor"
                 ></button>
                 {editor.isActive('highlight') && (
                   <button
@@ -232,14 +220,11 @@ export default function RichTextEditor({
             </div>
           </div>
 
-          {/* Separator */}
-          <div className="w-px h-8 bg-gray-300"></div>
-
           {/* Lists - TipTap SVG Icons */}
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`px-3 py-1 text-sm border rounded flex items-center ${
+            className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive('bulletList') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -255,7 +240,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`px-3 py-1 text-sm border rounded flex items-center ${
+            className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive('orderedList') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
