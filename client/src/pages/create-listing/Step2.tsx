@@ -5,17 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import { Underline } from '@tiptap/extension-underline';
-import Image from '@tiptap/extension-image';
-import ImageResize from 'tiptap-extension-resize-image';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
-import '../../styles/tiptap.css';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '../../components/iOSSpinner';
 import { useLocationsTree } from '@/hooks/useLocations';
@@ -36,78 +26,27 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Bold ve renk uyumluluğu için optimize edildi
+  // Basit açıklama input - maksimum 2000 karakter
   const MAX_DESCRIPTION_LENGTH = 2000;
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        link: false,
-        paragraph: {
-          HTMLAttributes: {
-            style: 'margin: 0; line-height: 1.4;',
-          },
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-[#EC7830] underline',
-        },
-      }),
-      ImageResize.configure({
-        HTMLAttributes: {
-          style: 'margin: 8px 0; border-radius: 4px;',
-        },
-        allowBase64: true,
-        inline: false,
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right'],
-        defaultAlignment: 'left'
-      }),
-      TextStyle,
-      Color,
-      Underline.configure({
-        HTMLAttributes: {
-          class: 'underline',
-        },
-      }),
-    ],
-    content: formData.customFields.description || '<p></p>',
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      const textContent = editor.getText();
+  
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    
+    // Karakter sınırı kontrolü
+    if (value.length <= MAX_DESCRIPTION_LENGTH) {
+      // Draft'a kaydet
+      dispatch({
+        type: 'SET_CUSTOM_FIELDS',
+        payload: {
+          ...formData.customFields,
+          description: value
+        }
+      });
       
-      // Karakter sınırlaması kontrolü
-      if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
-        // Draft'a kaydet
-        dispatch({
-          type: 'SET_CUSTOM_FIELDS',
-          payload: {
-            ...formData.customFields,
-            description: html
-          }
-        });
-        
-        // Database'e kaydet
-        handleInputChange('description', html);
-      } else {
-        // Sınır aşıldığında geri al
-        const currentContent = editor.getHTML();
-        setTimeout(() => {
-          if (editor && currentContent !== formData.customFields.description) {
-            editor.commands.setContent(formData.customFields.description || '<p></p>');
-          }
-        }, 100);
-      }
-    },
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none min-h-[200px] max-h-[300px] overflow-y-auto p-4 prose prose-sm max-w-none',
-      },
-    },
-  });
+      // Database'e kaydet
+      handleInputChange('description', value);
+    }
+  };
 
 
 
@@ -510,276 +449,23 @@ export default function Step2() {
           />
         </div>
 
-        {/* Açıklama Input - Tüm kategoriler için geçerli */}
+        {/* Açıklama Input - Basit textarea */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            {/* TipTap Toolbar */}
-            <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-1">
-              {/* Format Buttons */}
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={`w-8 h-8 rounded border text-lg font-bold flex items-center justify-center ${editor?.isActive('bold') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Bold"
-              >
-                B
-              </button>
-              
-
-
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                className={`w-8 h-8 rounded border text-lg font-medium flex items-center justify-center underline ${editor?.isActive('underline') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Underline"
-              >
-                U
-              </button>
-
-
-
-              {/* Text Alignment */}
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'left' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Left"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 8a1 1 0 011-1h9a1 1 0 110 2H3a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM2 16a1 1 0 011-1h6a1 1 0 110 2H3a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'center' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Center"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM5 8a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM7 16a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive({ textAlign: 'right' }) ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title="Align Right"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 4a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM8 8a1 1 0 011-1h8a1 1 0 110 2H9a1 1 0 01-1-1zM2 12a1 1 0 011-1h14a1 1 0 110 2H3a1 1 0 01-1-1zM11 16a1 1 0 011-1h5a1 1 0 110 2h-5a1 1 0 01-1-1z"/>
-                </svg>
-              </button>
-              
-
-
-              {/* Color Dropdown */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const dropdown = document.getElementById('color-dropdown');
-                    dropdown?.classList.toggle('hidden');
-                  }}
-                  className="w-8 h-8 rounded border border-gray-200 hover:border-gray-300 flex items-center justify-center transition-colors"
-                  style={{
-                    backgroundColor: editor?.getAttributes('textStyle')?.color || '#000000'
-                  }}
-                  title="Text Color"
-                >
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                  </svg>
-                </button>
-                <div
-                  id="color-dropdown"
-                  className="absolute top-10 left-0 bg-white border border-gray-200 rounded-lg p-3 shadow-lg hidden z-10 min-w-[150px]"
-                >
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#000000').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-black hover:scale-110 transition-transform"
-                      title="Black"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#DC2626').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-red-600 hover:scale-110 transition-transform"
-                      title="Red"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#EC7830').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-[#EC7830] hover:scale-110 transition-transform"
-                      title="Orange"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#2563EB').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-blue-600 hover:scale-110 transition-transform"
-                      title="Blue"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#16A34A').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-green-600 hover:scale-110 transition-transform"
-                      title="Green"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#9333EA').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-purple-600 hover:scale-110 transition-transform"
-                      title="Purple"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#7C2D12').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-amber-800 hover:scale-110 transition-transform"
-                      title="Brown"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#BE185D').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-pink-600 hover:scale-110 transition-transform"
-                      title="Pink"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().setColor('#0F766E').run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-8 h-8 rounded border border-gray-200 bg-teal-600 hover:scale-110 transition-transform"
-                      title="Teal"
-                    />
-                  </div>
-                  <div className="mt-3 border-t pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor?.chain().focus().unsetColor().run();
-                        document.getElementById('color-dropdown')?.classList.add('hidden');
-                      }}
-                      className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-600 rounded hover:bg-gray-300 flex items-center justify-center"
-                      title="Clear Color"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M15.293 3.293a1 1 0 011.414 1.414L12.414 9l4.293 4.293a1 1 0 01-1.414 1.414L11 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L9.586 9 5.293 4.707a1 1 0 011.414-1.414L11 7.586l4.293-4.293z"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Link Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (editor?.isActive('link')) {
-                    editor?.chain().focus().unsetLink().run();
-                  } else {
-                    const url = window.prompt('Link veya resim URL\'sini giriniz:');
-                    if (url) {
-                      // Resim URL'si kontrolü
-                      if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-                        // TipTap Image extension kullanarak resim ekle
-                        editor?.chain().focus().setImage({ src: url }).run();
-                      } else {
-                        // Normal link olarak ekle
-                        editor?.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-                      }
-                    }
-                  }
-                }}
-                className={`w-8 h-8 rounded border flex items-center justify-center ${editor?.isActive('link') ? 'bg-[#EC7830] text-white border-[#EC7830]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-                title={editor?.isActive('link') ? 'Remove Link' : 'Add Link/Image'}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z"/>
-                  <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z"/>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Editor Content */}
-            <div className="min-h-[200px] bg-white">
-              <EditorContent editor={editor} />
-            </div>
-          </div>
-        </div>
-
-        {/* Fiyat Input - Tüm kategoriler için geçerli */}
-        <div className="space-y-2 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
-            Fiyat
-            <span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="relative lg:w-[30%] w-full">
-            <input
-              type="text"
-              value={(() => {
-                const priceValue = formData.customFields.price || '';
-                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
-                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
-              })()}
-              onChange={(e) => {
-                let processedValue = e.target.value.replace(/\D/g, '');
-                const currentPrice = formData.customFields.price || {};
-                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
-              }}
-              placeholder="Fiyat giriniz"
-              inputMode="numeric"
-              className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+          <div className="relative">
+            <textarea
+              value={formData.customFields.description || ''}
+              onChange={handleDescriptionChange}
+              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              rows={8}
+              maxLength={MAX_DESCRIPTION_LENGTH}
+              className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 resize-y"
             />
-            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
-              <select
-                value={(() => {
-                  const currentPrice = formData.customFields.price || {};
-                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
-                })()}
-                onChange={(e) => {
-                  const currentPrice = formData.customFields.price || {};
-                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
-                  handleInputChange('price', { value, unit: e.target.value });
-                }}
-                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="TL">TL</option>
-                <option value="GBP">GBP</option>
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-              </select>
+            <div className="absolute bottom-3 right-3 text-sm text-gray-500">
+              {(formData.customFields.description || '').length} / {MAX_DESCRIPTION_LENGTH}
             </div>
           </div>
         </div>
