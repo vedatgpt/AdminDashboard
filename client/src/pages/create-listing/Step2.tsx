@@ -87,8 +87,8 @@ export default function Step2() {
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
 
-  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation
-  const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
+  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation  
+  const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData as any || null, isDraftLoading);
 
   // Step completion marking mutation
   const markStepCompletedMutation = useMutation({
@@ -405,7 +405,7 @@ export default function Step2() {
 
   const nextStep = async () => {
     // Form verilerini kaydetmeden önce güncelle
-    await updateFormData();
+    await updateFormData(formData);
     
     // Kısa bir bekleme süresi ekle - DOM'un güncellenmesi için
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -449,7 +449,7 @@ export default function Step2() {
         if (customFields) {
           for (const field of customFields) {
             if (errors[field.fieldName]) {
-              const elements = document.querySelectorAll(`input, select`);
+              const elements = Array.from(document.querySelectorAll(`input, select`));
               for (const element of elements) {
                 const classes = element.className;
                 if (classes.includes('border-red-500')) {
@@ -467,7 +467,7 @@ export default function Step2() {
         const locationFields = ['country', 'city', 'district', 'neighborhood'];
         for (const field of locationFields) {
           if (errors[field]) {
-            const elements = document.querySelectorAll(`select`);
+            const elements = Array.from(document.querySelectorAll(`select`));
             for (const element of elements) {
               const classes = element.className;
               if (classes.includes('border-red-500')) {

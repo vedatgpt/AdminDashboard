@@ -54,13 +54,27 @@ export function useStepGuard(
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Skip validation if still loading or no classifiedId
-    if (isLoading || !classifiedId) {
+    // CRITICAL: Skip validation ONLY if still loading
+    if (isLoading) {
       return;
     }
 
-    // Skip validation if no draft found (will be handled by individual components)
-    if (!draft) {
+    // SECURITY FIX: If no classifiedId, redirect to Step1 (except for Step1 itself)
+    if (!classifiedId && currentStep !== 1) {
+      console.warn(`No classifiedId found, redirecting to Step 1`);
+      setLocation('/create-listing/step-1');
+      return;
+    }
+
+    // SECURITY FIX: If no draft found and not Step1, redirect to Step1
+    if (!draft && currentStep !== 1) {
+      console.warn(`No draft found, redirecting to Step 1`);
+      setLocation('/create-listing/step-1');
+      return;
+    }
+
+    // Skip validation for Step1 (it creates its own draft)
+    if (currentStep === 1) {
       return;
     }
 
@@ -69,7 +83,7 @@ export function useStepGuard(
 
     if (!validationResult.isValid && validationResult.redirectStep) {
       // Redirect to appropriate step with error feedback
-      const redirectPath = getRedirectPath(classifiedId, validationResult.redirectStep);
+      const redirectPath = getRedirectPath(classifiedId!, validationResult.redirectStep);
       
       // Show user-friendly error message
       console.warn(`Step ${currentStep} validation failed:`, validationResult.missingFields);
