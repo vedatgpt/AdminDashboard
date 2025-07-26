@@ -89,6 +89,15 @@ export default function Step2() {
 
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation  
   const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData as any || null, isDraftLoading);
+  
+  // DEBUG: Log step guard results
+  console.log('STEP2 DEBUG - StepGuard Result:', {
+    currentStep: 2,
+    classifiedId: currentClassifiedId,
+    draftData: draftData,
+    isDraftLoading: isDraftLoading,
+    stepGuardResult: stepGuardResult
+  });
 
   // Step completion marking mutation
   const markStepCompletedMutation = useMutation({

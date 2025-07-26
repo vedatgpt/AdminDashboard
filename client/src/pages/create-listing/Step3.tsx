@@ -49,8 +49,46 @@ export default function Step3() {
   // SECURITY FIX: Draft ownership verification
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
 
+  // EMERGENCY DEBUG: Manual step validation without hook
+  useEffect(() => {
+    console.log('🚨 STEP3 EMERGENCY DEBUG: Manual validation check');
+    
+    if (!isDraftLoading && draftData) {
+      const draft = draftData as any; // Type assertion for debugging
+      console.log('🔍 STEP3 MANUAL VALIDATION:', {
+        classifiedId: currentClassifiedId,
+        step1Completed: draft.step1Completed,
+        step2Completed: draft.step2Completed,
+        step3Completed: draft.step3Completed,
+        hasTitle: !!draft.title,
+        hasDescription: !!draft.description,
+        hasPrice: !!draft.price
+      });
+      
+      // Manual Step2 validation
+      if (!draft.step2Completed) {
+        console.error('🚨 MANUAL SECURITY CHECK FAILED: Step2 not completed, IMMEDIATE REDIRECT!');
+        
+        // Force redirect immediately
+        window.location.replace(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
+        return;
+      }
+      
+      console.log('✅ STEP3 MANUAL VALIDATION: All checks passed');
+    }
+  }, [draftData, isDraftLoading, currentClassifiedId]);
+  
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 3 validation
   const stepGuardResult = useStepGuard(3, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
+  
+  // DEBUG: Log step guard results
+  console.log('STEP3 DEBUG - StepGuard Result:', {
+    currentStep: 3,
+    classifiedId: currentClassifiedId,
+    draftData: draftData,
+    isDraftLoading: isDraftLoading,
+    stepGuardResult: stepGuardResult
+  });
 
   // Step completion marking mutation
   const markStepCompletedMutation = useMutation({

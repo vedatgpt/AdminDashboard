@@ -87,6 +87,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // SERVER-SIDE ROUTER GUARD: Step validation middleware (CRITICAL SECURITY)
+  const stepRouteGuard = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const path = req.path;
+    const classifiedId = req.query.classifiedId as string;
+    
+    // Only apply to step routes
+    const stepMatch = path.match(/\/create-listing\/step-(\d+)/);
+    if (!stepMatch) {
+      return next();
+    }
+    
+    const currentStep = parseInt(stepMatch[1]);
+    
+    // Skip validation for Step1
+    if (currentStep === 1) {
+      console.log(`✅ SERVER GUARD: Step1 access allowed (creates new draft)`);
+      return next();
+    }
+    
+    // Require authentication for all steps
+    if (!req.session?.user?.id) {
+      console.log(`🚨 SERVER GUARD: Unauthenticated user blocked from Step ${currentStep}`);
+      return res.redirect('/auth/login');
+    }
+    
+    // Require classifiedId for steps 2+
+    if (!classifiedId) {
+      console.log(`🚨 SERVER GUARD: No classifiedId for Step ${currentStep}, redirecting to Step1`);
+      return res.redirect('/create-listing/step-1');
+    }
+    
+    try {
+      const draft = await storage.getDraftListing(parseInt(classifiedId), req.session.user.id);
+      
+      if (!draft) {
+        console.log(`🚨 SERVER GUARD: Draft ${classifiedId} not found for user ${req.session.user.id}`);
+        return res.redirect('/create-listing/step-1');
+      }
+      
+      // Step validation logic
+      let shouldRedirect = false;
+      let redirectStep = 1;
+      
+      if (currentStep >= 2 && !draft.step1Completed) {
+        console.log(`🚨 SERVER GUARD: Step1 not completed for Step ${currentStep} access`);
+        shouldRedirect = true;
+        redirectStep = 1;
+      }
+      
+      if (currentStep >= 3 && !draft.step2Completed) {
+        console.log(`🚨 SERVER GUARD: Step2 not completed for Step ${currentStep} access`);
+        shouldRedirect = true;
+        redirectStep = 2;
+      }
+      
+      if (currentStep >= 4 && !draft.step3Completed) {
+        console.log(`🚨 SERVER GUARD: Step3 not completed for Step ${currentStep} access`);
+        shouldRedirect = true;
+        redirectStep = 3;
+      }
+      
+      if (shouldRedirect) {
+        const redirectPath = `/create-listing/step-${redirectStep}?classifiedId=${classifiedId}`;
+        console.log(`🚨 SERVER GUARD: SECURITY VIOLATION - Redirecting from Step ${currentStep} to ${redirectPath}`);
+        return res.redirect(redirectPath);
+      }
+      
+      console.log(`✅ SERVER GUARD: Step ${currentStep} access allowed - all validations passed`);
+      next();
+      
+    } catch (error) {
+      console.error('🚨 SERVER GUARD ERROR:', error);
+      return res.redirect('/create-listing/step-1');
+    }
+  };
+
+  // Apply server-side router guard BEFORE serving static files
+  app.use(stepRouteGuard);
+
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   

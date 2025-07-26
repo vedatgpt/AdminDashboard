@@ -56,42 +56,62 @@ export function useStepGuard(
   useEffect(() => {
     // CRITICAL: Skip validation ONLY if still loading
     if (isLoading) {
+      console.log(`🔄 STEP ${currentStep} GUARD: Skipping validation - still loading`);
       return;
     }
 
     // SECURITY FIX: If no classifiedId, redirect to Step1 (except for Step1 itself)
     if (!classifiedId && currentStep !== 1) {
-      console.warn(`No classifiedId found, redirecting to Step 1`);
+      console.warn(`🚨 STEP ${currentStep} GUARD: No classifiedId found, redirecting to Step 1`);
       setLocation('/create-listing/step-1');
       return;
     }
 
     // SECURITY FIX: If no draft found and not Step1, redirect to Step1
     if (!draft && currentStep !== 1) {
-      console.warn(`No draft found, redirecting to Step 1`);
+      console.warn(`🚨 STEP ${currentStep} GUARD: No draft found, redirecting to Step 1`);
       setLocation('/create-listing/step-1');
       return;
     }
 
     // Skip validation for Step1 (it creates its own draft)
     if (currentStep === 1) {
+      console.log(`✅ STEP 1 GUARD: Validation skipped - Step1 manages its own draft`);
       return;
     }
 
-    // Get appropriate validator for current step
+    // CRITICAL FIX: Actually perform step validation!
+    console.log(`🔍 STEP ${currentStep} GUARD: Performing validation check...`);
     const validationResult = getValidationForStep(currentStep, draft);
+    
+    console.log(`🔍 STEP ${currentStep} VALIDATION RESULT:`, {
+      isValid: validationResult.isValid,
+      missingFields: validationResult.missingFields,
+      redirectStep: validationResult.redirectStep,
+      draftStep1: draft?.step1Completed,
+      draftStep2: draft?.step2Completed,
+      draftStep3: draft?.step3Completed
+    });
 
     if (!validationResult.isValid && validationResult.redirectStep) {
       // Redirect to appropriate step with error feedback
       const redirectPath = getRedirectPath(classifiedId!, validationResult.redirectStep);
       
       // Show user-friendly error message
-      console.warn(`Step ${currentStep} validation failed:`, validationResult.missingFields);
+      console.warn(`🚨 STEP ${currentStep} VALIDATION FAILED:`, validationResult.missingFields);
+      console.warn(`🔄 REDIRECTING TO: ${redirectPath}`);
       
-      // Redirect to the required step
-      setTimeout(() => {
-        setLocation(redirectPath);
-      }, 100); // Small delay to prevent render conflicts
+      // IMMEDIATE REDIRECT - Remove timeout for instant security protection
+      console.warn(`🚨 SECURITY REDIRECT EXECUTING NOW!`);
+      setLocation(redirectPath);
+      
+      // Also try window.location as backup for absolute security
+      if (typeof window !== 'undefined') {
+        console.warn(`🚨 BACKUP REDIRECT: Using window.location.replace`);
+        window.location.replace(redirectPath);
+      }
+    } else {
+      console.log(`✅ STEP ${currentStep} GUARD: Validation passed`);
     }
   }, [currentStep, classifiedId, draft, isLoading, setLocation]);
 
