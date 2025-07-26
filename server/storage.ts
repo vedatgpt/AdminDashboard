@@ -567,8 +567,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Draft Listings methods
-  async getDraftListing(id: number): Promise<DraftListing | undefined> {
-    const [draft] = await db.select().from(draftListings).where(eq(draftListings.id, id));
+  async getDraftListing(id: number, userId?: number): Promise<DraftListing | undefined> {
+    // Build WHERE conditions
+    const conditions = [eq(draftListings.id, id)];
+    
+    // If userId provided, add ownership check
+    if (userId !== undefined) {
+      conditions.push(eq(draftListings.userId, userId));
+    }
+    
+    const [draft] = await db.select().from(draftListings).where(and(...conditions));
     return draft || undefined;
   }
 

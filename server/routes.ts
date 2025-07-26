@@ -1097,9 +1097,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
       
+      // SERVER-SIDE VALIDATION FOR STEP 2
+      if (step === 2) {
+        const validationErrors: string[] = [];
+        
+        // Parse draft data for validation
+        const customFields = existingDraft.customFields ? JSON.parse(existingDraft.customFields) : {};
+        
+        // Title validation
+        const titleValue = existingDraft.title?.trim() || customFields.title?.trim();
+        if (!titleValue) {
+          validationErrors.push('İlan başlığı zorunludur');
+        }
+        
+        // Description validation  
+        const descriptionValue = existingDraft.description?.trim() || customFields.description?.trim();
+        if (!descriptionValue) {
+          validationErrors.push('Açıklama zorunludur');
+        }
+        
+        // Price validation
+        const priceValue = (existingDraft.price && JSON.parse(existingDraft.price)?.value?.trim()) ||
+                          customFields.price?.value?.trim() ||
+                          (typeof customFields.price === 'string' && customFields.price.trim());
+        if (!priceValue) {
+          validationErrors.push('Fiyat zorunludur');
+        }
+        
+        // Custom fields validation
+        if (existingDraft.categoryId) {
+          const categoryFields = await storage.getCategoryCustomFieldsWithInheritance(existingDraft.categoryId);
+          categoryFields.forEach(field => {
+            const fieldValue = customFields[field.fieldName];
+            if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+              validationErrors.push(`${field.label} alanı zorunludur`);
+            }
+          });
+        }
+        
+        // Location validation
+        const locationSettings = await storage.getLocationSettings();
+        const locationData = existingDraft.locationData ? JSON.parse(existingDraft.locationData) : {};
+        
+        if (locationSettings?.showCountry && !locationData.country) {
+          validationErrors.push('Ülke seçimi zorunludur');
+        }
+        if (locationSettings?.showCity && !locationData.city) {
+          validationErrors.push('İl seçimi zorunludur');
+        }
+        if (locationSettings?.showDistrict && !locationData.district) {
+          validationErrors.push('İlçe seçimi zorunludur');
+        }
+        if (locationSettings?.showNeighborhood && !locationData.neighborhood) {
+          validationErrors.push('Mahalle seçimi zorunludur');
+        }
+        
+        // Return validation errors if any
+        if (validationErrors.length > 0) {
+          return res.status(400).json({ 
+            error: "Form validation hatası", 
+            validationErrors: validationErrors 
+          });
+        }
+      }
+      
       const updatedDraft = await storage.markStepCompleted(id, step);
       res.json(updatedDraft);
     } catch (error) {
+      console.error('Step completion error:', error);
       res.status(500).json({ error: "Step completion güncellenirken hata oluştu" });
     }
   });

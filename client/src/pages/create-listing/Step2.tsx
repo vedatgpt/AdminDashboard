@@ -501,8 +501,37 @@ export default function Step2() {
           data: draftData
         });
         
-        // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed
-        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
+        // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed with server-side validation
+        try {
+          await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
+        } catch (serverError: any) {
+          console.error('Server validation error:', serverError);
+          
+          // Handle server-side validation errors
+          if (serverError.response?.data?.validationErrors) {
+            const serverErrors: { [key: string]: string } = {};
+            serverError.response.data.validationErrors.forEach((error: string) => {
+              // Map generic errors to specific fields for visual feedback
+              if (error.includes('başlık')) serverErrors.title = error;
+              else if (error.includes('açıklama')) serverErrors.description = error;
+              else if (error.includes('fiyat')) serverErrors.price = error;
+              else if (error.includes('ülke')) serverErrors.country = error;
+              else if (error.includes('il')) serverErrors.city = error;
+              else if (error.includes('ilçe')) serverErrors.district = error;
+              else if (error.includes('mahalle')) serverErrors.neighborhood = error;
+              else serverErrors.general = error;
+            });
+            
+            setValidationErrors(serverErrors);
+            setShowValidation(true);
+          } else {
+            setValidationErrors({ general: 'Form doğrulama hatası oluştu' });
+            setShowValidation(true);
+          }
+          
+          setIsSubmitting(false);
+          return;
+        }
         
         // Step3 verilerini prefetch et - Step3'e geçmeden önce
         if (user?.id) {
