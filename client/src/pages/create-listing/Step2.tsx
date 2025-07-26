@@ -938,6 +938,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const countryId = parseInt(e.target.value);
                           const country = availableCountries.find(c => c.id === countryId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['country']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['country'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedCountry(country || null);
                           setSelectedCity(null);
                           setSelectedDistrict(null);
@@ -982,6 +992,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const cityId = parseInt(e.target.value);
                           const city = availableCities.find(c => c.id === cityId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['city']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['city'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedCity(city || null);
                           setSelectedDistrict(null);
                           setSelectedNeighborhood(null);
@@ -1028,6 +1048,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const districtId = parseInt(e.target.value);
                           const district = availableDistricts.find(d => d.id === districtId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['district']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['district'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedDistrict(district || null);
                           setSelectedNeighborhood(null);
                           updateFormData({
@@ -1073,6 +1103,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const neighborhoodId = parseInt(e.target.value);
                           const neighborhood = availableNeighborhoods.find(n => n.id === neighborhoodId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['neighborhood']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['neighborhood'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedNeighborhood(neighborhood || null);
                           updateFormData({
                             location: {

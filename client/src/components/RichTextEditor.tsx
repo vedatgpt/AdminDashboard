@@ -78,7 +78,7 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm focus:outline-none min-h-[200px] max-h-[200px] p-4 overflow-y-auto',
+        class: 'prose prose-sm focus:outline-none min-h-[200px] max-h-[200px] overflow-y-auto p-4',
         style: 'max-width: none;',
         tabindex: '0', // Enable TAB navigation to editor
       },

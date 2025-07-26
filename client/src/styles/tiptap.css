@@ -1,6 +1,9 @@
 /* TipTap Default Styles - Resmi Döküman Uyumlu */
 .ProseMirror {
   outline: none;
+  overflow-y: auto !important;
+  max-height: 200px !important;
+  padding: 1rem !important;
 }
 
 .ProseMirror p {
