@@ -15,12 +15,20 @@ import { useCategoriesTree } from '@/hooks/useCategories';
 import { useState, useMemo, useEffect } from 'react';
 import type { Location, Category } from '@shared/schema';
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath, classifiedId } = state;
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { prefetchStep3Data } = useStep3Prefetch();
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [showValidation, setShowValidation] = useState(false);
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -312,24 +320,24 @@ export default function Step2() {
   };
 
   const validateRequiredFields = () => {
-    const errors: string[] = [];
+    const errors: ValidationErrors = {};
 
     // Title validation - zorunlu
     if (!formData.customFields.title?.trim()) {
-      errors.push('Başlık alanı zorunludur');
+      errors.title = 'Başlık alanı zorunludur';
     }
 
     // Description validation - zorunlu
     if (!formData.customFields.description?.trim()) {
-      errors.push('Açıklama alanı zorunludur');
+      errors.description = 'Açıklama alanı zorunludur';
     }
 
     // Price validation - zorunlu
     if (!formData.customFields.price) {
-      errors.push('Fiyat alanı zorunludur');
+      errors.price = 'Fiyat alanı zorunludur';
     } else if (typeof formData.customFields.price === 'object') {
       if (!formData.customFields.price.value?.trim()) {
-        errors.push('Fiyat değeri zorunludur');
+        errors.price = 'Fiyat değeri zorunludur';
       }
     }
 
@@ -338,28 +346,28 @@ export default function Step2() {
       const value = formData.customFields[field.fieldName];
       
       if (!value) {
-        errors.push(`${field.label} alanı zorunludur`);
+        errors[field.fieldName] = `${field.label} alanı zorunludur`;
       } else if (typeof value === 'object' && value.value !== undefined) {
         if (!value.value?.toString().trim()) {
-          errors.push(`${field.label} değeri zorunludur`);
+          errors[field.fieldName] = `${field.label} değeri zorunludur`;
         }
       } else if (!value.toString().trim()) {
-        errors.push(`${field.label} alanı zorunludur`);
+        errors[field.fieldName] = `${field.label} alanı zorunludur`;
       }
     });
 
     // Location validation - aktif olanlar zorunlu
     if (locationSettings?.showCountry && !selectedCountry) {
-      errors.push('Ülke seçimi zorunludur');
+      errors.country = 'Ülke seçimi zorunludur';
     }
     if (locationSettings?.showCity && !selectedCity) {
-      errors.push('İl seçimi zorunludur');
+      errors.city = 'İl seçimi zorunludur';
     }
     if (locationSettings?.showDistrict && !selectedDistrict) {
-      errors.push('İlçe seçimi zorunludur');
+      errors.district = 'İlçe seçimi zorunludur';
     }
     if (locationSettings?.showNeighborhood && !selectedNeighborhood) {
-      errors.push('Mahalle seçimi zorunludur');
+      errors.neighborhood = 'Mahalle seçimi zorunludur';
     }
 
     return errors;
@@ -367,11 +375,16 @@ export default function Step2() {
 
   const nextStep = async () => {
     // Form validation - tüm alanlar zorunlu
-    const validationErrors = validateRequiredFields();
-    if (validationErrors.length > 0) {
-      alert(`Lütfen tüm alanları doldurun:\n\n${validationErrors.join('\n')}`);
+    const errors = validateRequiredFields();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setShowValidation(true);
       return;
     }
+    
+    // Clear validation state if all fields are valid
+    setValidationErrors({});
+    setShowValidation(false);
 
     // Update draft with current form data before navigating
     if (currentClassifiedId) {
@@ -489,19 +502,37 @@ export default function Step2() {
             İlan Başlığı
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.customFields.title || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.length <= 64) {
-                handleInputChange('title', value);
-              }
-            }}
-            placeholder="İlanınız için başlık yazınız"
-            maxLength={64}
-            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={formData.customFields.title || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 64) {
+                  handleInputChange('title', value);
+                }
+              }}
+              placeholder="İlanınız için başlık yazınız"
+              maxLength={64}
+              className={`py-2.5 sm:py-3 px-4 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                showValidation && validationErrors.title 
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+              }`}
+            />
+            {showValidation && validationErrors.title && (
+              <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                <svg className="shrink-0 size-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" x2="12" y1="8" y2="12"></line>
+                  <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                </svg>
+              </div>
+            )}
+          </div>
+          {showValidation && validationErrors.title && (
+            <p className="text-sm text-red-600 mt-2">{validationErrors.title}</p>
+          )}
         </div>
 
         {/* Açıklama Input - Rich Text Editor */}
@@ -510,12 +541,21 @@ export default function Step2() {
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <RichTextEditor
-            value={formData.customFields.description || ''}
-            onChange={handleDescriptionChange}
-            placeholder="Ürününüzün detaylı açıklamasını yazınız..."
-            maxLength={2000}
-          />
+          <div className={`${
+            showValidation && validationErrors.description 
+              ? 'border-red-500 rounded-lg border' 
+              : ''
+          }`}>
+            <RichTextEditor
+              value={formData.customFields.description || ''}
+              onChange={handleDescriptionChange}
+              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              maxLength={2000}
+            />
+          </div>
+          {showValidation && validationErrors.description && (
+            <p className="text-sm text-red-600 mt-2">{validationErrors.description}</p>
+          )}
         </div>
 
         {customFields && customFields.length > 0 && (
@@ -527,7 +567,7 @@ export default function Step2() {
               <div key={field.id} className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.label}
-                  {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 
                 {field.fieldType === 'text' && (
@@ -548,7 +588,11 @@ export default function Step2() {
                                 handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                               }}
                               placeholder={field.placeholder || ''}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                              className={`py-2.5 sm:py-3 px-4 pe-16 block w-full rounded-lg sm:text-sm ${
+                                showValidation && validationErrors[field.fieldName]
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                              }`}
                             />
                             <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
                               <span className="text-gray-500">{selectedUnit}</span>
@@ -796,6 +840,11 @@ export default function Step2() {
                   <p className="text-sm text-gray-500">
                     {field.minValue} - {field.maxValue} arasında
                   </p>
+                )}
+                
+                {/* Validation Error Message */}
+                {showValidation && validationErrors[field.fieldName] && (
+                  <p className="text-sm text-red-600 mt-2">{validationErrors[field.fieldName]}</p>
                 )}
               </div>
             );
