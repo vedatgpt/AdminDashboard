@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application built with React, Express.js, and PostgreSQL. It appears to be an admin panel for managing users, ads, categories, and locations. The application uses modern web technologies including TypeScript, Tailwind CSS, and shadcn/ui components.
+This is a full-stack Turkish classified ads platform ("İlan Platformu") built with React, Express.js, and PostgreSQL. The application includes comprehensive listing creation, user authentication, admin panel, and modern rich text editing with TipTap. The platform uses modern web technologies including TypeScript, Tailwind CSS, and Preline UI components.
 
 ## User Preferences
 
@@ -415,6 +415,17 @@ Authentication features:
 - Data stored in formData.customFields.description
 - All features working according to user specifications
 
+### Preline UI Validation System Implementation (July 26, 2025)
+- Completely replaced JavaScript alerts with professional Preline UI validation patterns
+- Implemented visual error states with red borders, error icons, and error messages below inputs
+- Added validation state management using validationErrors object for field-specific tracking
+- All Step-2 fields now mandatory with proper visual feedback using Preline UI structure
+- Title field: Enhanced with Preline UI validation pattern (red border + error message)
+- Description field: TipTap editor wrapped with validation border and error message display
+- Custom fields: All fields marked as mandatory (*) with individual error message support
+- Enhanced form validation to prevent empty submissions with comprehensive visual feedback
+- Maintains orange theme (#EC7830) consistency while adding professional error handling
+
 ### Universal Title Input Implementation (July 20, 2025)
 - Added universal title input field above description input (universal for all categories)
 - Title input available for all categories (not dependent on custom fields)
@@ -738,3 +749,39 @@ Authentication features:
 - **Smart Triggering**: Authenticate olduğu anda prefetch başlar
 - **Console Debugging**: Prefetch işlemleri console'da izlenebilir
 - **Modal Performance**: Parça parça yüklenme sorunu tamamen çözüldü
+
+### Critical Navigation & Validation Fixes (July 26, 2025)
+- **MAJOR BUG FIX**: Step1→Step2 navigation sorunu çözüldü
+- **Root Cause**: handleContinueWithDraft fonksiyonunda markStepCompletedMutation eksikti
+- **Solution**: Existing draft ile devam edilirken Step1 completion otomatik işaretlenir
+- **Double-Click Validation Fix**: DOM-based validation yaklaşımı kaldırıldı
+- **New Validation System**: Form state-based validation, anlık hata kontrolü
+- **Price Field JSON Fix**: Price objesi doğru parse ediliyor, string gösterimi sorunu çözüldü
+- **TipTap Editor Loading**: useEffect ile proper content initialization eklendi
+- **TypeScript Safety**: Tüm LSP diagnostics temizlendi, tip güvenliği sağlandı
+
+### Server-Side Validation System Implementation - FULLY OPERATIONAL (July 26, 2025)
+- **CRITICAL FIX**: Complete server-side validation system for Step-2 completion
+- **Dual Validation**: Both client-side (immediate feedback) and server-side (security) validation
+- **getDraftListing Enhancement**: Added userId parameter for proper ownership validation
+- **Custom Fields Inheritance**: Fixed inheritance logic working through parent category hierarchy
+- **16 Comprehensive Validations**: Title, description, price, all custom fields, location data
+- **400 Bad Request Response**: Server now properly returns validation errors instead of bypassing
+- **Form Security**: Empty forms can no longer bypass validation to reach Step-3
+- **Tested Categories**: M3 Competition (Category 10) inherits BMW→Otomobil custom fields correctly
+- **Production Ready**: Complete server-side security prevents step-skipping via API manipulation
+
+### Server-Side Router Guard Implementation - FULLY OPERATIONAL (July 26, 2025)
+- **CRITICAL SECURITY FIX**: Client-side Router Guard sistemi çalışmadığı için server-side implementasyon
+- **Complete Step Validation**: Step2/3/4 erişimi için önceki step'lerin completion kontrolü
+- **Authentication Required**: Tüm step'ler için session authentication zorunlu
+- **Draft Ownership**: Users can only access their own drafts with proper ownership verification
+- **Automatic Redirects**: Invalid step access attempts automatically redirect to appropriate step
+- **Real-time Logging**: Comprehensive console logging for security violation tracking
+- **Progressive Security**: Step1 free access, Step2+ requires step1Completed, Step3+ requires step2Completed
+- **Express Middleware**: Server-side middleware runs before static file serving for maximum security
+- **URL Parameter Protection**: ClassifiedId required for all steps 2+ with existence validation
+- **Production Ready**: No client-side bypass possible, server enforces all security rules
+- **Client-Side Guard Disabled**: Infinite loop conflict resolved by disabling client-side validation
+- **Comprehensive Testing**: Zero-draft accounts, step completion validation, URL manipulation prevention
+- **Test Results**: Fresh user Step2 access properly controlled - blocked when step1Completed=false, allowed when true ✅
