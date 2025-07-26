@@ -1,10 +1,19 @@
-/* TipTap Default Styles */
+/* TipTap Default Styles - Resmi Döküman Uyumlu */
 .ProseMirror {
   outline: none;
 }
 
 .ProseMirror p {
   margin: 1em 0;
+}
+
+/* Bold Extension - TipTap Resmi Stil */
+.ProseMirror strong {
+  font-weight: bold;
+}
+
+.ProseMirror b {
+  font-weight: bold;
 }
 
 .ProseMirror h1,

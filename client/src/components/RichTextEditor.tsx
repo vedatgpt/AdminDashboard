@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
@@ -22,7 +23,10 @@ export default function RichTextEditor({
   
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bold: false, // StarterKit'ten bold'u kapat
+      }),
+      Bold, // TipTap resmi dökümanına göre ayrı Bold extension
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -70,6 +74,7 @@ export default function RichTextEditor({
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Kalın (Ctrl+B)"
           >
             B
           </button>
