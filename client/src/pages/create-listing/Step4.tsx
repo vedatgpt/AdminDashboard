@@ -108,20 +108,28 @@ export default function Step4() {
 
   // Draft data değiştiğinde photos state'ini güncelle
   useEffect(() => {
+    console.log('🔄 Step4 Photos Debug:', {
+      hasDraftData: !!draftData,
+      photosField: draftData?.photos,
+      photosType: typeof draftData?.photos
+    });
+    
     if (draftData?.photos) {
       try {
         const parsedPhotos = JSON.parse(draftData.photos as string);
+        console.log('📸 Parsed Photos:', parsedPhotos);
         if (Array.isArray(parsedPhotos)) {
           // Order'a göre sırala
           const sortedPhotos = parsedPhotos.sort((a, b) => (a.order || 0) - (b.order || 0));
+          console.log('📋 Sorted Photos:', sortedPhotos);
           setPhotosState(sortedPhotos);
-
         }
       } catch (error) {
-
+        console.error('❌ Photos parse error:', error);
         setPhotosState([]);
       }
     } else {
+      console.log('📭 No photos in draft data');
       setPhotosState([]);
     }
   }, [draftData?.photos]);
@@ -175,8 +183,8 @@ export default function Step4() {
   if (!draftData) {
     return (
       <CreateListingLayout stepNumber={4}>
-        <div className="text-center py-12">
-          <IOSSpinner size="large" className="mx-auto" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <IOSSpinner size="large" />
         </div>
       </CreateListingLayout>
     );

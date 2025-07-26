@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '@/components/iOSSpinner';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
 import Sortable from "sortablejs";
@@ -46,7 +47,7 @@ export default function Step3() {
 
 
   // SECURITY FIX: Draft ownership verification
-  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
+  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -138,20 +139,21 @@ export default function Step3() {
 
     saveTimeoutRef.current = setTimeout(() => {
       if (currentClassifiedId) {
+        console.log('💾 Saving photos to draft:', updatedImages);
         const xhr = new XMLHttpRequest();
         xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
 
         xhr.onload = function() {
           if (xhr.status === 200) {
-            console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
+            console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi:', JSON.parse(xhr.responseText));
             
             // Sıralama kaydedildikten sonra Step4 prefetch tetikle (debounced)
             if (user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf sıralama');
             }
           } else {
-            console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
+            console.error('❌ ASYNC: Kaydetme başarısız', xhr.status, xhr.responseText);
           }
         };
 
@@ -433,6 +435,23 @@ export default function Step3() {
     // Direkt Step4'e geç
     navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
   };
+
+  // Loading state
+  if (!currentClassifiedId) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (isDraftLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-[60px] lg:pt-6">
