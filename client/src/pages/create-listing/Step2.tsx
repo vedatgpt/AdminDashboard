@@ -504,6 +504,18 @@ export default function Step2() {
         // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed with server-side validation
         try {
           await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
+          
+          // CRITICAL FIX: Wait for server completion before navigation
+          console.log('✅ Step2 completion successful, proceeding to navigation');
+          
+          // Step3 verilerini prefetch et
+          if (user?.id) {
+            prefetchStep3Data(currentClassifiedId, user.id);
+          }
+          
+          // TIMING FIX: Small delay to ensure server-side step completion is fully synchronized
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
         } catch (serverError: any) {
           console.error('Server validation error:', serverError);
           
@@ -531,11 +543,6 @@ export default function Step2() {
           
           setIsSubmitting(false);
           return;
-        }
-        
-        // Step3 verilerini prefetch et - Step3'e geçmeden önce
-        if (user?.id) {
-          prefetchStep3Data(currentClassifiedId, user.id);
         }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
