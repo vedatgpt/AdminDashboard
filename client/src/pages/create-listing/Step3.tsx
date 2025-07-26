@@ -131,39 +131,8 @@ export default function Step3() {
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
 
-  // SECURITY CHECK: Step2 verilerinin tamamlanmış olması gerekiyor
-  useEffect(() => {
-    if (draftData && currentClassifiedId) {
-      let customFields;
-      try {
-        customFields = typeof draftData.customFields === 'string' 
-          ? JSON.parse(draftData.customFields) 
-          : draftData.customFields;
-      } catch {
-        // Invalid JSON, redirect to Step2
-        toast({
-          title: "Form Hatası",
-          description: "Step-2'deki form bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
-        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
-        return;
-      }
-
-      // Gerekli alanları kontrol et: title, description, price
-      if (!customFields?.title?.trim() || 
-          !customFields?.description?.trim() || 
-          !customFields?.price?.value) {
-        toast({
-          title: "Eksik Bilgi",
-          description: "Başlık, açıklama ve fiyat bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
-        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
-        return;
-      }
-    }
-  }, [draftData, currentClassifiedId, navigate, toast]);
+  // CLIENT-SIDE VALIDATION REMOVED
+  // Users can now progress freely through steps
 
   // Memoized filtered images for Sortable.js
   const nonUploadingImages = useMemo(() => 
