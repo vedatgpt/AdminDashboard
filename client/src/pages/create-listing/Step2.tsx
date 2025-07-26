@@ -382,33 +382,60 @@ export default function Step2() {
   const validateRequiredFields = () => {
     const errors: ValidationErrors = {};
 
-    // Title validation - formData'dan kontrol et (updateFormData'dan sonra güncel olacak)
-    if (!formData.customFields.title?.trim()) {
+    // CRITICAL FIX: Direct DOM validation instead of relying on formData state
+    const titleInput = document.getElementById('title-input') as HTMLInputElement;
+    const priceInput = document.getElementById('price-input') as HTMLInputElement;
+    const descriptionEditor = document.querySelector('.ProseMirror');
+    
+    // Title validation - Direct DOM check
+    if (!titleInput?.value?.trim()) {
       errors.title = 'Başlık alanı zorunludur';
     }
 
-    // Description validation - formData'dan kontrol et
-    if (!formData.customFields.description?.trim()) {
+    // Description validation - Direct DOM check
+    const descriptionText = descriptionEditor?.textContent?.trim() || '';
+    if (!descriptionText) {
       errors.description = 'Açıklama alanı zorunludur';
     }
 
-    // Price validation - formData'dan kontrol et
-    if (!formData.customFields.price || !formData.customFields.price.value?.trim()) {
+    // Price validation - Direct DOM check
+    if (!priceInput?.value?.trim()) {
       errors.price = 'Fiyat alanı zorunludur';
     }
 
-    // Custom fields validation - formData'dan kontrol et (updateFormData'dan sonra güncel)
+    // Custom fields validation - CRITICAL FIX: Direct DOM check for all fields
     customFields.forEach((field) => {
-      const value = formData.customFields[field.fieldName];
-      
-      if (!value) {
-        errors[field.fieldName] = `${field.label} alanı zorunludur`;
-      } else if (typeof value === 'object' && value.value !== undefined) {
-        if (!value.value?.toString().trim()) {
-          errors[field.fieldName] = `${field.label} değeri zorunludur`;
+      if (field.fieldType === 'select') {
+        // For select fields, find by option value
+        const selectElement = Array.from(document.querySelectorAll('select')).find(select => {
+          const label = select.parentElement?.previousElementSibling?.textContent;
+          return label?.includes(field.label);
+        }) as HTMLSelectElement;
+        
+        if (selectElement && !selectElement.value) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
         }
-      } else if (!value.toString().trim()) {
-        errors[field.fieldName] = `${field.label} alanı zorunludur`;
+      } else if (field.fieldType === 'text' || field.fieldType === 'number') {
+        // For text/number fields, find by label
+        const inputElement = Array.from(document.querySelectorAll('input[type="text"], input[type="number"]')).find(input => {
+          const label = input.parentElement?.previousElementSibling?.textContent || 
+                       input.parentElement?.parentElement?.previousElementSibling?.textContent;
+          return label?.includes(field.label);
+        }) as HTMLInputElement;
+        
+        if (inputElement && !inputElement.value?.trim()) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
+        }
+      } else if (field.fieldType === 'checkbox') {
+        // For checkbox fields
+        const checkboxElement = Array.from(document.querySelectorAll('input[type="checkbox"]')).find(checkbox => {
+          const label = checkbox.parentElement?.textContent;
+          return label?.includes(field.label);
+        }) as HTMLInputElement;
+        
+        if (checkboxElement && !checkboxElement.checked) {
+          errors[field.fieldName] = `${field.label} seçimi zorunludur`;
+        }
       }
     });
 
