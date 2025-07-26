@@ -6,6 +6,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
+import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '../../components/iOSSpinner';
 import { useLocationsTree } from '@/hooks/useLocations';
@@ -26,26 +27,19 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // Basit açıklama input - maksimum 2000 karakter
-  const MAX_DESCRIPTION_LENGTH = 2000;
-  
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
+  // RichTextEditor için handler
+  const handleDescriptionChange = (value: string) => {
+    // Draft'a kaydet
+    dispatch({
+      type: 'SET_CUSTOM_FIELDS',
+      payload: {
+        ...formData.customFields,
+        description: value
+      }
+    });
     
-    // Karakter sınırı kontrolü
-    if (value.length <= MAX_DESCRIPTION_LENGTH) {
-      // Draft'a kaydet
-      dispatch({
-        type: 'SET_CUSTOM_FIELDS',
-        payload: {
-          ...formData.customFields,
-          description: value
-        }
-      });
-      
-      // Database'e kaydet
-      handleInputChange('description', value);
-    }
+    // Database'e kaydet
+    handleInputChange('description', value);
   };
 
 
@@ -449,25 +443,18 @@ export default function Step2() {
           />
         </div>
 
-        {/* Açıklama Input - Basit textarea */}
-        <div className="space-y-2 mb-6">
-          <label className="block text-sm font-medium text-gray-700">
+        {/* Açıklama Input - Rich Text Editor */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <div className="relative">
-            <textarea
-              value={formData.customFields.description || ''}
-              onChange={handleDescriptionChange}
-              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
-              rows={8}
-              maxLength={MAX_DESCRIPTION_LENGTH}
-              className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500 resize-y"
-            />
-            <div className="absolute bottom-3 right-3 text-sm text-gray-500">
-              {(formData.customFields.description || '').length} / {MAX_DESCRIPTION_LENGTH}
-            </div>
-          </div>
+          <RichTextEditor
+            value={formData.customFields.description || ''}
+            onChange={handleDescriptionChange}
+            placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+            maxLength={2000}
+          />
         </div>
 
         {customFields && customFields.length > 0 && (
