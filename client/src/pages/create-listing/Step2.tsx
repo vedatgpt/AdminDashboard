@@ -340,22 +340,26 @@ export default function Step2() {
   const validateRequiredFields = () => {
     const errors: ValidationErrors = {};
 
-    // Title validation - formData'dan kontrol et (updateFormData'dan sonra güncel olacak)
+    // Title validation - zorunlu
     if (!formData.customFields.title?.trim()) {
       errors.title = 'Başlık alanı zorunludur';
     }
 
-    // Description validation - formData'dan kontrol et
+    // Description validation - zorunlu
     if (!formData.customFields.description?.trim()) {
       errors.description = 'Açıklama alanı zorunludur';
     }
 
-    // Price validation - formData'dan kontrol et
-    if (!formData.customFields.price || !formData.customFields.price.value?.trim()) {
+    // Price validation - zorunlu
+    if (!formData.customFields.price) {
       errors.price = 'Fiyat alanı zorunludur';
+    } else if (typeof formData.customFields.price === 'object') {
+      if (!formData.customFields.price.value?.trim()) {
+        errors.price = 'Fiyat değeri zorunludur';
+      }
     }
 
-    // Custom fields validation - formData'dan kontrol et (updateFormData'dan sonra güncel)
+    // Custom fields validation - hepsi zorunlu
     customFields.forEach((field) => {
       const value = formData.customFields[field.fieldName];
       
@@ -388,12 +392,6 @@ export default function Step2() {
   };
 
   const nextStep = async () => {
-    // Form verilerini kaydetmeden önce güncelle
-    await updateFormData();
-    
-    // Kısa bir bekleme süresi ekle - DOM'un güncellenmesi için
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
     // Form validation - tüm alanlar zorunlu
     const errors = validateRequiredFields();
     if (Object.keys(errors).length > 0) {
