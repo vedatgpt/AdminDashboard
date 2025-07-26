@@ -32,11 +32,29 @@ export default function Step2() {
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
+    // Clear validation error when user starts typing
+    if (validationErrors[fieldName]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+    
     updateFormData({ [fieldName]: value });
   };
 
   // RichTextEditor için handler
   const handleDescriptionChange = (value: string) => {
+    // Clear validation error when user starts typing
+    if (validationErrors.description) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.description;
+        return newErrors;
+      });
+    }
+    
     // Draft'a kaydet
     dispatch({
       type: 'SET_CUSTOM_FIELDS',
@@ -784,16 +802,31 @@ export default function Step2() {
                       </div>
                     </div>
                   ) : (
-                    <select
-                      value={currentValue}
-                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                      className="py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                    >
-                      <option value="">{field.placeholder || "Seçiniz"}</option>
-                      {field.options && JSON.parse(field.options).map((option: string, index: number) => (
-                        <option key={index} value={option}>{option}</option>
-                      ))}
-                    </select>
+                    <div className="relative lg:w-[30%] w-full">
+                      <select
+                        value={currentValue}
+                        onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                        className={`py-3 px-4 pe-16 block w-full rounded-lg text-sm ${
+                          showValidation && validationErrors[field.fieldName]
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
+                      >
+                        <option value="">{field.placeholder || "Seçiniz"}</option>
+                        {field.options && JSON.parse(field.options).map((option: string, index: number) => (
+                          <option key={index} value={option}>{option}</option>
+                        ))}
+                      </select>
+                      {showValidation && validationErrors[field.fieldName] && (
+                        <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8">
+                          <svg className="shrink-0 size-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" x2="12" y1="8" y2="12"></line>
+                            <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
                   )
                 )}
 
