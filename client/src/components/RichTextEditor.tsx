@@ -3,6 +3,8 @@ import StarterKit from '@tiptap/starter-kit'
 import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
 import Underline from '@tiptap/extension-underline'
 
 interface RichTextEditorProps {
@@ -21,12 +23,16 @@ export default function RichTextEditor({
   
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
+      }),
       Bold.configure({
         HTMLAttributes: {
           class: 'font-bold',
         },
       }),
+      TextStyle, // TipTap resmi dökümanına göre span styling foundation
+      Color, // Metin rengi için Color extension
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -138,6 +144,28 @@ export default function RichTextEditor({
             }`}
           >
             ➡
+          </button>
+
+          {/* Separator */}
+          <div className="w-px h-8 bg-gray-300"></div>
+
+          {/* Text Color - TipTap TextStyle + Color */}
+          <input
+            type="color"
+            onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
+            value={editor.getAttributes('textStyle').color || '#000000'}
+            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            title="Metin Rengi"
+          />
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().unsetColor().run()}
+            disabled={!editor.getAttributes('textStyle').color}
+            className="px-3 py-1 text-sm border rounded bg-white text-gray-700 border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+            title="Metin Rengini Kaldır"
+          >
+            🗑️
           </button>
 
           {/* Separator */}
