@@ -195,12 +195,12 @@ export default function Step4() {
     });
   };
 
-  // Sayı formatlama fonksiyonu - nokta ekleme
-  const formatNumber = (value: string | number): string => {
+  // Sayı formatlama fonksiyonu - admin ayarına göre nokta ekleme
+  const formatNumber = (value: string | number, useThousandSeparator: boolean = false): string => {
     if (!value) return '';
     const numStr = value.toString();
-    // Sadece sayı ise nokta ekle
-    if (/^\d+$/.test(numStr)) {
+    // Sadece thousand separator ayarı açık ise ve sayı ise nokta ekle
+    if (useThousandSeparator && /^\d+$/.test(numStr)) {
       return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
     return numStr;
@@ -464,8 +464,8 @@ export default function Step4() {
                             <td className="py-2 lg:py-1.5 font-medium text-gray-700">Fiyat:</td>
                             <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                               {typeof customFields.price === 'object' && customFields.price !== null
-                                ? `${formatNumber((customFields.price as any).value || '')} ${(customFields.price as any).unit || ''}`.trim()
-                                : formatNumber(customFields.price)
+                                ? `${formatNumber((customFields.price as any).value || '', true)} ${(customFields.price as any).unit || ''}`.trim()
+                                : formatNumber(customFields.price, true)
                               }
                             </td>
                           </tr>
@@ -508,13 +508,13 @@ export default function Step4() {
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
                             if (value.value !== undefined) {
-                              displayValue = `${formatNumber(value.value)} ${value.unit || ''}`.trim();
+                              displayValue = `${formatNumber(value.value, field.useThousandSeparator)} ${value.unit || ''}`.trim();
                             } else {
                               // Skip complex objects that don't have value/unit structure
                               return null;
                             }
                           } else {
-                            displayValue = formatNumber(String(value));
+                            displayValue = formatNumber(String(value), field.useThousandSeparator);
                           }
 
                           return (
@@ -539,13 +539,13 @@ export default function Step4() {
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
                             if ((value as any).value !== undefined) {
-                              displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
+                              displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
                             } else {
                               // Don't show complex JSON objects in details table
                               return null;
                             }
                           } else {
-                            displayValue = formatNumber(String(value));
+                            displayValue = String(value);
                           }
 
                           return (
@@ -589,8 +589,8 @@ export default function Step4() {
                                                     <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
                             <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
                           {typeof customFields.price === 'object' && customFields.price !== null
-                            ? `${formatNumber((customFields.price as any).value || '')} ${(customFields.price as any).unit || ''}`.trim()
-                            : formatNumber(customFields.price)
+                            ? `${formatNumber((customFields.price as any).value || '', true)} ${(customFields.price as any).unit || ''}`.trim()
+                            : formatNumber(customFields.price, true)
                           }
                         </td>
                       </tr>
@@ -631,13 +631,13 @@ export default function Step4() {
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
                         if ((value as any).value !== undefined) {
-                          displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
+                          displayValue = `${formatNumber((value as any).value, field.useThousandSeparator)} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Skip complex objects that don't have value/unit structure
                           return null;
                         }
                       } else {
-                        displayValue = formatNumber(String(value));
+                        displayValue = formatNumber(String(value), field.useThousandSeparator);
                       }
 
                       return (
@@ -662,13 +662,13 @@ export default function Step4() {
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
                         if ((value as any).value !== undefined) {
-                          displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
+                          displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Don't show complex JSON objects in details table
                           return null;
                         }
                       } else {
-                        displayValue = formatNumber(String(value));
+                        displayValue = String(value);
                       }
 
                       return (
