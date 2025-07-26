@@ -4,15 +4,20 @@
 }
 
 .ProseMirror p {
-  margin: 0.5em 0;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.ProseMirror p:first-child {
-  margin-top: 0;
+.ProseMirror p + p {
+  margin-top: 1em;
 }
 
-.ProseMirror p:last-child {
-  margin-bottom: 0;
+.ProseMirror br {
+  content: "";
+}
+
+.ProseMirror br + br {
+  display: none;
 }
 
 /* Bold Extension - TipTap Resmi Stil */

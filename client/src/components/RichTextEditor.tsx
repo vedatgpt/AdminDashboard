@@ -109,40 +109,46 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-3 py-1 text-sm border rounded ${
+            className={`px-3 py-1 text-sm border rounded flex items-center ${
               editor.isActive({ textAlign: 'left' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Sola Hizala"
           >
-            ⬅️
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18v2H3zm0 5h12v2H3zm0 5h18v2H3z" fill="currentColor"/>
+            </svg>
           </button>
           
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-3 py-1 text-sm border rounded ${
+            className={`px-3 py-1 text-sm border rounded flex items-center ${
               editor.isActive({ textAlign: 'center' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Ortala"
           >
-            ↔️
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18v2H3zm4 5h10v2H7zm-4 5h18v2H3z" fill="currentColor"/>
+            </svg>
           </button>
           
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-3 py-1 text-sm border rounded ${
+            className={`px-3 py-1 text-sm border rounded flex items-center ${
               editor.isActive({ textAlign: 'right' }) 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Sağa Hizala"
           >
-            ➡️
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18v2H3zm6 5h12v2H9zm-6 5h18v2H3z" fill="currentColor"/>
+            </svg>
           </button>
 
           {/* Separator */}
@@ -150,75 +156,71 @@ export default function RichTextEditor({
 
 
 
-          {/* Highlight Dropdown - Tek Buton */}
+          {/* Highlight Dropdown - Yatay Liste */}
           <div className="relative group">
             <button
               type="button"
-              className={`px-3 py-1 text-sm border rounded flex items-center gap-1 ${
+              className={`px-3 py-1 text-sm border rounded flex items-center ${
                 editor.isActive('highlight') 
                   ? 'bg-yellow-300 text-black border-yellow-400' 
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
-              title="Vurgula (Ctrl+Shift+H)"
+              title="Vurgula"
             >
-              🖍️
-              <span className="text-xs">▼</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.75 12.25l-1.5-1.5L9 18l-4.5-4.5L3 15l6 6 10.5-10.5-1.75-1.75z" fill="currentColor"/>
+                <rect x="4" y="4" width="16" height="3" rx="1" fill="currentColor"/>
+              </svg>
             </button>
             
-            {/* Dropdown Menu */}
+            {/* Yatay Dropdown Menu */}
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="p-2 space-y-1 min-w-[120px]">
+              <div className="p-2 flex gap-1">
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight().run()}
-                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <span className="w-4 h-4 bg-yellow-300 rounded"></span>
-                  Sarı
-                </button>
+                  className="w-6 h-6 bg-yellow-300 rounded hover:scale-110 transition-transform"
+                  title="Sarı"
+                ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
-                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#ffc078' }}></span>
-                  Turuncu
-                </button>
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  style={{ backgroundColor: '#ffc078' }}
+                  title="Turuncu"
+                ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()}
-                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#8ce99a' }}></span>
-                  Yeşil
-                </button>
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  style={{ backgroundColor: '#8ce99a' }}
+                  title="Yeşil"
+                ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
-                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#74c0fc' }}></span>
-                  Mavi
-                </button>
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  style={{ backgroundColor: '#74c0fc' }}
+                  title="Mavi"
+                ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
-                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#b197fc' }}></span>
-                  Mor
-                </button>
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  style={{ backgroundColor: '#b197fc' }}
+                  title="Mor"
+                ></button>
                 {editor.isActive('highlight') && (
-                  <>
-                    <hr className="my-1 border-gray-200" />
-                    <button
-                      type="button"
-                      onClick={() => editor.chain().focus().unsetHighlight().run()}
-                      className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 text-red-600"
-                    >
-                      Vurguyu Kaldır
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().unsetHighlight().run()}
+                    className="w-6 h-6 bg-gray-200 rounded hover:bg-gray-300 transition-colors flex items-center justify-center"
+                    title="Vurguyu Kaldır"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 6l12 12m0-12L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </button>
                 )}
               </div>
             </div>
