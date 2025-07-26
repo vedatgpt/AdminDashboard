@@ -3,8 +3,6 @@ import StarterKit from '@tiptap/starter-kit'
 import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
-import { TextStyle } from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
 import Underline from '@tiptap/extension-underline'
 
 interface RichTextEditorProps {
@@ -31,8 +29,6 @@ export default function RichTextEditor({
           class: 'font-bold',
         },
       }),
-      TextStyle, // TipTap resmi dökümanına göre span styling foundation
-      Color, // Metin rengi için Color extension
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -109,7 +105,7 @@ export default function RichTextEditor({
           {/* Separator */}
           <div className="w-px h-8 bg-gray-300"></div>
 
-          {/* Text Alignment */}
+          {/* Text Alignment - TipTap Resmi İkonlar */}
           <button
             type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
@@ -118,8 +114,9 @@ export default function RichTextEditor({
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Sola Hizala"
           >
-            ⬅
+            ⬅️
           </button>
           
           <button
@@ -130,8 +127,9 @@ export default function RichTextEditor({
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Ortala"
           >
-            ↔
+            ↔️
           </button>
           
           <button
@@ -142,114 +140,89 @@ export default function RichTextEditor({
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Sağa Hizala"
           >
-            ➡
+            ➡️
           </button>
 
           {/* Separator */}
           <div className="w-px h-8 bg-gray-300"></div>
 
-          {/* Text Color - TipTap TextStyle + Color */}
-          <input
-            type="color"
-            onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
-            value={editor.getAttributes('textStyle').color || '#000000'}
-            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-            title="Metin Rengi"
-          />
 
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().unsetColor().run()}
-            disabled={!editor.getAttributes('textStyle').color}
-            className="px-3 py-1 text-sm border rounded bg-white text-gray-700 border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-            title="Metin Rengini Kaldır"
-          >
-            🗑️
-          </button>
 
-          {/* Separator */}
-          <div className="w-px h-8 bg-gray-300"></div>
-
-          {/* Highlight Colors - TipTap Resmi Renkler */}
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-            className={`px-3 py-1 text-sm border rounded ${
-              editor.isActive('highlight') 
-                ? 'bg-yellow-300 text-black border-yellow-400' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            title="Vurgula (Ctrl+Shift+H)"
-          >
-            🖍️
-          </button>
-
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
-            className={`px-3 py-1 text-sm border rounded ${
-              editor.isActive('highlight', { color: '#ffc078' }) 
-                ? 'bg-orange-300 text-black border-orange-400' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            style={{ backgroundColor: editor.isActive('highlight', { color: '#ffc078' }) ? '#ffc078' : undefined }}
-            title="Turuncu Vurgu"
-          >
-            🟠
-          </button>
-
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()}
-            className={`px-3 py-1 text-sm border rounded ${
-              editor.isActive('highlight', { color: '#8ce99a' }) 
-                ? 'bg-green-300 text-black border-green-400' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            style={{ backgroundColor: editor.isActive('highlight', { color: '#8ce99a' }) ? '#8ce99a' : undefined }}
-            title="Yeşil Vurgu"
-          >
-            🟢
-          </button>
-
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
-            className={`px-3 py-1 text-sm border rounded ${
-              editor.isActive('highlight', { color: '#74c0fc' }) 
-                ? 'bg-blue-300 text-black border-blue-400' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            style={{ backgroundColor: editor.isActive('highlight', { color: '#74c0fc' }) ? '#74c0fc' : undefined }}
-            title="Mavi Vurgu"
-          >
-            🔵
-          </button>
-
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
-            className={`px-3 py-1 text-sm border rounded ${
-              editor.isActive('highlight', { color: '#b197fc' }) 
-                ? 'bg-purple-300 text-black border-purple-400' 
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-            }`}
-            style={{ backgroundColor: editor.isActive('highlight', { color: '#b197fc' }) ? '#b197fc' : undefined }}
-            title="Mor Vurgu"
-          >
-            🟣
-          </button>
-
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().unsetHighlight().run()}
-            disabled={!editor.isActive('highlight')}
-            className="px-3 py-1 text-sm border rounded bg-white text-gray-700 border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-            title="Vurguyu Kaldır"
-          >
-            🗑️
-          </button>
+          {/* Highlight Dropdown - Tek Buton */}
+          <div className="relative group">
+            <button
+              type="button"
+              className={`px-3 py-1 text-sm border rounded flex items-center gap-1 ${
+                editor.isActive('highlight') 
+                  ? 'bg-yellow-300 text-black border-yellow-400' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+              }`}
+              title="Vurgula (Ctrl+Shift+H)"
+            >
+              🖍️
+              <span className="text-xs">▼</span>
+            </button>
+            
+            {/* Dropdown Menu */}
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="p-2 space-y-1 min-w-[120px]">
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <span className="w-4 h-4 bg-yellow-300 rounded"></span>
+                  Sarı
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
+                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#ffc078' }}></span>
+                  Turuncu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()}
+                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#8ce99a' }}></span>
+                  Yeşil
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
+                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#74c0fc' }}></span>
+                  Mavi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
+                  className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <span className="w-4 h-4 rounded" style={{ backgroundColor: '#b197fc' }}></span>
+                  Mor
+                </button>
+                {editor.isActive('highlight') && (
+                  <>
+                    <hr className="my-1 border-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => editor.chain().focus().unsetHighlight().run()}
+                      className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 text-red-600"
+                    >
+                      Vurguyu Kaldır
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Separator */}
           <div className="w-px h-8 bg-gray-300"></div>
