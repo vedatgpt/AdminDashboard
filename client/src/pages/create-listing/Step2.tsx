@@ -628,7 +628,11 @@ export default function Step2() {
                               handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                             }}
                             placeholder={field.placeholder || ''}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                            className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                              showValidation && validationErrors[field.fieldName]
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                            }`}
                           />
                           <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                             <select
@@ -653,7 +657,11 @@ export default function Step2() {
                       value={currentValue}
                       onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
                       placeholder={field.placeholder || ''}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className={`py-3 px-4 block lg:w-[30%] w-full rounded-lg text-sm ${
+                        showValidation && validationErrors[field.fieldName]
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                      }`}
                     />
                   )
                 )}
@@ -689,7 +697,11 @@ export default function Step2() {
                               }}
                               placeholder={field.placeholder || ''}
                               inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                              className={`py-2.5 sm:py-3 px-4 pe-16 block w-full rounded-lg sm:text-sm ${
+                                showValidation && validationErrors[field.fieldName]
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                              }`}
                             />
                             <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
                               <span className="text-gray-500">{selectedUnit}</span>
@@ -720,7 +732,11 @@ export default function Step2() {
                             }}
                             placeholder={field.placeholder || ''}
                             inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                            className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                              showValidation && validationErrors[field.fieldName]
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                            }`}
                           />
                           <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                             <select
@@ -762,7 +778,11 @@ export default function Step2() {
                       inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
                       min={field.minValue || undefined}
                       max={field.maxValue || undefined}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className={`py-3 px-4 block lg:w-[30%] w-full rounded-lg text-sm ${
+                        showValidation && validationErrors[field.fieldName]
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                      }`}
                     />
                   )
                 )}
@@ -779,7 +799,11 @@ export default function Step2() {
                             : field.defaultUnit || unitOptions[0];
                           handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                         }}
-                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                        className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                          showValidation && validationErrors[field.fieldName]
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">{field.placeholder || "Seçiniz"}</option>
                         {field.options && JSON.parse(field.options).map((option: string, index: number) => (
@@ -927,7 +951,11 @@ export default function Step2() {
                             }
                           });
                         }}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm ${
+                          showValidation && validationErrors['country']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">Ülke seçiniz</option>
                         {availableCountries.map((country) => (
@@ -964,7 +992,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showCountry ? !selectedCountry : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['city']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showCountry && !selectedCountry) ? "Önce ülke seçiniz" : "İl seçiniz"}
@@ -1002,7 +1034,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showCity ? !selectedCity : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['district']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showCity && !selectedCity) ? "Önce il seçiniz" : "İlçe seçiniz"}
@@ -1039,7 +1075,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showDistrict ? !selectedDistrict : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['neighborhood']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showDistrict && !selectedDistrict) ? "Önce ilçe seçiniz" : "Mahalle seçiniz"}

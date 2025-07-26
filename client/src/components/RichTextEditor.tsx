@@ -37,6 +37,7 @@ export default function RichTextEditor({
       StarterKit.configure({
         bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
         heading: false, // Heading'i ayrı extension olarak ekliyoruz
+        strike: false, // Strike'ı kapat (underline ile karışmasın)
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
