@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
+import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '@/components/iOSSpinner';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
-import { useStepGuard } from '@/hooks/useStepGuard';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -49,64 +49,11 @@ export default function Step3() {
   // SECURITY FIX: Draft ownership verification
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
 
-  // EMERGENCY DEBUG: Manual step validation without hook
-  useEffect(() => {
-    console.log('🚨 STEP3 EMERGENCY DEBUG: Manual validation check');
-    
-    if (!isDraftLoading && draftData) {
-      const draft = draftData as any; // Type assertion for debugging
-      console.log('🔍 STEP3 MANUAL VALIDATION:', {
-        classifiedId: currentClassifiedId,
-        step1Completed: draft.step1Completed,
-        step2Completed: draft.step2Completed,
-        step3Completed: draft.step3Completed,
-        hasTitle: !!draft.title,
-        hasDescription: !!draft.description,
-        hasPrice: !!draft.price
-      });
-      
-      // Manual Step2 validation
-      if (!draft.step2Completed) {
-        console.error('🚨 MANUAL SECURITY CHECK FAILED: Step2 not completed, IMMEDIATE REDIRECT!');
-        
-        // Force redirect immediately
-        window.location.replace(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
-        return;
-      }
-      
-      console.log('✅ STEP3 MANUAL VALIDATION: All checks passed');
-    }
-  }, [draftData, isDraftLoading, currentClassifiedId]);
-  
-  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 3 validation
-  const stepGuardResult = useStepGuard(3, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
-  
-  // DEBUG: Log step guard results
-  console.log('STEP3 DEBUG - StepGuard Result:', {
-    currentStep: 3,
-    classifiedId: currentClassifiedId,
-    draftData: draftData,
-    isDraftLoading: isDraftLoading,
-    stepGuardResult: stepGuardResult
-  });
-
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
-  });
-
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
       console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-
+      
       // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
       if (draftError.message?.includes('erişim yetkiniz yok')) {
         console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
@@ -130,9 +77,6 @@ export default function Step3() {
       }
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
-
-  // CLIENT-SIDE VALIDATION REMOVED
-  // Users can now progress freely through steps
 
   // Memoized filtered images for Sortable.js
   const nonUploadingImages = useMemo(() => 
@@ -195,20 +139,21 @@ export default function Step3() {
 
     saveTimeoutRef.current = setTimeout(() => {
       if (currentClassifiedId) {
+        console.log('💾 Saving photos to draft:', updatedImages);
         const xhr = new XMLHttpRequest();
         xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
 
         xhr.onload = function() {
           if (xhr.status === 200) {
-            console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
-
+            console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi:', JSON.parse(xhr.responseText));
+            
             // Sıralama kaydedildikten sonra Step4 prefetch tetikle (debounced)
             if (user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf sıralama');
             }
           } else {
-            console.error('❌ ASYNC: Kaydetme başarısız', xhr.status);
+            console.error('❌ ASYNC: Kaydetme başarısız', xhr.status, xhr.responseText);
           }
         };
 
@@ -266,12 +211,12 @@ export default function Step3() {
               }
               return newImages;
             });
-
+            
             // Fotoğraf upload tamamlandıktan sonra Step4 prefetch tetikle
             if (currentClassifiedId && user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf yükleme');
             }
-
+            
             resolve(data);
           } else {
             reject(new Error('Upload failed'));
@@ -328,7 +273,7 @@ export default function Step3() {
         }
         return prev.filter(img => img.id !== imageId);
       });
-
+      
       // Fotoğraf silindikten sonra Step4 prefetch tetikle
       if (currentClassifiedId && user?.id) {
         smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf silme');
@@ -343,52 +288,7 @@ export default function Step3() {
     }
   });
 
-  // Optimized rotate image function using requestIdleCallback
-  const rotateImage = useCallback((imageId: string) => {
-    setImages(prev => prev.map(img => {
-      if (img.id === imageId) {
-        // Use requestIdleCallback for non-blocking rotation
-        requestIdleCallback(() => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const imageElement = new Image();
 
-          imageElement.onload = () => {
-            // Set canvas dimensions for 90-degree rotation
-            canvas.width = imageElement.height;
-            canvas.height = imageElement.width;
-
-            // Apply rotation
-            ctx?.translate(canvas.width / 2, canvas.height / 2);
-            ctx?.rotate(Math.PI / 2);
-            ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
-
-            // Convert back to blob and update image
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const newUrl = URL.createObjectURL(blob);
-                blobUrlsRef.current.add(newUrl);
-                setImages(prev => prev.map(prevImg => 
-                  prevImg.id === imageId 
-                    ? { ...prevImg, url: newUrl, thumbnail: newUrl }
-                    : prevImg
-                ));
-
-                // Fotoğraf döndürme tamamlandıktan sonra Step4 prefetch tetikle
-                if (currentClassifiedId && user?.id) {
-                  smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
-                }
-              }
-            }, 'image/jpeg', 0.9);
-          };
-
-          imageElement.src = img.url;
-        });
-        return img;
-      }
-      return img;
-    }));
-  }, []);
 
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
@@ -522,23 +422,7 @@ export default function Step3() {
     }
   };
 
-  const handleNextStep = async () => {
-    // Clear any pending save timeout and execute immediately
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-
-      // Immediately save any pending changes
-      if (currentClassifiedId && images.length > 0) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // Synchronous for immediate save
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-          photos: JSON.stringify(images)
-        }));
-      }
-    }
-
+  const handleNextStep = () => {
     if (!currentClassifiedId) {
       toast({
         title: "Hata",
@@ -547,60 +431,30 @@ export default function Step3() {
       });
       return;
     }
-
-    if (images.length > 0) {
-      // Show loading state
-      toast({
-        title: "Kaydediliyor...",
-        description: "Fotoğraflar kaydediliyor, lütfen bekleyin.",
-        variant: "default"
-      });
-
-      try {
-        // Wait for the save to complete
-        await new Promise((resolve, reject) => {
-          updateDraftMutation.mutate({
-            id: currentClassifiedId,
-            data: {
-              photos: JSON.stringify(images)
-            }
-          }, {
-            onSuccess: () => {
-              resolve(true);
-            },
-            onError: (error) => {
-              reject(error);
-            }
-          });
-        });
-
-        // Wait a bit more to ensure server has processed the data
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // PROGRESSIVE DISCLOSURE: Mark Step 3 as completed
-        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 3 });
-
-        // Son prefetch - Step4'e gitmeden önce
-        if (user?.id) {
-          smartPrefetchStep4(currentClassifiedId, user.id, 'Step4 navigation');
-        }
-
-        // Navigate to Step-4
-        navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
-      } catch (error) {
-        toast({
-          title: "Kaydetme Hatası",
-          description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
-          variant: "destructive"
-        });
-      }
-    } else {
-      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
-    }
+    
+    // Direkt Step4'e geç
+    navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
   };
 
+  // Loading state
+  if (!currentClassifiedId) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (isDraftLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-[60px] lg:pt-6">
       {/* Fotoğraf Yükleme Kutusu */}
       <div className="mb-6 lg:mt-0 mt-3">
         <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -693,15 +547,7 @@ export default function Step3() {
                         </button>
                       )}
 
-                      {/* Rotate Button - Sağ alt */}
-                      {!image.uploading && (
-                        <button
-                          onClick={() => rotateImage(image.id)}
-                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
-                        >
-                          <RotateCw className="w-3 h-3" />
-                        </button>
-                      )}
+
 
                       {/* Drag Handle - Orta */}
                       {!image.uploading && (

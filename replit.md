@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack Turkish classified ads platform ("İlan Platformu") built with React, Express.js, and PostgreSQL. The application includes comprehensive listing creation, user authentication, admin panel, and modern rich text editing with TipTap. The platform uses modern web technologies including TypeScript, Tailwind CSS, and Preline UI components.
+This is a full-stack web application built with React, Express.js, and PostgreSQL. It appears to be an admin panel for managing users, ads, categories, and locations. The application uses modern web technologies including TypeScript, Tailwind CSS, and shadcn/ui components.
 
 ## User Preferences
 
@@ -415,17 +415,6 @@ Authentication features:
 - Data stored in formData.customFields.description
 - All features working according to user specifications
 
-### Preline UI Validation System Implementation (July 26, 2025)
-- Completely replaced JavaScript alerts with professional Preline UI validation patterns
-- Implemented visual error states with red borders, error icons, and error messages below inputs
-- Added validation state management using validationErrors object for field-specific tracking
-- All Step-2 fields now mandatory with proper visual feedback using Preline UI structure
-- Title field: Enhanced with Preline UI validation pattern (red border + error message)
-- Description field: TipTap editor wrapped with validation border and error message display
-- Custom fields: All fields marked as mandatory (*) with individual error message support
-- Enhanced form validation to prevent empty submissions with comprehensive visual feedback
-- Maintains orange theme (#EC7830) consistency while adding professional error handling
-
 ### Universal Title Input Implementation (July 20, 2025)
 - Added universal title input field above description input (universal for all categories)
 - Title input available for all categories (not dependent on custom fields)
@@ -749,36 +738,3 @@ Authentication features:
 - **Smart Triggering**: Authenticate olduğu anda prefetch başlar
 - **Console Debugging**: Prefetch işlemleri console'da izlenebilir
 - **Modal Performance**: Parça parça yüklenme sorunu tamamen çözüldü
-
-### Critical Navigation & Validation Fixes (July 26, 2025)
-- **MAJOR BUG FIX**: Step1→Step2 navigation sorunu çözüldü
-- **Root Cause**: handleContinueWithDraft fonksiyonunda markStepCompletedMutation eksikti
-- **Solution**: Existing draft ile devam edilirken Step1 completion otomatik işaretlenir
-- **Double-Click Validation Fix**: DOM-based validation yaklaşımı kaldırıldı
-- **New Validation System**: Form state-based validation, anlık hata kontrolü
-- **Price Field JSON Fix**: Price objesi doğru parse ediliyor, string gösterimi sorunu çözüldü
-- **TipTap Editor Loading**: useEffect ile proper content initialization eklendi
-- **TypeScript Safety**: Tüm LSP diagnostics temizlendi, tip güvenliği sağlandı
-
-### Validation System Refactoring - Client-Side Only (July 26, 2025)
-- **CRITICAL CHANGE**: Removed all server-side validation from Step-2 completion endpoint
-- **Client-Side Preservation**: Visual validation feedback maintained for user experience
-- **Progressive Workflow**: Users can now advance through steps even with incomplete forms
-- **User Experience**: Form validation errors show visually but don't block navigation
-- **Step Navigation Fix**: Resolved Step-2 → Step-3 redirect issues caused by server validation
-- **Empty Form Progression**: System allows empty forms to progress through all steps
-- **Custom Fields Inheritance**: Maintained proper inheritance logic for form display
-- **Visual Feedback Only**: Red borders, error messages shown but don't prevent step completion
-- **Workflow Freedom**: Users control their own progression through listing creation process
-
-### Complete Validation System Removal - FULLY OPERATIONAL (July 26, 2025)
-- **CRITICAL CHANGE**: Removed both server-side validation AND server-side router guard completely
-- **Free Navigation**: Users can now navigate between all steps without any blocking or redirects
-- **Empty Form Progression**: Complete Step1→Step2→Step3→Step4 progression works with empty forms
-- **Client-Side Visual Only**: Form validation shows red borders/errors but doesn't prevent navigation
-- **Server Acceptance**: All step completion endpoints accept requests without validation checks
-- **User Freedom**: Complete control over listing creation workflow without system interference
-- **Testing Verified**: Full step progression tested - all steps complete successfully with empty data
-- **No Redirect Loops**: Eliminated all Step2→Step3→Step2 redirect issues completely
-- **Production Ready**: System provides visual feedback while allowing complete user control
-- **Workflow Simplified**: Focus on user experience rather than enforced validation constraints

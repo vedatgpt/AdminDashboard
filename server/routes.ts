@@ -87,9 +87,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // SERVER-SIDE ROUTER GUARD REMOVED
-  // Users can now freely navigate between steps
-
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
@@ -995,91 +992,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(publishedListing);
     } catch (error) {
       res.status(500).json({ error: "İlan yayınlanırken hata oluştu" });
-    }
-  });
-
-  // Step completion tracking endpoints
-  
-  // Mark step as completed
-  app.post("/api/draft-listings/:id/step/:step/complete", async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const step = parseInt(req.params.step);
-      const userId = req.session?.user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
-      }
-      
-      if (step < 1 || step > 4) {
-        return res.status(400).json({ error: "Geçersiz step numarası (1-4 arası olmalı)" });
-      }
-      
-      // Verify ownership
-      const existingDraft = await storage.getDraftListing(id);
-      if (!existingDraft || existingDraft.userId !== userId) {
-        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
-      }
-      
-      // SERVER-SIDE VALIDATION REMOVED
-      // Client-side validation handles all form validation
-      
-      const updatedDraft = await storage.markStepCompleted(id, step);
-      res.json(updatedDraft);
-    } catch (error) {
-      console.error('Step completion error:', error);
-      res.status(500).json({ error: "Step completion güncellenirken hata oluştu" });
-    }
-  });
-
-  // Mark step as incomplete
-  app.post("/api/draft-listings/:id/step/:step/incomplete", async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const step = parseInt(req.params.step);
-      const userId = req.session?.user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
-      }
-      
-      if (step < 1 || step > 4) {
-        return res.status(400).json({ error: "Geçersiz step numarası (1-4 arası olmalı)" });
-      }
-      
-      // Verify ownership
-      const existingDraft = await storage.getDraftListing(id);
-      if (!existingDraft || existingDraft.userId !== userId) {
-        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
-      }
-      
-      const updatedDraft = await storage.markStepIncomplete(id, step);
-      res.json(updatedDraft);
-    } catch (error) {
-      res.status(500).json({ error: "Step completion güncellenirken hata oluştu" });
-    }
-  });
-
-  // Get step completion status
-  app.get("/api/draft-listings/:id/steps", async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const userId = req.session?.user?.id;
-      
-      if (!userId) {
-        return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
-      }
-      
-      // Verify ownership
-      const existingDraft = await storage.getDraftListing(id);
-      if (!existingDraft || existingDraft.userId !== userId) {
-        return res.status(404).json({ error: "İlan taslağı bulunamadı" });
-      }
-      
-      const stepStatus = await storage.getStepCompletionStatus(id);
-      res.json(stepStatus);
-    } catch (error) {
-      res.status(500).json({ error: "Step durumu alınırken hata oluştu" });
     }
   });
 

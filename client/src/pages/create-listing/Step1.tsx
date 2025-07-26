@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
 import { useStep2Prefetch } from '@/hooks/useStep2Prefetch';
 import { useStep1Prefetch } from '@/hooks/useStep1Prefetch';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -56,18 +56,6 @@ export default function CreateListingStep1() {
   const createDraftMutation = useCreateDraftListing();
   const updateDraftMutation = useUpdateDraftListing();
   const deleteDraftMutation = useDeleteDraftListing();
-
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
-  });
   
   // Modal state
   const [showDraftModal, setShowDraftModal] = useState(false);
@@ -344,9 +332,6 @@ export default function CreateListingStep1() {
       
       draftId = draftResult.id;
       
-      // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
-      await markStepCompletedMutation.mutateAsync({ classifiedId: draftId, step: 1 });
-      
       // Update context with new draft
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: draftId });
       dispatch({ type: 'SET_IS_DRAFT', payload: true });
@@ -374,43 +359,28 @@ export default function CreateListingStep1() {
   };
 
   // Modal handlers
-  const handleContinueWithDraft = async () => {
+  const handleContinueWithDraft = () => {
     if (!currentExistingDraft || !pendingCategory) return;
     
-    try {
-      // CRITICAL FIX: Mark Step 1 as completed for existing draft
-      await markStepCompletedMutation.mutateAsync({ 
-        classifiedId: currentExistingDraft.id, 
-        step: 1 
-      });
-      
-      setShowDraftModal(false);
-      setCurrentExistingDraft(null);
-      
-      // Set draft info in context
-      dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentExistingDraft.id });
-      dispatch({ type: 'SET_IS_DRAFT', payload: true });
-      dispatch({ 
-        type: 'SET_CATEGORY', 
-        payload: { 
-          category: pendingCategory, 
-          path: pendingPath 
-        } 
-      });
-      
-      // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
-      prefetchStep2Data(pendingCategory.id);
-      
-      // Navigate to step 2
-      navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
-    } catch (error) {
-      console.error('Step1 completion hatası:', error);
-      toast({
-        title: "Hata",
-        description: 'İlan güncellenirken bir hata oluştu. Lütfen tekrar deneyin.',
-        variant: "destructive"
-      });
-    }
+    setShowDraftModal(false);
+    setCurrentExistingDraft(null);
+    
+    // Set draft info in context
+    dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentExistingDraft.id });
+    dispatch({ type: 'SET_IS_DRAFT', payload: true });
+    dispatch({ 
+      type: 'SET_CATEGORY', 
+      payload: { 
+        category: pendingCategory, 
+        path: pendingPath 
+      } 
+    });
+    
+    // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
+    prefetchStep2Data(pendingCategory.id);
+    
+    // Navigate to step 2
+    navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
   };
 
   const handleCreateNewListing = async () => {
@@ -711,9 +681,6 @@ export default function CreateListingStep1() {
                                   id: currentClassifiedId,
                                   data: { categoryId: state.selectedCategory.id }
                                 });
-                                
-                                // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
-                                await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                               } catch (error) {
                                 console.error('Draft güncellenemedi:', error);
                               }
@@ -806,9 +773,6 @@ export default function CreateListingStep1() {
                         currentClassifiedId = newDraft.id;
                         dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
                         dispatch({ type: 'SET_IS_DRAFT', payload: true });
-                        
-                        // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
-                        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                       } catch (error) {
                         console.error('Draft oluşturulamadı:', error);
                         return;
