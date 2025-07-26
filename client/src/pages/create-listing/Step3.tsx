@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '@/components/iOSSpinner';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
 import Sortable from "sortablejs";
@@ -46,7 +47,7 @@ export default function Step3() {
 
 
   // SECURITY FIX: Draft ownership verification
-  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
+  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -101,6 +102,15 @@ export default function Step3() {
       blobUrlsRef.current.clear();
     };
   }, []);
+
+  // LOADING CHECK: Auth and Draft loading states
+  if (authLoading || isDraftLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
 
   // Redirect to login if not authenticated
   useEffect(() => {

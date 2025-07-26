@@ -311,7 +311,68 @@ export default function Step2() {
 
   };
 
+  const validateRequiredFields = () => {
+    const errors: string[] = [];
+
+    // Title validation - zorunlu
+    if (!formData.customFields.title?.trim()) {
+      errors.push('Başlık alanı zorunludur');
+    }
+
+    // Description validation - zorunlu
+    if (!formData.customFields.description?.trim()) {
+      errors.push('Açıklama alanı zorunludur');
+    }
+
+    // Price validation - zorunlu
+    if (!formData.customFields.price) {
+      errors.push('Fiyat alanı zorunludur');
+    } else if (typeof formData.customFields.price === 'object') {
+      if (!formData.customFields.price.value?.trim()) {
+        errors.push('Fiyat değeri zorunludur');
+      }
+    }
+
+    // Custom fields validation - hepsi zorunlu
+    customFields.forEach((field) => {
+      const value = formData.customFields[field.fieldName];
+      
+      if (!value) {
+        errors.push(`${field.label} alanı zorunludur`);
+      } else if (typeof value === 'object' && value.value !== undefined) {
+        if (!value.value?.toString().trim()) {
+          errors.push(`${field.label} değeri zorunludur`);
+        }
+      } else if (!value.toString().trim()) {
+        errors.push(`${field.label} alanı zorunludur`);
+      }
+    });
+
+    // Location validation - aktif olanlar zorunlu
+    if (locationSettings?.showCountry && !selectedCountry) {
+      errors.push('Ülke seçimi zorunludur');
+    }
+    if (locationSettings?.showCity && !selectedCity) {
+      errors.push('İl seçimi zorunludur');
+    }
+    if (locationSettings?.showDistrict && !selectedDistrict) {
+      errors.push('İlçe seçimi zorunludur');
+    }
+    if (locationSettings?.showNeighborhood && !selectedNeighborhood) {
+      errors.push('Mahalle seçimi zorunludur');
+    }
+
+    return errors;
+  };
+
   const nextStep = async () => {
+    // Form validation - tüm alanlar zorunlu
+    const validationErrors = validateRequiredFields();
+    if (validationErrors.length > 0) {
+      alert(`Lütfen tüm alanları doldurun:\n\n${validationErrors.join('\n')}`);
+      return;
+    }
+
     // Update draft with current form data before navigating
     if (currentClassifiedId) {
       const draftData = {

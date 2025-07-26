@@ -175,8 +175,8 @@ export default function Step4() {
   if (!draftData) {
     return (
       <CreateListingLayout stepNumber={4}>
-        <div className="text-center py-12">
-          <IOSSpinner size="large" className="mx-auto" />
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <IOSSpinner size="large" />
         </div>
       </CreateListingLayout>
     );
