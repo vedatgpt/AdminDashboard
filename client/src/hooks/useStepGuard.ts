@@ -45,6 +45,7 @@ function getRedirectPath(classifiedId: string, targetStep: number): string {
 }
 
 // Router Guard hook for step-based navigation protection
+// DISABLED: Server-side Router Guard handles all security validation
 export function useStepGuard(
   currentStep: number,
   classifiedId: string | null,
@@ -54,6 +55,14 @@ export function useStepGuard(
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    // CLIENT-SIDE ROUTER GUARD DISABLED
+    // Server-side middleware in routes.ts handles all security validation
+    // This prevents infinite loop conflicts between client and server guards
+    console.log(`ℹ️ CLIENT GUARD DISABLED: Server-side Guard handles Step ${currentStep} security`);
+    return;
+    
+    // All original validation logic commented out to prevent conflicts
+    /*
     // CRITICAL: Skip validation ONLY if still loading
     if (isLoading) {
       console.log(`🔄 STEP ${currentStep} GUARD: Skipping validation - still loading`);
@@ -113,6 +122,7 @@ export function useStepGuard(
     } else {
       console.log(`✅ STEP ${currentStep} GUARD: Validation passed`);
     }
+    */
   }, [currentStep, classifiedId, draft, isLoading, setLocation]);
 
   // Return validation status for component use
