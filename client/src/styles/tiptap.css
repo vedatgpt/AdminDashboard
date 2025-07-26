@@ -8,16 +8,18 @@
   line-height: 1.5;
 }
 
-.ProseMirror p + p {
-  margin-top: 1em;
+.ProseMirror {
+  white-space: pre-wrap;
 }
 
 .ProseMirror br {
-  content: "";
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 
-.ProseMirror br + br {
-  display: none;
+.ProseMirror p:empty {
+  min-height: 1.5em;
 }
 
 /* Bold Extension - TipTap Resmi Stil */

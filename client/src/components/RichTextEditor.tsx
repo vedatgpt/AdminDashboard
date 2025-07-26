@@ -156,11 +156,11 @@ export default function RichTextEditor({
 
 
 
-          {/* Highlight Dropdown - Yatay Liste */}
+          {/* Highlight Dropdown - Dikey Liste */}
           <div className="relative group">
             <button
               type="button"
-              className={`px-3 py-1 text-sm border rounded flex items-center ${
+              className={`px-3 py-1 text-sm border rounded flex items-center h-8 ${
                 editor.isActive('highlight') 
                   ? 'bg-yellow-300 text-black border-yellow-400' 
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
@@ -168,45 +168,46 @@ export default function RichTextEditor({
               title="Vurgula"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.75 12.25l-1.5-1.5L9 18l-4.5-4.5L3 15l6 6 10.5-10.5-1.75-1.75z" fill="currentColor"/>
-                <rect x="4" y="4" width="16" height="3" rx="1" fill="currentColor"/>
+                <path d="M18.5 4l-1.16-1.16a3 3 0 0 0-4.24 0L5 10.94a1 1 0 0 0 0 1.41l2.65 2.65a1 1 0 0 0 1.41 0L17.16 6.84a3 3 0 0 0 0-4.24L18.5 4z" fill="currentColor"/>
+                <path d="M3.5 17.5l3-3L9 17l-3 3a1 1 0 0 1-1.41 0l-.09-.09a1 1 0 0 1 0-1.41z" fill="currentColor"/>
+                <path d="M2 22h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
             
-            {/* Yatay Dropdown Menu */}
+            {/* Dikey Dropdown Menu */}
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="p-2 flex gap-1">
+              <div className="p-2 space-y-1">
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight().run()}
-                  className="w-6 h-6 bg-yellow-300 rounded hover:scale-110 transition-transform"
+                  className="w-6 h-6 bg-yellow-300 rounded hover:scale-110 transition-transform block"
                   title="Sarı"
                 ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
-                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform block"
                   style={{ backgroundColor: '#ffc078' }}
                   title="Turuncu"
                 ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()}
-                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform block"
                   style={{ backgroundColor: '#8ce99a' }}
                   title="Yeşil"
                 ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
-                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform block"
                   style={{ backgroundColor: '#74c0fc' }}
                   title="Mavi"
                 ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
-                  className="w-6 h-6 rounded hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform block"
                   style={{ backgroundColor: '#b197fc' }}
                   title="Mor"
                 ></button>
@@ -229,29 +230,37 @@ export default function RichTextEditor({
           {/* Separator */}
           <div className="w-px h-8 bg-gray-300"></div>
 
-          {/* Lists */}
+          {/* Lists - TipTap SVG Icons */}
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`px-3 py-1 text-sm border rounded ${
+            className={`px-3 py-1 text-sm border rounded flex items-center ${
               editor.isActive('bulletList') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Madde İşaretli Liste"
           >
-            • Liste
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="6" cy="12" r="2" fill="currentColor"/>
+              <path d="M10 12h12M10 6h12M10 18h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </button>
 
           <button
             type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`px-3 py-1 text-sm border rounded ${
+            className={`px-3 py-1 text-sm border rounded flex items-center ${
               editor.isActive('orderedList') 
                 ? 'bg-orange-500 text-white border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
+            title="Numaralı Liste"
           >
-            1. Liste
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 4h2v2H2V4zm0 6h2v2H2v-2zm0 6h2v2H2v-2z" fill="currentColor"/>
+              <path d="M6 5h16M6 11h16M6 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </button>
         </div>
         
