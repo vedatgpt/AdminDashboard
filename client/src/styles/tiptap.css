@@ -71,47 +71,38 @@
   text-align: left;
 }
 
-/* TipTap Bold + Color - SON ÇÖZÜM */
+/* TipTap Bold + Color - YENİDEN YAPILANDIRILDI */
 
-/* Temel Bold styling */
+/* Temel Bold styling - priority yüksek */
 .ProseMirror strong {
   font-weight: 700 !important;
 }
 
-/* TipTap TextStyle ile color extension */
-.ProseMirror span[style*="color"] {
-  /* Renk inline style ile uygulanıyor */
-}
-
-/* ANAHTAR: Bold + Color birlikte çalışması */
+/* Bold + Color kombinasyonu - Ana kural */
+.ProseMirror strong[style*="color"],
+.ProseMirror span[style*="color"] strong,
 .ProseMirror strong span[style*="color"] {
   font-weight: 700 !important;
 }
 
-.ProseMirror span[style*="color"] strong {
-  font-weight: 700 !important;  
+/* Nested markup durumları */
+.ProseMirror strong span[style*="color"] *,
+.ProseMirror span[style*="color"] strong *,
+.ProseMirror * strong[style*="color"],
+.ProseMirror * span[style*="color"] strong {
+  font-weight: inherit !important;
 }
 
-/* Nested durumlar için */
-.ProseMirror strong span[style*="color"] span,
-.ProseMirror span[style*="color"] strong span,
-.ProseMirror span span[style*="color"] strong {
+/* TextStyle mark'ı olan elementlerde bold korunması */
+.ProseMirror span[data-type="textStyle"] strong,
+.ProseMirror strong span[data-type="textStyle"] {
   font-weight: 700 !important;
 }
 
-/* Multiple nesting combinations */
-.ProseMirror strong > span[style*="color"],
-.ProseMirror span[style*="color"] > strong {
+/* Universal bold preservation - tüm durumlar için */
+.ProseMirror *[style*="font-weight: bold"],
+.ProseMirror *[style*="font-weight:bold"] {
   font-weight: 700 !important;
-}
-
-/* Keep marks birlikte çalıştırmak için */
-.ProseMirror .tiptap-textstyle {
-  /* TextStyle mark container */
-}
-
-.ProseMirror .tiptap-color {
-  /* Color mark container */
 }
 
 /* Resizable image styling */

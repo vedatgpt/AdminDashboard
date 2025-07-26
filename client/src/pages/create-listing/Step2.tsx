@@ -36,17 +36,12 @@ export default function Step2() {
     updateFormData({ [fieldName]: value });
   };
 
-  // TipTap Editor Setup - Tam featured setup
+  // TipTap Editor Setup - Bold ve renk uyumluluğu için optimize edildi
   const MAX_DESCRIPTION_LENGTH = 2000;
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         link: false,
-        bold: {
-          HTMLAttributes: {
-            class: 'font-bold',
-          },
-        },
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
@@ -71,18 +66,8 @@ export default function Step2() {
         alignments: ['left', 'center', 'right'],
         defaultAlignment: 'left'
       }),
-      TextStyle.configure({
-        HTMLAttributes: {
-          class: 'tiptap-textstyle',
-        },
-      }),
-      Color.configure({
-        types: ['textStyle'],
-        keepMarks: true,
-        HTMLAttributes: {
-          class: 'tiptap-color',
-        },
-      }),
+      TextStyle,
+      Color,
       Underline.configure({
         HTMLAttributes: {
           class: 'underline',
@@ -98,12 +83,10 @@ export default function Step2() {
       if (textContent.length <= MAX_DESCRIPTION_LENGTH) {
         // Draft'a kaydet
         dispatch({
-          type: 'UPDATE_FORM_DATA',
+          type: 'SET_CUSTOM_FIELDS',
           payload: {
-            customFields: {
-              ...formData.customFields,
-              description: html
-            }
+            ...formData.customFields,
+            description: html
           }
         });
         
