@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Camera, Upload, X, Image as ImageIcon, GripVertical, RotateCw } from "lucide-react";
+import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
@@ -52,7 +52,7 @@ export default function Step3() {
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
       console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-
+      
       // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
       if (draftError.message?.includes('erişim yetkiniz yok')) {
         console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
@@ -76,40 +76,6 @@ export default function Step3() {
       }
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
-
-  // SECURITY CHECK: Step2 verilerinin tamamlanmış olması gerekiyor
-  useEffect(() => {
-    if (draftData && currentClassifiedId) {
-      let customFields;
-      try {
-        customFields = typeof draftData.customFields === 'string' 
-          ? JSON.parse(draftData.customFields) 
-          : draftData.customFields;
-      } catch {
-        // Invalid JSON, redirect to Step2
-        toast({
-          title: "Form Hatası",
-          description: "Step-2'deki form bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
-        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
-        return;
-      }
-
-      // Gerekli alanları kontrol et: title, description, price
-      if (!customFields?.title?.trim() || 
-          !customFields?.description?.trim() || 
-          !customFields?.price?.value) {
-        toast({
-          title: "Eksik Bilgi",
-          description: "Başlık, açıklama ve fiyat bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
-        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
-        return;
-      }
-    }
-  }, [draftData, currentClassifiedId, navigate, toast]);
 
   // Memoized filtered images for Sortable.js
   const nonUploadingImages = useMemo(() => 
@@ -179,7 +145,7 @@ export default function Step3() {
         xhr.onload = function() {
           if (xhr.status === 200) {
             console.log('✅ ASYNC: Fotoğraf sıralaması kaydedildi');
-
+            
             // Sıralama kaydedildikten sonra Step4 prefetch tetikle (debounced)
             if (user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf sıralama');
@@ -243,12 +209,12 @@ export default function Step3() {
               }
               return newImages;
             });
-
+            
             // Fotoğraf upload tamamlandıktan sonra Step4 prefetch tetikle
             if (currentClassifiedId && user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf yükleme');
             }
-
+            
             resolve(data);
           } else {
             reject(new Error('Upload failed'));
@@ -305,7 +271,7 @@ export default function Step3() {
         }
         return prev.filter(img => img.id !== imageId);
       });
-
+      
       // Fotoğraf silindikten sonra Step4 prefetch tetikle
       if (currentClassifiedId && user?.id) {
         smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf silme');
@@ -320,52 +286,7 @@ export default function Step3() {
     }
   });
 
-  // Optimized rotate image function using requestIdleCallback
-  const rotateImage = useCallback((imageId: string) => {
-    setImages(prev => prev.map(img => {
-      if (img.id === imageId) {
-        // Use requestIdleCallback for non-blocking rotation
-        requestIdleCallback(() => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const imageElement = new Image();
 
-          imageElement.onload = () => {
-            // Set canvas dimensions for 90-degree rotation
-            canvas.width = imageElement.height;
-            canvas.height = imageElement.width;
-
-            // Apply rotation
-            ctx?.translate(canvas.width / 2, canvas.height / 2);
-            ctx?.rotate(Math.PI / 2);
-            ctx?.drawImage(imageElement, -imageElement.width / 2, -imageElement.height / 2);
-
-            // Convert back to blob and update image
-            canvas.toBlob((blob) => {
-              if (blob) {
-                const newUrl = URL.createObjectURL(blob);
-                blobUrlsRef.current.add(newUrl);
-                setImages(prev => prev.map(prevImg => 
-                  prevImg.id === imageId 
-                    ? { ...prevImg, url: newUrl, thumbnail: newUrl }
-                    : prevImg
-                ));
-
-                // Fotoğraf döndürme tamamlandıktan sonra Step4 prefetch tetikle
-                if (currentClassifiedId && user?.id) {
-                  smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf döndürme');
-                }
-              }
-            }, 'image/jpeg', 0.9);
-          };
-
-          imageElement.src = img.url;
-        });
-        return img;
-      }
-      return img;
-    }));
-  }, []);
 
   // Initialize Sortable.js for uploaded images with proper cleanup
   useEffect(() => {
@@ -499,23 +420,7 @@ export default function Step3() {
     }
   };
 
-  const handleNextStep = async () => {
-    // Clear any pending save timeout and execute immediately
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-
-      // Immediately save any pending changes
-      if (currentClassifiedId && images.length > 0) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // Synchronous for immediate save
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-          photos: JSON.stringify(images)
-        }));
-      }
-    }
-
+  const handleNextStep = () => {
     if (!currentClassifiedId) {
       toast({
         title: "Hata",
@@ -524,57 +429,13 @@ export default function Step3() {
       });
       return;
     }
-
-    if (images.length > 0) {
-      // Show loading state
-      toast({
-        title: "Kaydediliyor...",
-        description: "Fotoğraflar kaydediliyor, lütfen bekleyin.",
-        variant: "default"
-      });
-
-      try {
-        // Wait for the save to complete
-        await new Promise((resolve, reject) => {
-          updateDraftMutation.mutate({
-            id: currentClassifiedId,
-            data: {
-              photos: JSON.stringify(images)
-            }
-          }, {
-            onSuccess: () => {
-              resolve(true);
-            },
-            onError: (error) => {
-              reject(error);
-            }
-          });
-        });
-
-        // Wait a bit more to ensure server has processed the data
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Son prefetch - Step4'e gitmeden önce
-        if (user?.id) {
-          smartPrefetchStep4(currentClassifiedId, user.id, 'Step4 navigation');
-        }
-
-        // Navigate to Step-4
-        navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
-      } catch (error) {
-        toast({
-          title: "Kaydetme Hatası",
-          description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
-          variant: "destructive"
-        });
-      }
-    } else {
-      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
-    }
+    
+    // Direkt Step4'e geç
+    navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-[60px] lg:pt-6">
       {/* Fotoğraf Yükleme Kutusu */}
       <div className="mb-6 lg:mt-0 mt-3">
         <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -667,15 +528,7 @@ export default function Step3() {
                         </button>
                       )}
 
-                      {/* Rotate Button - Sağ alt */}
-                      {!image.uploading && (
-                        <button
-                          onClick={() => rotateImage(image.id)}
-                          className="absolute bottom-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
-                        >
-                          <RotateCw className="w-3 h-3" />
-                        </button>
-                      )}
+
 
                       {/* Drag Handle - Orta */}
                       {!image.uploading && (

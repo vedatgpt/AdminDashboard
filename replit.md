@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack Turkish classified ads platform ("İlan Platformu") built with React, Express.js, and PostgreSQL. The application includes comprehensive listing creation, user authentication, admin panel, and modern rich text editing with TipTap. The platform uses modern web technologies including TypeScript, Tailwind CSS, and Preline UI components.
+This is a full-stack web application built with React, Express.js, and PostgreSQL. It appears to be an admin panel for managing users, ads, categories, and locations. The application uses modern web technologies including TypeScript, Tailwind CSS, and shadcn/ui components.
 
 ## User Preferences
 
@@ -414,17 +414,6 @@ Authentication features:
 - Editor height 200px with proper styling integration
 - Data stored in formData.customFields.description
 - All features working according to user specifications
-
-### Preline UI Validation System Implementation (July 26, 2025)
-- Completely replaced JavaScript alerts with professional Preline UI validation patterns
-- Implemented visual error states with red borders, error icons, and error messages below inputs
-- Added validation state management using validationErrors object for field-specific tracking
-- All Step-2 fields now mandatory with proper visual feedback using Preline UI structure
-- Title field: Enhanced with Preline UI validation pattern (red border + error message)
-- Description field: TipTap editor wrapped with validation border and error message display
-- Custom fields: All fields marked as mandatory (*) with individual error message support
-- Enhanced form validation to prevent empty submissions with comprehensive visual feedback
-- Maintains orange theme (#EC7830) consistency while adding professional error handling
 
 ### Universal Title Input Implementation (July 20, 2025)
 - Added universal title input field above description input (universal for all categories)
