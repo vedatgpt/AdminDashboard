@@ -379,67 +379,36 @@ export default function Step2() {
 
   };
 
-  const validateRequiredFields = () => {
-    const errors: ValidationErrors = {};
 
-    // CRITICAL FIX: Direct DOM validation instead of relying on formData state
-    const titleInput = document.getElementById('title-input') as HTMLInputElement;
-    const priceInput = document.getElementById('price-input') as HTMLInputElement;
-    const descriptionEditor = document.querySelector('.ProseMirror');
+
+  const nextStep = async () => {
+    // SIMPLIFIED VALIDATION: Direct field checks without DOM queries
+    const errors: { [key: string]: string } = {};
     
-    // Title validation - Direct DOM check
-    if (!titleInput?.value?.trim()) {
-      errors.title = 'Başlık alanı zorunludur';
+    // Title validation
+    if (!formData.customFields.title?.trim()) {
+      errors.title = 'İlan başlığı zorunludur';
     }
-
-    // Description validation - Direct DOM check
-    const descriptionText = descriptionEditor?.textContent?.trim() || '';
-    if (!descriptionText) {
-      errors.description = 'Açıklama alanı zorunludur';
+    
+    // Description validation
+    if (!formData.customFields.description?.trim()) {
+      errors.description = 'Açıklama zorunludur';
     }
-
-    // Price validation - Direct DOM check
-    if (!priceInput?.value?.trim()) {
-      errors.price = 'Fiyat alanı zorunludur';
+    
+    // Price validation
+    if (!formData.customFields.price?.value?.trim()) {
+      errors.price = 'Fiyat zorunludur';
     }
-
-    // Custom fields validation - CRITICAL FIX: Direct DOM check for all fields
-    customFields.forEach((field) => {
-      if (field.fieldType === 'select') {
-        // For select fields, find by option value
-        const selectElement = Array.from(document.querySelectorAll('select')).find(select => {
-          const label = select.parentElement?.previousElementSibling?.textContent;
-          return label?.includes(field.label);
-        }) as HTMLSelectElement;
-        
-        if (selectElement && !selectElement.value) {
-          errors[field.fieldName] = `${field.label} alanı zorunludur`;
-        }
-      } else if (field.fieldType === 'text' || field.fieldType === 'number') {
-        // For text/number fields, find by label
-        const inputElement = Array.from(document.querySelectorAll('input[type="text"], input[type="number"]')).find(input => {
-          const label = input.parentElement?.previousElementSibling?.textContent || 
-                       input.parentElement?.parentElement?.previousElementSibling?.textContent;
-          return label?.includes(field.label);
-        }) as HTMLInputElement;
-        
-        if (inputElement && !inputElement.value?.trim()) {
-          errors[field.fieldName] = `${field.label} alanı zorunludur`;
-        }
-      } else if (field.fieldType === 'checkbox') {
-        // For checkbox fields
-        const checkboxElement = Array.from(document.querySelectorAll('input[type="checkbox"]')).find(checkbox => {
-          const label = checkbox.parentElement?.textContent;
-          return label?.includes(field.label);
-        }) as HTMLInputElement;
-        
-        if (checkboxElement && !checkboxElement.checked) {
-          errors[field.fieldName] = `${field.label} seçimi zorunludur`;
-        }
+    
+    // Custom fields validation (from form state, not DOM)
+    customFields?.forEach(field => {
+      const fieldValue = formData.customFields[field.fieldName];
+      if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+        errors[field.fieldName] = `${field.label} alanı zorunludur`;
       }
     });
-
-    // Location validation - aktif olanlar zorunlu
+    
+    // Location validation
     if (locationSettings?.showCountry && !selectedCountry) {
       errors.country = 'Ülke seçimi zorunludur';
     }
@@ -452,82 +421,11 @@ export default function Step2() {
     if (locationSettings?.showNeighborhood && !selectedNeighborhood) {
       errors.neighborhood = 'Mahalle seçimi zorunludur';
     }
-
-    return errors;
-  };
-
-  const nextStep = async () => {
-    // CRITICAL FIX: Immediate validation without state update delay
-    const errors = validateRequiredFields();
+    
+    // Show validation errors if any
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       setShowValidation(true);
-      
-      // Auto-scroll to first validation error
-      setTimeout(() => {
-        // First check universal fields in order: title, description, price
-        if (errors.title) {
-          const element = document.getElementById('title-input');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (element instanceof HTMLElement) element.focus();
-            return;
-          }
-        }
-        
-        if (errors.description) {
-          const element = document.querySelector('.ProseMirror');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-          }
-        }
-        
-        if (errors.price) {
-          const element = document.getElementById('price-input');
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (element instanceof HTMLElement) element.focus();
-            return;
-          }
-        }
-        
-        // Then check custom fields
-        if (customFields) {
-          for (const field of customFields) {
-            if (errors[field.fieldName]) {
-              const elements = Array.from(document.querySelectorAll(`input, select`));
-              for (const element of elements) {
-                const classes = element.className;
-                if (classes.includes('border-red-500')) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  if (element instanceof HTMLElement) element.focus();
-                  return;
-                }
-              }
-              break;
-            }
-          }
-        }
-        
-        // Finally check location fields
-        const locationFields = ['country', 'city', 'district', 'neighborhood'];
-        for (const field of locationFields) {
-          if (errors[field]) {
-            const elements = Array.from(document.querySelectorAll(`select`));
-            for (const element of elements) {
-              const classes = element.className;
-              if (classes.includes('border-red-500')) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                if (element instanceof HTMLElement) element.focus();
-                return;
-              }
-            }
-            break;
-          }
-        }
-      }, 200);
-      
       return;
     }
     

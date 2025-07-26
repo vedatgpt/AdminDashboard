@@ -374,28 +374,43 @@ export default function CreateListingStep1() {
   };
 
   // Modal handlers
-  const handleContinueWithDraft = () => {
+  const handleContinueWithDraft = async () => {
     if (!currentExistingDraft || !pendingCategory) return;
     
-    setShowDraftModal(false);
-    setCurrentExistingDraft(null);
-    
-    // Set draft info in context
-    dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentExistingDraft.id });
-    dispatch({ type: 'SET_IS_DRAFT', payload: true });
-    dispatch({ 
-      type: 'SET_CATEGORY', 
-      payload: { 
-        category: pendingCategory, 
-        path: pendingPath 
-      } 
-    });
-    
-    // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
-    prefetchStep2Data(pendingCategory.id);
-    
-    // Navigate to step 2
-    navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
+    try {
+      // CRITICAL FIX: Mark Step 1 as completed for existing draft
+      await markStepCompletedMutation.mutateAsync({ 
+        classifiedId: currentExistingDraft.id, 
+        step: 1 
+      });
+      
+      setShowDraftModal(false);
+      setCurrentExistingDraft(null);
+      
+      // Set draft info in context
+      dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentExistingDraft.id });
+      dispatch({ type: 'SET_IS_DRAFT', payload: true });
+      dispatch({ 
+        type: 'SET_CATEGORY', 
+        payload: { 
+          category: pendingCategory, 
+          path: pendingPath 
+        } 
+      });
+      
+      // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
+      prefetchStep2Data(pendingCategory.id);
+      
+      // Navigate to step 2
+      navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
+    } catch (error) {
+      console.error('Step1 completion hatası:', error);
+      toast({
+        title: "Hata",
+        description: 'İlan güncellenirken bir hata oluştu. Lütfen tekrar deneyin.',
+        variant: "destructive"
+      });
+    }
   };
 
   const handleCreateNewListing = async () => {
