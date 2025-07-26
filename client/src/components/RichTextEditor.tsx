@@ -4,6 +4,7 @@ import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
 import Underline from '@tiptap/extension-underline'
+import { useState, useEffect } from 'react'
 
 interface RichTextEditorProps {
   value: string;
@@ -18,6 +19,16 @@ export default function RichTextEditor({
   placeholder = "Açıklama yazınız...", 
   maxLength = 2000 
 }: RichTextEditorProps) {
+  
+  const [activeStates, setActiveStates] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    highlight: false,
+    bulletList: false,
+    orderedList: false,
+    textAlign: 'left'
+  })
   
   const editor = useEditor({
     extensions: [
@@ -58,7 +69,31 @@ export default function RichTextEditor({
     },
   })
 
-  const currentLength = editor?.getText()?.length || 0
+  // Update active states when editor content changes
+  useEffect(() => {
+    if (!editor) return
+    
+    const updateActiveStates = () => {
+      setActiveStates({
+        bold: editor.isActive('bold'),
+        italic: editor.isActive('italic'),
+        underline: editor.isActive('underline'),
+        highlight: editor.isActive('highlight'),
+        bulletList: editor.isActive('bulletList'),
+        orderedList: editor.isActive('orderedList'),
+        textAlign: editor.isActive({ textAlign: 'center' }) ? 'center' : 
+                  editor.isActive({ textAlign: 'right' }) ? 'right' : 'left'
+      })
+    }
+    
+    editor.on('selectionUpdate', updateActiveStates)
+    editor.on('transaction', updateActiveStates)
+    
+    return () => {
+      editor.off('selectionUpdate', updateActiveStates)
+      editor.off('transaction', updateActiveStates)
+    }
+  }, [editor])
 
   if (!editor) {
     return null
@@ -72,9 +107,12 @@ export default function RichTextEditor({
           {/* Text Formatting */}
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onClick={() => {
+              editor.chain().focus().toggleBold().run()
+              setActiveStates(prev => ({ ...prev, bold: !prev.bold }))
+            }}
             className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
-              editor.isActive('bold') 
+              activeStates.bold 
                 ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
@@ -85,9 +123,12 @@ export default function RichTextEditor({
           
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onClick={() => {
+              editor.chain().focus().toggleItalic().run()
+              setActiveStates(prev => ({ ...prev, italic: !prev.italic }))
+            }}
             className={`w-8 h-8 text-sm italic border rounded flex items-center justify-center ${
-              editor.isActive('italic') 
+              activeStates.italic 
                 ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
@@ -97,9 +138,12 @@ export default function RichTextEditor({
 
           <button
             type="button"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            onClick={() => {
+              editor.chain().focus().toggleUnderline().run()
+              setActiveStates(prev => ({ ...prev, underline: !prev.underline }))
+            }}
             className={`w-8 h-8 text-sm underline border rounded flex items-center justify-center ${
-              editor.isActive('underline') 
+              activeStates.underline 
                 ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
@@ -176,6 +220,13 @@ export default function RichTextEditor({
             {/* Dikey Dropdown Menu */}
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
               <div className="p-2 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().toggleHighlight({ color: '#fff3cd' }).run()}
+                  className="w-6 h-6 rounded hover:scale-110 transition-transform block"
+                  style={{ backgroundColor: '#fff3cd' }}
+                  title="Pastel Sarı"
+                ></button>
                 <button
                   type="button"
                   onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
@@ -255,7 +306,7 @@ export default function RichTextEditor({
         </div>
         
         {/* Editor - Resizable with Scroll */}
-        <div className="resize-y overflow-auto min-h-[200px] max-h-[400px] bg-white relative">
+        <div className="resize-y overflow-auto min-h-[200px] bg-white relative">
           <div className="h-full overflow-y-auto">
             <EditorContent editor={editor} />
             {placeholder && !editor.getText() && (
@@ -265,11 +316,6 @@ export default function RichTextEditor({
             )}
           </div>
         </div>
-      </div>
-      
-      {/* Karakter Sayacı */}
-      <div className="text-right text-sm text-gray-500">
-        {currentLength} / {maxLength}
       </div>
     </div>
   )
