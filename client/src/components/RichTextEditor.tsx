@@ -38,7 +38,6 @@ export default function RichTextEditor({
       StarterKit.configure({
         bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
         heading: false, // Heading'i ayrı extension olarak ekliyoruz
-        underline: false, // Underline'ı ayrı extension olarak ekliyoruz
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
@@ -186,28 +185,28 @@ export default function RichTextEditor({
                 <button
                   type="button"
                   onClick={() => {
-                    editor.chain().focus().toggleHeading({ level: 3 }).run()
-                    setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
+                    editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
                   }}
-                  className={`w-24 h-8 text-sm rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
-                    activeStates.heading3 ? 'text-orange-500' : 'text-gray-700'
+                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
+                    activeStates.heading2 ? 'text-orange-500' : 'text-gray-700'
                   }`}
-                  title="Normal Metin"
+                  title="Başlık 2"
                 >
-                  Normal Metin
+                  H2
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    editor.chain().focus().toggleHeading({ level: 2 }).run()
-                    setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
+                    editor.chain().focus().toggleHeading({ level: 3 }).run()
+                    setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
                   }}
-                  className={`w-24 h-8 text-sm rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
-                    activeStates.heading2 ? 'text-orange-500' : 'text-gray-700'
+                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
+                    activeStates.heading3 ? 'text-orange-500' : 'text-gray-700'
                   }`}
-                  title="Büyük Metin"
+                  title="Başlık 3"
                 >
-                  Büyük Metin
+                  H3
                 </button>
               </div>
             </div>
@@ -273,15 +272,8 @@ export default function RichTextEditor({
               title="Vurgula"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="6" cy="6" r="3" fill="currentColor"/>
-                <circle cx="12" cy="6" r="3" fill="currentColor"/>
-                <circle cx="18" cy="6" r="3" fill="currentColor"/>
-                <circle cx="6" cy="12" r="3" fill="currentColor"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                <circle cx="18" cy="12" r="3" fill="currentColor"/>
-                <circle cx="6" cy="18" r="3" fill="currentColor"/>
-                <circle cx="12" cy="18" r="3" fill="currentColor"/>
-                <circle cx="18" cy="18" r="3" fill="currentColor"/>
+                <path d="m21.174 6.812-1.986-1.987a1.625 1.625 0 0 0-2.299 0l-9.188 9.188a.75.75 0 0 0-.194.325l-1.65 5.95a.375.375 0 0 0 .47.47l5.95-1.65a.75.75 0 0 0 .325-.194l9.188-9.188a1.625 1.625 0 0 0 0-2.299l-1.987-1.987a1.625 1.625 0 0 0-2.299 0zm-10.436 13.436L9.188 18.688a.375.375 0 0 1-.47-.47l1.56-5.618 4.34 4.34-1.56 5.618a.375.375 0 0 1-.47.47z" fill="currentColor"/>
+                <path d="M19.513 8.199 15.801 4.487a.75.75 0 0 0-1.061 1.061l3.712 3.713a.75.75 0 0 0 1.061-1.062z" fill="currentColor"/>
               </svg>
             </button>
             
@@ -374,9 +366,9 @@ export default function RichTextEditor({
         </div>
         
         {/* Editor - Resizable with Scroll */}
-        <div className="resize-y min-h-[200px] max-h-[400px] bg-white relative border-t-0">
-          <div className="h-full overflow-y-auto p-4">
-            <EditorContent editor={editor} className="prose max-w-none" />
+        <div className="resize-y overflow-hidden min-h-[200px] max-h-[400px] bg-white relative">
+          <div className="h-full overflow-y-auto">
+            <EditorContent editor={editor} />
             {placeholder && !editor.getText() && (
               <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
                 {placeholder}
