@@ -178,11 +178,15 @@ export default function Step2() {
         try {
           const customFields = JSON.parse(draftData.customFields);
           
-          // CRITICAL FIX: Handle price parsing from database string
-          if (draftData.price && !customFields.price) {
+          // CRITICAL FIX: Handle price parsing from database - ALWAYS OVERRIDE
+          if (draftData.price) {
             try {
               const priceData = JSON.parse(draftData.price);
-              customFields.price = priceData;
+              if (priceData && typeof priceData === 'object' && priceData.value) {
+                customFields.price = priceData;
+              } else {
+                customFields.price = { value: draftData.price, unit: 'TL' };
+              }
             } catch {
               // If price is not JSON, treat as plain value
               customFields.price = { value: draftData.price, unit: 'TL' };
@@ -426,13 +430,7 @@ export default function Step2() {
   };
 
   const nextStep = async () => {
-    // Form verilerini kaydetmeden önce güncelle
-    await updateFormData(formData);
-    
-    // Kısa bir bekleme süresi ekle - DOM'un güncellenmesi için
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Form validation - tüm alanlar zorunlu
+    // CRITICAL FIX: Immediate validation without state update delay
     const errors = validateRequiredFields();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
