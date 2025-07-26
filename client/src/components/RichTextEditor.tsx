@@ -23,6 +23,11 @@ export default function RichTextEditor({
     extensions: [
       StarterKit.configure({
         bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
+        paragraph: {
+          HTMLAttributes: {
+            style: 'margin: 0; line-height: 1.4;',
+          },
+        },
       }),
       Bold.configure({
         HTMLAttributes: {

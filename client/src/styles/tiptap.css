@@ -5,21 +5,11 @@
 
 .ProseMirror p {
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
-.ProseMirror {
-  white-space: pre-wrap;
-}
-
-.ProseMirror br {
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-
-.ProseMirror p:empty {
-  min-height: 1.5em;
+.ProseMirror p + p {
+  margin-top: 0.5rem;
 }
 
 /* Bold Extension - TipTap Resmi Stil */
