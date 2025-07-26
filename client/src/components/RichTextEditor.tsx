@@ -75,7 +75,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
               editor.isActive('bold') 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Kalın (Ctrl+B)"
@@ -88,7 +88,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`w-8 h-8 text-sm italic border rounded flex items-center justify-center ${
               editor.isActive('italic') 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
           >
@@ -100,7 +100,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             className={`w-8 h-8 text-sm underline border rounded flex items-center justify-center ${
               editor.isActive('underline') 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
           >
@@ -113,7 +113,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'left' }) 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Sola Hizala"
@@ -128,7 +128,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'center' }) 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Ortala"
@@ -143,7 +143,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive({ textAlign: 'right' }) 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Sağa Hizala"
@@ -161,7 +161,7 @@ export default function RichTextEditor({
               type="button"
               className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
                 editor.isActive('highlight') 
-                  ? 'bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-400 text-white border-purple-400' 
+                  ? 'bg-white text-orange-500 border-orange-500' 
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
               title="Vurgula"
@@ -226,7 +226,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive('bulletList') 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Madde İşaretli Liste"
@@ -242,7 +242,7 @@ export default function RichTextEditor({
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
               editor.isActive('orderedList') 
-                ? 'bg-orange-500 text-white border-orange-500' 
+                ? 'bg-white text-orange-500 border-orange-500' 
                 : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
             }`}
             title="Numaralı Liste"
@@ -254,14 +254,16 @@ export default function RichTextEditor({
           </button>
         </div>
         
-        {/* Editor */}
-        <div className="min-h-[200px] bg-white relative">
-          <EditorContent editor={editor} />
-          {placeholder && !editor.getText() && (
-            <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
-              {placeholder}
-            </div>
-          )}
+        {/* Editor - Resizable with Scroll */}
+        <div className="resize-y overflow-auto min-h-[200px] max-h-[400px] bg-white relative">
+          <div className="h-full overflow-y-auto">
+            <EditorContent editor={editor} />
+            {placeholder && !editor.getText() && (
+              <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+                {placeholder}
+              </div>
+            )}
+          </div>
         </div>
       </div>
       
