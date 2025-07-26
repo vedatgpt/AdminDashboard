@@ -78,9 +78,9 @@ export default function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm focus:outline-none min-h-[200px] max-h-[200px] overflow-y-auto p-4',
-        style: 'max-width: none;',
-        tabindex: '0', // Enable TAB navigation to editor
+        class: 'focus:outline-none p-4 text-sm leading-relaxed',
+        style: 'max-width: none; min-height: 200px; max-height: 200px; overflow-y: scroll;',
+        tabindex: '0',
       },
     },
   })
@@ -117,7 +117,7 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className="space-y-2">
+    <div>
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         {/* Toolbar */}
         <div className="border-b border-gray-200 p-3 bg-gray-50 flex flex-wrap gap-2">
@@ -338,16 +338,14 @@ export default function RichTextEditor({
           </button>
         </div>
         
-        {/* Editor - Resizable with Scroll */}
-        <div className="resize-y overflow-hidden min-h-[200px] max-h-[400px] bg-white relative">
-          <div className="h-full overflow-y-auto">
-            <EditorContent editor={editor} />
-            {placeholder && !editor.getText() && (
-              <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
-                {placeholder}
-              </div>
-            )}
-          </div>
+        {/* Editor Content */}
+        <div className="bg-white relative">
+          <EditorContent editor={editor} />
+          {placeholder && !editor.getText() && (
+            <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
+              {placeholder}
+            </div>
+          )}
         </div>
       </div>
     </div>

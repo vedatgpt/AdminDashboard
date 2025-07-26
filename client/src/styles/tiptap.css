@@ -1,18 +1,21 @@
-/* TipTap Default Styles - Resmi Döküman Uyumlu */
+/* TipTap Simple Styles */
 .ProseMirror {
   outline: none;
-  overflow-y: auto !important;
-  max-height: 200px !important;
-  padding: 1rem !important;
+  min-height: 200px;
+  max-height: 200px;
+  overflow-y: scroll;
+  padding: 1rem;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .ProseMirror p {
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .ProseMirror p + p {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 /* Bold Extension - TipTap Resmi Stil */
