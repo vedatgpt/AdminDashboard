@@ -30,6 +30,9 @@ export default function Step2() {
   // Validation state
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [showValidation, setShowValidation] = useState(false);
+  
+  // DOUBLE-CLICK PROTECTION: Loading state for next step button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -391,8 +394,18 @@ export default function Step2() {
 
 
   const nextStep = async () => {
-    // SIMPLIFIED VALIDATION: Direct field checks without DOM queries
-    const errors: { [key: string]: string } = {};
+    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
+    if (isSubmitting) {
+      console.log('🚫 Double-click prevented - already submitting');
+      return;
+    }
+    
+    // Set loading state immediately
+    setIsSubmitting(true);
+    
+    try {
+      // SIMPLIFIED VALIDATION: Direct field checks without DOM queries
+      const errors: { [key: string]: string } = {};
     
     // Title validation
     if (!formData.customFields.title?.trim()) {
@@ -431,12 +444,13 @@ export default function Step2() {
       errors.neighborhood = 'Mahalle seçimi zorunludur';
     }
     
-    // Show validation errors if any
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      setShowValidation(true);
-      return;
-    }
+      // Show validation errors if any exist
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        setShowValidation(true);
+        setIsSubmitting(false); // Reset loading state on validation error
+        return;
+      }
     
     // Clear validation state if all fields are valid
     setValidationErrors({});
@@ -480,14 +494,21 @@ export default function Step2() {
         }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
+        setIsSubmitting(false); // Reset loading state on error
+        return;
       }
     }
     
-    dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-    const url = currentClassifiedId ? 
-      `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
-      '/create-listing/step-3';
-    navigate(url);
+      dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
+      const url = currentClassifiedId ? 
+        `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
+        '/create-listing/step-3';
+      navigate(url);
+      
+    } catch (error) {
+      console.error('NextStep error:', error);
+      setIsSubmitting(false); // Reset loading state on any error
+    }
   };
   // Get categoryId from draft or selected category for custom fields
   const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
@@ -1265,12 +1286,17 @@ export default function Step2() {
               🧪 Tüm Verileri Doldur (Test)
             </button>
             
-            {/* Sonraki Adım Butonu */}
+            {/* Sonraki Adım Butonu - Double-click protection */}
             <button
               onClick={nextStep}
-              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-4 rounded-lg transition-colors font-medium ${
+                isSubmitting 
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+              }`}
             >
-              Sonraki Adım
+              {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
             </button>
           </div>
         </div>
