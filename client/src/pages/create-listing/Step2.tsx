@@ -549,7 +549,7 @@ export default function Step2() {
             )}
           </div>
           {showValidation && validationErrors.title && (
-            <p className="text-sm text-red-600 mt-2">{validationErrors.title}</p>
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
           )}
         </div>
 
@@ -572,7 +572,7 @@ export default function Step2() {
             />
           </div>
           {showValidation && validationErrors.description && (
-            <p className="text-sm text-red-600 mt-2">{validationErrors.description}</p>
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
           )}
         </div>
 
@@ -901,7 +901,7 @@ export default function Step2() {
                 
                 {/* Validation Error Message */}
                 {showValidation && validationErrors[field.fieldName] && (
-                  <p className="text-sm text-red-600 mt-2">{validationErrors[field.fieldName]}</p>
+                  <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
                 )}
               </div>
             );
@@ -964,6 +964,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['country'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -1007,6 +1010,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['city'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -1049,6 +1055,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['district'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -1090,6 +1099,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['neighborhood'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
