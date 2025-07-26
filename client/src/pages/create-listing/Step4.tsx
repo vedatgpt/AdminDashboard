@@ -9,7 +9,6 @@ import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
-import { useStepValidation } from "@/hooks/useStepValidation";
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
@@ -71,12 +70,57 @@ export default function Step4() {
     gcTime: 0, // No cache for immediate updates
   });
 
-  // Step validation middleware - URL manipulation koruması
-  useStepValidation({
-    draftData: draftData || null,
-    isDraftLoading: !draftData && !isDraftError,
-    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
-  });
+  // SECURITY CHECK: Step2 ve Step3 verilerinin tamamlanmış olması gerekiyor
+  useEffect(() => {
+    if (draftData && currentClassifiedId) {
+      let customFields;
+      try {
+        customFields = typeof draftData.customFields === 'string' 
+          ? JSON.parse(draftData.customFields) 
+          : draftData.customFields;
+      } catch {
+        // Invalid JSON, redirect to Step2
+        toast({
+          title: "Form Hatası",
+          description: "Step-2'deki form bilgilerini tamamlayınız",
+          variant: "destructive"
+        });
+        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
+        return;
+      }
+
+      // Step2 kontrolleri: title, description, price
+      if (!customFields?.title?.trim() || 
+          !customFields?.description?.trim() || 
+          !customFields?.price?.value) {
+        toast({
+          title: "Eksik Bilgi",
+          description: "Başlık, açıklama ve fiyat bilgilerini tamamlayınız",
+          variant: "destructive"
+        });
+        navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
+        return;
+      }
+
+      // Step3 kontrolleri: en az 1 fotoğraf yüklenmiş olmalı
+      let photos;
+      try {
+        photos = draftData.photos ? JSON.parse(draftData.photos as string) : [];
+      } catch {
+        photos = [];
+      }
+
+      if (!Array.isArray(photos) || photos.length === 0) {
+        toast({
+          title: "Fotoğraf Eksik",
+          description: "En az 1 fotoğraf yüklemeniz gerekiyor",
+          variant: "destructive"
+        });
+        navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`);
+        return;
+      }
+    }
+  }, [draftData, currentClassifiedId, navigate, toast]);
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic  
   useEffect(() => {
