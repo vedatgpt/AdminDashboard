@@ -397,6 +397,40 @@ export default function Step2() {
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       setShowValidation(true);
+      
+      // Auto-scroll to first validation error
+      setTimeout(() => {
+        const errorFieldNames = ['title', 'description', 'price', ...Object.keys(errors)];
+        for (const fieldName of errorFieldNames) {
+          let element = null;
+          
+          if (fieldName === 'title') {
+            element = document.getElementById('title-input');
+          } else if (fieldName === 'description') {
+            element = document.querySelector('.ProseMirror');
+          } else if (fieldName === 'price') {
+            element = document.getElementById('price-input');
+          } else if (['country', 'city', 'district', 'neighborhood'].includes(fieldName)) {
+            element = document.querySelector(`select[class*="border-red-500"]:first-of-type`);
+          } else {
+            // Custom field
+            element = document.querySelector(`input[class*="border-red-500"]:first-of-type, select[class*="border-red-500"]:first-of-type`);
+          }
+          
+          if (element) {
+            element.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center',
+              inline: 'nearest'
+            });
+            if (element instanceof HTMLElement && element.focus) {
+              element.focus();
+            }
+            break;
+          }
+        }
+      }, 100);
+      
       return;
     }
     
@@ -522,12 +556,22 @@ export default function Step2() {
           </label>
           <div className="relative">
             <input
+              id="title-input"
               type="text"
               value={formData.customFields.title || ''}
               onChange={(e) => {
                 const value = e.target.value;
                 if (value.length <= 64) {
                   handleInputChange('title', value);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  const priceInput = document.getElementById('price-input');
+                  if (priceInput) {
+                    priceInput.focus();
+                  }
                 }
               }}
               placeholder="İlanınız için başlık yazınız"
@@ -572,6 +616,63 @@ export default function Step2() {
             />
           </div>
           {showValidation && validationErrors.description && (
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+          )}
+        </div>
+
+        {/* Universal Price Input - Tüm kategoriler için */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Fiyat
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative lg:w-[30%] w-full">
+            <input
+              id="price-input"
+              type="text"
+              value={(() => {
+                const price = formData.customFields.price;
+                if (typeof price === 'object' && price?.value) {
+                  const numericValue = price.value.toString().replace(/\D/g, '');
+                  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                }
+                return '';
+              })()}
+              onChange={(e) => {
+                const numericValue = e.target.value.replace(/\D/g, '');
+                const currentPrice = formData.customFields.price;
+                const currentUnit = (typeof currentPrice === 'object' && currentPrice?.unit) ? currentPrice.unit : 'TL';
+                handleInputChange('price', { value: numericValue, unit: currentUnit });
+              }}
+              placeholder="Fiyat giriniz"
+              inputMode="numeric"
+              className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                showValidation && validationErrors.price
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+              }`}
+            />
+            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+              <select
+                value={(() => {
+                  const price = formData.customFields.price;
+                  return (typeof price === 'object' && price?.unit) ? price.unit : 'TL';
+                })()}
+                onChange={(e) => {
+                  const price = formData.customFields.price;
+                  const currentValue = (typeof price === 'object' && price?.value) ? price.value : '';
+                  handleInputChange('price', { value: currentValue, unit: e.target.value });
+                }}
+                className="h-full py-0 ps-2 pe-7 block w-32 border-transparent bg-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm"
+              >
+                <option value="TL">TL</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+          </div>
+          {showValidation && validationErrors.price && (
             <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
           )}
         </div>
