@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
 import { useListing } from '../../contexts/ListingContext';
 import { useDraftListing } from '@/hooks/useDraftListing';
@@ -9,6 +9,7 @@ import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
+import { useStepGuard } from '@/hooks/useStepGuard';
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
@@ -46,7 +47,7 @@ export default function Step4() {
   const currentClassifiedId = state.classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
 
   // SECURITY FIX: Draft listing data with ownership verification
-  const { data: draftData, error: draftError, isError: isDraftError, refetch: refetchDraft } = useQuery({
+  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading, refetch: refetchDraft } = useQuery({
     queryKey: ['/api/draft-listings', currentClassifiedId],
     queryFn: async () => {
       if (!currentClassifiedId) return null;
@@ -68,6 +69,21 @@ export default function Step4() {
     enabled: !!currentClassifiedId,
     staleTime: 0, // No cache for immediate updates
     gcTime: 0, // No cache for immediate updates
+  });
+
+  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 4 validation
+  const stepGuardResult = useStepGuard(4, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
+
+  // Step completion marking mutation
+  const markStepCompletedMutation = useMutation({
+    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Step completion update failed');
+      return response.json();
+    },
   });
 
   // SECURITY CHECK: Step2 ve Step3 verilerinin tamamlanmış olması gerekiyor

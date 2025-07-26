@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
+import { useStepGuard } from '@/hooks/useStepGuard';
 import Sortable from "sortablejs";
 
 interface UploadedImage {
@@ -46,7 +47,22 @@ export default function Step3() {
 
 
   // SECURITY FIX: Draft ownership verification
-  const { data: draftData, error: draftError, isError: isDraftError } = useDraftListing(currentClassifiedId);
+  const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
+
+  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 3 validation
+  const stepGuardResult = useStepGuard(3, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
+
+  // Step completion marking mutation
+  const markStepCompletedMutation = useMutation({
+    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Step completion update failed');
+      return response.json();
+    },
+  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -553,6 +569,9 @@ export default function Step3() {
 
         // Wait a bit more to ensure server has processed the data
         await new Promise(resolve => setTimeout(resolve, 500));
+
+        // PROGRESSIVE DISCLOSURE: Mark Step 3 as completed
+        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 3 });
 
         // Son prefetch - Step4'e gitmeden önce
         if (user?.id) {

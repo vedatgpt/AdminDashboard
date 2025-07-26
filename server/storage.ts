@@ -73,6 +73,7 @@ export interface IStorage {
   updateDraftListing(id: number, updates: UpdateDraftListing): Promise<DraftListing>;
   deleteDraftListing(id: number): Promise<void>;
   publishDraftListing(id: number): Promise<DraftListing>;
+  markStepCompleted(id: number, step: number): Promise<DraftListing>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -624,6 +625,59 @@ export class DatabaseStorage implements IStorage {
       .where(eq(draftListings.id, id))
       .returning();
     return draft;
+  }
+
+  // Step completion tracking methods
+  async updateStepCompletion(id: number, step: number, completed: boolean = true): Promise<DraftListing> {
+    const updateData: any = { updatedAt: new Date() };
+    
+    switch (step) {
+      case 1:
+        updateData.step1Completed = completed;
+        break;
+      case 2:
+        updateData.step2Completed = completed;
+        break;
+      case 3:
+        updateData.step3Completed = completed;
+        break;
+      case 4:
+        updateData.step4Completed = completed;
+        break;
+      default:
+        throw new Error(`Invalid step number: ${step}`);
+    }
+    
+    const [draft] = await db.update(draftListings)
+      .set(updateData)
+      .where(eq(draftListings.id, id))
+      .returning();
+    return draft;
+  }
+
+  async markStepCompleted(id: number, step: number): Promise<DraftListing> {
+    return this.updateStepCompletion(id, step, true);
+  }
+
+  async markStepIncomplete(id: number, step: number): Promise<DraftListing> {
+    return this.updateStepCompletion(id, step, false);
+  }
+
+  async getStepCompletionStatus(id: number): Promise<{
+    step1: boolean;
+    step2: boolean;
+    step3: boolean;
+    step4: boolean;
+  } | null> {
+    const draft = await this.getDraftListing(id);
+    if (!draft) return null;
+    
+    return {
+      step1: draft.step1Completed || false,
+      step2: draft.step2Completed || false,
+      step3: draft.step3Completed || false,
+      step4: draft.step4Completed || false,
+    };
   }
 }
 

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSmartPrefetch } from '@/hooks/useSmartPrefetch';
 import { useStep2Prefetch } from '@/hooks/useStep2Prefetch';
 import { useStep1Prefetch } from '@/hooks/useStep1Prefetch';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 
@@ -56,6 +56,18 @@ export default function CreateListingStep1() {
   const createDraftMutation = useCreateDraftListing();
   const updateDraftMutation = useUpdateDraftListing();
   const deleteDraftMutation = useDeleteDraftListing();
+
+  // Step completion marking mutation
+  const markStepCompletedMutation = useMutation({
+    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Step completion update failed');
+      return response.json();
+    },
+  });
   
   // Modal state
   const [showDraftModal, setShowDraftModal] = useState(false);
@@ -331,6 +343,9 @@ export default function CreateListingStep1() {
       });
       
       draftId = draftResult.id;
+      
+      // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
+      await markStepCompletedMutation.mutateAsync({ classifiedId: draftId, step: 1 });
       
       // Update context with new draft
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: draftId });

@@ -1,10 +1,11 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCategoryCustomFields } from '../../hooks/useCustomFields';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
+import { useStepGuard } from '@/hooks/useStepGuard';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -85,6 +86,21 @@ export default function Step2() {
   // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
+
+  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation
+  const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData, isDraftLoading);
+
+  // Step completion marking mutation
+  const markStepCompletedMutation = useMutation({
+    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Step completion update failed');
+      return response.json();
+    },
+  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -500,6 +516,9 @@ export default function Step2() {
           id: currentClassifiedId,
           data: draftData
         });
+        
+        // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed
+        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
         
         // Step3 verilerini prefetch et - Step3'e geçmeden önce
         if (user?.id) {
