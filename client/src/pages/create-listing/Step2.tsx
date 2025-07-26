@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
+import { useStepValidation } from '@/hooks/useStepValidation';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -85,6 +86,13 @@ export default function Step2() {
   // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
+
+  // Step validation middleware - URL manipulation koruması
+  useStepValidation({
+    draftData: draftData || null,
+    isDraftLoading,
+    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
+  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {

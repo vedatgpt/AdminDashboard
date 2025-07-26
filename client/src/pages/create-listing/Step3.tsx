@@ -4,6 +4,7 @@ import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-reac
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
+import { useStepValidation } from "@/hooks/useStepValidation";
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
@@ -70,6 +71,13 @@ export default function Step3() {
       navigate('/auth/login');
     }
   }, [authLoading, isAuthenticated, navigate]);
+
+  // Step validation middleware - URL manipulation koruması
+  useStepValidation({
+    draftData: draftData || null,
+    isDraftLoading,
+    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
+  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {

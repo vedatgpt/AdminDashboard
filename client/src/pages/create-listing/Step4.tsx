@@ -9,6 +9,7 @@ import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
+import { useStepValidation } from "@/hooks/useStepValidation";
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
@@ -68,6 +69,13 @@ export default function Step4() {
     enabled: !!currentClassifiedId,
     staleTime: 0, // No cache for immediate updates
     gcTime: 0, // No cache for immediate updates
+  });
+
+  // Step validation middleware - URL manipulation koruması
+  useStepValidation({
+    draftData: draftData || null,
+    isDraftLoading: !draftData && !isDraftError,
+    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
   });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic  
