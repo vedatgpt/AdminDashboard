@@ -696,6 +696,9 @@ export default function CreateListingStep1() {
                                   id: currentClassifiedId,
                                   data: { categoryId: state.selectedCategory.id }
                                 });
+                                
+                                // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
+                                await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                               } catch (error) {
                                 console.error('Draft güncellenemedi:', error);
                               }
@@ -788,6 +791,9 @@ export default function CreateListingStep1() {
                         currentClassifiedId = newDraft.id;
                         dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
                         dispatch({ type: 'SET_IS_DRAFT', payload: true });
+                        
+                        // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
+                        await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                       } catch (error) {
                         console.error('Draft oluşturulamadı:', error);
                         return;
