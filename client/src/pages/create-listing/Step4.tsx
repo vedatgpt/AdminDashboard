@@ -11,6 +11,7 @@ import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '@/components/iOSSpinner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
@@ -175,7 +176,7 @@ export default function Step4() {
     return (
       <CreateListingLayout stepNumber={4}>
         <div className="text-center py-12">
-          <p className="text-gray-500">Yükleniyor...</p>
+          <IOSSpinner size="large" className="mx-auto" />
         </div>
       </CreateListingLayout>
     );
@@ -192,6 +193,17 @@ export default function Step4() {
       year: 'numeric',
       month: 'long'
     });
+  };
+
+  // Sayı formatlama fonksiyonu - nokta ekleme
+  const formatNumber = (value: string | number): string => {
+    if (!value) return '';
+    const numStr = value.toString();
+    // Sadece sayı ise nokta ekle
+    if (/^\d+$/.test(numStr)) {
+      return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    return numStr;
   };
 
   // Photos artık photosState'ten geliyor
@@ -452,8 +464,8 @@ export default function Step4() {
                             <td className="py-2 lg:py-1.5 font-medium text-gray-700">Fiyat:</td>
                             <td className="py-2 lg:py-1.5 text-gray-900 text-right">
                               {typeof customFields.price === 'object' && customFields.price !== null
-                                ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
-                                : customFields.price
+                                ? `${formatNumber((customFields.price as any).value || '')} ${(customFields.price as any).unit || ''}`.trim()
+                                : formatNumber(customFields.price)
                               }
                             </td>
                           </tr>
@@ -496,13 +508,13 @@ export default function Step4() {
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
                             if (value.value !== undefined) {
-                              displayValue = `${value.value} ${value.unit || ''}`.trim();
+                              displayValue = `${formatNumber(value.value)} ${value.unit || ''}`.trim();
                             } else {
                               // Skip complex objects that don't have value/unit structure
                               return null;
                             }
                           } else {
-                            displayValue = String(value);
+                            displayValue = formatNumber(String(value));
                           }
 
                           return (
@@ -527,13 +539,13 @@ export default function Step4() {
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
                             if ((value as any).value !== undefined) {
-                              displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
+                              displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
                             } else {
                               // Don't show complex JSON objects in details table
                               return null;
                             }
                           } else {
-                            displayValue = String(value);
+                            displayValue = formatNumber(String(value));
                           }
 
                           return (
@@ -577,8 +589,8 @@ export default function Step4() {
                                                     <td className="py-2 font-medium text-gray-700 lg:hidden">Fiyat:</td>
                             <td className="py-2 text-gray-900 lg:text-left lg:col-span-2 lg:text-orange-500 lg:text-base lg:font-semibold lg:pt-0">
                           {typeof customFields.price === 'object' && customFields.price !== null
-                            ? `${(customFields.price as any).value || ''} ${(customFields.price as any).unit || ''}`.trim()
-                            : customFields.price
+                            ? `${formatNumber((customFields.price as any).value || '')} ${(customFields.price as any).unit || ''}`.trim()
+                            : formatNumber(customFields.price)
                           }
                         </td>
                       </tr>
@@ -619,13 +631,13 @@ export default function Step4() {
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
                         if ((value as any).value !== undefined) {
-                          displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
+                          displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Skip complex objects that don't have value/unit structure
                           return null;
                         }
                       } else {
-                        displayValue = String(value);
+                        displayValue = formatNumber(String(value));
                       }
 
                       return (
@@ -650,13 +662,13 @@ export default function Step4() {
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
                         if ((value as any).value !== undefined) {
-                          displayValue = `${(value as any).value} ${(value as any).unit || ''}`.trim();
+                          displayValue = `${formatNumber((value as any).value)} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Don't show complex JSON objects in details table
                           return null;
                         }
                       } else {
-                        displayValue = String(value);
+                        displayValue = formatNumber(String(value));
                       }
 
                       return (
