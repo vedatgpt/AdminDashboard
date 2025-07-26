@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
-import { useStepValidation } from '@/hooks/useStepValidation';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -86,13 +85,6 @@ export default function Step2() {
   // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
-
-  // Step validation middleware - URL manipulation koruması
-  useStepValidation({
-    draftData: draftData || null,
-    isDraftLoading,
-    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
-  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -348,26 +340,22 @@ export default function Step2() {
   const validateRequiredFields = () => {
     const errors: ValidationErrors = {};
 
-    // Title validation - zorunlu
+    // Title validation - formData'dan kontrol et (updateFormData'dan sonra güncel olacak)
     if (!formData.customFields.title?.trim()) {
       errors.title = 'Başlık alanı zorunludur';
     }
 
-    // Description validation - zorunlu
+    // Description validation - formData'dan kontrol et
     if (!formData.customFields.description?.trim()) {
       errors.description = 'Açıklama alanı zorunludur';
     }
 
-    // Price validation - zorunlu
-    if (!formData.customFields.price) {
+    // Price validation - formData'dan kontrol et
+    if (!formData.customFields.price || !formData.customFields.price.value?.trim()) {
       errors.price = 'Fiyat alanı zorunludur';
-    } else if (typeof formData.customFields.price === 'object') {
-      if (!formData.customFields.price.value?.trim()) {
-        errors.price = 'Fiyat değeri zorunludur';
-      }
     }
 
-    // Custom fields validation - hepsi zorunlu
+    // Custom fields validation - formData'dan kontrol et (updateFormData'dan sonra güncel)
     customFields.forEach((field) => {
       const value = formData.customFields[field.fieldName];
       
@@ -400,6 +388,12 @@ export default function Step2() {
   };
 
   const nextStep = async () => {
+    // Form verilerini kaydetmeden önce güncelle
+    await updateFormData();
+    
+    // Kısa bir bekleme süresi ekle - DOM'un güncellenmesi için
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Form validation - tüm alanlar zorunlu
     const errors = validateRequiredFields();
     if (Object.keys(errors).length > 0) {
