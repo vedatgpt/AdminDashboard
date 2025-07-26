@@ -4,6 +4,7 @@ import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
 import Underline from '@tiptap/extension-underline'
+import Heading from '@tiptap/extension-heading'
 import { useState, useEffect } from 'react'
 
 interface RichTextEditorProps {
@@ -27,13 +28,17 @@ export default function RichTextEditor({
     highlight: false,
     bulletList: false,
     orderedList: false,
-    textAlign: 'left'
+    textAlign: 'left',
+    heading1: false,
+    heading2: false,
+    heading3: false
   })
   
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
+        heading: false, // Heading'i ayrı extension olarak ekliyoruz
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
@@ -45,11 +50,19 @@ export default function RichTextEditor({
           class: 'font-bold',
         },
       }),
+      Heading.configure({
+        levels: [1, 2, 3],
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
       Highlight.configure({
         multicolor: true
+      }),
+      Underline.configure({
+        HTMLAttributes: {
+          class: 'underline',
+        },
       }),
     ],
     content: value,
@@ -81,6 +94,9 @@ export default function RichTextEditor({
         highlight: editor.isActive('highlight'),
         bulletList: editor.isActive('bulletList'),
         orderedList: editor.isActive('orderedList'),
+        heading1: editor.isActive('heading', { level: 1 }),
+        heading2: editor.isActive('heading', { level: 2 }),
+        heading3: editor.isActive('heading', { level: 3 }),
         textAlign: editor.isActive({ textAlign: 'center' }) ? 'center' : 
                   editor.isActive({ textAlign: 'right' }) ? 'right' : 'left'
       })
@@ -149,6 +165,55 @@ export default function RichTextEditor({
             }`}
           >
             U
+          </button>
+
+          {/* Heading Buttons */}
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+              setActiveStates(prev => ({ ...prev, heading1: !prev.heading1 }))
+            }}
+            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
+              activeStates.heading1 
+                ? 'bg-white text-orange-500 border-orange-500' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            title="Başlık 1"
+          >
+            H1
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+              setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
+            }}
+            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
+              activeStates.heading2 
+                ? 'bg-white text-orange-500 border-orange-500' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            title="Başlık 2"
+          >
+            H2
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+              setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
+            }}
+            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
+              activeStates.heading3 
+                ? 'bg-white text-orange-500 border-orange-500' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            title="Başlık 3"
+          >
+            H3
           </button>
 
           {/* Text Alignment - TipTap Resmi İkonlar */}
@@ -306,7 +371,7 @@ export default function RichTextEditor({
         </div>
         
         {/* Editor - Resizable with Scroll */}
-        <div className="resize-y overflow-auto min-h-[200px] bg-white relative">
+        <div className="resize-y overflow-hidden min-h-[200px] max-h-[400px] bg-white relative">
           <div className="h-full overflow-y-auto">
             <EditorContent editor={editor} />
             {placeholder && !editor.getText() && (
