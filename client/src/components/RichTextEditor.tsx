@@ -29,7 +29,6 @@ export default function RichTextEditor({
     bulletList: false,
     orderedList: false,
     textAlign: 'left',
-    heading2: false,
     heading3: false
   })
   
@@ -50,7 +49,10 @@ export default function RichTextEditor({
         },
       }),
       Heading.configure({
-        levels: [2, 3],
+        levels: [3],
+        HTMLAttributes: {
+          style: 'margin-top: 0;',
+        },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -93,7 +95,6 @@ export default function RichTextEditor({
         highlight: editor.isActive('highlight'),
         bulletList: editor.isActive('bulletList'),
         orderedList: editor.isActive('orderedList'),
-        heading2: editor.isActive('heading', { level: 2 }),
         heading3: editor.isActive('heading', { level: 3 }),
         textAlign: editor.isActive({ textAlign: 'center' }) ? 'center' : 
                   editor.isActive({ textAlign: 'right' }) ? 'right' : 'left'
@@ -165,52 +166,22 @@ export default function RichTextEditor({
             U
           </button>
 
-          {/* Heading Dropdown */}
-          <div className="relative group">
-            <button
-              type="button"
-              className={`w-8 h-8 text-sm border rounded flex items-center justify-center ${
-                activeStates.heading2 || activeStates.heading3
-                  ? 'bg-white text-orange-500 border-orange-500' 
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-              }`}
-              title="Başlık"
-            >
-              T
-            </button>
-            
-            {/* Dikey Dropdown Menu */}
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="p-2 space-y-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    editor.chain().focus().toggleHeading({ level: 2 }).run()
-                    setActiveStates(prev => ({ ...prev, heading2: !prev.heading2 }))
-                  }}
-                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
-                    activeStates.heading2 ? 'text-orange-500' : 'text-gray-700'
-                  }`}
-                  title="Başlık 2"
-                >
-                  H2
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    editor.chain().focus().toggleHeading({ level: 3 }).run()
-                    setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
-                  }}
-                  className={`w-16 h-8 text-sm font-bold rounded hover:bg-gray-100 transition-colors block text-left px-2 ${
-                    activeStates.heading3 ? 'text-orange-500' : 'text-gray-700'
-                  }`}
-                  title="Başlık 3"
-                >
-                  H3
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Heading Button */}
+          <button
+            type="button"
+            onClick={() => {
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+              setActiveStates(prev => ({ ...prev, heading3: !prev.heading3 }))
+            }}
+            className={`w-8 h-8 text-sm font-bold border rounded flex items-center justify-center ${
+              activeStates.heading3
+                ? 'bg-white text-orange-500 border-orange-500' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            title="Başlık"
+          >
+            T
+          </button>
 
           {/* Text Alignment - TipTap Resmi İkonlar */}
           <button
