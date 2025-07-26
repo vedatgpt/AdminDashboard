@@ -173,10 +173,32 @@ export default function Step2() {
         } 
       });
       
-      // Load form data from draft
+      // Load form data from draft with proper field handling
       if (draftData.customFields) {
         try {
           const customFields = JSON.parse(draftData.customFields);
+          
+          // CRITICAL FIX: Handle price parsing from database string
+          if (draftData.price && !customFields.price) {
+            try {
+              const priceData = JSON.parse(draftData.price);
+              customFields.price = priceData;
+            } catch {
+              // If price is not JSON, treat as plain value
+              customFields.price = { value: draftData.price, unit: 'TL' };
+            }
+          }
+          
+          // CRITICAL FIX: Handle description from separate field
+          if (draftData.description && !customFields.description) {
+            customFields.description = draftData.description;
+          }
+          
+          // CRITICAL FIX: Handle title from separate field
+          if (draftData.title && !customFields.title) {
+            customFields.title = draftData.title;
+          }
+          
           dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
         } catch (error) {
           console.error('Custom fields parse error:', error);
