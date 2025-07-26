@@ -340,37 +340,47 @@ export default function Step2() {
   const validateRequiredFields = () => {
     const errors: ValidationErrors = {};
 
-    // Title validation - zorunlu
-    if (!formData.customFields.title?.trim()) {
+    // Title validation - DOM'dan direkt al
+    const titleInput = document.getElementById('title-input') as HTMLInputElement;
+    if (!titleInput?.value?.trim()) {
       errors.title = 'Başlık alanı zorunludur';
     }
 
-    // Description validation - zorunlu
-    if (!formData.customFields.description?.trim()) {
+    // Description validation - TipTap editöründen al
+    const descriptionElement = document.querySelector('.ProseMirror');
+    const descriptionText = descriptionElement?.textContent?.trim() || '';
+    if (!descriptionText) {
       errors.description = 'Açıklama alanı zorunludur';
     }
 
-    // Price validation - zorunlu
-    if (!formData.customFields.price) {
+    // Price validation - DOM'dan direkt al
+    const priceInput = document.getElementById('price-input') as HTMLInputElement;
+    if (!priceInput?.value?.trim()) {
       errors.price = 'Fiyat alanı zorunludur';
-    } else if (typeof formData.customFields.price === 'object') {
-      if (!formData.customFields.price.value?.trim()) {
-        errors.price = 'Fiyat değeri zorunludur';
-      }
     }
 
-    // Custom fields validation - hepsi zorunlu
+    // Custom fields validation - DOM'dan direkt al
     customFields.forEach((field) => {
-      const value = formData.customFields[field.fieldName];
+      // Field name ile input elementi bul
+      const inputElement = document.querySelector(`[name="${field.fieldName}"], #${field.fieldName}`) as HTMLInputElement | HTMLSelectElement;
       
-      if (!value) {
-        errors[field.fieldName] = `${field.label} alanı zorunludur`;
-      } else if (typeof value === 'object' && value.value !== undefined) {
-        if (!value.value?.toString().trim()) {
-          errors[field.fieldName] = `${field.label} değeri zorunludur`;
+      if (inputElement) {
+        const value = inputElement.value?.trim();
+        if (!value) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
         }
-      } else if (!value.toString().trim()) {
-        errors[field.fieldName] = `${field.label} alanı zorunludur`;
+      } else {
+        // Fallback: formData'dan kontrol et
+        const value = formData.customFields[field.fieldName];
+        if (!value) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
+        } else if (typeof value === 'object' && value.value !== undefined) {
+          if (!value.value?.toString().trim()) {
+            errors[field.fieldName] = `${field.label} değeri zorunludur`;
+          }
+        } else if (!value.toString().trim()) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
+        }
       }
     });
 
