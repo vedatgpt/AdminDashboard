@@ -202,6 +202,44 @@ export default function Step3() {
     };
   }, [nonUploadingImages, debouncedSave]);
 
+  // Delete image mutation - moved BEFORE early return
+  const deleteImageMutation = useMutation({
+    mutationFn: async (imageId: string) => {
+      const response = await fetch(`/api/upload/images/${imageId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Delete failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (_, imageId) => {
+      setImages(prev => {
+        const imageToDelete = prev.find(img => img.id === imageId);
+        if (imageToDelete?.url.startsWith('blob:')) {
+          URL.revokeObjectURL(imageToDelete.url);
+          blobUrlsRef.current.delete(imageToDelete.url);
+        }
+        return prev.filter(img => img.id !== imageId);
+      });
+      
+      // Fotoğraf silindikten sonra Step4 prefetch tetikle
+      if (currentClassifiedId && user?.id) {
+        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf silme');
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Silme Hatası",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   // LOADING CHECK: Auth and Draft loading states - NOW after all hooks
   if (authLoading || isDraftLoading) {
     return (
@@ -293,43 +331,6 @@ export default function Step3() {
       });
     }
   };
-
-  const deleteImageMutation = useMutation({
-    mutationFn: async (imageId: string) => {
-      const response = await fetch(`/api/upload/images/${imageId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Delete failed');
-      }
-
-      return response.json();
-    },
-    onSuccess: (_, imageId) => {
-      setImages(prev => {
-        const imageToDelete = prev.find(img => img.id === imageId);
-        if (imageToDelete?.url.startsWith('blob:')) {
-          URL.revokeObjectURL(imageToDelete.url);
-          blobUrlsRef.current.delete(imageToDelete.url);
-        }
-        return prev.filter(img => img.id !== imageId);
-      });
-      
-      // Fotoğraf silindikten sonra Step4 prefetch tetikle
-      if (currentClassifiedId && user?.id) {
-        smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf silme');
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Silme Hatası",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
 
 
 
