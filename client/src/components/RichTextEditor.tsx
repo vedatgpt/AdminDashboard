@@ -1,9 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
 import { Highlight } from '@tiptap/extension-highlight'
-import Underline from '@tiptap/extension-underline'
 import Heading from '@tiptap/extension-heading'
 import { useState, useEffect } from 'react'
 
@@ -35,18 +33,11 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        bold: false, // Duplicate warning'ı önlemek için StarterKit bold'u kapat
         heading: false, // Heading'i ayrı extension olarak ekliyoruz
-        strike: false, // Strike'ı kapat (underline ile karışmasın)
         paragraph: {
           HTMLAttributes: {
             style: 'margin: 0; line-height: 1.4;',
           },
-        },
-      }),
-      Bold.configure({
-        HTMLAttributes: {
-          class: 'font-bold',
         },
       }),
       Heading.configure({
@@ -60,11 +51,6 @@ export default function RichTextEditor({
       }),
       Highlight.configure({
         multicolor: true
-      }),
-      Underline.configure({
-        HTMLAttributes: {
-          class: 'underline',
-        },
       }),
     ],
     content: value,
@@ -93,7 +79,7 @@ export default function RichTextEditor({
       setActiveStates({
         bold: editor.isActive('bold'),
         italic: editor.isActive('italic'),
-        underline: editor.isActive('underline'),
+        underline: editor.isActive('strike'),
         highlight: editor.isActive('highlight'),
         bulletList: editor.isActive('bulletList'),
         orderedList: editor.isActive('orderedList'),
@@ -156,7 +142,7 @@ export default function RichTextEditor({
           <button
             type="button"
             onClick={() => {
-              editor.chain().focus().toggleUnderline().run()
+              editor.chain().focus().toggleStrike().run()
               setActiveStates(prev => ({ ...prev, underline: !prev.underline }))
             }}
             className={`w-8 h-8 text-sm underline border rounded flex items-center justify-center ${

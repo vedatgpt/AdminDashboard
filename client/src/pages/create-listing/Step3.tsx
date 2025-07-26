@@ -49,6 +49,28 @@ export default function Step3() {
   // SECURITY FIX: Draft ownership verification
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
 
+  // Memoized filtered images for Sortable.js
+  const nonUploadingImages = useMemo(() => 
+    images.filter(img => !img.uploading), 
+    [images]
+  );
+
+  // Memoized file size formatter
+  const formatFileSize = useCallback((bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }, []);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/auth/login');
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
@@ -78,21 +100,6 @@ export default function Step3() {
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
 
-  // Memoized filtered images for Sortable.js
-  const nonUploadingImages = useMemo(() => 
-    images.filter(img => !img.uploading), 
-    [images]
-  );
-
-  // Memoized file size formatter
-  const formatFileSize = useCallback((bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  }, []);
-
   // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
@@ -102,25 +109,6 @@ export default function Step3() {
       blobUrlsRef.current.clear();
     };
   }, []);
-
-  // LOADING CHECK: Auth and Draft loading states
-  if (authLoading || isDraftLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <IOSSpinner size="large" />
-      </div>
-    );
-  }
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
-
-  // Load existing photos from draft when component mounts
-  // Note: draftData already defined above for security check
 
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
@@ -174,7 +162,54 @@ export default function Step3() {
         }));
       }
     }, 500); // 500ms debounce
-  }, [currentClassifiedId]);
+  }, [currentClassifiedId, user?.id, smartPrefetchStep4]);
+
+  // Sortable.js integration - moved BEFORE early return
+  useEffect(() => {
+    const sortableContainer = sortableRef.current;
+    if (!sortableContainer || nonUploadingImages.length === 0) return;
+
+    const sortable = Sortable.create(sortableContainer, {
+      animation: 150,
+      ghostClass: 'opacity-30',
+      handle: '.drag-handle',
+      onEnd: (evt) => {
+        const { oldIndex, newIndex } = evt;
+        if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+          const reorderedImages = [...nonUploadingImages];
+          const [reorderedItem] = reorderedImages.splice(oldIndex, 1);
+          reorderedImages.splice(newIndex, 0, reorderedItem);
+
+          // Update image orders with 1-based indexing
+          const updatedImages = reorderedImages.map((img, index) => ({
+            ...img,
+            order: index + 1
+          }));
+
+          setImages(prev => {
+            const uploadingImages = prev.filter(img => img.uploading);
+            return [...uploadingImages, ...updatedImages];
+          });
+
+          // Debounced save for drag operations
+          debouncedSave(updatedImages);
+        }
+      }
+    });
+
+    return () => {
+      sortable?.destroy();
+    };
+  }, [nonUploadingImages, debouncedSave]);
+
+  // LOADING CHECK: Auth and Draft loading states - NOW after all hooks
+  if (authLoading || isDraftLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <IOSSpinner size="large" />
+      </div>
+    );
+  }
 
   const uploadSingleImage = async (file: File, uploadingId: string) => {
     const formData = new FormData();
@@ -298,57 +333,7 @@ export default function Step3() {
 
 
 
-  // Initialize Sortable.js for uploaded images with proper cleanup
-  useEffect(() => {
-    let sortable: Sortable | null = null;
 
-    if (sortableRef.current && nonUploadingImages.length > 0) {
-      try {
-                sortable = Sortable.create(sortableRef.current, {
-          animation: 150,
-          handle: '.drag-handle',
-          ghostClass: 'opacity-50',
-          chosenClass: 'border-orange-500',
-          filter: '.uploading-item', // Exclude uploading items from sorting
-          preventOnFilter: false,
-          onEnd: (evt) => {
-            if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
-              // Prevent page refresh by using React state management
-              evt.preventDefault?.();
-              setImages(prevImages => {
-                const newImages = [...prevImages];
-                const [removed] = newImages.splice(evt.oldIndex!, 1);
-                newImages.splice(evt.newIndex!, 0, removed);
-
-                // Update order numbers and save to draft
-                const updatedImages = newImages.map((img, index) => ({
-                  ...img,
-                  order: index + 1
-                }));
-
-                // Debounced save
-                debouncedSave(updatedImages);
-
-                return updatedImages;
-              });
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Sortable.js initialization error:', error);
-      }
-    }
-
-    return () => {
-      if (sortable && sortable.el) {
-        try {
-          sortable.destroy();
-        } catch (error) {
-          // Sortable already destroyed, ignore error
-        }
-      }
-    };
-  }, [nonUploadingImages.length, debouncedSave]); // Only reinitialize when non-uploading images change
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return;
