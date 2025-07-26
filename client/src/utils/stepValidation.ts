@@ -1,167 +1,145 @@
-import { DraftListing } from "@shared/schema";
+import { DraftListing } from '@shared/schema';
 
-// Step validation utility functions for Progressive Disclosure
 export interface StepValidationResult {
   isValid: boolean;
-  missingFields: string[];
-  redirectStep?: number;
+  redirectTo?: number;
+  message?: string;
 }
 
-// Validate Step 1 completion (category selection)
-export function validateStep1(draft: DraftListing | null): StepValidationResult {
-  if (!draft) {
+export const validateStepAccess = (
+  targetStep: number,
+  draftData: DraftListing | null
+): StepValidationResult => {
+  // Step 1: Herkes erişebilir
+  if (targetStep === 1) {
+    return { isValid: true };
+  }
+
+  // Draft yoksa Step 1'e yönlendir
+  if (!draftData) {
     return {
       isValid: false,
-      missingFields: ["Draft listing not found"],
-      redirectStep: 1
+      redirectTo: 1,
+      message: "İlan oluşturmak için kategori seçiniz"
     };
   }
 
-  if (!draft.categoryId || !draft.step1Completed) {
-    return {
-      isValid: false,
-      missingFields: ["Category selection required"],
-      redirectStep: 1
-    };
-  }
-
-  return { isValid: true, missingFields: [] };
-}
-
-// Validate Step 2 completion (form data)
-export function validateStep2(draft: DraftListing | null): StepValidationResult {
-  const step1Result = validateStep1(draft);
-  if (!step1Result.isValid) {
-    return step1Result;
-  }
-
-  if (!draft) {
-    return {
-      isValid: false,
-      missingFields: ["Draft listing not found"],
-      redirectStep: 1
-    };
-  }
-
-  const missingFields: string[] = [];
-
-  // Check required Step 2 fields
-  if (!draft.title || draft.title.trim() === "") {
-    missingFields.push("Title required");
-  }
-
-  if (!draft.description || draft.description.trim() === "") {
-    missingFields.push("Description required");
-  }
-
-  if (!draft.price || draft.price.trim() === "") {
-    missingFields.push("Price required");
-  }
-
-  // Check custom fields completion
-  try {
-    const customFields = draft.customFields ? JSON.parse(draft.customFields) : {};
-    
-    // Basic validation - at least some custom fields should be filled
-    if (!customFields || Object.keys(customFields).length === 0) {
-      missingFields.push("Form data required");
+  // Step 2: Kategori seçimi gerekli
+  if (targetStep === 2) {
+    if (!draftData.categoryId) {
+      return {
+        isValid: false,
+        redirectTo: 1,
+        message: "Önce kategori seçimi yapınız"
+      };
     }
-  } catch (error) {
-    missingFields.push("Invalid form data");
+    return { isValid: true };
   }
 
-  if (missingFields.length > 0 || !draft.step2Completed) {
-    return {
-      isValid: false,
-      missingFields,
-      redirectStep: 2
-    };
-  }
-
-  return { isValid: true, missingFields: [] };
-}
-
-// Validate Step 3 completion (photos)
-export function validateStep3(draft: DraftListing | null): StepValidationResult {
-  const step2Result = validateStep2(draft);
-  if (!step2Result.isValid) {
-    return step2Result;
-  }
-
-  if (!draft) {
-    return {
-      isValid: false,
-      missingFields: ["Draft listing not found"],
-      redirectStep: 1
-    };
-  }
-
-  const missingFields: string[] = [];
-
-  // Check photos completion
-  try {
-    const photos = draft.photos ? JSON.parse(draft.photos) : [];
-    
-    if (!Array.isArray(photos) || photos.length === 0) {
-      missingFields.push("At least one photo required");
+  // Step 3: Temel bilgiler gerekli
+  if (targetStep === 3) {
+    if (!draftData.categoryId) {
+      return {
+        isValid: false,
+        redirectTo: 1,
+        message: "Önce kategori seçimi yapınız"
+      };
     }
+
+    if (!hasRequiredFields(draftData)) {
+      return {
+        isValid: false,
+        redirectTo: 2,
+        message: "Önce gerekli bilgileri tamamlayınız"
+      };
+    }
+    return { isValid: true };
+  }
+
+  // Step 4: Temel bilgiler + fotoğraf gerekli
+  if (targetStep === 4) {
+    if (!draftData.categoryId) {
+      return {
+        isValid: false,
+        redirectTo: 1,
+        message: "Önce kategori seçimi yapınız"
+      };
+    }
+
+    if (!hasRequiredFields(draftData)) {
+      return {
+        isValid: false,
+        redirectTo: 2,
+        message: "Önce gerekli bilgileri tamamlayınız"
+      };
+    }
+
+    if (!hasPhotos(draftData)) {
+      return {
+        isValid: false,
+        redirectTo: 3,
+        message: "Önce fotoğraf yükleyiniz"
+      };
+    }
+    return { isValid: true };
+  }
+
+  return { isValid: false, redirectTo: 1 };
+};
+
+// Temel bilgilerin tamamlanıp tamamlanmadığını kontrol et
+const hasRequiredFields = (draftData: DraftListing): boolean => {
+  try {
+    const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
+    
+    console.log('🔍 Validation Debug - CustomFields:', customFields);
+    
+    // Title ve description zorunlu
+    if (!customFields.title || customFields.title.trim() === '') {
+      console.log('❌ Title missing or empty');
+      return false;
+    }
+    
+    if (!customFields.description || customFields.description.trim() === '') {
+      console.log('❌ Description missing or empty');
+      return false;
+    }
+
+    // Price zorunlu
+    if (!customFields.price || !customFields.price.value || customFields.price.value.trim() === '') {
+      console.log('❌ Price missing or empty');
+      return false;
+    }
+
+    // Location bilgileri zorunlu - district seçimi gerekli
+    const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
+    console.log('🔍 Validation Debug - LocationData:', locationData);
+    
+    if (!locationData.district) {
+      console.log('❌ District missing');
+      return false;
+    }
+
+    console.log('✅ All required fields present');
+    return true;
   } catch (error) {
-    missingFields.push("Invalid photo data");
+    console.log('❌ Error parsing data:', error);
+    return false;
   }
+};
 
-  if (missingFields.length > 0 || !draft.step3Completed) {
-    return {
-      isValid: false,
-      missingFields,
-      redirectStep: 3
-    };
+// Fotoğraf yüklenip yüklenmediğini kontrol et
+const hasPhotos = (draftData: DraftListing): boolean => {
+  try {
+    const photos = draftData.photos ? JSON.parse(draftData.photos) : [];
+    return Array.isArray(photos) && photos.length > 0;
+  } catch (error) {
+    return false;
   }
+};
 
-  return { isValid: true, missingFields: [] };
-}
-
-// Validate Step 4 access (preview)
-export function validateStep4(draft: DraftListing | null): StepValidationResult {
-  const step3Result = validateStep3(draft);
-  if (!step3Result.isValid) {
-    return step3Result;
-  }
-
-  // Step 4 is the final preview step, no additional validation needed
-  return { isValid: true, missingFields: [] };
-}
-
-// Get validation function by step number
-export function getStepValidator(step: number): (draft: DraftListing | null) => StepValidationResult {
-  switch (step) {
-    case 1:
-      return validateStep1;
-    case 2:
-      return validateStep2;
-    case 3:
-      return validateStep3;
-    case 4:
-      return validateStep4;
-    default:
-      return validateStep1;
-  }
-}
-
-// Helper function to determine which step user should be redirected to
-export function getRedirectPath(classifiedId: string, targetStep: number): string {
-  const basePath = "/create-listing";
-  const queryParam = `?classifiedId=${classifiedId}`;
-  
-  switch (targetStep) {
-    case 1:
-      return `${basePath}/step-1${queryParam}`;
-    case 2:
-      return `${basePath}/step-2${queryParam}`;
-    case 3:
-      return `${basePath}/step-3${queryParam}`;
-    case 4:
-      return `${basePath}/step-4${queryParam}`;
-    default:
-      return `${basePath}/step-1${queryParam}`;
-  }
-}
+// Step numarasını URL'den çıkar
+export const getStepFromPath = (pathname: string): number => {
+  const match = pathname.match(/\/create-listing\/step-(\d+)/);
+  return match ? parseInt(match[1], 10) : 1;
+};

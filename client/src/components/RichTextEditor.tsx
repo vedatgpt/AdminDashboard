@@ -71,13 +71,6 @@ export default function RichTextEditor({
     },
   })
 
-  // CRITICAL FIX: Update editor content when value prop changes
-  useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || '')
-    }
-  }, [editor, value])
-
   // Update active states when editor content changes
   useEffect(() => {
     if (!editor) return

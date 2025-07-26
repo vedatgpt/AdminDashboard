@@ -1,11 +1,11 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCategoryCustomFields } from '../../hooks/useCustomFields';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
-import { useStepGuard } from '@/hooks/useStepGuard';
+import { useStepValidation } from '@/hooks/useStepValidation';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -30,9 +30,6 @@ export default function Step2() {
   // Validation state
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [showValidation, setShowValidation] = useState(false);
-  
-  // DOUBLE-CLICK PROTECTION: Loading state for next step button
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -90,28 +87,11 @@ export default function Step2() {
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
 
-  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation  
-  const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData as any || null, isDraftLoading);
-  
-  // DEBUG: Log step guard results
-  console.log('STEP2 DEBUG - StepGuard Result:', {
-    currentStep: 2,
-    classifiedId: currentClassifiedId,
-    draftData: draftData,
-    isDraftLoading: isDraftLoading,
-    stepGuardResult: stepGuardResult
-  });
-
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
+  // Step validation middleware - URL manipulation koruması
+  useStepValidation({
+    draftData: draftData || null,
+    isDraftLoading,
+    classifiedId: currentClassifiedId ? String(currentClassifiedId) : null
   });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
@@ -185,36 +165,10 @@ export default function Step2() {
         } 
       });
       
-      // Load form data from draft with proper field handling
+      // Load form data from draft
       if (draftData.customFields) {
         try {
           const customFields = JSON.parse(draftData.customFields);
-          
-          // CRITICAL FIX: Handle price parsing from database - ALWAYS OVERRIDE
-          if (draftData.price) {
-            try {
-              const priceData = JSON.parse(draftData.price);
-              if (priceData && typeof priceData === 'object' && priceData.value) {
-                customFields.price = priceData;
-              } else {
-                customFields.price = { value: draftData.price, unit: 'TL' };
-              }
-            } catch {
-              // If price is not JSON, treat as plain value
-              customFields.price = { value: draftData.price, unit: 'TL' };
-            }
-          }
-          
-          // CRITICAL FIX: Handle description from separate field
-          if (draftData.description && !customFields.description) {
-            customFields.description = draftData.description;
-          }
-          
-          // CRITICAL FIX: Handle title from separate field
-          if (draftData.title && !customFields.title) {
-            customFields.title = draftData.title;
-          }
-          
           dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
         } catch (error) {
           console.error('Custom fields parse error:', error);
@@ -391,82 +345,134 @@ export default function Step2() {
 
   };
 
+  const validateRequiredFields = () => {
+    const errors: ValidationErrors = {};
 
+    // Title validation - zorunlu
+    if (!formData.customFields.title?.trim()) {
+      errors.title = 'Başlık alanı zorunludur';
+    }
+
+    // Description validation - zorunlu
+    if (!formData.customFields.description?.trim()) {
+      errors.description = 'Açıklama alanı zorunludur';
+    }
+
+    // Price validation - zorunlu
+    if (!formData.customFields.price) {
+      errors.price = 'Fiyat alanı zorunludur';
+    } else if (typeof formData.customFields.price === 'object') {
+      if (!formData.customFields.price.value?.trim()) {
+        errors.price = 'Fiyat değeri zorunludur';
+      }
+    }
+
+    // Custom fields validation - hepsi zorunlu
+    customFields.forEach((field) => {
+      const value = formData.customFields[field.fieldName];
+      
+      if (!value) {
+        errors[field.fieldName] = `${field.label} alanı zorunludur`;
+      } else if (typeof value === 'object' && value.value !== undefined) {
+        if (!value.value?.toString().trim()) {
+          errors[field.fieldName] = `${field.label} değeri zorunludur`;
+        }
+      } else if (!value.toString().trim()) {
+        errors[field.fieldName] = `${field.label} alanı zorunludur`;
+      }
+    });
+
+    // Location validation - aktif olanlar zorunlu
+    if (locationSettings?.showCountry && !selectedCountry) {
+      errors.country = 'Ülke seçimi zorunludur';
+    }
+    if (locationSettings?.showCity && !selectedCity) {
+      errors.city = 'İl seçimi zorunludur';
+    }
+    if (locationSettings?.showDistrict && !selectedDistrict) {
+      errors.district = 'İlçe seçimi zorunludur';
+    }
+    if (locationSettings?.showNeighborhood && !selectedNeighborhood) {
+      errors.neighborhood = 'Mahalle seçimi zorunludur';
+    }
+
+    return errors;
+  };
 
   const nextStep = async () => {
-    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
-    if (isSubmitting) {
-      console.log('🚫 Double-click prevented - already submitting');
+    // Form validation - tüm alanlar zorunlu
+    const errors = validateRequiredFields();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setShowValidation(true);
+      
+      // Auto-scroll to first validation error
+      setTimeout(() => {
+        // First check universal fields in order: title, description, price
+        if (errors.title) {
+          const element = document.getElementById('title-input');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (element instanceof HTMLElement) element.focus();
+            return;
+          }
+        }
+        
+        if (errors.description) {
+          const element = document.querySelector('.ProseMirror');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+        
+        if (errors.price) {
+          const element = document.getElementById('price-input');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (element instanceof HTMLElement) element.focus();
+            return;
+          }
+        }
+        
+        // Then check custom fields
+        if (customFields) {
+          for (const field of customFields) {
+            if (errors[field.fieldName]) {
+              const elements = document.querySelectorAll(`input, select`);
+              for (const element of elements) {
+                const classes = element.className;
+                if (classes.includes('border-red-500')) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  if (element instanceof HTMLElement) element.focus();
+                  return;
+                }
+              }
+              break;
+            }
+          }
+        }
+        
+        // Finally check location fields
+        const locationFields = ['country', 'city', 'district', 'neighborhood'];
+        for (const field of locationFields) {
+          if (errors[field]) {
+            const elements = document.querySelectorAll(`select`);
+            for (const element of elements) {
+              const classes = element.className;
+              if (classes.includes('border-red-500')) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (element instanceof HTMLElement) element.focus();
+                return;
+              }
+            }
+            break;
+          }
+        }
+      }, 200);
+      
       return;
     }
-    
-    // Set loading state immediately
-    setIsSubmitting(true);
-    
-    try {
-      // ENHANCED VALIDATION: Check both context formData AND draft data as fallback
-      const errors: { [key: string]: string } = {};
-      
-      // Parse draft data for validation fallback
-      const draftCustomFields = draftData?.customFields ? JSON.parse(draftData.customFields) : {};
-      
-      // Title validation - check context first, then draft data
-      const titleValue = formData.customFields.title?.trim() || draftCustomFields.title?.trim() || draftData?.title?.trim();
-      if (!titleValue) {
-        errors.title = 'İlan başlığı zorunludur';
-      }
-      
-      // Description validation - check context first, then draft data  
-      const descriptionValue = formData.customFields.description?.trim() || draftCustomFields.description?.trim() || draftData?.description?.trim();
-      if (!descriptionValue) {
-        errors.description = 'Açıklama zorunludur';
-      }
-      
-      // Price validation - check context first, then draft data
-      const priceValue = formData.customFields.price?.value?.trim() || 
-                        (draftCustomFields.price?.value?.trim()) ||
-                        (typeof draftCustomFields.price === 'string' && draftCustomFields.price.trim()) ||
-                        (draftData?.price && JSON.parse(draftData.price)?.value?.trim());
-      if (!priceValue) {
-        errors.price = 'Fiyat zorunludur';
-      }
-    
-      // Custom fields validation - check context first, then draft data
-      customFields?.forEach(field => {
-        const contextValue = formData.customFields[field.fieldName];
-        const draftValue = draftCustomFields[field.fieldName];
-        
-        // Check both sources for field value
-        const fieldValue = contextValue || draftValue;
-        
-        if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
-          errors[field.fieldName] = `${field.label} alanı zorunludur`;
-        }
-      });
-    
-      // Location validation - check current selections and draft data
-      const draftLocationData = draftData?.locationData ? JSON.parse(draftData.locationData) : {};
-      
-      if (locationSettings?.showCountry && !selectedCountry && !draftLocationData.country) {
-        errors.country = 'Ülke seçimi zorunludur';
-      }
-      if (locationSettings?.showCity && !selectedCity && !draftLocationData.city) {
-        errors.city = 'İl seçimi zorunludur';
-      }
-      if (locationSettings?.showDistrict && !selectedDistrict && !draftLocationData.district) {
-        errors.district = 'İlçe seçimi zorunludur';
-      }
-      if (locationSettings?.showNeighborhood && !selectedNeighborhood && !draftLocationData.neighborhood) {
-        errors.neighborhood = 'Mahalle seçimi zorunludur';
-      }
-    
-      // Show validation errors if any exist
-      if (Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
-        setShowValidation(true);
-        setIsSubmitting(false); // Reset loading state on validation error
-        return;
-      }
     
     // Clear validation state if all fields are valid
     setValidationErrors({});
@@ -501,66 +507,20 @@ export default function Step2() {
           data: draftData
         });
         
-        // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed with server-side validation
-        try {
-          await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
-          
-          // CRITICAL FIX: Wait for server completion before navigation
-          console.log('✅ Step2 completion successful, proceeding to navigation');
-          
-          // Step3 verilerini prefetch et
-          if (user?.id) {
-            prefetchStep3Data(currentClassifiedId, user.id);
-          }
-          
-          // TIMING FIX: Small delay to ensure server-side step completion is fully synchronized
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-        } catch (serverError: any) {
-          console.error('Server validation error:', serverError);
-          
-          // Handle server-side validation errors
-          if (serverError.response?.data?.validationErrors) {
-            const serverErrors: { [key: string]: string } = {};
-            serverError.response.data.validationErrors.forEach((error: string) => {
-              // Map generic errors to specific fields for visual feedback
-              if (error.includes('başlık')) serverErrors.title = error;
-              else if (error.includes('açıklama')) serverErrors.description = error;
-              else if (error.includes('fiyat')) serverErrors.price = error;
-              else if (error.includes('ülke')) serverErrors.country = error;
-              else if (error.includes('il')) serverErrors.city = error;
-              else if (error.includes('ilçe')) serverErrors.district = error;
-              else if (error.includes('mahalle')) serverErrors.neighborhood = error;
-              else serverErrors.general = error;
-            });
-            
-            setValidationErrors(serverErrors);
-            setShowValidation(true);
-          } else {
-            setValidationErrors({ general: 'Form doğrulama hatası oluştu' });
-            setShowValidation(true);
-          }
-          
-          setIsSubmitting(false);
-          return;
+        // Step3 verilerini prefetch et - Step3'e geçmeden önce
+        if (user?.id) {
+          prefetchStep3Data(currentClassifiedId, user.id);
         }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
-        setIsSubmitting(false); // Reset loading state on error
-        return;
       }
     }
     
-      dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-      const url = currentClassifiedId ? 
-        `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
-        '/create-listing/step-3';
-      navigate(url);
-      
-    } catch (error) {
-      console.error('NextStep error:', error);
-      setIsSubmitting(false); // Reset loading state on any error
-    }
+    dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
+    const url = currentClassifiedId ? 
+      `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
+      '/create-listing/step-3';
+    navigate(url);
   };
   // Get categoryId from draft or selected category for custom fields
   const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
@@ -1338,17 +1298,12 @@ export default function Step2() {
               🧪 Tüm Verileri Doldur (Test)
             </button>
             
-            {/* Sonraki Adım Butonu - Double-click protection */}
+            {/* Sonraki Adım Butonu */}
             <button
               onClick={nextStep}
-              disabled={isSubmitting}
-              className={`w-full py-3 px-4 rounded-lg transition-colors font-medium ${
-                isSubmitting 
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                  : 'bg-orange-500 text-white hover:bg-orange-600'
-              }`}
+              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >
-              {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
+              Sonraki Adım
             </button>
           </div>
         </div>

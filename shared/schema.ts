@@ -230,11 +230,6 @@ export const draftListings = pgTable("draft_listings", {
   photos: text("photos"), // JSON array of photo metadata
   locationData: text("location_data"), // JSON object for location selections
   status: text("status").notNull().default("draft"), // draft, published, deleted
-  // Step completion tracking for Progressive Disclosure
-  step1Completed: boolean("step1_completed").notNull().default(false), // Category selection completed
-  step2Completed: boolean("step2_completed").notNull().default(false), // Form data completed
-  step3Completed: boolean("step3_completed").notNull().default(false), // Photos uploaded
-  step4Completed: boolean("step4_completed").notNull().default(false), // Preview confirmed
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
