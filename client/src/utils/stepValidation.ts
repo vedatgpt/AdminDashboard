@@ -92,28 +92,38 @@ const hasRequiredFields = (draftData: DraftListing): boolean => {
   try {
     const customFields = draftData.customFields ? JSON.parse(draftData.customFields) : {};
     
+    console.log('🔍 Validation Debug - CustomFields:', customFields);
+    
     // Title ve description zorunlu
     if (!customFields.title || customFields.title.trim() === '') {
+      console.log('❌ Title missing or empty');
       return false;
     }
     
     if (!customFields.description || customFields.description.trim() === '') {
+      console.log('❌ Description missing or empty');
       return false;
     }
 
     // Price zorunlu
     if (!customFields.price || !customFields.price.value || customFields.price.value.trim() === '') {
+      console.log('❌ Price missing or empty');
       return false;
     }
 
-    // Location bilgileri zorunlu
+    // Location bilgileri zorunlu - district seçimi gerekli
     const locationData = draftData.locationData ? JSON.parse(draftData.locationData) : {};
-    if (!locationData.district || !locationData.district.id) {
+    console.log('🔍 Validation Debug - LocationData:', locationData);
+    
+    if (!locationData.district) {
+      console.log('❌ District missing');
       return false;
     }
 
+    console.log('✅ All required fields present');
     return true;
   } catch (error) {
+    console.log('❌ Error parsing data:', error);
     return false;
   }
 };

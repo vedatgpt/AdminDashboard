@@ -42,5 +42,5 @@ export const useStepValidation = ({
       const redirectPath = `/create-listing/step-${validation.redirectTo}${classifiedId ? `?classifiedId=${classifiedId}` : ''}`;
       navigate(redirectPath);
     }
-  }, [location, draftData, isDraftLoading, classifiedId, navigate]);
+  }, [location, draftData, classifiedId, navigate]);
 };
