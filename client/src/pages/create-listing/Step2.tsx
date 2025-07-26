@@ -400,36 +400,68 @@ export default function Step2() {
       
       // Auto-scroll to first validation error
       setTimeout(() => {
-        const errorFieldNames = ['title', 'description', 'price', ...Object.keys(errors)];
-        for (const fieldName of errorFieldNames) {
-          let element = null;
-          
-          if (fieldName === 'title') {
-            element = document.getElementById('title-input');
-          } else if (fieldName === 'description') {
-            element = document.querySelector('.ProseMirror');
-          } else if (fieldName === 'price') {
-            element = document.getElementById('price-input');
-          } else if (['country', 'city', 'district', 'neighborhood'].includes(fieldName)) {
-            element = document.querySelector(`select[class*="border-red-500"]:first-of-type`);
-          } else {
-            // Custom field
-            element = document.querySelector(`input[class*="border-red-500"]:first-of-type, select[class*="border-red-500"]:first-of-type`);
-          }
-          
+        // First check universal fields in order: title, description, price
+        if (errors.title) {
+          const element = document.getElementById('title-input');
           if (element) {
-            element.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center',
-              inline: 'nearest'
-            });
-            if (element instanceof HTMLElement && element.focus) {
-              element.focus();
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (element instanceof HTMLElement) element.focus();
+            return;
+          }
+        }
+        
+        if (errors.description) {
+          const element = document.querySelector('.ProseMirror');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+        }
+        
+        if (errors.price) {
+          const element = document.getElementById('price-input');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (element instanceof HTMLElement) element.focus();
+            return;
+          }
+        }
+        
+        // Then check custom fields
+        if (customFields) {
+          for (const field of customFields) {
+            if (errors[field.fieldName]) {
+              const elements = document.querySelectorAll(`input, select`);
+              for (const element of elements) {
+                const classes = element.className;
+                if (classes.includes('border-red-500')) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  if (element instanceof HTMLElement) element.focus();
+                  return;
+                }
+              }
+              break;
+            }
+          }
+        }
+        
+        // Finally check location fields
+        const locationFields = ['country', 'city', 'district', 'neighborhood'];
+        for (const field of locationFields) {
+          if (errors[field]) {
+            const elements = document.querySelectorAll(`select`);
+            for (const element of elements) {
+              const classes = element.className;
+              if (classes.includes('border-red-500')) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (element instanceof HTMLElement) element.focus();
+                return;
+              }
             }
             break;
           }
         }
-      }, 100);
+      }, 200);
       
       return;
     }
@@ -620,9 +652,9 @@ export default function Step2() {
           )}
         </div>
 
-        {/* Universal Price Input - Tüm kategoriler için */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        {/* Fiyat Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
             Fiyat
             <span className="text-red-500 ml-1">*</span>
           </label>
@@ -631,18 +663,15 @@ export default function Step2() {
               id="price-input"
               type="text"
               value={(() => {
-                const price = formData.customFields.price;
-                if (typeof price === 'object' && price?.value) {
-                  const numericValue = price.value.toString().replace(/\D/g, '');
-                  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                }
-                return '';
+                const priceValue = formData.customFields.price || '';
+                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
+                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
               })()}
               onChange={(e) => {
-                const numericValue = e.target.value.replace(/\D/g, '');
-                const currentPrice = formData.customFields.price;
-                const currentUnit = (typeof currentPrice === 'object' && currentPrice?.unit) ? currentPrice.unit : 'TL';
-                handleInputChange('price', { value: numericValue, unit: currentUnit });
+                let processedValue = e.target.value.replace(/\D/g, '');
+                const currentPrice = formData.customFields.price || {};
+                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
               }}
               placeholder="Fiyat giriniz"
               inputMode="numeric"
@@ -655,20 +684,20 @@ export default function Step2() {
             <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
               <select
                 value={(() => {
-                  const price = formData.customFields.price;
-                  return (typeof price === 'object' && price?.unit) ? price.unit : 'TL';
+                  const currentPrice = formData.customFields.price || {};
+                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
                 })()}
                 onChange={(e) => {
-                  const price = formData.customFields.price;
-                  const currentValue = (typeof price === 'object' && price?.value) ? price.value : '';
-                  handleInputChange('price', { value: currentValue, unit: e.target.value });
+                  const currentPrice = formData.customFields.price || {};
+                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
+                  handleInputChange('price', { value, unit: e.target.value });
                 }}
-                className="h-full py-0 ps-2 pe-7 block w-32 border-transparent bg-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500 text-sm"
+                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
               >
                 <option value="TL">TL</option>
+                <option value="GBP">GBP</option>
                 <option value="EUR">EUR</option>
                 <option value="USD">USD</option>
-                <option value="GBP">GBP</option>
               </select>
             </div>
           </div>
