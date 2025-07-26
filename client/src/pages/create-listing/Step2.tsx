@@ -1,10 +1,11 @@
 import { useListing } from '../../contexts/ListingContext';
 import { useCategoryCustomFields } from '../../hooks/useCustomFields';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useStep3Prefetch } from '@/hooks/useStep3Prefetch';
+import { useStepGuard } from '@/hooks/useStepGuard';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
 import RichTextEditor from '@/components/RichTextEditor';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
@@ -15,20 +16,49 @@ import { useCategoriesTree } from '@/hooks/useCategories';
 import { useState, useMemo, useEffect } from 'react';
 import type { Location, Category } from '@shared/schema';
 
+interface ValidationErrors {
+  [key: string]: string;
+}
+
 export default function Step2() {
   const { state, dispatch } = useListing();
   const { selectedCategory, formData, categoryPath, classifiedId } = state;
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { prefetchStep3Data } = useStep3Prefetch();
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [showValidation, setShowValidation] = useState(false);
+  
+  // DOUBLE-CLICK PROTECTION: Loading state for next step button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
+    // Clear validation error when user starts typing
+    if (validationErrors[fieldName]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+    
     updateFormData({ [fieldName]: value });
   };
 
   // RichTextEditor için handler
   const handleDescriptionChange = (value: string) => {
+    // Clear validation error when user starts typing
+    if (validationErrors.description) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.description;
+        return newErrors;
+      });
+    }
+    
     // Draft'a kaydet
     dispatch({
       type: 'SET_CUSTOM_FIELDS',
@@ -59,6 +89,30 @@ export default function Step2() {
   // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
+
+  // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation  
+  const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData as any || null, isDraftLoading);
+  
+  // DEBUG: Log step guard results
+  console.log('STEP2 DEBUG - StepGuard Result:', {
+    currentStep: 2,
+    classifiedId: currentClassifiedId,
+    draftData: draftData,
+    isDraftLoading: isDraftLoading,
+    stepGuardResult: stepGuardResult
+  });
+
+  // Step completion marking mutation
+  const markStepCompletedMutation = useMutation({
+    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Step completion update failed');
+      return response.json();
+    },
+  });
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
@@ -131,10 +185,36 @@ export default function Step2() {
         } 
       });
       
-      // Load form data from draft
+      // Load form data from draft with proper field handling
       if (draftData.customFields) {
         try {
           const customFields = JSON.parse(draftData.customFields);
+          
+          // CRITICAL FIX: Handle price parsing from database - ALWAYS OVERRIDE
+          if (draftData.price) {
+            try {
+              const priceData = JSON.parse(draftData.price);
+              if (priceData && typeof priceData === 'object' && priceData.value) {
+                customFields.price = priceData;
+              } else {
+                customFields.price = { value: draftData.price, unit: 'TL' };
+              }
+            } catch {
+              // If price is not JSON, treat as plain value
+              customFields.price = { value: draftData.price, unit: 'TL' };
+            }
+          }
+          
+          // CRITICAL FIX: Handle description from separate field
+          if (draftData.description && !customFields.description) {
+            customFields.description = draftData.description;
+          }
+          
+          // CRITICAL FIX: Handle title from separate field
+          if (draftData.title && !customFields.title) {
+            customFields.title = draftData.title;
+          }
+          
           dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
         } catch (error) {
           console.error('Custom fields parse error:', error);
@@ -311,7 +391,87 @@ export default function Step2() {
 
   };
 
+
+
   const nextStep = async () => {
+    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
+    if (isSubmitting) {
+      console.log('🚫 Double-click prevented - already submitting');
+      return;
+    }
+    
+    // Set loading state immediately
+    setIsSubmitting(true);
+    
+    try {
+      // ENHANCED VALIDATION: Check both context formData AND draft data as fallback
+      const errors: { [key: string]: string } = {};
+      
+      // Parse draft data for validation fallback
+      const draftCustomFields = draftData?.customFields ? JSON.parse(draftData.customFields) : {};
+      
+      // Title validation - check context first, then draft data
+      const titleValue = formData.customFields.title?.trim() || draftCustomFields.title?.trim() || draftData?.title?.trim();
+      if (!titleValue) {
+        errors.title = 'İlan başlığı zorunludur';
+      }
+      
+      // Description validation - check context first, then draft data  
+      const descriptionValue = formData.customFields.description?.trim() || draftCustomFields.description?.trim() || draftData?.description?.trim();
+      if (!descriptionValue) {
+        errors.description = 'Açıklama zorunludur';
+      }
+      
+      // Price validation - check context first, then draft data
+      const priceValue = formData.customFields.price?.value?.trim() || 
+                        (draftCustomFields.price?.value?.trim()) ||
+                        (typeof draftCustomFields.price === 'string' && draftCustomFields.price.trim()) ||
+                        (draftData?.price && JSON.parse(draftData.price)?.value?.trim());
+      if (!priceValue) {
+        errors.price = 'Fiyat zorunludur';
+      }
+    
+      // Custom fields validation - check context first, then draft data
+      customFields?.forEach(field => {
+        const contextValue = formData.customFields[field.fieldName];
+        const draftValue = draftCustomFields[field.fieldName];
+        
+        // Check both sources for field value
+        const fieldValue = contextValue || draftValue;
+        
+        if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
+          errors[field.fieldName] = `${field.label} alanı zorunludur`;
+        }
+      });
+    
+      // Location validation - check current selections and draft data
+      const draftLocationData = draftData?.locationData ? JSON.parse(draftData.locationData) : {};
+      
+      if (locationSettings?.showCountry && !selectedCountry && !draftLocationData.country) {
+        errors.country = 'Ülke seçimi zorunludur';
+      }
+      if (locationSettings?.showCity && !selectedCity && !draftLocationData.city) {
+        errors.city = 'İl seçimi zorunludur';
+      }
+      if (locationSettings?.showDistrict && !selectedDistrict && !draftLocationData.district) {
+        errors.district = 'İlçe seçimi zorunludur';
+      }
+      if (locationSettings?.showNeighborhood && !selectedNeighborhood && !draftLocationData.neighborhood) {
+        errors.neighborhood = 'Mahalle seçimi zorunludur';
+      }
+    
+      // Show validation errors if any exist
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        setShowValidation(true);
+        setIsSubmitting(false); // Reset loading state on validation error
+        return;
+      }
+    
+    // Clear validation state if all fields are valid
+    setValidationErrors({});
+    setShowValidation(false);
+
     // Update draft with current form data before navigating
     if (currentClassifiedId) {
       const draftData = {
@@ -341,20 +501,59 @@ export default function Step2() {
           data: draftData
         });
         
+        // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed with server-side validation
+        try {
+          await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
+        } catch (serverError: any) {
+          console.error('Server validation error:', serverError);
+          
+          // Handle server-side validation errors
+          if (serverError.response?.data?.validationErrors) {
+            const serverErrors: { [key: string]: string } = {};
+            serverError.response.data.validationErrors.forEach((error: string) => {
+              // Map generic errors to specific fields for visual feedback
+              if (error.includes('başlık')) serverErrors.title = error;
+              else if (error.includes('açıklama')) serverErrors.description = error;
+              else if (error.includes('fiyat')) serverErrors.price = error;
+              else if (error.includes('ülke')) serverErrors.country = error;
+              else if (error.includes('il')) serverErrors.city = error;
+              else if (error.includes('ilçe')) serverErrors.district = error;
+              else if (error.includes('mahalle')) serverErrors.neighborhood = error;
+              else serverErrors.general = error;
+            });
+            
+            setValidationErrors(serverErrors);
+            setShowValidation(true);
+          } else {
+            setValidationErrors({ general: 'Form doğrulama hatası oluştu' });
+            setShowValidation(true);
+          }
+          
+          setIsSubmitting(false);
+          return;
+        }
+        
         // Step3 verilerini prefetch et - Step3'e geçmeden önce
         if (user?.id) {
           prefetchStep3Data(currentClassifiedId, user.id);
         }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
+        setIsSubmitting(false); // Reset loading state on error
+        return;
       }
     }
     
-    dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
-    const url = currentClassifiedId ? 
-      `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
-      '/create-listing/step-3';
-    navigate(url);
+      dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
+      const url = currentClassifiedId ? 
+        `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
+        '/create-listing/step-3';
+      navigate(url);
+      
+    } catch (error) {
+      console.error('NextStep error:', error);
+      setIsSubmitting(false); // Reset loading state on any error
+    }
   };
   // Get categoryId from draft or selected category for custom fields
   const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
@@ -428,19 +627,47 @@ export default function Step2() {
             İlan Başlığı
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.customFields.title || ''}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value.length <= 64) {
-                handleInputChange('title', value);
-              }
-            }}
-            placeholder="İlanınız için başlık yazınız"
-            maxLength={64}
-            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
-          />
+          <div className="relative">
+            <input
+              id="title-input"
+              type="text"
+              value={formData.customFields.title || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 64) {
+                  handleInputChange('title', value);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  const priceInput = document.getElementById('price-input');
+                  if (priceInput) {
+                    priceInput.focus();
+                  }
+                }
+              }}
+              placeholder="İlanınız için başlık yazınız"
+              maxLength={64}
+              className={`py-2.5 sm:py-3 px-4 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                showValidation && validationErrors.title 
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+              }`}
+            />
+            {showValidation && validationErrors.title && (
+              <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                <svg className="shrink-0 size-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" x2="12" y1="8" y2="12"></line>
+                  <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                </svg>
+              </div>
+            )}
+          </div>
+          {showValidation && validationErrors.title && (
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+          )}
         </div>
 
         {/* Açıklama Input - Rich Text Editor */}
@@ -449,12 +676,75 @@ export default function Step2() {
             Açıklama
             <span className="text-red-500 ml-1">*</span>
           </label>
-          <RichTextEditor
-            value={formData.customFields.description || ''}
-            onChange={handleDescriptionChange}
-            placeholder="Ürününüzün detaylı açıklamasını yazınız..."
-            maxLength={2000}
-          />
+          <div className={`${
+            showValidation && validationErrors.description 
+              ? 'border-red-500 rounded-lg border' 
+              : ''
+          }`}>
+            <RichTextEditor
+              value={formData.customFields.description || ''}
+              onChange={handleDescriptionChange}
+              placeholder="Ürününüzün detaylı açıklamasını yazınız..."
+              maxLength={2000}
+            />
+          </div>
+          {showValidation && validationErrors.description && (
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+          )}
+        </div>
+
+        {/* Fiyat Input - Tüm kategoriler için geçerli */}
+        <div className="space-y-2 mb-6">
+          <label className="block text-sm font-medium text-gray-700">
+            Fiyat
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative lg:w-[30%] w-full">
+            <input
+              id="price-input"
+              type="text"
+              value={(() => {
+                const priceValue = formData.customFields.price || '';
+                const value = typeof priceValue === 'object' ? priceValue.value || '' : priceValue || '';
+                return value ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+              })()}
+              onChange={(e) => {
+                let processedValue = e.target.value.replace(/\D/g, '');
+                const currentPrice = formData.customFields.price || {};
+                const selectedCurrency = typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                handleInputChange('price', { value: processedValue, unit: selectedCurrency });
+              }}
+              placeholder="Fiyat giriniz"
+              inputMode="numeric"
+              className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                showValidation && validationErrors.price
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+              }`}
+            />
+            <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
+              <select
+                value={(() => {
+                  const currentPrice = formData.customFields.price || {};
+                  return typeof currentPrice === 'object' ? currentPrice.unit || 'TL' : 'TL';
+                })()}
+                onChange={(e) => {
+                  const currentPrice = formData.customFields.price || {};
+                  const value = typeof currentPrice === 'object' ? currentPrice.value || '' : currentPrice || '';
+                  handleInputChange('price', { value, unit: e.target.value });
+                }}
+                className="block w-full border-transparent rounded-lg focus:ring-orange-500 focus:border-orange-500"
+              >
+                <option value="TL">TL</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+          </div>
+          {showValidation && validationErrors.price && (
+            <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+          )}
         </div>
 
         {customFields && customFields.length > 0 && (
@@ -466,7 +756,7 @@ export default function Step2() {
               <div key={field.id} className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.label}
-                  {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 
                 {field.fieldType === 'text' && (
@@ -487,7 +777,11 @@ export default function Step2() {
                                 handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                               }}
                               placeholder={field.placeholder || ''}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                              className={`py-2.5 sm:py-3 px-4 pe-16 block w-full rounded-lg sm:text-sm ${
+                                showValidation && validationErrors[field.fieldName]
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                              }`}
                             />
                             <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
                               <span className="text-gray-500">{selectedUnit}</span>
@@ -505,7 +799,11 @@ export default function Step2() {
                               handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                             }}
                             placeholder={field.placeholder || ''}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                            className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                              showValidation && validationErrors[field.fieldName]
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                            }`}
                           />
                           <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                             <select
@@ -530,7 +828,11 @@ export default function Step2() {
                       value={currentValue}
                       onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
                       placeholder={field.placeholder || ''}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className={`py-3 px-4 block lg:w-[30%] w-full rounded-lg text-sm ${
+                        showValidation && validationErrors[field.fieldName]
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                      }`}
                     />
                   )
                 )}
@@ -566,7 +868,11 @@ export default function Step2() {
                               }}
                               placeholder={field.placeholder || ''}
                               inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                              className="py-2.5 sm:py-3 px-4 pe-16 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                              className={`py-2.5 sm:py-3 px-4 pe-16 block w-full rounded-lg sm:text-sm ${
+                                showValidation && validationErrors[field.fieldName]
+                                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                  : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                              }`}
                             />
                             <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none z-20 pe-4">
                               <span className="text-gray-500">{selectedUnit}</span>
@@ -597,7 +903,11 @@ export default function Step2() {
                             }}
                             placeholder={field.placeholder || ''}
                             inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
-                            className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                            className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                              showValidation && validationErrors[field.fieldName]
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                                : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                            }`}
                           />
                           <div className="absolute inset-y-0 end-0 flex items-center text-gray-500 pe-px">
                             <select
@@ -639,7 +949,11 @@ export default function Step2() {
                       inputMode={field.useMobileNumericKeyboard ? "numeric" : undefined}
                       min={field.minValue || undefined}
                       max={field.maxValue || undefined}
-                      className="py-3 px-4 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
+                      className={`py-3 px-4 block lg:w-[30%] w-full rounded-lg text-sm ${
+                        showValidation && validationErrors[field.fieldName]
+                          ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                          : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                      }`}
                     />
                   )
                 )}
@@ -656,7 +970,11 @@ export default function Step2() {
                             : field.defaultUnit || unitOptions[0];
                           handleInputChange(field.fieldName, { value: e.target.value, unit: selectedUnit });
                         }}
-                        className="py-2.5 sm:py-3 px-4 pe-20 block w-full border-gray-200 rounded-lg sm:text-sm focus:z-10 focus:border-orange-500 focus:ring-orange-500"
+                        className={`py-2.5 sm:py-3 px-4 pe-20 block w-full rounded-lg sm:text-sm focus:z-10 ${
+                          showValidation && validationErrors[field.fieldName]
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">{field.placeholder || "Seçiniz"}</option>
                         {field.options && JSON.parse(field.options).map((option: string, index: number) => (
@@ -679,16 +997,31 @@ export default function Step2() {
                       </div>
                     </div>
                   ) : (
-                    <select
-                      value={currentValue}
-                      onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                      className="py-3 px-4 pe-9 block lg:w-[30%] w-full border-gray-200 rounded-lg text-sm focus:border-orange-500 focus:ring-orange-500"
-                    >
-                      <option value="">{field.placeholder || "Seçiniz"}</option>
-                      {field.options && JSON.parse(field.options).map((option: string, index: number) => (
-                        <option key={index} value={option}>{option}</option>
-                      ))}
-                    </select>
+                    <div className="relative lg:w-[30%] w-full">
+                      <select
+                        value={currentValue}
+                        onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+                        className={`py-3 px-4 pe-16 block w-full rounded-lg text-sm ${
+                          showValidation && validationErrors[field.fieldName]
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
+                      >
+                        <option value="">{field.placeholder || "Seçiniz"}</option>
+                        {field.options && JSON.parse(field.options).map((option: string, index: number) => (
+                          <option key={index} value={option}>{option}</option>
+                        ))}
+                      </select>
+                      {showValidation && validationErrors[field.fieldName] && (
+                        <div className="absolute inset-y-0 end-0 flex items-center pointer-events-none pe-8">
+                          <svg className="shrink-0 size-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" x2="12" y1="8" y2="12"></line>
+                            <line x1="12" x2="12.01" y1="16" y2="16"></line>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
                   )
                 )}
 
@@ -736,6 +1069,11 @@ export default function Step2() {
                     {field.minValue} - {field.maxValue} arasında
                   </p>
                 )}
+                
+                {/* Validation Error Message */}
+                {showValidation && validationErrors[field.fieldName] && (
+                  <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                )}
               </div>
             );
             })}
@@ -771,6 +1109,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const countryId = parseInt(e.target.value);
                           const country = availableCountries.find(c => c.id === countryId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['country']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['country'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedCountry(country || null);
                           setSelectedCity(null);
                           setSelectedDistrict(null);
@@ -784,7 +1132,11 @@ export default function Step2() {
                             }
                           });
                         }}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm ${
+                          showValidation && validationErrors['country']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">Ülke seçiniz</option>
                         {availableCountries.map((country) => (
@@ -793,6 +1145,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['country'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -808,6 +1163,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const cityId = parseInt(e.target.value);
                           const city = availableCities.find(c => c.id === cityId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['city']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['city'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedCity(city || null);
                           setSelectedDistrict(null);
                           setSelectedNeighborhood(null);
@@ -821,7 +1186,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showCountry ? !selectedCountry : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['city']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showCountry && !selectedCountry) ? "Önce ülke seçiniz" : "İl seçiniz"}
@@ -832,6 +1201,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['city'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -847,6 +1219,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const districtId = parseInt(e.target.value);
                           const district = availableDistricts.find(d => d.id === districtId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['district']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['district'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedDistrict(district || null);
                           setSelectedNeighborhood(null);
                           updateFormData({
@@ -859,7 +1241,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showCity ? !selectedCity : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['district']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showCity && !selectedCity) ? "Önce il seçiniz" : "İlçe seçiniz"}
@@ -870,6 +1256,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['district'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -885,6 +1274,16 @@ export default function Step2() {
                         onChange={(e) => {
                           const neighborhoodId = parseInt(e.target.value);
                           const neighborhood = availableNeighborhoods.find(n => n.id === neighborhoodId);
+                          
+                          // Clear validation error when user makes selection
+                          if (validationErrors['neighborhood']) {
+                            setValidationErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors['neighborhood'];
+                              return newErrors;
+                            });
+                          }
+                          
                           setSelectedNeighborhood(neighborhood || null);
                           updateFormData({
                             location: {
@@ -896,7 +1295,11 @@ export default function Step2() {
                           });
                         }}
                         disabled={locationSettings?.showDistrict ? !selectedDistrict : false}
-                        className="py-2.5 sm:py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-orange-500 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className={`py-2.5 sm:py-3 px-4 pe-9 block w-full rounded-lg sm:text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${
+                          showValidation && validationErrors['neighborhood']
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500'
+                        }`}
                       >
                         <option value="">
                           {(locationSettings?.showDistrict && !selectedDistrict) ? "Önce ilçe seçiniz" : "Mahalle seçiniz"}
@@ -907,6 +1310,9 @@ export default function Step2() {
                           </option>
                         ))}
                       </select>
+                      {showValidation && validationErrors['neighborhood'] && (
+                        <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
+                      )}
                     </div>
                   )}
 
@@ -925,12 +1331,17 @@ export default function Step2() {
               🧪 Tüm Verileri Doldur (Test)
             </button>
             
-            {/* Sonraki Adım Butonu */}
+            {/* Sonraki Adım Butonu - Double-click protection */}
             <button
               onClick={nextStep}
-              className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-4 rounded-lg transition-colors font-medium ${
+                isSubmitting 
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+              }`}
             >
-              Sonraki Adım
+              {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
             </button>
           </div>
         </div>
