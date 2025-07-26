@@ -2,8 +2,6 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Bold from '@tiptap/extension-bold'
 import TextAlign from '@tiptap/extension-text-align'
-import { TextStyle } from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
 import { Highlight } from '@tiptap/extension-highlight'
 import Underline from '@tiptap/extension-underline'
 
@@ -23,19 +21,18 @@ export default function RichTextEditor({
   
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        bold: false, // StarterKit'ten bold'u kapat
+      StarterKit,
+      Bold.configure({
+        HTMLAttributes: {
+          class: 'font-bold',
+        },
       }),
-      Bold, // TipTap resmi dökümanına göre ayrı Bold extension
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      TextStyle,
-      Color,
       Highlight.configure({
         multicolor: true
       }),
-      Underline,
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -146,37 +143,84 @@ export default function RichTextEditor({
           {/* Separator */}
           <div className="w-px h-8 bg-gray-300"></div>
 
-          {/* Text Color */}
-          <input
-            type="color"
-            onInput={(event) => editor.chain().focus().setColor((event.target as HTMLInputElement).value).run()}
-            value={editor.getAttributes('textStyle').color || '#000000'}
-            data-testid="setColor"
-            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-            title="Metin Rengi"
-          />
-
-          {/* Background Color */}
-          <input
-            type="color"
-            onInput={(event) => editor.chain().focus().setHighlight({ color: (event.target as HTMLInputElement).value }).run()}
-            value={editor.getAttributes('highlight').color || '#ffffff'}
-            data-testid="setHighlight"
-            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-            title="Arkaplan Rengi"
-          />
-
-          {/* Remove Color */}
+          {/* Highlight Colors - TipTap Resmi Renkler */}
           <button
             type="button"
-            onClick={() => {
-              editor.chain().focus().unsetColor().run()
-              editor.chain().focus().unsetHighlight().run()
-            }}
-            className="px-3 py-1 text-sm border rounded bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-            title="Renkleri Temizle"
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            className={`px-3 py-1 text-sm border rounded ${
+              editor.isActive('highlight') 
+                ? 'bg-yellow-300 text-black border-yellow-400' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            title="Vurgula (Ctrl+Shift+H)"
           >
-            🗑
+            🖍️
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHighlight({ color: '#ffc078' }).run()}
+            className={`px-3 py-1 text-sm border rounded ${
+              editor.isActive('highlight', { color: '#ffc078' }) 
+                ? 'bg-orange-300 text-black border-orange-400' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            style={{ backgroundColor: editor.isActive('highlight', { color: '#ffc078' }) ? '#ffc078' : undefined }}
+            title="Turuncu Vurgu"
+          >
+            🟠
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()}
+            className={`px-3 py-1 text-sm border rounded ${
+              editor.isActive('highlight', { color: '#8ce99a' }) 
+                ? 'bg-green-300 text-black border-green-400' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            style={{ backgroundColor: editor.isActive('highlight', { color: '#8ce99a' }) ? '#8ce99a' : undefined }}
+            title="Yeşil Vurgu"
+          >
+            🟢
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHighlight({ color: '#74c0fc' }).run()}
+            className={`px-3 py-1 text-sm border rounded ${
+              editor.isActive('highlight', { color: '#74c0fc' }) 
+                ? 'bg-blue-300 text-black border-blue-400' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            style={{ backgroundColor: editor.isActive('highlight', { color: '#74c0fc' }) ? '#74c0fc' : undefined }}
+            title="Mavi Vurgu"
+          >
+            🔵
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleHighlight({ color: '#b197fc' }).run()}
+            className={`px-3 py-1 text-sm border rounded ${
+              editor.isActive('highlight', { color: '#b197fc' }) 
+                ? 'bg-purple-300 text-black border-purple-400' 
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            style={{ backgroundColor: editor.isActive('highlight', { color: '#b197fc' }) ? '#b197fc' : undefined }}
+            title="Mor Vurgu"
+          >
+            🟣
+          </button>
+
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().unsetHighlight().run()}
+            disabled={!editor.isActive('highlight')}
+            className="px-3 py-1 text-sm border rounded bg-white text-gray-700 border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+            title="Vurguyu Kaldır"
+          >
+            🗑️
           </button>
 
           {/* Separator */}
