@@ -36,20 +36,6 @@ export default function ListingPackageForm({
 
   // Fetch categories for selection
   const { data: categories = [] } = useCategories();
-  
-  // Function to load existing categories for editing
-  const loadExistingCategories = async (packageId: number) => {
-    try {
-      const response = await fetch(`/api/listing-packages/${packageId}/category-pricing`);
-      if (response.ok) {
-        const pricing = await response.json();
-        const categoryIds = pricing.map((p: any) => p.categoryId);
-        setSelectedCategories(categoryIds);
-      }
-    } catch (error) {
-      console.error('Error loading existing categories:', error);
-    }
-  };
 
   // Reset form when modal opens/closes or listingPackage changes
   useEffect(() => {
@@ -231,77 +217,53 @@ export default function ListingPackageForm({
             {/* Categories */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Geçerli Kategoriler *
+                Geçerli Kategoriler
               </label>
-              
-              <select
-                multiple
-                size={8}
-                value={selectedCategories.map(String)}
-                onChange={(e) => {
-                  const selectedValues = Array.from(e.target.selectedOptions, option => parseInt(option.value));
-                  setSelectedCategories(selectedValues);
-                }}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-[#EC7830] bg-white text-sm"
-                required
-              >
-                {categories.map((category) => {
-                  let displayName = category.name;
-                  
-                  // Add indentation based on hierarchy level
-                  if (category.parentId) {
-                    const parent = categories.find(c => c.id === category.parentId);
-                    if (parent?.parentId) {
-                      // Third level
-                      displayName = `    └── ${category.name}`;
-                    } else {
-                      // Second level
-                      displayName = `  ├─ ${category.name}`;
-                    }
-                  }
-                  
-                  return (
-                    <option key={category.id} value={category.id}>
-                      {displayName}
-                    </option>
-                  );
-                })}
-              </select>
-              
-              <p className="text-xs text-gray-500 mt-1">
-                Ctrl/Cmd tuşu ile çoklu seçim yapabilirsiniz.
-              </p>
-              
-              {/* Selected Categories Display */}
-              {selectedCategories.length > 0 && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Seçilen Kategoriler ({selectedCategories.length}):
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCategories.map(categoryId => {
-                      const category = categories.find(c => c.id === categoryId);
-                      if (!category) return null;
-                      
-                      return (
-                        <span
-                          key={categoryId}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-[#EC7830] text-white rounded-lg"
-                        >
-                          {category.name}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedCategories(prev => prev.filter(id => id !== categoryId))}
-                            className="ml-2 hover:text-gray-200 font-bold"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      );
-                    })}
+              <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
+                {categories.filter(cat => !cat.parentId).map((mainCategory) => (
+                  <div key={mainCategory.id}>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(mainCategory.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCategories([...selectedCategories, mainCategory.id]);
+                          } else {
+                            setSelectedCategories(selectedCategories.filter(id => id !== mainCategory.id));
+                          }
+                        }}
+                        className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-900">{mainCategory.name}</span>
+                    </label>
+                    
+                    {/* Sub-categories */}
+                    <div className="ml-6 mt-1 space-y-1">
+                      {categories.filter(cat => cat.parentId === mainCategory.id).map((subCategory) => (
+                        <label key={subCategory.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(subCategory.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategories([...selectedCategories, subCategory.id]);
+                              } else {
+                                setSelectedCategories(selectedCategories.filter(id => id !== subCategory.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">{subCategory.name}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Bu paket hangi kategorilerde kullanılabilir olacak?
+              </p>
             </div>
 
 
