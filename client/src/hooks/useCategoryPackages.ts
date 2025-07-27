@@ -1,119 +1,115 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import type { CategoryPackage, InsertCategoryPackage, UpdateCategoryPackage } from "@shared/schema";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Get category packages for a specific category
+export interface CategoryPackage {
+  id: number;
+  name: string;
+  description: string | null;
+  basePrice: number;
+  durationDays: number;
+  features: string | null;
+  maxPhotos: number;
+  membershipType: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  categoryPrice: number;
+  categoryPackageId: number;
+}
+
+export interface CreateCategoryPackageData {
+  packageId: number;
+  price: number;
+}
+
+export interface UpdateCategoryPackageData {
+  price: number;
+}
+
+// Fetch category packages
 export function useCategoryPackages(categoryId: number) {
   return useQuery({
-    queryKey: ["category-packages", categoryId],
-    queryFn: async (): Promise<CategoryPackage[]> => {
-      const response = await fetch(`/api/category-packages/${categoryId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch category packages");
-      }
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['/api/categories', categoryId, 'packages'],
+    enabled: !!categoryId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
-// Get specific category package by ID
-export function useCategoryPackage(id: number) {
+// Create category package mutation
+export function useCreateCategoryPackage(categoryId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: CreateCategoryPackageData): Promise<CategoryPackage> => {
+      const response = await fetch(`/api/categories/${categoryId}/packages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Kategori paketi oluşturulamadı');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', categoryId, 'packages'] });
+    },
+  });
+}
+
+// Update category package mutation
+export function useUpdateCategoryPackage(categoryId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...data }: UpdateCategoryPackageData & { id: number }): Promise<CategoryPackage> => {
+      const response = await fetch(`/api/categories/${categoryId}/packages/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Kategori paketi güncellenemedi');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', categoryId, 'packages'] });
+    },
+  });
+}
+
+// Delete category package mutation
+export function useDeleteCategoryPackage(categoryId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number): Promise<void> => {
+      const response = await fetch(`/api/categories/${categoryId}/packages/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Kategori paketi silinemedi');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories', categoryId, 'packages'] });
+    },
+  });
+}
+
+// Fetch all listing packages (for selecting which package to assign to category)
+export function useListingPackages() {
   return useQuery({
-    queryKey: ["category-packages", "package", id],
-    queryFn: async (): Promise<CategoryPackage> => {
-      const response = await fetch(`/api/category-packages/package/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch category package");
-      }
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
-// Create new category package
-export function useCreateCategoryPackage() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: any) => {
-      return apiRequest(`/api/category-packages/${data.categoryId}`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate category packages list for the specific category
-      queryClient.invalidateQueries({
-        queryKey: ["category-packages", variables.categoryId],
-      });
-    },
-  });
-}
-
-// Update category package
-export function useUpdateCategoryPackage() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, ...data }: any) => {
-      return apiRequest(`/api/category-packages/package/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: (data) => {
-      // Invalidate specific package and category packages list
-      queryClient.invalidateQueries({
-        queryKey: ["category-packages", "package", data.id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["category-packages", data.categoryId],
-      });
-    },
-  });
-}
-
-// Delete category package
-export function useDeleteCategoryPackage() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, categoryId }: { id: number; categoryId: number }) => {
-      return apiRequest(`/api/category-packages/package/${id}`, {
-        method: "DELETE",
-      });
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate category packages list
-      queryClient.invalidateQueries({
-        queryKey: ["category-packages", variables.categoryId],
-      });
-      // Remove specific package from cache
-      queryClient.removeQueries({
-        queryKey: ["category-packages", "package", variables.id],
-      });
-    },
-  });
-}
-
-// Reorder category packages
-export function useReorderCategoryPackages() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ categoryId, packageIds }: { categoryId: number; packageIds: number[] }) => {
-      return apiRequest(`/api/category-packages/${categoryId}/reorder`, {
-        method: "PATCH",
-        body: JSON.stringify({ packageIds }),
-      });
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate category packages list to reflect new order
-      queryClient.invalidateQueries({
-        queryKey: ["category-packages", variables.categoryId],
-      });
-    },
+    queryKey: ['/api/listing-packages'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }

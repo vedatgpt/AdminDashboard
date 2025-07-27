@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, categoryPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type CategoryPackage, type InsertCategoryPackage, type UpdateCategoryPackage } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, listingPackages, listingPackageCategoryPricing, corporatePackageAllocations, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type ListingPackage, type InsertListingPackage, type UpdateListingPackage, type ListingPackageCategoryPricing, type InsertListingPackageCategoryPricing, type UpdateListingPackageCategoryPricing, type CorporatePackageAllocation, type InsertCorporatePackageAllocation, type ListingPackageWithPricing } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -83,13 +83,36 @@ export interface IStorage {
   deleteDopingPackage(id: number): Promise<void>;
   reorderDopingPackages(packageIds: number[]): Promise<void>;
 
-  // Category Packages methods
-  getCategoryPackages(categoryId: number): Promise<CategoryPackage[]>;
-  getCategoryPackageById(id: number): Promise<CategoryPackage | undefined>;
+  // Listing Packages methods
+  getListingPackages(): Promise<ListingPackage[]>;
+  getListingPackageById(id: number): Promise<ListingPackage | undefined>;
+  getListingPackageWithPricing(id: number): Promise<ListingPackageWithPricing | undefined>;
+  createListingPackage(data: InsertListingPackage): Promise<ListingPackage>;
+  updateListingPackage(id: number, updates: UpdateListingPackage): Promise<ListingPackage>;
+  deleteListingPackage(id: number): Promise<void>;
+  reorderListingPackages(packageIds: number[]): Promise<void>;
+
+  // Category-Package relationship methods
+  getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
   createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
   updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
   deleteCategoryPackage(id: number): Promise<void>;
-  reorderCategoryPackages(categoryId: number, packageIds: number[]): Promise<void>;
+  getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
+  createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
+  updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
+  deleteCategoryPackage(id: number): Promise<void>;
+
+  // Listing Package Category Pricing methods
+  getPackageCategoryPricing(packageId: number): Promise<ListingPackageCategoryPricing[]>;
+  createPackageCategoryPricing(data: InsertListingPackageCategoryPricing): Promise<ListingPackageCategoryPricing>;
+  updatePackageCategoryPricing(id: number, updates: UpdateListingPackageCategoryPricing): Promise<ListingPackageCategoryPricing>;
+  deletePackageCategoryPricing(id: number): Promise<void>;
+  deletePackageCategoryPricingByPackage(packageId: number): Promise<void>;
+
+  // Corporate Package Allocation methods
+  getCorporatePackageAllocations(corporateUserId: number): Promise<CorporatePackageAllocation[]>;
+  createCorporatePackageAllocation(data: InsertCorporatePackageAllocation): Promise<CorporatePackageAllocation>;
+  updateCorporatePackageAllocation(id: number, updates: Partial<CorporatePackageAllocation>): Promise<CorporatePackageAllocation>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -746,47 +769,175 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Category Packages Implementation
-  async getCategoryPackages(categoryId: number): Promise<CategoryPackage[]> {
+  // Listing Packages Implementation
+  async getListingPackages(): Promise<ListingPackage[]> {
     const packages = await db.select()
-      .from(categoryPackages)
-      .where(eq(categoryPackages.categoryId, categoryId))
-      .orderBy(asc(categoryPackages.sortOrder), asc(categoryPackages.name));
+      .from(listingPackages)
+      .orderBy(asc(listingPackages.sortOrder), asc(listingPackages.name));
     return packages;
   }
 
-  async getCategoryPackageById(id: number): Promise<CategoryPackage | undefined> {
-    const [categoryPackage] = await db.select()
-      .from(categoryPackages)
-      .where(eq(categoryPackages.id, id));
-    return categoryPackage;
+  // Get packages assigned to specific category
+  async getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]> {
+    const packages = await db.select({
+      id: listingPackages.id,
+      name: listingPackages.name,
+      description: listingPackages.description,
+      basePrice: listingPackages.basePrice,
+      durationDays: listingPackages.durationDays,
+      features: listingPackages.features,
+      maxPhotos: listingPackages.maxPhotos,
+      membershipType: listingPackages.membershipType,
+      isActive: listingPackages.isActive,
+      sortOrder: listingPackages.sortOrder,
+      createdAt: listingPackages.createdAt,
+      updatedAt: listingPackages.updatedAt,
+      categoryPrice: categoryPackages.price,
+      categoryPackageId: categoryPackages.id,
+    })
+    .from(listingPackages)
+    .innerJoin(categoryPackages, eq(categoryPackages.packageId, listingPackages.id))
+    .where(eq(categoryPackages.categoryId, categoryId))
+    .orderBy(asc(listingPackages.sortOrder), asc(listingPackages.name));
+
+    return packages;
   }
 
+  // Create category-package relationship
   async createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage> {
     const [categoryPackage] = await db.insert(categoryPackages)
-      .values(data)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
       .returning();
     return categoryPackage;
   }
 
+  // Update category-package relationship
   async updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage> {
     const [categoryPackage] = await db.update(categoryPackages)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
       .where(eq(categoryPackages.id, id))
       .returning();
     return categoryPackage;
   }
 
+  // Delete category-package relationship
   async deleteCategoryPackage(id: number): Promise<void> {
     await db.delete(categoryPackages).where(eq(categoryPackages.id, id));
   }
 
-  async reorderCategoryPackages(categoryId: number, packageIds: number[]): Promise<void> {
+  async getListingPackageById(id: number): Promise<ListingPackage | undefined> {
+    const [listingPackage] = await db.select()
+      .from(listingPackages)
+      .where(eq(listingPackages.id, id));
+    return listingPackage;
+  }
+
+  async getListingPackageWithPricing(id: number): Promise<ListingPackageWithPricing | undefined> {
+    const [listingPackage] = await db.select()
+      .from(listingPackages)
+      .where(eq(listingPackages.id, id));
+    
+    if (!listingPackage) return undefined;
+
+    const categoryPricing = await db.select()
+      .from(listingPackageCategoryPricing)
+      .where(eq(listingPackageCategoryPricing.packageId, id));
+
+    return {
+      ...listingPackage,
+      categoryPricing
+    };
+  }
+
+  async createListingPackage(data: InsertListingPackage): Promise<ListingPackage> {
+    const [listingPackage] = await db.insert(listingPackages)
+      .values(data)
+      .returning();
+    return listingPackage;
+  }
+
+  async updateListingPackage(id: number, updates: UpdateListingPackage): Promise<ListingPackage> {
+    const [listingPackage] = await db.update(listingPackages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(listingPackages.id, id))
+      .returning();
+    return listingPackage;
+  }
+
+  async deleteListingPackage(id: number): Promise<void> {
+    await db.delete(listingPackages).where(eq(listingPackages.id, id));
+  }
+
+  async reorderListingPackages(packageIds: number[]): Promise<void> {
     for (let i = 0; i < packageIds.length; i++) {
-      await db.update(categoryPackages)
+      await db.update(listingPackages)
         .set({ sortOrder: i + 1 })
-        .where(and(eq(categoryPackages.id, packageIds[i]), eq(categoryPackages.categoryId, categoryId)));
+        .where(eq(listingPackages.id, packageIds[i]));
     }
+  }
+
+  // Listing Package Category Pricing Implementation
+  async getPackageCategoryPricing(packageId: number): Promise<ListingPackageCategoryPricing[]> {
+    const pricing = await db.select()
+      .from(listingPackageCategoryPricing)
+      .where(eq(listingPackageCategoryPricing.packageId, packageId))
+      .orderBy(asc(listingPackageCategoryPricing.categoryId));
+    return pricing;
+  }
+
+  async createPackageCategoryPricing(data: InsertListingPackageCategoryPricing): Promise<ListingPackageCategoryPricing> {
+    const [pricing] = await db.insert(listingPackageCategoryPricing)
+      .values(data)
+      .returning();
+    return pricing;
+  }
+
+  async updatePackageCategoryPricing(id: number, updates: UpdateListingPackageCategoryPricing): Promise<ListingPackageCategoryPricing> {
+    const [pricing] = await db.update(listingPackageCategoryPricing)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(listingPackageCategoryPricing.id, id))
+      .returning();
+    return pricing;
+  }
+
+  async deletePackageCategoryPricing(id: number): Promise<void> {
+    await db.delete(listingPackageCategoryPricing).where(eq(listingPackageCategoryPricing.id, id));
+  }
+
+  async deletePackageCategoryPricingByPackage(packageId: number): Promise<void> {
+    await db.delete(listingPackageCategoryPricing)
+      .where(eq(listingPackageCategoryPricing.packageId, packageId));
+  }
+
+  // Corporate Package Allocation Implementation
+  async getCorporatePackageAllocations(corporateUserId: number): Promise<CorporatePackageAllocation[]> {
+    const allocations = await db.select()
+      .from(corporatePackageAllocations)
+      .where(eq(corporatePackageAllocations.corporateUserId, corporateUserId))
+      .orderBy(desc(corporatePackageAllocations.createdAt));
+    return allocations;
+  }
+
+  async createCorporatePackageAllocation(data: InsertCorporatePackageAllocation): Promise<CorporatePackageAllocation> {
+    const [allocation] = await db.insert(corporatePackageAllocations)
+      .values(data)
+      .returning();
+    return allocation;
+  }
+
+  async updateCorporatePackageAllocation(id: number, updates: Partial<CorporatePackageAllocation>): Promise<CorporatePackageAllocation> {
+    const [allocation] = await db.update(corporatePackageAllocations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(corporatePackageAllocations.id, id))
+      .returning();
+    return allocation;
   }
 }
 

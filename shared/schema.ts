@@ -297,32 +297,113 @@ export type DopingPackage = typeof dopingPackages.$inferSelect;
 export type InsertDopingPackage = z.infer<typeof insertDopingPackageSchema>;
 export type UpdateDopingPackage = z.infer<typeof updateDopingPackageSchema>;
 
-// Category Packages table for category-specific doping packages
-export const categoryPackages = pgTable("category_packages", {
+// Listing packages table for category-based listing packages system
+export const listingPackages = pgTable("listing_packages", {
   id: serial("id").primaryKey(),
-  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   description: text("description"),
-  price: integer("price").notNull().default(0), // Price in TL cents (e.g., 5000 = 50.00 TL)
+  basePrice: integer("base_price").notNull().default(0), // Base price in TL cents
   durationDays: integer("duration_days").notNull().default(30), // Duration in days
-  features: text("features"), // JSON array of features like ["top_listing", "highlighted", "badge"]
-  membershipTypes: text("membership_types"), // JSON array: ["individual"], ["corporate"], or ["individual", "corporate"]
+  features: text("features"), // JSON array of features like ["top_listing", "highlighted", "badge_premium"]
+  maxPhotos: integer("max_photos").notNull().default(20), // Maximum photos allowed
+  membershipType: text("membership_type").notNull(), // 'individual' or 'corporate'
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Schema for creating category packages
+// Category-based pricing for listing packages
+export const listingPackageCategoryPricing = pgTable("listing_package_category_pricing", {
+  id: serial("id").primaryKey(),
+  packageId: integer("package_id").notNull().references(() => listingPackages.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  individualPrice: integer("individual_price").notNull().default(0), // Price for individual users (TL cents)
+  corporatePrice: integer("corporate_price").notNull().default(0), // Price for corporate users (TL cents)
+  isFreeForIndividual: boolean("is_free_for_individual").notNull().default(false),
+  isFreeForCorporate: boolean("is_free_for_corporate").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniquePackageCategory: unique().on(table.packageId, table.categoryId),
+}));
+
+// Corporate package allocations for package pool management
+export const corporatePackageAllocations = pgTable("corporate_package_allocations", {
+  id: serial("id").primaryKey(),
+  corporateUserId: integer("corporate_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  packageId: integer("package_id").notNull().references(() => listingPackages.id, { onDelete: "cascade" }),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  totalPurchased: integer("total_purchased").notNull().default(0), // Total packages purchased
+  allocatedToPersonnel: integer("allocated_to_personnel").notNull().default(0), // Allocated to authorized personnel
+  remainingBalance: integer("remaining_balance").notNull().default(0), // Remaining balance
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating listing packages
+export const insertListingPackageSchema = createInsertSchema(listingPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Schema for updating listing packages
+export const updateListingPackageSchema = insertListingPackageSchema.partial();
+
+// Schema for creating listing package category pricing
+export const insertListingPackageCategoryPricingSchema = createInsertSchema(listingPackageCategoryPricing).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Schema for updating listing package category pricing
+export const updateListingPackageCategoryPricingSchema = insertListingPackageCategoryPricingSchema.partial();
+
+// Schema for creating corporate package allocations
+export const insertCorporatePackageAllocationSchema = createInsertSchema(corporatePackageAllocations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ListingPackage = typeof listingPackages.$inferSelect;
+export type InsertListingPackage = z.infer<typeof insertListingPackageSchema>;
+export type UpdateListingPackage = z.infer<typeof updateListingPackageSchema>;
+
+// Category-Package relationship table
+export const categoryPackages = pgTable("category_packages", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  packageId: integer("package_id").notNull().references(() => listingPackages.id, { onDelete: "cascade" }),
+  price: integer("price").notNull(), // Price in cents, can override base package price
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Schema for category-package relationships
 export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-// Schema for updating category packages
 export const updateCategoryPackageSchema = insertCategoryPackageSchema.partial();
 
 export type CategoryPackage = typeof categoryPackages.$inferSelect;
 export type InsertCategoryPackage = z.infer<typeof insertCategoryPackageSchema>;
 export type UpdateCategoryPackage = z.infer<typeof updateCategoryPackageSchema>;
+
+export type ListingPackageCategoryPricing = typeof listingPackageCategoryPricing.$inferSelect;
+export type InsertListingPackageCategoryPricing = z.infer<typeof insertListingPackageCategoryPricingSchema>;
+export type UpdateListingPackageCategoryPricing = z.infer<typeof updateListingPackageCategoryPricingSchema>;
+
+export type CorporatePackageAllocation = typeof corporatePackageAllocations.$inferSelect;
+export type InsertCorporatePackageAllocation = z.infer<typeof insertCorporatePackageAllocationSchema>;
+
+// Combined type for listing package with category pricing
+export type ListingPackageWithPricing = ListingPackage & {
+  categoryPricing?: ListingPackageCategoryPricing[];
+};
