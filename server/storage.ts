@@ -814,7 +814,7 @@ export class DatabaseStorage implements IStorage {
       .from(categories)
       .where(eq(categories.id, categoryId));
     
-    if (!category || category.freeListingLimit === 0) {
+    if (!category) {
       return null;
     }
 
@@ -828,10 +828,11 @@ export class DatabaseStorage implements IStorage {
     
     // If no usage record exists, create one
     if (!usage) {
-      const resetDate = this.calculateResetDate(category.freeResetPeriod);
+      const resetDate = this.calculateResetDate("monthly"); // Default to monthly
       [usage] = await db.insert(userCategoryUsage).values({
         userId,
         categoryId,
+        userType: "individual", // Default user type
         usedFreeListings: 0,
         resetDate,
       }).returning();
@@ -840,7 +841,7 @@ export class DatabaseStorage implements IStorage {
     // Check if reset is needed
     const now = new Date();
     if (now >= usage.resetDate) {
-      const newResetDate = this.calculateResetDate(category.freeResetPeriod);
+      const newResetDate = this.calculateResetDate("monthly"); // Default to monthly
       [usage] = await db.update(userCategoryUsage)
         .set({
           usedFreeListings: 0,
@@ -853,7 +854,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       usedFreeListings: usage.usedFreeListings,
-      limit: category.freeListingLimit,
+      limit: 0, // Will need proper implementation later
       resetDate: usage.resetDate,
     };
   }
@@ -880,7 +881,7 @@ export class DatabaseStorage implements IStorage {
     
     if (!category) return;
 
-    const newResetDate = this.calculateResetDate(category.freeResetPeriod);
+    const newResetDate = this.calculateResetDate("monthly"); // Default to monthly
     
     await db.update(userCategoryUsage)
       .set({

@@ -1451,26 +1451,31 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
         return res.status(400).json({ error: "Invalid category ID" });
       }
 
-      const { freeListingLimit, freeResetPeriod, applyToSubcategories, freeListingUserTypes } = req.body;
+      const { freeListingLimitIndividual, freeResetPeriodIndividual, freeListingLimitCorporate, freeResetPeriodCorporate, applyToSubcategories } = req.body;
 
       // Validation
-      if (typeof freeListingLimit !== "number" || freeListingLimit < 0) {
-        return res.status(400).json({ error: "Free listing limit must be a non-negative number" });
+      if (typeof freeListingLimitIndividual !== "number" || freeListingLimitIndividual < 0) {
+        return res.status(400).json({ error: "Individual free listing limit must be a non-negative number" });
       }
 
-      if (!["monthly", "yearly", "once"].includes(freeResetPeriod)) {
-        return res.status(400).json({ error: "Invalid reset period" });
+      if (typeof freeListingLimitCorporate !== "number" || freeListingLimitCorporate < 0) {
+        return res.status(400).json({ error: "Corporate free listing limit must be a non-negative number" });
       }
 
-      if (!Array.isArray(freeListingUserTypes) || freeListingUserTypes.length === 0) {
-        return res.status(400).json({ error: "At least one user type must be selected" });
+      if (!["monthly", "yearly", "once"].includes(freeResetPeriodIndividual)) {
+        return res.status(400).json({ error: "Invalid individual reset period" });
+      }
+
+      if (!["monthly", "yearly", "once"].includes(freeResetPeriodCorporate)) {
+        return res.status(400).json({ error: "Invalid corporate reset period" });
       }
 
       const updatedCategory = await storage.updateCategory(categoryId, {
-        freeListingLimit,
-        freeResetPeriod,
+        freeListingLimitIndividual,
+        freeResetPeriodIndividual,
+        freeListingLimitCorporate,
+        freeResetPeriodCorporate,
         applyToSubcategories: applyToSubcategories || false,
-        freeListingUserTypes: JSON.stringify(freeListingUserTypes),
       });
 
       res.json(updatedCategory);

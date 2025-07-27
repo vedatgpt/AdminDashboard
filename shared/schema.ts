@@ -92,11 +92,12 @@ export const categories = pgTable("categories", {
   isActive: boolean("is_active").notNull().default(true),
   adCount: integer("ad_count").notNull().default(0), // Number of ads in this category
   categoryType: text("category_type"), // Manual category type like "Marka", "Seri", "Model", etc.
-  // Free listing settings
-  freeListingLimit: integer("free_listing_limit").notNull().default(0),
-  freeResetPeriod: text("free_reset_period").notNull().default("monthly"), // "monthly", "yearly", "once"
+  // Free listing settings - separate for individual and corporate users
+  freeListingLimitIndividual: integer("free_listing_limit_individual").notNull().default(0),
+  freeResetPeriodIndividual: text("free_reset_period_individual").notNull().default("monthly"),
+  freeListingLimitCorporate: integer("free_listing_limit_corporate").notNull().default(0), 
+  freeResetPeriodCorporate: text("free_reset_period_corporate").notNull().default("monthly"),
   applyToSubcategories: boolean("apply_to_subcategories").notNull().default(true),
-  freeListingUserTypes: text("free_listing_user_types").notNull().default('["individual","corporate"]'), // JSON array
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
@@ -171,17 +172,18 @@ export const insertLocationSchema = createInsertSchema(locations).omit({
 // Schema for updating locations
 export const updateLocationSchema = insertLocationSchema.partial();
 
-// User category usage tracking for free listings
+// User category usage tracking for free listings - separate for individual and corporate
 export const userCategoryUsage = pgTable("user_category_usage", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  userType: text("user_type").notNull(), // "individual" or "corporate"
   usedFreeListings: integer("used_free_listings").notNull().default(0),
   resetDate: timestamp("reset_date").notNull(),
   lastUpdated: timestamp("last_updated").notNull().defaultNow(),
 }, (table) => ({
-  // Unique constraint per user per category
-  uniqueUserCategory: unique().on(table.userId, table.categoryId),
+  // Unique constraint per user per category per userType
+  uniqueUserCategoryType: unique().on(table.userId, table.categoryId, table.userType),
 }));
 
 // Schema for creating custom fields

@@ -23,10 +23,11 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
   });
 
   const [freeListingData, setFreeListingData] = useState({
-    freeListingLimit: 0,
-    freeResetPeriod: "monthly" as "monthly" | "yearly" | "once",
+    freeListingLimitIndividual: 0,
+    freeResetPeriodIndividual: "monthly" as "monthly" | "yearly" | "once",
+    freeListingLimitCorporate: 0,
+    freeResetPeriodCorporate: "monthly" as "monthly" | "yearly" | "once",
     applyToSubcategories: true,
-    freeListingUserTypes: ["individual", "corporate"] as string[],
   });
 
   const [activeTab, setActiveTab] = useState<"packages" | "free">("packages");
@@ -67,6 +68,19 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       setShowForm(true);
     }
   }, [editingPackage]);
+
+  // Initialize free listing data when category changes
+  useEffect(() => {
+    if (category) {
+      setFreeListingData({
+        freeListingLimitIndividual: (category as any).freeListingLimitIndividual || 0,
+        freeResetPeriodIndividual: ((category as any).freeResetPeriodIndividual as "monthly" | "yearly" | "once") || "monthly",
+        freeListingLimitCorporate: (category as any).freeListingLimitCorporate || 0,
+        freeResetPeriodCorporate: ((category as any).freeResetPeriodCorporate as "monthly" | "yearly" | "once") || "monthly",
+        applyToSubcategories: (category as any).applyToSubcategories || true,
+      });
+    }
+  }, [category]);
 
   const resetForm = () => {
     setFormData({
@@ -570,86 +584,83 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                 </div>
 
                 <form className="space-y-6">
-                  {/* Free Listing Limit */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ücretsiz İlan Limiti
-                    </label>
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={freeListingData.freeListingLimit}
-                        onChange={(e) => setFreeListingData(prev => ({ 
-                          ...prev, 
-                          freeListingLimit: parseInt(e.target.value) || 0 
-                        }))}
-                        className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
-                      />
-                      <span className="text-sm text-gray-600">ilan</span>
-                      <span className="text-xs text-gray-500">(0 = ücretsiz ilan yok)</span>
+                  {/* Bireysel Kullanıcılar Ayarları */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Bireysel Kullanıcılar</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ücretsiz İlan Limiti
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          value={freeListingData.freeListingLimitIndividual}
+                          onChange={(e) => setFreeListingData({
+                            ...freeListingData,
+                            freeListingLimitIndividual: parseInt(e.target.value) || 0
+                          })}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Yenileme Periyodu
+                        </label>
+                        <select
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          value={freeListingData.freeResetPeriodIndividual}
+                          onChange={(e) => setFreeListingData({
+                            ...freeListingData,
+                            freeResetPeriodIndividual: e.target.value as "monthly" | "yearly" | "once"
+                          })}
+                        >
+                          <option value="monthly">Aylık</option>
+                          <option value="yearly">Yıllık</option>
+                          <option value="once">Tek Seferlik</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Reset Period */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Limit Yenileme Periyodu
-                    </label>
-                    <select
-                      value={freeListingData.freeResetPeriod}
-                      onChange={(e) => setFreeListingData(prev => ({ 
-                        ...prev, 
-                        freeResetPeriod: e.target.value as "monthly" | "yearly" | "once"
-                      }))}
-                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
-                    >
-                      <option value="monthly">Aylık</option>
-                      <option value="yearly">Yıllık</option>
-                      <option value="once">Tek Seferlik</option>
-                    </select>
-                    <p className="mt-1 text-xs text-gray-500">
-                      {freeListingData.freeResetPeriod === "monthly" && "Her ay limit yenilenir"}
-                      {freeListingData.freeResetPeriod === "yearly" && "Her yıl limit yenilenir"}
-                      {freeListingData.freeResetPeriod === "once" && "Limit sadece bir kez kullanılabilir"}
-                    </p>
-                  </div>
+                  {/* Kurumsal Kullanıcılar Ayarları */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Kurumsal Kullanıcılar</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ücretsiz İlan Limiti
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          value={freeListingData.freeListingLimitCorporate}
+                          onChange={(e) => setFreeListingData({
+                            ...freeListingData,
+                            freeListingLimitCorporate: parseInt(e.target.value) || 0
+                          })}
+                        />
+                      </div>
 
-                  {/* User Types */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hangi Kullanıcı Türleri İçin Geçerli
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={freeListingData.freeListingUserTypes.includes("individual")}
-                          onChange={(e) => {
-                            const updated = e.target.checked 
-                              ? [...freeListingData.freeListingUserTypes.filter(t => t !== "individual"), "individual"]
-                              : freeListingData.freeListingUserTypes.filter(t => t !== "individual");
-                            setFreeListingData(prev => ({ ...prev, freeListingUserTypes: updated }));
-                          }}
-                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Bireysel</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={freeListingData.freeListingUserTypes.includes("corporate")}
-                          onChange={(e) => {
-                            const updated = e.target.checked 
-                              ? [...freeListingData.freeListingUserTypes.filter(t => t !== "corporate"), "corporate"]
-                              : freeListingData.freeListingUserTypes.filter(t => t !== "corporate");
-                            setFreeListingData(prev => ({ ...prev, freeListingUserTypes: updated }));
-                          }}
-                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Kurumsal</span>
-                      </label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Yenileme Periyodu
+                        </label>
+                        <select
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          value={freeListingData.freeResetPeriodCorporate}
+                          onChange={(e) => setFreeListingData({
+                            ...freeListingData,
+                            freeResetPeriodCorporate: e.target.value as "monthly" | "yearly" | "once"
+                          })}
+                        >
+                          <option value="monthly">Aylık</option>
+                          <option value="yearly">Yıllık</option>
+                          <option value="once">Tek Seferlik</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
