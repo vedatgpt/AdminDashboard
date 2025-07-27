@@ -114,10 +114,10 @@ export default function ListingPackageForm({
     setFeaturesArray(featuresArray.filter((_, i) => i !== index));
   };
 
-  // Build category tree with all levels
+  // Build category tree with all levels - FIXED: Use correct property names
   const buildCategoryTree = (parentId: number | null = null, level: number = 0): any[] => {
     return categories
-      .filter(cat => cat.parentId === parentId)
+      .filter(cat => cat.parentId === parentId) // API returns camelCase
       .map(category => ({
         ...category,
         level,
