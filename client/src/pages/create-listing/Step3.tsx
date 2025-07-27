@@ -352,13 +352,7 @@ export default function Step3() {
 
             resolve(data);
           } else {
-            // Parse error message from server response
-            try {
-              const errorData = JSON.parse(xhr.responseText);
-              reject(new Error(errorData.error || 'Upload failed'));
-            } catch {
-              reject(new Error('Upload failed'));
-            }
+            reject(new Error('Upload failed'));
           }
         });
 
@@ -382,17 +376,11 @@ export default function Step3() {
         }
         return newImages;
       });
-      
-      // Show user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Yükleme Hatası",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : 'Bilinmeyen hata',
         variant: "destructive"
       });
-      
-      // Log error for debugging without throwing
-      console.warn('Upload error:', errorMessage);
     }
   };
 
@@ -536,11 +524,10 @@ export default function Step3() {
     if (!files) return;
 
     const validFiles = Array.from(files).filter(file => {
-      // Check if file type is allowed
-      if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
+      if (!file.type.startsWith('image/')) {
         toast({
-          title: "Geçersiz Dosya Formatı",
-          description: 'Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir. HEIC dosyaları bazı durumlarda uyumluluk sorunları yaşayabilir.',
+          title: "Geçersiz Dosya",
+          description: 'Sadece resim dosyaları yüklenebilir',
           variant: "destructive"
         });
         return false;

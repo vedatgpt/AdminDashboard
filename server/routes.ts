@@ -36,13 +36,10 @@ const upload = multer({
     fileSize: FILE_LIMITS.PROFILE_IMAGE,
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-      cb(null, true);
-    } else if (file.mimetype.match(/^image\/(heic|heif)$/)) {
-      // Allow HEIC files but they may have processing limitations
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
       cb(null, true);
     } else {
-      cb(new Error('Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir'));
+      cb(new Error('Only JPG and PNG files are allowed'));
     }
   },
 });
@@ -55,13 +52,10 @@ const uploadListingImages = multer({
     files: FILE_LIMITS.MAX_LISTING_IMAGES
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-      cb(null, true);
-    } else if (file.mimetype.match(/^image\/(heic|heif)$/)) {
-      // Allow HEIC files but they may have processing limitations
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
       cb(null, true);
     } else {
-      cb(new Error('Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir'));
+      cb(new Error('Only JPG and PNG files are allowed'));
     }
   },
 });
@@ -1211,23 +1205,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } catch (processError) {
           console.error('Image processing error:', processError);
-          
-          // Check if this is a HEIC-specific error
-          if (processError instanceof Error && 
-              (processError.message.includes('Bu HEIC dosya formatı desteklenmiyor') ||
-               processError.message.includes('HEIC/HEIF dosya işlenemedi'))) {
-            // Return specific HEIC error immediately instead of continuing
-            return res.status(400).json({ 
-              error: processError.message 
-            });
-          }
-          
-          continue; // Skip this image but continue with others for non-HEIC errors
+          continue; // Skip this image but continue with others
         }
       }
 
       if (uploadedImages.length === 0) {
-        return res.status(400).json({ error: "Hiçbir resim işlenemedi. HEIC dosyaları için lütfen JPG veya PNG formatı kullanın." });
+        return res.status(500).json({ error: "Hiçbir resim işlenemedi" });
       }
 
       res.json({ images: uploadedImages });
