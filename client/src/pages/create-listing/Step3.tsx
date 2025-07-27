@@ -524,10 +524,11 @@ export default function Step3() {
     if (!files) return;
 
     const validFiles = Array.from(files).filter(file => {
-      if (!file.type.startsWith('image/')) {
+      // Check if file type is allowed
+      if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
         toast({
-          title: "Geçersiz Dosya",
-          description: 'Sadece resim dosyaları yüklenebilir',
+          title: "Geçersiz Dosya Formatı",
+          description: 'Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir',
           variant: "destructive"
         });
         return false;

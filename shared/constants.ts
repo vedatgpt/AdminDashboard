@@ -2,7 +2,7 @@
 export const LISTING_CONFIG = {
   MAX_IMAGES: 10,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
-  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
   MIN_TITLE_LENGTH: 3,
   MAX_TITLE_LENGTH: 100,
   MIN_DESCRIPTION_LENGTH: 10,

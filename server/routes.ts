@@ -36,10 +36,10 @@ const upload = multer({
     fileSize: FILE_LIMITS.PROFILE_IMAGE,
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/)) {
       cb(null, true);
     } else {
-      cb(new Error('Only JPG and PNG files are allowed'));
+      cb(new Error('Only JPG, PNG, WebP, and HEIC files are allowed'));
     }
   },
 });
@@ -52,10 +52,10 @@ const uploadListingImages = multer({
     files: FILE_LIMITS.MAX_LISTING_IMAGES
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+    if (file.mimetype.match(/^image\/(jpeg|jpg|png|webp|heic|heif)$/)) {
       cb(null, true);
     } else {
-      cb(new Error('Only JPG and PNG files are allowed'));
+      cb(new Error('Only JPG, PNG, WebP, and HEIC files are allowed'));
     }
   },
 });
