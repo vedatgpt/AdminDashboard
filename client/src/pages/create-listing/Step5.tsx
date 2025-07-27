@@ -157,7 +157,7 @@ export default function Step5() {
 
   // Check if free listing is available for this category with inheritance
   const hasFreeListing = useMemo(() => {
-    if (!category || !allCategories.length) return false;
+    if (!category || !allCategories.length || !authUser) return false;
     
     // Build hierarchy path from current category to root
     const getHierarchyPath = (categoryId: number): Category[] => {
@@ -174,17 +174,21 @@ export default function Step5() {
     };
     
     const hierarchyPath = getHierarchyPath(category.id);
+    const isIndividual = authUser.role === 'individual';
+    const isCorporate = authUser.role === 'corporate';
     
-    // Check each category in hierarchy for free listing limits
+    // Check each category in hierarchy for free listing limits based on user role
     for (const cat of hierarchyPath) {
-      if ((cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) ||
-          (cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0)) {
+      if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
+        return true;
+      }
+      if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
         return true;
       }
     }
     
     return false;
-  }, [category, allCategories]);
+  }, [category, allCategories, authUser]);
 
   if (authLoading || isDraftLoading) {
     return (
