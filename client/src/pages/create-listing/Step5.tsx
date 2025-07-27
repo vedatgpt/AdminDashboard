@@ -35,6 +35,13 @@ interface DraftListing {
   step4Completed: boolean;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  freeListingLimitIndividual?: number;
+  freeListingLimitCorporate?: number;
+}
+
 export default function Step5() {
   const [, navigate] = useLocation();
   const search = useSearch();
@@ -71,6 +78,13 @@ export default function Step5() {
   // Fetch category packages
   const { data: categoryPackages = [], isLoading: isCategoryPackagesLoading } = useQuery<CategoryPackage[]>({
     queryKey: ['/api/categories', draftListing?.categoryId, 'packages'],
+    enabled: !!draftListing?.categoryId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch category details to check free listing limits
+  const { data: category } = useQuery<Category>({
+    queryKey: ['/api/categories', draftListing?.categoryId],
     enabled: !!draftListing?.categoryId,
     staleTime: 5 * 60 * 1000,
   });
@@ -134,6 +148,14 @@ export default function Step5() {
     alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice]);
 
+  // Check if free listing is available for this category
+  const hasFreeListing = useMemo(() => {
+    if (!category) return false;
+    // Check if either individual or corporate users have free listing limit > 0
+    return (category.freeListingLimitIndividual && category.freeListingLimitIndividual > 0) ||
+           (category.freeListingLimitCorporate && category.freeListingLimitCorporate > 0);
+  }, [category]);
+
   if (authLoading || isDraftLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -147,15 +169,10 @@ export default function Step5() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Paket Seçimi</h1>
-        <p className="text-gray-600">İlanınız için uygun paketleri seçin</p>
-      </div>
 
       <div className="space-y-8">
-        {/* Category Packages - Only show if packages exist */}
-        {categoryPackages.length > 0 && (
+        {/* Category Packages - Only show if packages exist or free listing available */}
+        {(categoryPackages.length > 0 || hasFreeListing) && (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Kategori Paketleri</h2>
             
@@ -166,25 +183,27 @@ export default function Step5() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Free option */}
-                <div
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                    selectedCategoryPackage === null
-                      ? 'border-[#EC7830] bg-orange-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => handleCategoryPackageSelect(null)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
-                      <p className="text-gray-600 text-sm">Standart ilan özelliklerini kullanın</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-green-600">Ücretsiz</p>
+                {/* Free option - only show if category has free listing limits */}
+                {hasFreeListing && (
+                  <div
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
+                      selectedCategoryPackage === null
+                        ? 'border-[#EC7830] bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleCategoryPackageSelect(null)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
+                        <p className="text-gray-600 text-sm">Standart ilan özelliklerini kullanın</p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-green-600">Ücretsiz</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Category packages */}
                 {categoryPackages.map((pkg: CategoryPackage) => {
