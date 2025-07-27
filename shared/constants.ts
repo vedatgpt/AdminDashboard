@@ -17,6 +17,8 @@ export const ERROR_MESSAGES = {
   FILE_TOO_LARGE: 'Dosya boyutu çok büyük',
   TOO_MANY_FILES: 'Çok fazla dosya seçildi',
   INVALID_FILE_TYPE: 'Geçersiz dosya formatı',
+  HEIC_NOT_SUPPORTED: 'HEIC dosya formatı desteklenmemektedir. Lütfen JPG, PNG veya WebP formatında fotoğraf yükleyiniz.',
+  UNSUPPORTED_IMAGE_FORMAT: 'Bu dosya formatı desteklenmemektedir. Lütfen JPG, PNG veya WebP formatında fotoğraf yükleyiniz.',
   UPLOAD_FAILED: 'Yükleme başarısız',
   SAVE_FAILED: 'Kaydetme başarısız',
   DELETE_FAILED: 'Silme işlemi başarısız',

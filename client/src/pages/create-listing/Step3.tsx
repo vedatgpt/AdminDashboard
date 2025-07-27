@@ -524,10 +524,32 @@ export default function Step3() {
     if (!files) return;
 
     const validFiles = Array.from(files).filter(file => {
+      // Check if file extension is HEIC/HEIF (case insensitive)
+      const fileName = file.name.toLowerCase();
+      if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+        toast({
+          title: "Desteklenmeyen Dosya Formatı",
+          description: ERROR_MESSAGES.HEIC_NOT_SUPPORTED,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Check if file type is image
       if (!file.type.startsWith('image/')) {
         toast({
           title: "Geçersiz Dosya",
           description: 'Sadece resim dosyaları yüklenebilir',
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Check if file type is supported (additional validation for MIME types)
+      if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast({
+          title: "Desteklenmeyen Dosya Formatı",
+          description: ERROR_MESSAGES.UNSUPPORTED_IMAGE_FORMAT,
           variant: "destructive"
         });
         return false;
