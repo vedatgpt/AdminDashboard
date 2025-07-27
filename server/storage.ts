@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, categoryPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type CategoryPackage, type InsertCategoryPackage, type UpdateCategoryPackage } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, categoryPackages, userCategoryUsage, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type CategoryPackage, type InsertCategoryPackage, type UpdateCategoryPackage } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -90,6 +90,11 @@ export interface IStorage {
   updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
   deleteCategoryPackage(id: number): Promise<void>;
   reorderCategoryPackages(categoryId: number, packageIds: number[]): Promise<void>;
+
+  // User Category Usage methods for free listings tracking
+  getUserCategoryUsage(userId: number, categoryId: number): Promise<{ usedFreeListings: number; limit: number; resetDate: Date } | null>;
+  incrementUserCategoryUsage(userId: number, categoryId: number): Promise<void>;
+  resetUserCategoryUsage(userId: number, categoryId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -799,6 +804,108 @@ export class DatabaseStorage implements IStorage {
           eq(categoryPackages.id, packageIds[i]),
           eq(categoryPackages.categoryId, categoryId)
         ));
+    }
+  }
+
+  // User Category Usage methods for free listings tracking
+  async getUserCategoryUsage(userId: number, categoryId: number): Promise<{ usedFreeListings: number; limit: number; resetDate: Date } | null> {
+    // Get category free listing settings
+    const [category] = await db.select()
+      .from(categories)
+      .where(eq(categories.id, categoryId));
+    
+    if (!category || category.freeListingLimit === 0) {
+      return null;
+    }
+
+    // Get or create user usage record
+    let [usage] = await db.select()
+      .from(userCategoryUsage)
+      .where(and(
+        eq(userCategoryUsage.userId, userId),
+        eq(userCategoryUsage.categoryId, categoryId)
+      ));
+    
+    // If no usage record exists, create one
+    if (!usage) {
+      const resetDate = this.calculateResetDate(category.freeResetPeriod);
+      [usage] = await db.insert(userCategoryUsage).values({
+        userId,
+        categoryId,
+        usedFreeListings: 0,
+        resetDate,
+      }).returning();
+    }
+
+    // Check if reset is needed
+    const now = new Date();
+    if (now >= usage.resetDate) {
+      const newResetDate = this.calculateResetDate(category.freeResetPeriod);
+      [usage] = await db.update(userCategoryUsage)
+        .set({
+          usedFreeListings: 0,
+          resetDate: newResetDate,
+          lastUpdated: now,
+        })
+        .where(eq(userCategoryUsage.id, usage.id))
+        .returning();
+    }
+
+    return {
+      usedFreeListings: usage.usedFreeListings,
+      limit: category.freeListingLimit,
+      resetDate: usage.resetDate,
+    };
+  }
+
+  async incrementUserCategoryUsage(userId: number, categoryId: number): Promise<void> {
+    const usage = await this.getUserCategoryUsage(userId, categoryId);
+    if (!usage) return;
+
+    await db.update(userCategoryUsage)
+      .set({
+        usedFreeListings: sql`${userCategoryUsage.usedFreeListings} + 1`,
+        lastUpdated: new Date(),
+      })
+      .where(and(
+        eq(userCategoryUsage.userId, userId),
+        eq(userCategoryUsage.categoryId, categoryId)
+      ));
+  }
+
+  async resetUserCategoryUsage(userId: number, categoryId: number): Promise<void> {
+    const [category] = await db.select()
+      .from(categories)
+      .where(eq(categories.id, categoryId));
+    
+    if (!category) return;
+
+    const newResetDate = this.calculateResetDate(category.freeResetPeriod);
+    
+    await db.update(userCategoryUsage)
+      .set({
+        usedFreeListings: 0,
+        resetDate: newResetDate,
+        lastUpdated: new Date(),
+      })
+      .where(and(
+        eq(userCategoryUsage.userId, userId),
+        eq(userCategoryUsage.categoryId, categoryId)
+      ));
+  }
+
+  private calculateResetDate(resetPeriod: string): Date {
+    const now = new Date();
+    
+    switch (resetPeriod) {
+      case "monthly":
+        return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      case "yearly":
+        return new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+      case "once":
+        return new Date(2099, 11, 31); // Far future date for "once" period
+      default:
+        return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
     }
   }
 }

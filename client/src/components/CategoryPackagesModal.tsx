@@ -21,6 +21,15 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
   });
+
+  const [freeListingData, setFreeListingData] = useState({
+    freeListingLimit: 0,
+    freeResetPeriod: "monthly" as "monthly" | "yearly" | "once",
+    applyToSubcategories: true,
+    freeListingUserTypes: ["individual", "corporate"] as string[],
+  });
+
+  const [activeTab, setActiveTab] = useState<"packages" | "free">("packages");
   
   const [newFeature, setNewFeature] = useState("");
 
@@ -72,6 +81,30 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     setNewFeature("");
     setEditingPackage(null);
     setShowForm(false);
+  };
+
+  const handleFreeListingSettingsSave = async () => {
+    if (!category) return;
+
+    try {
+      const response = await fetch(`/api/categories/${category.id}/free-listing-settings`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(freeListingData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save settings");
+      }
+
+      alert("✅ Ücretsiz ilan ayarları başarıyla kaydedildi!");
+    } catch (error) {
+      console.error("Error saving free listing settings:", error);
+      alert("❌ Ayarlar kaydedilirken hata oluştu: " + (error as Error).message);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -180,15 +213,42 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
 
         {/* Content */}
         <div className="p-6">
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
+            <button
+              onClick={() => setActiveTab("packages")}
+              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "packages"
+                  ? "bg-white text-[#EC7830] shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Premium Paketler
+            </button>
+            <button
+              onClick={() => setActiveTab("free")}
+              className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "free"
+                  ? "bg-white text-[#EC7830] shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Ücretsiz İlan Ayarları
+            </button>
+          </div>
+
           {isLoading ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#EC7830]"></div>
-              <p className="mt-2 text-gray-600">Paketler yükleniyor...</p>
+              <p className="mt-2 text-gray-600">Yükleniyor...</p>
             </div>
           ) : (
-            <>
-              {/* Package List */}
-              <div className="mb-6">
+            <div>
+              {/* Tab Content */}
+              {activeTab === "packages" && (
+                <div>
+                  {/* Package List */}
+                  <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium text-gray-900">Mevcut Paketler</h3>
                   <button
@@ -487,7 +547,146 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   </form>
                 </div>
               )}
-            </>
+                </div>
+              )}
+
+              {/* Free Listing Settings Tab */}
+              {activeTab === "free" && (
+              <div className="space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800">Ücretsiz İlan Sistemi</h3>
+                      <p className="mt-1 text-sm text-blue-700">
+                        Bu kategoride kullanıcıların ücretsiz ilan verebilme limitlerini ve koşullarını belirleyin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <form className="space-y-6">
+                  {/* Free Listing Limit */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ücretsiz İlan Limiti
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={freeListingData.freeListingLimit}
+                        onChange={(e) => setFreeListingData(prev => ({ 
+                          ...prev, 
+                          freeListingLimit: parseInt(e.target.value) || 0 
+                        }))}
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                      />
+                      <span className="text-sm text-gray-600">ilan</span>
+                      <span className="text-xs text-gray-500">(0 = ücretsiz ilan yok)</span>
+                    </div>
+                  </div>
+
+                  {/* Reset Period */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Limit Yenileme Periyodu
+                    </label>
+                    <select
+                      value={freeListingData.freeResetPeriod}
+                      onChange={(e) => setFreeListingData(prev => ({ 
+                        ...prev, 
+                        freeResetPeriod: e.target.value as "monthly" | "yearly" | "once"
+                      }))}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                    >
+                      <option value="monthly">Aylık</option>
+                      <option value="yearly">Yıllık</option>
+                      <option value="once">Tek Seferlik</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {freeListingData.freeResetPeriod === "monthly" && "Her ay limit yenilenir"}
+                      {freeListingData.freeResetPeriod === "yearly" && "Her yıl limit yenilenir"}
+                      {freeListingData.freeResetPeriod === "once" && "Limit sadece bir kez kullanılabilir"}
+                    </p>
+                  </div>
+
+                  {/* User Types */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hangi Kullanıcı Türleri İçin Geçerli
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={freeListingData.freeListingUserTypes.includes("individual")}
+                          onChange={(e) => {
+                            const updated = e.target.checked 
+                              ? [...freeListingData.freeListingUserTypes.filter(t => t !== "individual"), "individual"]
+                              : freeListingData.freeListingUserTypes.filter(t => t !== "individual");
+                            setFreeListingData(prev => ({ ...prev, freeListingUserTypes: updated }));
+                          }}
+                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Bireysel</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={freeListingData.freeListingUserTypes.includes("corporate")}
+                          onChange={(e) => {
+                            const updated = e.target.checked 
+                              ? [...freeListingData.freeListingUserTypes.filter(t => t !== "corporate"), "corporate"]
+                              : freeListingData.freeListingUserTypes.filter(t => t !== "corporate");
+                            setFreeListingData(prev => ({ ...prev, freeListingUserTypes: updated }));
+                          }}
+                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Kurumsal</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Apply to Subcategories */}
+                  <div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={freeListingData.applyToSubcategories}
+                        onChange={(e) => setFreeListingData(prev => ({ 
+                          ...prev, 
+                          applyToSubcategories: e.target.checked 
+                        }))}
+                        className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
+                    </label>
+                    <p className="mt-1 ml-6 text-xs text-gray-500">
+                      Bu ayarlar alt kategoriler için de geçerli olacak
+                    </p>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={handleFreeListingSettingsSave}
+                      disabled={freeListingData.freeListingUserTypes.length === 0}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] rounded-md hover:bg-[#d96b2a] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Ayarları Kaydet
+                    </button>
+                  </div>
+                </form>
+              </div>
+              )}
+            </div>
           )}
         </div>
       </div>

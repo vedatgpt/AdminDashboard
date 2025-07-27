@@ -1443,6 +1443,43 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
     }
   });
 
+  // Free listing settings routes
+  app.patch("/api/categories/:categoryId/free-listing-settings", requireAdmin, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      if (isNaN(categoryId)) {
+        return res.status(400).json({ error: "Invalid category ID" });
+      }
+
+      const { freeListingLimit, freeResetPeriod, applyToSubcategories, freeListingUserTypes } = req.body;
+
+      // Validation
+      if (typeof freeListingLimit !== "number" || freeListingLimit < 0) {
+        return res.status(400).json({ error: "Free listing limit must be a non-negative number" });
+      }
+
+      if (!["monthly", "yearly", "once"].includes(freeResetPeriod)) {
+        return res.status(400).json({ error: "Invalid reset period" });
+      }
+
+      if (!Array.isArray(freeListingUserTypes) || freeListingUserTypes.length === 0) {
+        return res.status(400).json({ error: "At least one user type must be selected" });
+      }
+
+      const updatedCategory = await storage.updateCategory(categoryId, {
+        freeListingLimit,
+        freeResetPeriod,
+        applyToSubcategories: applyToSubcategories || false,
+        freeListingUserTypes: JSON.stringify(freeListingUserTypes),
+      });
+
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error("Error updating free listing settings:", error);
+      res.status(500).json({ error: "Failed to update free listing settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
