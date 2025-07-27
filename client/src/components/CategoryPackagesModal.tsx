@@ -32,7 +32,14 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     isCreating,
     isUpdating,
     isDeleting,
-  } = useCategoryPackages(category?.id || 0);
+  } = useCategoryPackages(category?.id || 0, {
+    onCreateSuccess: () => {
+      resetForm();
+    },
+    onUpdateSuccess: () => {
+      resetForm();
+    }
+  });
 
   useEffect(() => {
     if (editingPackage) {

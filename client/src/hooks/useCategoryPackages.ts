@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { CategoryPackage, InsertCategoryPackage, UpdateCategoryPackage } from "@shared/schema";
 
-export function useCategoryPackages(categoryId: number) {
+interface UseCategoryPackagesOptions {
+  onCreateSuccess?: () => void;
+  onUpdateSuccess?: () => void;
+}
+
+export function useCategoryPackages(categoryId: number, options?: UseCategoryPackagesOptions) {
   const queryClient = useQueryClient();
 
   // Get category packages
@@ -37,6 +42,7 @@ export function useCategoryPackages(categoryId: number) {
       queryClient.invalidateQueries({
         queryKey: ["/api/categories", categoryId, "packages"],
       });
+      options?.onCreateSuccess?.();
     },
     onError: (error) => {
       console.error("❌ CREATE ERROR:", error);
@@ -64,6 +70,7 @@ export function useCategoryPackages(categoryId: number) {
       queryClient.invalidateQueries({
         queryKey: ["/api/categories", categoryId, "packages"],
       });
+      options?.onUpdateSuccess?.();
     },
     onError: (error) => {
       console.error("Update package error:", error);
