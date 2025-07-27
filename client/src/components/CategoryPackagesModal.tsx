@@ -83,7 +83,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     } else {
       createPackage(submitData);
     }
-    resetForm();
   };
 
   const handleDelete = (packageToDelete: CategoryPackage) => {

@@ -32,13 +32,15 @@ export function useCategoryPackages(categoryId: number) {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newPackage) => {
+      console.log("✅ CREATE SUCCESS - Paket oluşturuldu:", newPackage);
       queryClient.invalidateQueries({
         queryKey: ["/api/categories", categoryId, "packages"],
       });
     },
     onError: (error) => {
-      console.error("Create package error:", error);
+      console.error("❌ CREATE ERROR:", error);
+      alert("Paket oluşturulurken hata oluştu: " + error.message);
     },
   });
 
@@ -65,6 +67,7 @@ export function useCategoryPackages(categoryId: number) {
     },
     onError: (error) => {
       console.error("Update package error:", error);
+      alert("Paket güncellenirken hata oluştu: " + error.message);
     },
   });
 
