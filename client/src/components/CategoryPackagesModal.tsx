@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCategoryPackages } from "@/hooks/useCategoryPackages";
 import type { CategoryPackage } from "@shared/schema";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 interface CategoryPackagesModalProps {
   isOpen: boolean;
@@ -29,9 +30,11 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     createPackage,
     updatePackage,
     deletePackage,
+    reorderPackages,
     isCreating,
     isUpdating,
     isDeleting,
+    isReordering,
   } = useCategoryPackages(category?.id || 0, {
     onCreateSuccess: () => {
       resetForm();
@@ -74,8 +77,24 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Form validation
     if (!formData.name.trim()) {
-      alert("Paket adı gereklidir");
+      alert("⚠️ Paket adı gereklidir");
+      return;
+    }
+    
+    if (formData.features.length === 0) {
+      alert("⚠️ En az bir paket özelliği eklemelisiniz");
+      return;
+    }
+    
+    if (formData.membershipTypes.length === 0) {
+      alert("⚠️ En az bir üyelik türü seçmelisiniz");
+      return;
+    }
+    
+    if (formData.price <= 0) {
+      alert("⚠️ Paket fiyatı 0'dan büyük olmalıdır");
       return;
     }
 
@@ -95,6 +114,24 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
   const handleDelete = (packageToDelete: CategoryPackage) => {
     if (confirm(`"${packageToDelete.name}" paketini silmek istediğinizden emin misiniz?`)) {
       deletePackage(packageToDelete.id);
+    }
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index > 0) {
+      const newOrder = [...packages];
+      [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+      const packageIds = newOrder.map(pkg => pkg.id);
+      reorderPackages(packageIds);
+    }
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index < packages.length - 1) {
+      const newOrder = [...packages];
+      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+      const packageIds = newOrder.map(pkg => pkg.id);
+      reorderPackages(packageIds);
     }
   };
 
@@ -417,6 +454,19 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                       </div>
                     </div>
 
+                    {/* Active/Inactive Status */}
+                    <div className="flex items-center">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Paket aktif</span>
+                      </label>
+                    </div>
+
                     {/* Submit Buttons */}
                     <div className="flex justify-end gap-3 pt-4">
                       <button
@@ -428,7 +478,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                       </button>
                       <button
                         type="submit"
-                        disabled={isCreating || isUpdating}
+                        disabled={isCreating || isUpdating || !formData.name.trim() || formData.features.length === 0}
                         className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] border border-transparent rounded-md hover:bg-[#d96b2a] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isCreating || isUpdating ? "Kaydediliyor..." : (editingPackage ? "Güncelle" : "Ekle")}

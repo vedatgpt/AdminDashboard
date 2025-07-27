@@ -46,7 +46,7 @@ export function useCategoryPackages(categoryId: number, options?: UseCategoryPac
     },
     onError: (error) => {
       console.error("❌ CREATE ERROR:", error);
-      alert("Paket oluşturulurken hata oluştu: " + error.message);
+      alert("❌ Paket oluşturulurken hata oluştu: " + error.message);
     },
   });
 
