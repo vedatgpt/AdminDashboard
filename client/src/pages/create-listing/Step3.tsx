@@ -604,6 +604,15 @@ export default function Step3() {
 
   const handleNextStep = async () => {
     await executeWithProtection(async () => {
+      // PHOTO VALIDATION: Check if at least one photo is uploaded
+      if (images.length === 0) {
+        toast({
+          title: "Fotoğraf Gerekli",
+          description: "Devam etmek için en az bir fotoğraf yüklemeniz gerekir.",
+          variant: "destructive"
+        });
+        return;
+      }
       // Clear any pending save timeout and execute immediately
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -630,13 +639,6 @@ export default function Step3() {
       }
 
       if (images.length > 0) {
-      // Show loading state
-      toast({
-        title: "Kaydediliyor...",
-        description: "Fotoğraflar kaydediliyor, lütfen bekleyin.",
-        variant: "default"
-      });
-
       try {
         // Wait for the save to complete
         await new Promise((resolve, reject) => {

@@ -12,6 +12,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 import { useClassifiedId } from '@/hooks/useClassifiedId';
+import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
@@ -29,6 +30,9 @@ export default function CreateListingStep1() {
   const { handleCategoryHover } = useSmartPrefetch();
   const { prefetchStep2Data } = useStep2Prefetch();
   const { smartPrefetchStep1 } = useStep1Prefetch();
+  
+  // DOUBLE-CLICK PROTECTION: Using custom hook
+  const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
   // Redirect to login if not authenticated - simplified
   useEffect(() => {
@@ -678,7 +682,7 @@ export default function CreateListingStep1() {
                           Kategori Seçimi Tamamlanmıştır.
                         </p>
                         <button
-                          onClick={async () => {
+                          onClick={() => executeWithProtection(async () => {
                             // Check authentication first
                             if (!isAuthenticated) {
                               navigate('/auth/login');
@@ -723,10 +727,15 @@ export default function CreateListingStep1() {
                               `/create-listing/step-2?classifiedId=${currentClassifiedId}` : 
                               '/create-listing/step-2';
                             navigate(url);
-                          }}
-                          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                          })}
+                          className={`px-6 py-2 rounded-lg transition-colors text-sm font-medium ${
+                            isSubmitting 
+                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                          }`}
+                          disabled={isSubmitting}
                         >
-                          {isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et'}
+                          {isSubmitting ? 'İşleniyor...' : (isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et')}
                         </button>
                       </div>
                     </div>
@@ -780,7 +789,7 @@ export default function CreateListingStep1() {
                     Kategori Seçimi Tamamlanmıştır.
                   </p>
                   <button
-                    onClick={async () => {
+                    onClick={() => executeWithProtection(async () => {
                       // Check authentication first
                       if (!isAuthenticated) {
                         navigate('/auth/login');
@@ -816,10 +825,15 @@ export default function CreateListingStep1() {
                       dispatch({ type: 'SET_STEP', payload: 2 });
                       const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
                       navigate(url);
-                    }}
-                    className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-base font-medium"
+                    })}
+                    className={`w-full py-3 rounded-lg transition-colors text-base font-medium ${
+                      isSubmitting 
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                    disabled={isSubmitting}
                   >
-                    {isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et'}
+                    {isSubmitting ? 'İşleniyor...' : (isAuthenticated ? 'Devam Et' : 'Giriş Yap ve Devam Et')}
                   </button>
                 </div>
               )}
