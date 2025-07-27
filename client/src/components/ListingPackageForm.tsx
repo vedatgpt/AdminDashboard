@@ -9,6 +9,7 @@ interface ListingPackageFormProps {
   onSubmit: (data: InsertListingPackage | UpdateListingPackage) => void;
   listingPackage?: ListingPackage | null;
   isLoading?: boolean;
+  packageType: 'individual' | 'corporate'; // Fixed package type from parent
 }
 
 export default function ListingPackageForm({ 
@@ -16,7 +17,8 @@ export default function ListingPackageForm({
   onClose, 
   onSubmit, 
   listingPackage, 
-  isLoading = false 
+  isLoading = false,
+  packageType 
 }: ListingPackageFormProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -31,7 +33,6 @@ export default function ListingPackageForm({
 
   const [featuresArray, setFeaturesArray] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [selectedMembershipTypes, setSelectedMembershipTypes] = useState<string[]>(['individual']); // Default to individual
 
   // Fetch categories for selection
   const { data: categories = [] } = useCategories();
@@ -58,10 +59,9 @@ export default function ListingPackageForm({
           setFeaturesArray([]);
         }
 
-        // TODO: Load existing category and membership type selections from database
-        // For now, keep empty arrays as placeholders
+        // TODO: Load existing category selections from database
+        // For now, keep empty array as placeholder
         setSelectedCategories([]);
-        setSelectedMembershipTypes(['individual']); // Default to individual when editing too
       } else {
         setFormData({
           name: "",
@@ -75,7 +75,6 @@ export default function ListingPackageForm({
         });
         setFeaturesArray([]);
         setSelectedCategories([]);
-        setSelectedMembershipTypes(['individual']); // Default to individual for new package
       }
     }
   }, [isOpen, listingPackage]);
@@ -89,16 +88,13 @@ export default function ListingPackageForm({
       return;
     }
 
-    if (selectedMembershipTypes.length === 0) {
-      alert('Paket tipini seçmelisiniz (Bireysel veya Kurumsal)');
-      return;
-    }
+
     
     const submitData = {
       ...formData,
       features: JSON.stringify(featuresArray),
       selectedCategories,
-      selectedMembershipTypes,
+      selectedMembershipTypes: [packageType], // Use fixed package type from prop
     };
     
     onSubmit(submitData);
@@ -270,39 +266,7 @@ export default function ListingPackageForm({
               </p>
             </div>
 
-            {/* Package Type (Individual or Corporate) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Paket Tipi
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="packageType"
-                    value="individual"
-                    checked={selectedMembershipTypes.includes('individual') && !selectedMembershipTypes.includes('corporate')}
-                    onChange={() => setSelectedMembershipTypes(['individual'])}
-                    className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 focus:ring-[#EC7830] focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-gray-900">Bireysel Paket</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="packageType"
-                    value="corporate"
-                    checked={selectedMembershipTypes.includes('corporate') && !selectedMembershipTypes.includes('individual')}
-                    onChange={() => setSelectedMembershipTypes(['corporate'])}
-                    className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 focus:ring-[#EC7830] focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-gray-900">Kurumsal Paket</span>
-                </label>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Bu paket bireysel mi yoksa kurumsal kullanıcılar için mi?
-              </p>
-            </div>
+
 
             {/* Features */}
             <div>

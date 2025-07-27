@@ -330,6 +330,7 @@ export default function CorporateListingPackages() {
         onSubmit={editingPackage ? handleUpdate : handleCreate}
         listingPackage={editingPackage}
         isLoading={createMutation.isPending || updateMutation.isPending}
+        packageType="corporate"
       />
     </div>
   );
