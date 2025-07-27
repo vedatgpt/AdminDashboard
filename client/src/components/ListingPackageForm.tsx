@@ -233,80 +233,96 @@ export default function ListingPackageForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Geçerli Kategoriler *
               </label>
+              
+              {/* Standard HTML Select with Preline styling */}
               <select
                 multiple
-                size={8}
+                size={6}
                 value={selectedCategories.map(String)}
                 onChange={(e) => {
                   const selectedValues = Array.from(e.target.selectedOptions, option => parseInt(option.value));
                   setSelectedCategories(selectedValues);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-[#EC7830] bg-white text-sm"
                 required
               >
-                <optgroup label="Ana Kategoriler">
-                  {categories.filter(cat => !cat.parentId).map((mainCategory) => (
-                    <option key={mainCategory.id} value={mainCategory.id}>
-                      {mainCategory.name} {mainCategory.categoryType ? `(${mainCategory.categoryType})` : ''}
-                    </option>
-                  ))}
-                </optgroup>
+                {/* Ana Kategoriler */}
+                {categories.filter(cat => !cat.parentId).map((mainCategory) => (
+                  <option 
+                    key={mainCategory.id} 
+                    value={mainCategory.id}
+                    className="py-2 font-medium text-blue-600"
+                  >
+                    📁 {mainCategory.name} {mainCategory.categoryType ? `(${mainCategory.categoryType})` : ''}
+                  </option>
+                ))}
                 
-                {categories.filter(cat => !cat.parentId).map((mainCategory) => {
-                  const subCategories = categories.filter(cat => cat.parentId === mainCategory.id);
-                  if (subCategories.length === 0) return null;
-                  
+                {/* Alt Kategoriler */}
+                {categories.filter(cat => cat.parentId && !categories.find(c => c.parentId === cat.id && categories.find(p => p.id === c.parentId)?.parentId)).map((subCategory) => {
+                  const parent = categories.find(c => c.id === subCategory.parentId);
                   return (
-                    <optgroup key={`sub-${mainCategory.id}`} label={`${mainCategory.name} - Alt Kategoriler`}>
-                      {subCategories.map((subCategory) => (
-                        <option key={subCategory.id} value={subCategory.id}>
-                          {subCategory.name} {subCategory.categoryType ? `(${subCategory.categoryType})` : ''}
-                        </option>
-                      ))}
-                    </optgroup>
+                    <option 
+                      key={subCategory.id} 
+                      value={subCategory.id}
+                      className="py-1 text-green-600 pl-4"
+                    >
+                      ├─ {subCategory.name} {subCategory.categoryType ? `(${subCategory.categoryType})` : ''}
+                    </option>
                   );
                 })}
                 
-                {/* Third level categories (like BMW > M Serisi > M3 Competition) */}
-                {categories.filter(cat => cat.parentId && categories.find(parent => parent.id === cat.parentId)?.parentId).map((thirdLevel) => {
+                {/* Üçüncü Seviye Kategoriler */}
+                {categories.filter(cat => {
+                  const parent = categories.find(c => c.id === cat.parentId);
+                  return parent && parent.parentId;
+                }).map((thirdLevel) => {
                   const parent = categories.find(c => c.id === thirdLevel.parentId);
-                  const grandParent = parent ? categories.find(c => c.id === parent.parentId) : null;
-                  
-                  if (!parent || !grandParent) return null;
                   
                   return (
-                    <optgroup key={`third-${grandParent.id}-${parent.id}`} label={`${grandParent.name} → ${parent.name}`}>
-                      <option key={thirdLevel.id} value={thirdLevel.id}>
-                        {thirdLevel.name} {thirdLevel.categoryType ? `(${thirdLevel.categoryType})` : ''}
-                      </option>
-                    </optgroup>
+                    <option 
+                      key={thirdLevel.id} 
+                      value={thirdLevel.id}
+                      className="py-1 text-orange-600 pl-8"
+                    >
+                      └── {thirdLevel.name} {thirdLevel.categoryType ? `(${thirdLevel.categoryType})` : ''}
+                    </option>
                   );
                 })}
               </select>
+              
               <p className="text-xs text-gray-500 mt-1">
                 Bu paket hangi kategorilerde kullanılabilir olacak? Ctrl/Cmd tuşu ile çoklu seçim yapabilirsiniz.
-                <br />Örn: Vasıta &gt; Otomobil &gt; BMW seçebilir veya sadece Vasıta seçebilirsiniz.
               </p>
               
               {/* Selected Categories Display */}
               {selectedCategories.length > 0 && (
-                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Seçilen Kategoriler:</p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Seçilen Kategoriler ({selectedCategories.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
                     {selectedCategories.map(categoryId => {
                       const category = categories.find(c => c.id === categoryId);
                       if (!category) return null;
                       
+                      // Get category hierarchy
+                      const getHierarchy = (cat: any): string => {
+                        if (!cat.parentId) return cat.name;
+                        const parent = categories.find(c => c.id === cat.parentId);
+                        return parent ? `${getHierarchy(parent)} → ${cat.name}` : cat.name;
+                      };
+                      
                       return (
                         <span
                           key={categoryId}
-                          className="inline-flex items-center px-2 py-1 text-xs bg-[#EC7830] text-white rounded"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-[#EC7830] text-white rounded-lg shadow-sm"
                         >
-                          {category.name}
+                          {getHierarchy(category)}
                           <button
                             type="button"
                             onClick={() => setSelectedCategories(prev => prev.filter(id => id !== categoryId))}
-                            className="ml-1 hover:text-gray-200"
+                            className="ml-2 hover:text-gray-200 font-bold text-base leading-none"
+                            title="Kaldır"
                           >
                             ×
                           </button>
