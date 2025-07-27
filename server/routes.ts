@@ -12,6 +12,7 @@ import { loginSchema, registerSchema, type User } from "@shared/schema";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import categoriesRouter from "./routes/categories";
+import categoryPackagesRouter from "./routes/categoryPackages";
 import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
 import { pool } from "./db";
 
@@ -1350,6 +1351,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Doping paketleri sıralanırken hata oluştu" });
     }
   });
+
+  // Mount category packages routes
+  app.use("/api/category-packages", categoryPackagesRouter);
 
   const httpServer = createServer(app);
   return httpServer;

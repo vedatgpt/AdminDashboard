@@ -12,6 +12,7 @@ const navigation = [
   { name: "Kategoriler", href: "/admin/categories", icon: Tags },
   { name: "Lokasyonlar", href: "/admin/locations", icon: MapPin },
   { name: "Doping Paketleri", href: "/admin/doping-packages", icon: Package },
+  { name: "Kategori Paketleri", href: "/admin/category-packages", icon: Package },
 ];
 
 export default function Sidebar() {

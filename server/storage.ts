@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, categoryPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type CategoryPackage, type InsertCategoryPackage, type UpdateCategoryPackage } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -82,6 +82,14 @@ export interface IStorage {
   updateDopingPackage(id: number, updates: UpdateDopingPackage): Promise<DopingPackage>;
   deleteDopingPackage(id: number): Promise<void>;
   reorderDopingPackages(packageIds: number[]): Promise<void>;
+
+  // Category Packages methods
+  getCategoryPackages(categoryId: number): Promise<CategoryPackage[]>;
+  getCategoryPackageById(id: number): Promise<CategoryPackage | undefined>;
+  createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
+  updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
+  deleteCategoryPackage(id: number): Promise<void>;
+  reorderCategoryPackages(categoryId: number, packageIds: number[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -735,6 +743,49 @@ export class DatabaseStorage implements IStorage {
       await db.update(dopingPackages)
         .set({ sortOrder: i + 1 })
         .where(eq(dopingPackages.id, packageIds[i]));
+    }
+  }
+
+  // Category Packages Implementation
+  async getCategoryPackages(categoryId: number): Promise<CategoryPackage[]> {
+    const packages = await db.select()
+      .from(categoryPackages)
+      .where(eq(categoryPackages.categoryId, categoryId))
+      .orderBy(asc(categoryPackages.sortOrder), asc(categoryPackages.name));
+    return packages;
+  }
+
+  async getCategoryPackageById(id: number): Promise<CategoryPackage | undefined> {
+    const [categoryPackage] = await db.select()
+      .from(categoryPackages)
+      .where(eq(categoryPackages.id, id));
+    return categoryPackage;
+  }
+
+  async createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage> {
+    const [categoryPackage] = await db.insert(categoryPackages)
+      .values(data)
+      .returning();
+    return categoryPackage;
+  }
+
+  async updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage> {
+    const [categoryPackage] = await db.update(categoryPackages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(categoryPackages.id, id))
+      .returning();
+    return categoryPackage;
+  }
+
+  async deleteCategoryPackage(id: number): Promise<void> {
+    await db.delete(categoryPackages).where(eq(categoryPackages.id, id));
+  }
+
+  async reorderCategoryPackages(categoryId: number, packageIds: number[]): Promise<void> {
+    for (let i = 0; i < packageIds.length; i++) {
+      await db.update(categoryPackages)
+        .set({ sortOrder: i + 1 })
+        .where(and(eq(categoryPackages.id, packageIds[i]), eq(categoryPackages.categoryId, categoryId)));
     }
   }
 }

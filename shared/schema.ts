@@ -296,3 +296,33 @@ export const updateDopingPackageSchema = insertDopingPackageSchema.partial();
 export type DopingPackage = typeof dopingPackages.$inferSelect;
 export type InsertDopingPackage = z.infer<typeof insertDopingPackageSchema>;
 export type UpdateDopingPackage = z.infer<typeof updateDopingPackageSchema>;
+
+// Category Packages table for category-specific doping packages
+export const categoryPackages = pgTable("category_packages", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: integer("price").notNull().default(0), // Price in TL cents (e.g., 5000 = 50.00 TL)
+  durationDays: integer("duration_days").notNull().default(30), // Duration in days
+  features: text("features"), // JSON array of features like ["top_listing", "highlighted", "badge"]
+  membershipTypes: text("membership_types"), // JSON array: ["individual"], ["corporate"], or ["individual", "corporate"]
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating category packages
+export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Schema for updating category packages
+export const updateCategoryPackageSchema = insertCategoryPackageSchema.partial();
+
+export type CategoryPackage = typeof categoryPackages.$inferSelect;
+export type InsertCategoryPackage = z.infer<typeof insertCategoryPackageSchema>;
+export type UpdateCategoryPackage = z.infer<typeof updateCategoryPackageSchema>;
