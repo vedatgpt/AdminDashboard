@@ -82,22 +82,33 @@ export default function DraftContinueModal({
         <div className="p-6">
           {/* Header */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              İlan vermeye başlayıp tamamlamadığınız bir ilan var
-            </h2>
-            <p className="text-gray-600">
-              Kaldığınız yerden devam etmek ister misiniz?
+           
+            <p className="text-md font-medium text-gray-900">
+              Tamamlanmamış bir ilanınız var. Devam etmek ister misiniz?
             </p>
           </div>
 
+
+
+
+         
+
+          
+
           {/* Draft Info */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
+
+            {/* Title */}
+            {draft.title && (
+              <div className="mb-2">
+                <p className="text-sm text-gray-900">{draft.title}</p>
+              </div>
+            )}
+      
             {/* Category Breadcrumb */}
             {categoryPath.length > 0 && (
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Kategori:
-                </label>
+              <div className="mb-2">
+                
                 <BreadcrumbNav 
                   categoryPath={categoryPath}
                   onCategoryClick={() => {}} // Disabled in modal
@@ -106,39 +117,31 @@ export default function DraftContinueModal({
               </div>
             )}
 
-            {/* Title */}
-            {draft.title && (
-              <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  İlan Başlığı:
-                </label>
-                <p className="text-gray-900">{draft.title}</p>
-              </div>
-            )}
+          
 
             {/* Creation Date */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Oluşturma Tarihi:
-              </label>
-              <p className="text-gray-600">{formatDate(draft.createdAt)}</p>
+              <p className="text-xs text-gray-600">Tarih: {formatDate(draft.createdAt)}</p>
             </div>
           </div>
 
+          
           {/* Buttons */}
           <div className="space-y-3">
             <button
               onClick={onContinue}
-              className="w-full py-3 px-4 bg-[#EC7830] text-white rounded-lg hover:bg-[#d86929] transition-colors font-medium"
+              type="button"
+              className="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d86929] focus:outline-none focus:bg-[#d86929] disabled:opacity-50 disabled:pointer-events-none"
             >
-              Evet, Bu İlanın Bilgilerini Girmeye Devam Etmek İstiyorum
+              Devam Et
             </button>
             
             <button
               onClick={onNewListing}
-              className="w-full py-3 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              type="button"
+              className="w-full py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700 dark:focus:bg-neutral-700"
             >
-              Hayır, Yeni Bir İlan Vermek İstiyorum
+              Yeni İlan Ver
             </button>
           </div>
         </div>
