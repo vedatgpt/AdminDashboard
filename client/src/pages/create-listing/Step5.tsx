@@ -46,7 +46,7 @@ interface Category {
 export default function Step5() {
   const [, navigate] = useLocation();
   const search = useSearch();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
   
   // Get classified ID from URL
   const params = new URLSearchParams(search);
