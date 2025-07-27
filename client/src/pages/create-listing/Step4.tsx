@@ -921,7 +921,7 @@ export default function Step4() {
 
           <button
             onClick={() => {
-              setLocation(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+              navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
             }}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
             disabled={!currentClassifiedId}
