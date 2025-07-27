@@ -34,6 +34,7 @@ export interface IStorage {
   // Category methods
   getCategories(): Promise<Category[]>;
   getCategoriesTree(): Promise<Category[]>;
+  getAllCategoriesFlat(): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | undefined>;
   getCategoryBySlug(slug: string, parentId?: number | null): Promise<Category | undefined>;
   getChildCategories(parentId: number | null): Promise<Category[]>;
@@ -301,6 +302,11 @@ export class DatabaseStorage implements IStorage {
     });
 
     return rootCategories as Category[];
+  }
+
+  async getAllCategoriesFlat(): Promise<Category[]> {
+    // Return all categories as flat list (needed for free listing inheritance checks)
+    return await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
   }
 
   async getCategoryById(id: number): Promise<Category | undefined> {

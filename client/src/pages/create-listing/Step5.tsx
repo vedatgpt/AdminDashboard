@@ -149,9 +149,9 @@ export default function Step5() {
     alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice]);
 
-  // Fetch all categories in hierarchy to check for inheritance
+  // Fetch all categories in flat structure to check for inheritance
   const { data: allCategories = [] } = useQuery<Category[]>({
-    queryKey: ['/api/categories'],
+    queryKey: ['/api/categories/flat'],
     staleTime: 10 * 60 * 1000,
   });
 

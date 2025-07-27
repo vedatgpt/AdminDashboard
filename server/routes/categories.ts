@@ -47,6 +47,17 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get all categories as flat list (public endpoint - for inheritance checks)
+router.get("/flat", async (req, res) => {
+  try {
+    const categories = await storage.getAllCategoriesFlat();
+    res.json(categories);
+  } catch (error) {
+    console.error("Error fetching categories flat:", error);
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
 // Get categories by parent ID with pagination (public endpoint)
 router.get("/paginated", async (req, res) => {
   try {
