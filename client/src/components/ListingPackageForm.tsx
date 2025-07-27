@@ -234,10 +234,9 @@ export default function ListingPackageForm({
                 Geçerli Kategoriler *
               </label>
               
-              {/* Standard HTML Select with Preline styling */}
               <select
                 multiple
-                size={6}
+                size={8}
                 value={selectedCategories.map(String)}
                 onChange={(e) => {
                   const selectedValues = Array.from(e.target.selectedOptions, option => parseInt(option.value));
@@ -246,57 +245,36 @@ export default function ListingPackageForm({
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-[#EC7830] bg-white text-sm"
                 required
               >
-                {/* Ana Kategoriler */}
-                {categories.filter(cat => !cat.parentId).map((mainCategory) => (
-                  <option 
-                    key={mainCategory.id} 
-                    value={mainCategory.id}
-                    className="py-2 font-medium text-blue-600"
-                  >
-                    📁 {mainCategory.name} {mainCategory.categoryType ? `(${mainCategory.categoryType})` : ''}
-                  </option>
-                ))}
-                
-                {/* Alt Kategoriler */}
-                {categories.filter(cat => cat.parentId && !categories.find(c => c.parentId === cat.id && categories.find(p => p.id === c.parentId)?.parentId)).map((subCategory) => {
-                  const parent = categories.find(c => c.id === subCategory.parentId);
-                  return (
-                    <option 
-                      key={subCategory.id} 
-                      value={subCategory.id}
-                      className="py-1 text-green-600 pl-4"
-                    >
-                      ├─ {subCategory.name} {subCategory.categoryType ? `(${subCategory.categoryType})` : ''}
-                    </option>
-                  );
-                })}
-                
-                {/* Üçüncü Seviye Kategoriler */}
-                {categories.filter(cat => {
-                  const parent = categories.find(c => c.id === cat.parentId);
-                  return parent && parent.parentId;
-                }).map((thirdLevel) => {
-                  const parent = categories.find(c => c.id === thirdLevel.parentId);
+                {categories.map((category) => {
+                  let displayName = category.name;
+                  
+                  // Add indentation based on hierarchy level
+                  if (category.parentId) {
+                    const parent = categories.find(c => c.id === category.parentId);
+                    if (parent?.parentId) {
+                      // Third level
+                      displayName = `    └── ${category.name}`;
+                    } else {
+                      // Second level
+                      displayName = `  ├─ ${category.name}`;
+                    }
+                  }
                   
                   return (
-                    <option 
-                      key={thirdLevel.id} 
-                      value={thirdLevel.id}
-                      className="py-1 text-orange-600 pl-8"
-                    >
-                      └── {thirdLevel.name} {thirdLevel.categoryType ? `(${thirdLevel.categoryType})` : ''}
+                    <option key={category.id} value={category.id}>
+                      {displayName}
                     </option>
                   );
                 })}
               </select>
               
               <p className="text-xs text-gray-500 mt-1">
-                Bu paket hangi kategorilerde kullanılabilir olacak? Ctrl/Cmd tuşu ile çoklu seçim yapabilirsiniz.
+                Ctrl/Cmd tuşu ile çoklu seçim yapabilirsiniz.
               </p>
               
               {/* Selected Categories Display */}
               {selectedCategories.length > 0 && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-700 mb-2">
                     Seçilen Kategoriler ({selectedCategories.length}):
                   </p>
@@ -305,24 +283,16 @@ export default function ListingPackageForm({
                       const category = categories.find(c => c.id === categoryId);
                       if (!category) return null;
                       
-                      // Get category hierarchy
-                      const getHierarchy = (cat: any): string => {
-                        if (!cat.parentId) return cat.name;
-                        const parent = categories.find(c => c.id === cat.parentId);
-                        return parent ? `${getHierarchy(parent)} → ${cat.name}` : cat.name;
-                      };
-                      
                       return (
                         <span
                           key={categoryId}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-[#EC7830] text-white rounded-lg shadow-sm"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-[#EC7830] text-white rounded-lg"
                         >
-                          {getHierarchy(category)}
+                          {category.name}
                           <button
                             type="button"
                             onClick={() => setSelectedCategories(prev => prev.filter(id => id !== categoryId))}
-                            className="ml-2 hover:text-gray-200 font-bold text-base leading-none"
-                            title="Kaldır"
+                            className="ml-2 hover:text-gray-200 font-bold"
                           >
                             ×
                           </button>
