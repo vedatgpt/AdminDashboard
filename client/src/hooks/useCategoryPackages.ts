@@ -10,7 +10,7 @@ export function useCategoryPackages(categoryId: number) {
     data: packages = [],
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<CategoryPackage[]>({
     queryKey: ["/api/categories", categoryId, "packages"],
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -18,11 +18,19 @@ export function useCategoryPackages(categoryId: number) {
 
   // Create package mutation
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<InsertCategoryPackage, "categoryId">) => {
-      return apiRequest(`/api/categories/${categoryId}/packages`, {
+    mutationFn: async (data: Omit<InsertCategoryPackage, "categoryId">): Promise<CategoryPackage> => {
+      const response = await fetch(`/api/categories/${categoryId}/packages`, {
         method: "POST",
-        body: data,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Paket oluşturulamadı');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -36,11 +44,19 @@ export function useCategoryPackages(categoryId: number) {
 
   // Update package mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...data }: { id: number } & UpdateCategoryPackage) => {
-      return apiRequest(`/api/category-packages/${id}`, {
+    mutationFn: async ({ id, ...data }: { id: number } & UpdateCategoryPackage): Promise<CategoryPackage> => {
+      const response = await fetch(`/api/category-packages/${id}`, {
         method: "PATCH",
-        body: data,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Paket güncellenemedi');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -54,10 +70,15 @@ export function useCategoryPackages(categoryId: number) {
 
   // Delete package mutation
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/category-packages/${id}`, {
+    mutationFn: async (id: number): Promise<void> => {
+      const response = await fetch(`/api/category-packages/${id}`, {
         method: "DELETE",
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Paket silinemedi');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -71,11 +92,17 @@ export function useCategoryPackages(categoryId: number) {
 
   // Reorder packages mutation
   const reorderMutation = useMutation({
-    mutationFn: async (packageIds: number[]) => {
-      return apiRequest(`/api/categories/${categoryId}/packages/reorder`, {
+    mutationFn: async (packageIds: number[]): Promise<void> => {
+      const response = await fetch(`/api/categories/${categoryId}/packages/reorder`, {
         method: "PATCH",
-        body: { packageIds },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageIds }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Paketler sıralanamadı');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -85,7 +112,7 @@ export function useCategoryPackages(categoryId: number) {
   });
 
   return {
-    packages,
+    packages: packages as CategoryPackage[],
     isLoading,
     error,
     createPackage: createMutation.mutate,

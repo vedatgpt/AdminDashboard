@@ -20,6 +20,8 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
   });
+  
+  const [newFeature, setNewFeature] = useState("");
 
   const {
     packages,
@@ -160,7 +162,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {packages.map((pkg) => (
+                    {(packages as CategoryPackage[]).map((pkg: CategoryPackage) => (
                       <div
                         key={pkg.id}
                         className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
