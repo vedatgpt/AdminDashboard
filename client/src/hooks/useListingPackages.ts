@@ -1,10 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ListingPackage, InsertListingPackage, UpdateListingPackage, ListingPackageWithPricing, ListingPackageCategoryPricing, InsertListingPackageCategoryPricing, UpdateListingPackageCategoryPricing } from "@shared/schema";
 
-// Fetch all listing packages
-export function useListingPackages() {
-  return useQuery({
-    queryKey: ['/api/listing-packages'],
+// Fetch all listing packages (optionally filtered by membership type)
+export function useListingPackages(membershipType?: 'individual' | 'corporate') {
+  return useQuery<ListingPackage[]>({
+    queryKey: membershipType 
+      ? ['/api/listing-packages', { membershipType }] 
+      : ['/api/listing-packages'],
+    queryFn: async () => {
+      const url = membershipType 
+        ? `/api/listing-packages?membershipType=${membershipType}`
+        : '/api/listing-packages';
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'İlan paketleri alınamadı');
+      }
+      return response.json();
+    },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }

@@ -13,7 +13,7 @@ export default function CorporateListingPackages() {
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   // Queries and mutations
-  const { data: packages = [], isLoading, error } = useListingPackages();
+  const { data: packages = [], isLoading, error } = useListingPackages('corporate');
   const createMutation = useCreateListingPackage();
   const updateMutation = useUpdateListingPackage();
   const deleteMutation = useDeleteListingPackage();
@@ -25,16 +25,10 @@ export default function CorporateListingPackages() {
     setTimeout(() => setShowAlert(null), duration);
   };
 
-  // Filter only corporate packages and search
+  // Filter corporate packages and search (filtering now done by API)
   const filteredPackages = useMemo(() => {
-    let corporatePackages = (packages as ListingPackage[]).filter((pkg: ListingPackage) => {
-      // For now, we'll assume no existing packages are corporate
-      // TODO: Add package type field to distinguish
-      return false;
-    });
-
-    if (!searchTerm) return corporatePackages;
-    return corporatePackages.filter(pkg => 
+    if (!searchTerm) return packages as ListingPackage[];
+    return (packages as ListingPackage[]).filter(pkg => 
       pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (pkg.description && pkg.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );

@@ -13,7 +13,7 @@ export default function IndividualListingPackages() {
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   // Queries and mutations
-  const { data: packages = [], isLoading, error } = useListingPackages();
+  const { data: packages = [], isLoading, error } = useListingPackages('individual');
   const createMutation = useCreateListingPackage();
   const updateMutation = useUpdateListingPackage();
   const deleteMutation = useDeleteListingPackage();
@@ -25,16 +25,10 @@ export default function IndividualListingPackages() {
     setTimeout(() => setShowAlert(null), duration);
   };
 
-  // Filter only individual packages and search
+  // Filter individual packages and search (filtering now done by API)
   const filteredPackages = useMemo(() => {
-    let individualPackages = (packages as ListingPackage[]).filter((pkg: ListingPackage) => {
-      // For now, we'll assume all existing packages are individual
-      // TODO: Add package type field to distinguish
-      return true;
-    });
-
-    if (!searchTerm) return individualPackages;
-    return individualPackages.filter(pkg => 
+    if (!searchTerm) return packages as ListingPackage[];
+    return (packages as ListingPackage[]).filter(pkg => 
       pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (pkg.description && pkg.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );

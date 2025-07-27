@@ -306,6 +306,7 @@ export const listingPackages = pgTable("listing_packages", {
   durationDays: integer("duration_days").notNull().default(30), // Duration in days
   features: text("features"), // JSON array of features like ["top_listing", "highlighted", "badge_premium"]
   maxPhotos: integer("max_photos").notNull().default(20), // Maximum photos allowed
+  membershipType: text("membership_type").notNull(), // 'individual' or 'corporate'
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),

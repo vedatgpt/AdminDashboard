@@ -1354,8 +1354,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== LISTING PACKAGES ENDPOINTS =====
   app.get("/api/listing-packages", requireAdmin, async (req, res) => {
     try {
+      const { membershipType } = req.query;
       const packages = await storage.getListingPackages();
-      res.json(packages);
+      
+      // Filter by membership type if provided
+      let filteredPackages = packages;
+      if (membershipType && typeof membershipType === 'string') {
+        filteredPackages = packages.filter((pkg: any) => pkg.membershipType === membershipType);
+      }
+      
+      res.json(filteredPackages);
     } catch (error: any) {
       console.error("Error fetching listing packages:", error);
       res.status(500).json({ error: "İlan paketleri alınırken hata oluştu" });
@@ -1407,8 +1415,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("📦 Creating listing package with categories:", selectedCategories);
       console.log("👥 Membership types:", selectedMembershipTypes);
       
+      // Add membershipType to package data (use first from selectedMembershipTypes array)
+      const membershipType = selectedMembershipTypes && selectedMembershipTypes.length > 0 
+        ? selectedMembershipTypes[0] 
+        : 'individual';
+      
+      const packageWithType = {
+        ...packageData,
+        membershipType
+      };
+      
       // First create the listing package
-      const listingPackage = await storage.createListingPackage(packageData);
+      const listingPackage = await storage.createListingPackage(packageWithType);
       
       // Then create category pricing entries for selected categories
       if (selectedCategories && Array.isArray(selectedCategories) && selectedCategories.length > 0) {
