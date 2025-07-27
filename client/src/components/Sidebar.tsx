@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Users, Megaphone, Tags, MapPin, Package, LogOut, X, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Home, Users, Megaphone, Tags, MapPin, Package, LogOut, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/use-sidebar";
 import logoPath from "@assets/logo_1752808818099.png";
@@ -121,8 +121,6 @@ export default function Sidebar() {
                     </li>
                   );
                 })}
-
-
 
                 {/* Account Section with Accordion */}
                 <li className="hs-accordion" id="account-accordion">

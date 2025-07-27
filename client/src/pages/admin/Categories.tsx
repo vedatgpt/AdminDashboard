@@ -6,7 +6,6 @@ import Sortable from "sortablejs";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
 import CustomFieldsModal from "@/components/CustomFieldsModal";
-import CategoryPackagesModal from "@/components/CategoryPackagesModal";
 import { useCategoriesTree, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
@@ -19,8 +18,6 @@ export default function Categories() {
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
   const [customFieldsCategory, setCustomFieldsCategory] = useState<Category | null>(null);
-  const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false);
-  const [packagesCategory, setPackagesCategory] = useState<Category | null>(null);
   
   const queryClient = useQueryClient();
 
@@ -212,11 +209,6 @@ export default function Categories() {
   const handleCustomFields = (category: Category) => {
     setCustomFieldsCategory(category);
     setIsCustomFieldsOpen(true);
-  };
-
-  const handleListingPackages = (category: Category) => {
-    setPackagesCategory(category);
-    setIsPackagesModalOpen(true);
   };
 
   const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
@@ -435,16 +427,6 @@ export default function Categories() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleListingPackages(category);
-                          }}
-                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
-                          title="İlan paketleri"
-                        >
-                          <FolderTree className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
                             handleEdit(category);
                           }}
                           className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
@@ -502,18 +484,6 @@ export default function Categories() {
             setCustomFieldsCategory(null);
           }}
           category={customFieldsCategory}
-        />
-      )}
-
-      {/* Category Packages Modal */}
-      {packagesCategory && (
-        <CategoryPackagesModal
-          isOpen={isPackagesModalOpen}
-          onClose={() => {
-            setIsPackagesModalOpen(false);
-            setPackagesCategory(null);
-          }}
-          category={packagesCategory}
         />
       )}
     </div>
