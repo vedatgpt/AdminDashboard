@@ -352,7 +352,13 @@ export default function Step3() {
 
             resolve(data);
           } else {
-            reject(new Error('Upload failed'));
+            // Parse error message from server response
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.error || 'Upload failed'));
+            } catch {
+              reject(new Error('Upload failed'));
+            }
           }
         });
 
@@ -528,7 +534,7 @@ export default function Step3() {
       if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
         toast({
           title: "Geçersiz Dosya Formatı",
-          description: 'Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir',
+          description: 'Sadece JPG, PNG, WebP ve HEIC dosyaları yüklenebilir. HEIC dosyaları bazı durumlarda uyumluluk sorunları yaşayabilir.',
           variant: "destructive"
         });
         return false;

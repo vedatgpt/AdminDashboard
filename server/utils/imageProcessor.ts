@@ -43,12 +43,20 @@ export class ImageProcessor {
       // Ensure directory exists
       await fs.mkdir(path.dirname(outputPath), { recursive: true });
       
-      // Get metadata first
-      const metadata = await sharp(inputBuffer).metadata();
-      const originalWidth = metadata.width || 0;
-      const originalHeight = metadata.height || 0;
+      // Get metadata first - with HEIF error handling
+      let metadata;
+      try {
+        metadata = await sharp(inputBuffer).metadata();
+      } catch (metadataError) {
+        // If metadata extraction fails (common with unsupported HEIC variants)
+        console.warn('Metadata extraction failed, using defaults:', metadataError);
+        metadata = { width: 1920, height: 1080 }; // Default dimensions
+      }
       
-      // Process image with Sharp
+      const originalWidth = metadata.width || 1920;
+      const originalHeight = metadata.height || 1080;
+      
+      // Process image with Sharp - enhanced HEIF error handling
       let sharpInstance = sharp(inputBuffer);
       
       // Resize if needed while preserving orientation
@@ -60,12 +68,17 @@ export class ImageProcessor {
       }
       
       // Auto-rotate based on EXIF data to prevent orientation issues
-      sharpInstance = sharpInstance.rotate();
+      try {
+        sharpInstance = sharpInstance.rotate();
+      } catch (rotateError) {
+        console.warn('Auto-rotation failed, skipping:', rotateError);
+        // Continue without rotation if it fails
+      }
       
       // Set quality and format
       sharpInstance = sharpInstance.jpeg({ quality });
       
-      // Save processed image
+      // Save processed image with enhanced error handling
       await sharpInstance.toFile(outputPath);
       
       // Get processed file size
@@ -87,6 +100,17 @@ export class ImageProcessor {
       return result;
     } catch (error) {
       console.error('Image processing error:', error);
+      
+      // Check if this is a HEIC compression error
+      if (error instanceof Error && error.message.includes('compression format has not been built in')) {
+        throw new Error('Bu HEIC dosya formatı desteklenmiyor. Lütfen JPG, PNG veya WebP formatında fotoğraf yükleyiniz.');
+      }
+      
+      // Check if this is a HEIF/HEIC related error
+      if (error instanceof Error && (error.message.includes('heif') || error.message.includes('heic'))) {
+        throw new Error('HEIC/HEIF dosya işlenemedi. Lütfen fotoğrafı JPG veya PNG formatında kaydedin ve tekrar yükleyin.');
+      }
+      
       throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
