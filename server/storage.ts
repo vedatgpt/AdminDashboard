@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, listingPackages, listingPackageCategoryPricing, corporatePackageAllocations, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type ListingPackage, type InsertListingPackage, type UpdateListingPackage, type ListingPackageCategoryPricing, type InsertListingPackageCategoryPricing, type UpdateListingPackageCategoryPricing, type CorporatePackageAllocation, type InsertCorporatePackageAllocation, type ListingPackageWithPricing } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, listingPackages, listingPackageCategoryPricing, corporatePackageAllocations, categoryPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage, type ListingPackage, type InsertListingPackage, type UpdateListingPackage, type ListingPackageCategoryPricing, type InsertListingPackageCategoryPricing, type UpdateListingPackageCategoryPricing, type CorporatePackageAllocation, type InsertCorporatePackageAllocation, type ListingPackageWithPricing, type CategoryPackage, type InsertCategoryPackage, type UpdateCategoryPackage } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -93,10 +93,6 @@ export interface IStorage {
   reorderListingPackages(packageIds: number[]): Promise<void>;
 
   // Category-Package relationship methods
-  getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
-  createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
-  updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
-  deleteCategoryPackage(id: number): Promise<void>;
   getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
   createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
   updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;

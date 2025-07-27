@@ -28,7 +28,7 @@ export interface UpdateCategoryPackageData {
 
 // Fetch category packages
 export function useCategoryPackages(categoryId: number) {
-  return useQuery({
+  return useQuery<CategoryPackage[]>({
     queryKey: ['/api/categories', categoryId, 'packages'],
     enabled: !!categoryId,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -106,9 +106,25 @@ export function useDeleteCategoryPackage(categoryId: number) {
   });
 }
 
+// Interface for ListingPackage from API
+interface ListingPackage {
+  id: number;
+  name: string;
+  description: string | null;
+  basePrice: number;
+  durationDays: number;
+  features: string | null;
+  maxPhotos: number;
+  membershipType: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Fetch all listing packages (for selecting which package to assign to category)
 export function useListingPackages() {
-  return useQuery({
+  return useQuery<ListingPackage[]>({
     queryKey: ['/api/listing-packages'],
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
