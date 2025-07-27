@@ -24,6 +24,7 @@ import AuthorizedPersonnel from "./pages/account/AuthorizedPersonnel";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/public/not-found";
+import CategoryListingPackages from "./pages/admin/CategoryListingPackages";
 
 import CreateListingStep1 from "@/pages/create-listing/Step1";
 import CreateListingStep2 from "@/pages/create-listing/Step2";
@@ -70,6 +71,7 @@ function Router() {
             <Route path="/admin/listing-packages" component={ListingPackages} />
             <Route path="/admin/listing-packages/individual" component={IndividualListingPackages} />
             <Route path="/admin/listing-packages/corporate" component={CorporateListingPackages} />
+            <Route path="/admin/categories/:categoryId/packages" component={CategoryListingPackages} />
 
             <Route component={NotFound} />
           </Switch>

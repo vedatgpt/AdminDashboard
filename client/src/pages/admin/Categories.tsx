@@ -211,6 +211,10 @@ export default function Categories() {
     setIsCustomFieldsOpen(true);
   };
 
+  const handleListingPackages = (category: Category) => {
+    setLocation(`/admin/categories/${category.id}/packages`);
+  };
+
   const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   // Initialize SortableJS for categories
@@ -423,6 +427,16 @@ export default function Categories() {
                           title="Özel alanlar"
                         >
                           <Settings className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleListingPackages(category);
+                          }}
+                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                          title="İlan paketleri"
+                        >
+                          <FolderTree className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
