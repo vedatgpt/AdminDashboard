@@ -31,7 +31,7 @@ export default function ListingPackageForm({
 
   const [featuresArray, setFeaturesArray] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [selectedMembershipTypes, setSelectedMembershipTypes] = useState<string[]>([]);
+  const [selectedMembershipTypes, setSelectedMembershipTypes] = useState<string[]>(['individual']); // Default to individual
 
   // Fetch categories for selection
   const { data: categories = [] } = useCategories();
@@ -61,7 +61,7 @@ export default function ListingPackageForm({
         // TODO: Load existing category and membership type selections from database
         // For now, keep empty arrays as placeholders
         setSelectedCategories([]);
-        setSelectedMembershipTypes([]);
+        setSelectedMembershipTypes(['individual']); // Default to individual when editing too
       } else {
         setFormData({
           name: "",
@@ -74,6 +74,8 @@ export default function ListingPackageForm({
           sortOrder: 0,
         });
         setFeaturesArray([]);
+        setSelectedCategories([]);
+        setSelectedMembershipTypes(['individual']); // Default to individual for new package
       }
     }
   }, [isOpen, listingPackage]);
@@ -88,7 +90,7 @@ export default function ListingPackageForm({
     }
 
     if (selectedMembershipTypes.length === 0) {
-      alert('En az bir üyelik tipi seçmelisiniz');
+      alert('Paket tipini seçmelisiniz (Bireysel veya Kurumsal)');
       return;
     }
     
@@ -268,36 +270,37 @@ export default function ListingPackageForm({
               </p>
             </div>
 
-            {/* Membership Types */}
+            {/* Package Type (Individual or Corporate) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Geçerli Üyelik Tipleri
+                Paket Tipi
               </label>
               <div className="space-y-2">
-                {['individual', 'corporate', 'authorized_personnel'].map((type) => (
-                  <label key={type} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedMembershipTypes.includes(type)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedMembershipTypes([...selectedMembershipTypes, type]);
-                        } else {
-                          setSelectedMembershipTypes(selectedMembershipTypes.filter(t => t !== type));
-                        }
-                      }}
-                      className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
-                    />
-                    <span className="ml-2 text-sm text-gray-900">
-                      {type === 'individual' ? 'Bireysel Üyeler' : 
-                       type === 'corporate' ? 'Kurumsal Üyeler' :
-                       'Yetkili Kişiler'}
-                    </span>
-                  </label>
-                ))}
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="packageType"
+                    value="individual"
+                    checked={selectedMembershipTypes.includes('individual') && !selectedMembershipTypes.includes('corporate')}
+                    onChange={() => setSelectedMembershipTypes(['individual'])}
+                    className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 focus:ring-[#EC7830] focus:ring-2"
+                  />
+                  <span className="ml-2 text-sm text-gray-900">Bireysel Paket</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="packageType"
+                    value="corporate"
+                    checked={selectedMembershipTypes.includes('corporate') && !selectedMembershipTypes.includes('individual')}
+                    onChange={() => setSelectedMembershipTypes(['corporate'])}
+                    className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 focus:ring-[#EC7830] focus:ring-2"
+                  />
+                  <span className="ml-2 text-sm text-gray-900">Kurumsal Paket</span>
+                </label>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Bu paket hangi üyelik tiplerinde kullanılabilir olacak?
+                Bu paket bireysel mi yoksa kurumsal kullanıcılar için mi?
               </p>
             </div>
 

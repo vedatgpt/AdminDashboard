@@ -9,6 +9,8 @@ import Locations from "@/pages/admin/Locations";
 import LocationSettings from "@/pages/admin/LocationSettings";
 import DopingPackages from "@/pages/admin/DopingPackages";
 import ListingPackages from "@/pages/admin/ListingPackages";
+import IndividualListingPackages from "@/pages/admin/IndividualListingPackages";
+import CorporateListingPackages from "@/pages/admin/CorporateListingPackages";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -66,6 +68,8 @@ function Router() {
             <Route path="/admin/locations/:parentId" component={Locations} />
             <Route path="/admin/doping-packages" component={DopingPackages} />
             <Route path="/admin/listing-packages" component={ListingPackages} />
+            <Route path="/admin/listing-packages/individual" component={IndividualListingPackages} />
+            <Route path="/admin/listing-packages/corporate" component={CorporateListingPackages} />
 
             <Route component={NotFound} />
           </Switch>

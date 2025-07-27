@@ -12,7 +12,6 @@ const navigation = [
   { name: "Kategoriler", href: "/admin/categories", icon: Tags },
   { name: "Lokasyonlar", href: "/admin/locations", icon: MapPin },
   { name: "Doping Paketleri", href: "/admin/doping-packages", icon: Package },
-  { name: "İlan Paketleri", href: "/admin/listing-packages", icon: FileText },
 ];
 
 export default function Sidebar() {
@@ -103,8 +102,7 @@ export default function Sidebar() {
                                    (location === "/" && item.href === "/admin") ||
                                    (item.href === "/admin/categories" && location.startsWith("/admin/categories")) ||
                                    (item.href === "/admin/locations" && location.startsWith("/admin/locations")) ||
-                                   (item.href === "/admin/doping-packages" && location.startsWith("/admin/doping-packages")) ||
-                                   (item.href === "/admin/listing-packages" && location.startsWith("/admin/listing-packages"));
+                                   (item.href === "/admin/doping-packages" && location.startsWith("/admin/doping-packages"));
 
                   return (
                     <li key={item.name}>
@@ -123,6 +121,56 @@ export default function Sidebar() {
                     </li>
                   );
                 })}
+
+                {/* İlan Paketleri Section with Accordion */}
+                <li className="hs-accordion" id="listing-packages-accordion">
+                  <button 
+                    type="button" 
+                    className={`hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100 ${
+                      location.startsWith("/admin/listing-packages") ? "bg-gray-100 text-gray-800" : "text-gray-800"
+                    }`}
+                    aria-expanded="false" 
+                    aria-controls="listing-packages-accordion-collapse"
+                  >
+                    <FileText className="size-4" />
+                    İlan Paketleri
+
+                    <ChevronUp className="hs-accordion-active:block ms-auto hidden size-4 text-gray-600" />
+                    <ChevronDown className="hs-accordion-active:hidden ms-auto block size-4 text-gray-600" />
+                  </button>
+
+                  <div 
+                    id="listing-packages-accordion-collapse" 
+                    className="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden" 
+                    role="region" 
+                    aria-labelledby="listing-packages-accordion"
+                  >
+                    <ul className="pt-1 ps-7 space-y-1">
+                      <li>
+                        <Link
+                          href="/admin/listing-packages/individual"
+                          className={`flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100 ${
+                            location === "/admin/listing-packages/individual" ? "bg-gray-100 text-gray-800" : "text-gray-800"
+                          }`}
+                          onClick={close}
+                        >
+                          Bireysel Paketler
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/admin/listing-packages/corporate"
+                          className={`flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100 ${
+                            location === "/admin/listing-packages/corporate" ? "bg-gray-100 text-gray-800" : "text-gray-800"
+                          }`}
+                          onClick={close}
+                        >
+                          Kurumsal Paketler
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
 
                 {/* Account Section with Accordion */}
                 <li className="hs-accordion" id="account-accordion">
