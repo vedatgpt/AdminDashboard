@@ -382,11 +382,17 @@ export default function Step3() {
         }
         return newImages;
       });
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
       toast({
         title: "Yükleme Hatası",
-        description: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        description: errorMessage,
         variant: "destructive"
       });
+      
+      // Log error for debugging without throwing
+      console.warn('Upload error:', errorMessage);
     }
   };
 
