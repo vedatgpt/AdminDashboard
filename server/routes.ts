@@ -1259,7 +1259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Category Packages routes
-app.get("/api/categories/:categoryId/packages", requireAdmin, async (req, res) => {
+app.get("/api/categories/:categoryId/packages", async (req, res) => {
   try {
     const categoryId = parseInt(req.params.categoryId);
     if (isNaN(categoryId)) {
@@ -1351,7 +1351,7 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
 });
 
 // Doping Packages routes
-  app.get("/api/doping-packages", requireAdmin, async (req, res) => {
+  app.get("/api/doping-packages", async (req, res) => {
     try {
       const packages = await storage.getDopingPackages();
       res.json(packages);

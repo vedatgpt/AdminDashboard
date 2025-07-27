@@ -26,7 +26,7 @@ import CreateListingStep1 from "@/pages/create-listing/Step1";
 import CreateListingStep2 from "@/pages/create-listing/Step2";
 import CreateListingStep3 from "@/pages/create-listing/Step3";
 import CreateListingStep4 from "@/pages/create-listing/Step4";
-import CreateListingStep5 from "@/pages/Step5";
+import CreateListingStep5 from "@/pages/create-listing/Step5";
 import CreateListingLayout from "@/components/CreateListingLayout";
 import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
