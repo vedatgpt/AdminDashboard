@@ -36,6 +36,9 @@ export default function Step3() {
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateDraftMutation = useUpdateDraftListing();
+  
+  // DOUBLE-CLICK PROTECTION: Loading state for next step button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // URL parameter support - Custom hook kullanımı
   const currentClassifiedId = useClassifiedId();
@@ -599,32 +602,43 @@ export default function Step3() {
   };
 
   const handleNextStep = async () => {
-    // Clear any pending save timeout and execute immediately
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-
-      // Immediately save any pending changes
-      if (currentClassifiedId && images.length > 0) {
-        const xhr = new XMLHttpRequest();
-        xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // Synchronous for immediate save
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-          photos: JSON.stringify(images)
-        }));
-      }
-    }
-
-    if (!currentClassifiedId) {
-      toast({
-        title: "Hata",
-        description: "İlan ID bulunamadı. Lütfen sayfayı yenileyin.",
-        variant: "destructive"
-      });
+    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
+    if (isSubmitting) {
+      console.log('🚫 Double-click prevented - already submitting');
       return;
     }
+    
+    // Set loading state immediately
+    setIsSubmitting(true);
+    
+    try {
+      // Clear any pending save timeout and execute immediately
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
 
-    if (images.length > 0) {
+        // Immediately save any pending changes
+        if (currentClassifiedId && images.length > 0) {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PATCH', `/api/draft-listings/${currentClassifiedId}`, false); // Synchronous for immediate save
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.send(JSON.stringify({
+            photos: JSON.stringify(images)
+          }));
+        }
+      }
+
+      if (!currentClassifiedId) {
+        toast({
+          title: "Hata",
+          description: "İlan ID bulunamadı. Lütfen sayfayı yenileyin.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (images.length > 0) {
       // Show loading state
       toast({
         title: "Kaydediliyor...",
@@ -669,9 +683,16 @@ export default function Step3() {
           description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
           variant: "destructive"
         });
+        setIsSubmitting(false);
+        return;
       }
-    } else {
-      navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
+      } else {
+        navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
+      }
+    
+    } catch (error) {
+      console.error('Step-3 navigation error:', error);
+      setIsSubmitting(false);
     }
   };
 
@@ -830,9 +851,14 @@ export default function Step3() {
 
         <button
           onClick={handleNextStep}
-          className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          disabled={isSubmitting}
+          className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+            isSubmitting 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : 'bg-orange-500 text-white hover:bg-orange-600'
+          }`}
         >
-          Sonraki Adım
+          {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
         </button>
       </div>
 

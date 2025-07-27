@@ -35,6 +35,9 @@ export default function Step4() {
   const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
   const thumbnailsPerPage = 10;
   const queryClient = useQueryClient();
+  
+  // DOUBLE-CLICK PROTECTION: Loading state for next step button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -920,13 +923,31 @@ export default function Step4() {
           </button>
 
           <button
-            onClick={() => {
-              navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+            onClick={async () => {
+              // DOUBLE-CLICK PROTECTION: Early exit if already submitting
+              if (isSubmitting) {
+                console.log('🚫 Double-click prevented - already submitting');
+                return;
+              }
+              
+              // Set loading state immediately
+              setIsSubmitting(true);
+              
+              try {
+                navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+              } catch (error) {
+                console.error('Step-4 navigation error:', error);
+                setIsSubmitting(false);
+              }
             }}
-            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-            disabled={!currentClassifiedId}
+            className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+              isSubmitting 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+            disabled={!currentClassifiedId || isSubmitting}
           >
-            Sonraki Adım
+            {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
           </button>
         </div>
 

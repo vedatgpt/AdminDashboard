@@ -54,6 +54,9 @@ export default function Step5() {
   
   const [selectedCategoryPackage, setSelectedCategoryPackage] = useState<number | null>(null);
   const [selectedDopingPackages, setSelectedDopingPackages] = useState<number[]>([]);
+  
+  // DOUBLE-CLICK PROTECTION: Loading state for publish button
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -139,17 +142,36 @@ export default function Step5() {
     navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}`);
   }, [navigate, currentClassifiedId]);
 
-  const handleContinue = useCallback(() => {
-    // Package selection completed - ready for payment integration
-    const selectedPackages = {
-      categoryPackage: selectedCategoryPackage,
-      dopingPackages: selectedDopingPackages,
-      totalPrice
-    };
+  const handleContinue = useCallback(async () => {
+    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
+    if (isSubmitting) {
+      console.log('🚫 Double-click prevented - already submitting');
+      return;
+    }
     
-    // Future: Integrate with Stripe payment system
-    alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
-  }, [selectedCategoryPackage, selectedDopingPackages, totalPrice]);
+    // Set loading state immediately
+    setIsSubmitting(true);
+    
+    try {
+      // Package selection completed - ready for payment integration
+      const selectedPackages = {
+        categoryPackage: selectedCategoryPackage,
+        dopingPackages: selectedDopingPackages,
+        totalPrice
+      };
+      
+      // Future: Integrate with Stripe payment system
+      alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
+      
+      // Simulate some processing time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+    } catch (error) {
+      console.error('Step-5 submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedCategoryPackage, selectedDopingPackages, totalPrice, isSubmitting]);
 
   // Fetch all categories in flat structure to check for inheritance
   const { data: allCategories = [] } = useQuery<Category[]>({
@@ -370,9 +392,14 @@ export default function Step5() {
 
         <button
           onClick={handleContinue}
-          className="px-6 py-3 bg-[#EC7830] text-white rounded-lg hover:bg-[#d96b2a] transition-colors font-medium"
+          disabled={isSubmitting}
+          className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+            isSubmitting 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : 'bg-[#EC7830] text-white hover:bg-[#d96b2a]'
+          }`}
         >
-          Devam Et
+          {isSubmitting ? 'İşleniyor...' : 'Devam Et'}
         </button>
       </div>
 
