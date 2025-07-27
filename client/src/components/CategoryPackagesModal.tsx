@@ -16,8 +16,8 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     description: "",
     price: 0,
     durationDays: 30,
-    features: "[]",
-    membershipTypes: '["individual","corporate"]',
+    features: [] as string[],
+    membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
   });
 
@@ -39,8 +39,8 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         description: editingPackage.description || "",
         price: editingPackage.price,
         durationDays: editingPackage.durationDays,
-        features: editingPackage.features,
-        membershipTypes: editingPackage.membershipTypes,
+        features: parseFeatures(editingPackage.features),
+        membershipTypes: parseMembershipTypes(editingPackage.membershipTypes),
         isActive: editingPackage.isActive,
       });
       setShowForm(true);
@@ -53,10 +53,11 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       description: "",
       price: 0,
       durationDays: 30,
-      features: "[]",
-      membershipTypes: '["individual","corporate"]',
+      features: [],
+      membershipTypes: ["individual", "corporate"],
       isActive: true,
     });
+    setNewFeature("");
     setEditingPackage(null);
     setShowForm(false);
   };
@@ -69,13 +70,18 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       return;
     }
 
+    const submitData = {
+      ...formData,
+      features: JSON.stringify(formData.features),
+      membershipTypes: JSON.stringify(formData.membershipTypes)
+    };
+
     if (editingPackage) {
-      updatePackage({ id: editingPackage.id, ...formData });
-      resetForm();
+      updatePackage({ id: editingPackage.id, ...submitData });
     } else {
-      createPackage(formData);
-      resetForm();
+      createPackage(submitData);
     }
+    resetForm();
   };
 
   const handleDelete = (packageToDelete: CategoryPackage) => {
@@ -317,13 +323,12 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={parseMembershipTypes(formData.membershipTypes).includes("individual")}
+                            checked={formData.membershipTypes.includes("individual")}
                             onChange={(e) => {
-                              const current = parseMembershipTypes(formData.membershipTypes);
                               const updated = e.target.checked 
-                                ? [...current.filter(t => t !== "individual"), "individual"]
-                                : current.filter(t => t !== "individual");
-                              setFormData(prev => ({ ...prev, membershipTypes: JSON.stringify(updated) }));
+                                ? [...formData.membershipTypes.filter(t => t !== "individual"), "individual"]
+                                : formData.membershipTypes.filter(t => t !== "individual");
+                              setFormData(prev => ({ ...prev, membershipTypes: updated }));
                             }}
                             className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
                           />
@@ -332,13 +337,12 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                         <label className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={parseMembershipTypes(formData.membershipTypes).includes("corporate")}
+                            checked={formData.membershipTypes.includes("corporate")}
                             onChange={(e) => {
-                              const current = parseMembershipTypes(formData.membershipTypes);
                               const updated = e.target.checked 
-                                ? [...current.filter(t => t !== "corporate"), "corporate"]
-                                : current.filter(t => t !== "corporate");
-                              setFormData(prev => ({ ...prev, membershipTypes: JSON.stringify(updated) }));
+                                ? [...formData.membershipTypes.filter(t => t !== "corporate"), "corporate"]
+                                : formData.membershipTypes.filter(t => t !== "corporate");
+                              setFormData(prev => ({ ...prev, membershipTypes: updated }));
                             }}
                             className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
                           />
@@ -352,52 +356,56 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Paket Özellikleri
                       </label>
-                      <div className="space-y-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={parseFeatures(formData.features).includes("top_listing")}
-                            onChange={(e) => {
-                              const current = parseFeatures(formData.features);
-                              const updated = e.target.checked 
-                                ? [...current.filter(f => f !== "top_listing"), "top_listing"]
-                                : current.filter(f => f !== "top_listing");
-                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
-                            }}
-                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Üst Sırada Gösterim</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={parseFeatures(formData.features).includes("highlighted")}
-                            onChange={(e) => {
-                              const current = parseFeatures(formData.features);
-                              const updated = e.target.checked 
-                                ? [...current.filter(f => f !== "highlighted"), "highlighted"]
-                                : current.filter(f => f !== "highlighted");
-                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
-                            }}
-                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Vurgulu Gösterim</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={parseFeatures(formData.features).includes("badge")}
-                            onChange={(e) => {
-                              const current = parseFeatures(formData.features);
-                              const updated = e.target.checked 
-                                ? [...current.filter(f => f !== "badge"), "badge"]
-                                : current.filter(f => f !== "badge");
-                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
-                            }}
-                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Özel Rozet</span>
-                        </label>
+                      
+                      {/* Add new feature */}
+                      <div className="flex gap-2 mb-3">
+                        <input
+                          type="text"
+                          value={newFeature}
+                          onChange={(e) => setNewFeature(e.target.value)}
+                          placeholder="Yeni özellik ekle..."
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newFeature.trim() && !formData.features.includes(newFeature.trim())) {
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                features: [...prev.features, newFeature.trim()] 
+                              }));
+                              setNewFeature("");
+                            }
+                          }}
+                          className="px-3 py-2 bg-[#EC7830] text-white rounded-md hover:bg-[#d96b2a] text-sm"
+                        >
+                          Ekle
+                        </button>
+                      </div>
+
+                      {/* Feature list */}
+                      <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md p-2">
+                        {formData.features.length === 0 ? (
+                          <p className="text-gray-500 text-sm text-center py-2">Henüz özellik eklenmedi</p>
+                        ) : (
+                          formData.features.map((feature, index) => (
+                            <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                              <span className="text-sm text-gray-700">{feature}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    features: prev.features.filter((_, i) => i !== index)
+                                  }));
+                                }}
+                                className="text-red-500 hover:text-red-700 text-sm font-medium"
+                              >
+                                Sil
+                              </button>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
 
