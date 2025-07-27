@@ -152,25 +152,7 @@ export default function Step5() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Free Option */}
-                <div
-                  className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                    selectedCategoryPackage === null
-                      ? 'border-[#EC7830] bg-orange-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => handleCategoryPackageSelect(null)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
-                      <p className="text-gray-600 text-sm">Standart ilan özellikleri</p>
-                    </div>
-                    <div>
-                      <p className="font-bold text-green-600">Ücretsiz</p>
-                    </div>
-                  </div>
-                </div>
+                {/* Free Option - Temporarily disabled until inheritance is properly implemented */}
 
                 {/* Paid Category Packages */}
                 {categoryPackages.map((pkg: CategoryPackage) => (

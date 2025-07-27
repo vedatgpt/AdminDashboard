@@ -71,6 +71,23 @@ router.get("/:id/breadcrumbs", async (req, res) => {
   }
 });
 
+// Get packages for category (public endpoint - BEFORE auth middleware)
+router.get("/:categoryId/packages", async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.categoryId);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    // Get packages for this category and inherited packages from parent categories
+    const categoryPackages = await storage.getCategoryPackagesWithInheritance(categoryId);
+    res.json(categoryPackages);
+  } catch (error: any) {
+    console.error("Error getting category packages:", error);
+    res.status(500).json({ error: "Kategori paketleri alınamadı" });
+  }
+});
+
 // Get single category by ID (public endpoint)
 router.get("/:id", async (req, res) => {
   try {
@@ -301,6 +318,28 @@ router.delete("/:id", async (req, res) => {
     console.error("Error deleting category:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to delete category";
     res.status(500).json({ error: errorMessage });
+  }
+});
+
+// Create new category package (admin only)
+router.post("/:categoryId/packages", async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.categoryId);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    const insertData = { ...req.body, categoryId };
+    const { insertCategoryPackageSchema } = await import("@shared/schema");
+    const validatedData = insertCategoryPackageSchema.parse(insertData);
+    const categoryPackage = await storage.createCategoryPackage(validatedData);
+    res.status(201).json(categoryPackage);
+  } catch (error: any) {
+    console.error("Error creating category package:", error);
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "Geçersiz veri", details: error.errors });
+    }
+    res.status(500).json({ error: "Kategori paketi oluşturulamadı" });
   }
 });
 
