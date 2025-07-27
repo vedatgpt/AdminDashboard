@@ -92,6 +92,16 @@ export interface IStorage {
   deleteListingPackage(id: number): Promise<void>;
   reorderListingPackages(packageIds: number[]): Promise<void>;
 
+  // Category-Package relationship methods
+  getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
+  createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
+  updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
+  deleteCategoryPackage(id: number): Promise<void>;
+  getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]>;
+  createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
+  updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
+  deleteCategoryPackage(id: number): Promise<void>;
+
   // Listing Package Category Pricing methods
   getPackageCategoryPricing(packageId: number): Promise<ListingPackageCategoryPricing[]>;
   createPackageCategoryPricing(data: InsertListingPackageCategoryPricing): Promise<ListingPackageCategoryPricing>;
@@ -765,6 +775,61 @@ export class DatabaseStorage implements IStorage {
       .from(listingPackages)
       .orderBy(asc(listingPackages.sortOrder), asc(listingPackages.name));
     return packages;
+  }
+
+  // Get packages assigned to specific category
+  async getCategoryPackages(categoryId: number): Promise<(ListingPackage & { categoryPrice: number; categoryPackageId: number })[]> {
+    const packages = await db.select({
+      id: listingPackages.id,
+      name: listingPackages.name,
+      description: listingPackages.description,
+      basePrice: listingPackages.basePrice,
+      durationDays: listingPackages.durationDays,
+      features: listingPackages.features,
+      maxPhotos: listingPackages.maxPhotos,
+      membershipType: listingPackages.membershipType,
+      isActive: listingPackages.isActive,
+      sortOrder: listingPackages.sortOrder,
+      createdAt: listingPackages.createdAt,
+      updatedAt: listingPackages.updatedAt,
+      categoryPrice: categoryPackages.price,
+      categoryPackageId: categoryPackages.id,
+    })
+    .from(listingPackages)
+    .innerJoin(categoryPackages, eq(categoryPackages.packageId, listingPackages.id))
+    .where(eq(categoryPackages.categoryId, categoryId))
+    .orderBy(asc(listingPackages.sortOrder), asc(listingPackages.name));
+
+    return packages;
+  }
+
+  // Create category-package relationship
+  async createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage> {
+    const [categoryPackage] = await db.insert(categoryPackages)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return categoryPackage;
+  }
+
+  // Update category-package relationship
+  async updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage> {
+    const [categoryPackage] = await db.update(categoryPackages)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(categoryPackages.id, id))
+      .returning();
+    return categoryPackage;
+  }
+
+  // Delete category-package relationship
+  async deleteCategoryPackage(id: number): Promise<void> {
+    await db.delete(categoryPackages).where(eq(categoryPackages.id, id));
   }
 
   async getListingPackageById(id: number): Promise<ListingPackage | undefined> {

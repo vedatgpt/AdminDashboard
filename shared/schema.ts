@@ -373,6 +373,29 @@ export type ListingPackage = typeof listingPackages.$inferSelect;
 export type InsertListingPackage = z.infer<typeof insertListingPackageSchema>;
 export type UpdateListingPackage = z.infer<typeof updateListingPackageSchema>;
 
+// Category-Package relationship table
+export const categoryPackages = pgTable("category_packages", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  packageId: integer("package_id").notNull().references(() => listingPackages.id, { onDelete: "cascade" }),
+  price: integer("price").notNull(), // Price in cents, can override base package price
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Schema for category-package relationships
+export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateCategoryPackageSchema = insertCategoryPackageSchema.partial();
+
+export type CategoryPackage = typeof categoryPackages.$inferSelect;
+export type InsertCategoryPackage = z.infer<typeof insertCategoryPackageSchema>;
+export type UpdateCategoryPackage = z.infer<typeof updateCategoryPackageSchema>;
+
 export type ListingPackageCategoryPricing = typeof listingPackageCategoryPricing.$inferSelect;
 export type InsertListingPackageCategoryPricing = z.infer<typeof insertListingPackageCategoryPricingSchema>;
 export type UpdateListingPackageCategoryPricing = z.infer<typeof updateListingPackageCategoryPricingSchema>;

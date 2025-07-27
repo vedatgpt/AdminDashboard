@@ -1370,6 +1370,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get packages for specific category
+  app.get("/api/categories/:categoryId/packages", requireAdmin, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      if (isNaN(categoryId)) {
+        return res.status(400).json({ error: "Geçersiz kategori ID" });
+      }
+
+      const packages = await storage.getCategoryPackages(categoryId);
+      res.json(packages);
+    } catch (error: any) {
+      console.error("Error fetching category packages:", error);
+      res.status(500).json({ error: "Kategori paketleri alınırken hata oluştu" });
+    }
+  });
+
+  // Assign package to category
+  app.post("/api/categories/:categoryId/packages", requireAdmin, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      if (isNaN(categoryId)) {
+        return res.status(400).json({ error: "Geçersiz kategori ID" });
+      }
+
+      const { packageId, price } = req.body;
+      if (!packageId || typeof price !== 'number') {
+        return res.status(400).json({ error: "Paket ID ve fiyat gerekli" });
+      }
+
+      const categoryPackage = await storage.createCategoryPackage({
+        categoryId,
+        packageId,
+        price,
+      });
+
+      res.status(201).json(categoryPackage);
+    } catch (error: any) {
+      console.error("Error creating category package:", error);
+      res.status(500).json({ error: "Kategori paketi oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Update category package
+  app.patch("/api/categories/:categoryId/packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz kategori paketi ID" });
+      }
+
+      const updates = req.body;
+      const categoryPackage = await storage.updateCategoryPackage(id, updates);
+      res.json(categoryPackage);
+    } catch (error: any) {
+      console.error("Error updating category package:", error);
+      res.status(500).json({ error: "Kategori paketi güncellenirken hata oluştu" });
+    }
+  });
+
+  // Delete category package
+  app.delete("/api/categories/:categoryId/packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz kategori paketi ID" });
+      }
+
+      await storage.deleteCategoryPackage(id);
+      res.json({ message: "Kategori paketi başarıyla silindi" });
+    } catch (error: any) {
+      console.error("Error deleting category package:", error);
+      res.status(500).json({ error: "Kategori paketi silinirken hata oluştu" });
+    }
+  });
+
   app.get("/api/listing-packages/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
