@@ -157,10 +157,7 @@ export default function Step5() {
 
   // Check if free listing is available for this category with inheritance
   const hasFreeListing = useMemo(() => {
-    if (!category || !allCategories.length) {
-      console.log('❌ hasFreeListing: Missing data', { category: !!category, allCategoriesLength: allCategories.length });
-      return false;
-    }
+    if (!category || !allCategories.length) return false;
     
     // Build hierarchy path from current category to root
     const getHierarchyPath = (categoryId: number): Category[] => {
@@ -177,33 +174,15 @@ export default function Step5() {
     };
     
     const hierarchyPath = getHierarchyPath(category.id);
-    console.log('🔍 Free listing check for category:', category.name);
-    console.log('📋 Hierarchy path:', hierarchyPath.map(c => ({ 
-      id: c.id, 
-      name: c.name, 
-      individual: c.freeListingLimitIndividual, 
-      corporate: c.freeListingLimitCorporate 
-    })));
     
     // Check each category in hierarchy for free listing limits
     for (const cat of hierarchyPath) {
-      const hasIndividualLimit = cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0;
-      const hasCorporateLimit = cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0;
-      
-      console.log(`🏷️ Checking ${cat.name}:`, {
-        individual: cat.freeListingLimitIndividual,
-        corporate: cat.freeListingLimitCorporate,
-        hasIndividualLimit,
-        hasCorporateLimit
-      });
-      
-      if (hasIndividualLimit || hasCorporateLimit) {
-        console.log('✅ Free listing available from category:', cat.name);
+      if ((cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) ||
+          (cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0)) {
         return true;
       }
     }
     
-    console.log('❌ No free listing found in hierarchy');
     return false;
   }, [category, allCategories]);
 
