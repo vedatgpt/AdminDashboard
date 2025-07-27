@@ -921,15 +921,12 @@ export default function Step4() {
 
           <button
             onClick={() => {
-              // TODO: İlanı yayınla fonksiyonu
-              toast({
-                title: "Bilgi",
-                description: 'İlan yayınlama özelliği yakında eklenecek'
-              });
+              setLocation(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
             }}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            disabled={!currentClassifiedId}
           >
-            İlanı Yayınla
+            Sonraki Adım
           </button>
         </div>
 

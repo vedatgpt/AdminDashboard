@@ -26,6 +26,7 @@ import CreateListingStep1 from "@/pages/create-listing/Step1";
 import CreateListingStep2 from "@/pages/create-listing/Step2";
 import CreateListingStep3 from "@/pages/create-listing/Step3";
 import CreateListingStep4 from "@/pages/create-listing/Step4";
+import CreateListingStep5 from "@/pages/Step5";
 import CreateListingLayout from "@/components/CreateListingLayout";
 import { ListingProvider } from "@/contexts/ListingContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,6 +89,11 @@ function Router() {
             </CreateListingLayout>
           </Route>
           <Route path="/create-listing/step-4" component={CreateListingStep4} />
+          <Route path="/create-listing/step-5">
+            <CreateListingLayout stepNumber={5}>
+              <CreateListingStep5 />
+            </CreateListingLayout>
+          </Route>
           <Route path="/:username" component={UserProfile} />
           <Route component={Landing} />
         </Switch>
