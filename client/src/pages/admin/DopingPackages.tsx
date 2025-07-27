@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Plus, Search, Package, AlertTriangle, CheckCircle, Info, Edit, Trash2, GripVertical, DollarSign, Calendar, List, ToggleLeft, ToggleRight } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Search, Package, AlertTriangle, CheckCircle, Info, Edit, Trash2, GripVertical } from "lucide-react";
 import Sortable from 'sortablejs';
 import PageHeader from "@/components/PageHeader";
 import DopingPackageForm from "@/components/DopingPackageForm";
@@ -11,7 +11,6 @@ export default function DopingPackages() {
   const [editingPackage, setEditingPackage] = useState<DopingPackage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
-  const sortableContainerRef = useRef<HTMLDivElement>(null);
 
   // Queries and mutations
   const { data: packages = [], isLoading, error } = useDopingPackages();
@@ -37,34 +36,54 @@ export default function DopingPackages() {
 
   // Initialize sortable for drag & drop reordering
   useEffect(() => {
-    let sortable: Sortable | null = null;
+    const timer = setTimeout(() => {
+      const sortableElement = document.querySelector("#hs-package-sortable");
+      if (sortableElement && filteredPackages.length > 1) {
+        // Destroy existing sortable instance if it exists
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
 
-    if (sortableContainerRef.current && filteredPackages.length > 0) {
-      try {
-        sortable = Sortable.create(sortableContainerRef.current, {
+        const sortableInstance = new Sortable(sortableElement as HTMLElement, {
           animation: 150,
+          dragClass: 'rounded-none!',
           handle: '.drag-handle',
-          ghostClass: 'opacity-50',
-          chosenClass: 'border-orange-500',
-          onEnd: (evt) => {
-            if (evt.oldIndex !== undefined && evt.newIndex !== undefined && evt.oldIndex !== evt.newIndex) {
-              const newOrder = [...filteredPackages];
-              const [removed] = newOrder.splice(evt.oldIndex, 1);
-              newOrder.splice(evt.newIndex, 0, removed);
+          onEnd: function (evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+              // Create new array with reordered packages
+              const reorderedPackages = [...filteredPackages];
+              const [draggedPackage] = reorderedPackages.splice(oldIndex, 1);
+              reorderedPackages.splice(newIndex, 0, draggedPackage);
               
-              const packageIds = newOrder.map(pkg => pkg.id);
+              // Extract package IDs in new order
+              const packageIds = reorderedPackages.map(pkg => pkg.id);
+              
+              // Send reorder request to backend
               reorderMutation.mutate(packageIds);
             }
           }
         });
-      } catch (error) {
-        console.error('Sortable initialization failed:', error);
-      }
-    }
 
+        // Store instance for cleanup
+        (sortableElement as any).sortableInstance = sortableInstance;
+      }
+    }, 100);
+
+    // Cleanup function
     return () => {
-      if (sortable) {
-        sortable.destroy();
+      clearTimeout(timer);
+      const sortableElement = document.querySelector("#hs-package-sortable");
+      if (sortableElement) {
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
       }
     };
   }, [filteredPackages, reorderMutation]);
@@ -122,166 +141,169 @@ export default function DopingPackages() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Doping Paketleri"
-        description="İlan doping paketlerini yönetin"
-        icon={Package}
-      />
-
+    <div className="h-full flex flex-col">
       {/* Alert Messages */}
       {showAlert && (
-        <div className={`rounded-lg p-4 flex items-center gap-3 ${
-          showAlert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-          showAlert.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-          'bg-blue-50 text-blue-800 border border-blue-200'
+        <div className={`mb-4 p-4 rounded-lg flex items-center ${
+          showAlert.type === 'success' ? 'bg-green-50 text-green-800' :
+          showAlert.type === 'error' ? 'bg-red-50 text-red-800' :
+          'bg-blue-50 text-blue-800'
         }`}>
-          {showAlert.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
-          {showAlert.type === 'error' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-          {showAlert.type === 'info' && <Info className="w-5 h-5 text-blue-600" />}
-          <span className="text-sm font-medium">{showAlert.message}</span>
+          {showAlert.type === 'success' && <CheckCircle className="w-5 h-5 mr-2" />}
+          {showAlert.type === 'error' && <AlertTriangle className="w-5 h-5 mr-2" />}
+          {showAlert.type === 'info' && <Info className="w-5 h-5 mr-2" />}
+          {showAlert.message}
         </div>
       )}
 
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Doping paketlerinde ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
-        </div>
+      <PageHeader
+        title="Doping Paketleri"
+        subtitle={`${filteredPackages.length} paket`}
+      />
 
-        {/* Add New Package Button */}
-        <button
-          onClick={handleAddNew}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Yeni Paket
-        </button>
-      </div>
+      <div className="flex-1 flex flex-col">
+        {/* Package List */}
+        <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            {/* Title */}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-[#EC7830] font-medium">Doping Paketleri</span>
+            </div>
+            
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {/* Search */}
+              <div className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Paket ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                />
+              </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Doping paketleri yükleniyor...</p>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600">Doping paketleri yüklenirken hata oluştu</p>
-        </div>
-      ) : filteredPackages.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">
-            {searchTerm ? 'Arama kriterlerine uygun doping paketi bulunamadı' : 'Henüz doping paketi bulunmuyor'}
-          </p>
-          {!searchTerm && (
-            <button
-              onClick={handleAddNew}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              İlk Paketi Oluştur
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <div ref={sortableContainerRef} className="divide-y divide-gray-200">
-            {filteredPackages.map((dopingPackage) => {
-              const features = parseFeatures(dopingPackage.features);
-              const priceInTL = (dopingPackage.price / 100).toFixed(2);
-              
-              return (
-                <div
-                  key={dopingPackage.id}
-                  className="group flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    {/* Drag Handle */}
-                    <div className="drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                      <GripVertical className="w-5 h-5 text-gray-400" />
-                    </div>
+              {/* Add Package Button */}
+              <button 
+                onClick={handleAddNew}
+                disabled={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
+              >
+                <Plus className="w-4 h-4" />
+                Yeni Paket
+              </button>
+            </div>
+          </div>
 
-                    {/* Package Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-medium text-gray-900">{dopingPackage.name}</h3>
-                        {dopingPackage.isActive ? (
-                          <ToggleRight className="w-5 h-5 text-green-500" />
-                        ) : (
-                          <ToggleLeft className="w-5 h-5 text-gray-400" />
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-2 text-gray-600">Doping paketleri yükleniyor...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-600">
+                <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
+                <p>Doping paketleri yüklenirken bir hata oluştu</p>
+              </div>
+            ) : filteredPackages.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>{searchTerm ? 'Paket bulunamadı' : 'Henüz doping paketi oluşturulmamış'}</p>
+                <p className="text-sm mt-1">
+                  {searchTerm 
+                    ? 'Arama kriterlerinize uygun paket bulunamadı.' 
+                    : 'Başlamak için "Yeni Paket" butonunu kullanın'
+                  }
+                </p>
+                {!searchTerm && (
+                  <button
+                    onClick={handleAddNew}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#EC7830] hover:bg-[#d6691a] mt-4"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    İlk Paketi Oluştur
+                  </button>
+                )}
+              </div>
+            ) : (
+              <ul id="hs-package-sortable" className="flex flex-col">
+                {filteredPackages.map((dopingPackage) => {
+                  const features = parseFeatures(dopingPackage.features);
+                  const priceInTL = Math.floor(dopingPackage.price / 100);
+                  
+                  return (
+                    <li
+                      key={dopingPackage.id}
+                      data-package-id={dopingPackage.id}
+                      className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
+                    >
+                      {/* Package Icon */}
+                      <Package className="shrink-0 w-4 h-4 text-gray-400" />
+                      
+                      {/* Package Name and Details */}
+                      <div className="flex-1 text-left">
+                        <div className="font-medium">{dopingPackage.name}</div>
+                        {dopingPackage.description && (
+                          <div className="text-xs text-gray-500 mt-1">{dopingPackage.description}</div>
                         )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                          <span>{priceInTL} TL</span>
+                          <span>{dopingPackage.durationDays} gün</span>
+                          {features.length > 0 && <span>{features.length} özellik</span>}
+                        </div>
                       </div>
                       
-                      {dopingPackage.description && (
-                        <p className="text-sm text-gray-600 mb-2">{dopingPackage.description}</p>
-                      )}
+                      {/* Status Badge */}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        dopingPackage.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {dopingPackage.isActive ? 'Aktif' : 'Pasif'}
+                      </span>
                       
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          {priceInTL} TL
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {dopingPackage.durationDays} gün
-                        </div>
-                        {features.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            <List className="w-4 h-4" />
-                            {features.length} özellik
-                          </div>
-                        )}
+                      {/* Sort Order */}
+                      <span className="text-gray-500 text-xs min-w-[2rem] text-center">
+                        #{dopingPackage.sortOrder}
+                      </span>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(dopingPackage);
+                          }}
+                          className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                          title="Düzenle"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(dopingPackage);
+                          }}
+                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                          title="Sil"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                       
-                      {features.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {features.map((feature, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-                            >
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleEdit(dopingPackage)}
-                      className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                      title="Düzenle"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(dopingPackage)}
-                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Sil"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                      {/* Drag Handle */}
+                      <GripVertical className="shrink-0 w-4 h-4 text-gray-400 drag-handle cursor-grab hover:cursor-grabbing" />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Form Modal */}
       <DopingPackageForm

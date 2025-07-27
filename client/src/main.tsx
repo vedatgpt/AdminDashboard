@@ -17,6 +17,9 @@ if (typeof window !== 'undefined') {
       if ((window as any).HSDropdown) {
         (window as any).HSDropdown.autoInit();
       }
+      if ((window as any).HSFormSwitch) {
+        (window as any).HSFormSwitch.autoInit();
+      }
     }, 100);
   }).catch(error => {
     console.warn('Preline UI failed to load:', error);

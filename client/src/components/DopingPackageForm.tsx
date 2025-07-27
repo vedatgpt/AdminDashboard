@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Package, DollarSign, Calendar, List, ToggleLeft, ToggleRight } from "lucide-react";
+import { X } from "lucide-react";
 import type { DopingPackage, InsertDopingPackage, UpdateDopingPackage } from "@shared/schema";
 
 interface DopingPackageFormProps {
@@ -108,131 +108,124 @@ export default function DopingPackageForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Package Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Package className="w-4 h-4 inline mr-2" />
-              Paket Adı *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Örn: Vitrin İlanı, Öne Çıkan İlan"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Açıklama
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="Paket hakkında açıklama"
-            />
-          </div>
-
-          {/* Price and Duration */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-4">
+            {/* Package Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                <DollarSign className="w-4 h-4 inline mr-2" />
-                Fiyat (Kuruş) *
+                Paket Adı *
               </label>
               <input
-                type="number"
+                type="text"
                 required
-                min="0"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="5000 (50.00 TL)"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                placeholder="Örn: Vitrin İlanı, Öne Çıkan İlan"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {(formData.price / 100).toFixed(2)} TL
-              </p>
             </div>
 
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Süre (Gün) *
+                Açıklama
               </label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={formData.durationDays}
-                onChange={(e) => setFormData({ ...formData, durationDays: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="30"
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                placeholder="Paket hakkında açıklama"
               />
             </div>
-          </div>
 
-          {/* Features */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <List className="w-4 h-4 inline mr-2" />
-              Özellikler
-            </label>
-            <div className="space-y-2">
-              {featuresArray.map((feature, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={feature}
-                    onChange={(e) => updateFeature(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="Örn: top_listing, highlighted, badge"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFeature(index)}
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addFeature}
-                className="text-orange-600 hover:text-orange-700 text-sm font-medium"
-              >
-                + Özellik Ekle
-              </button>
+            {/* Price and Duration */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fiyat (TL) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={Math.floor(formData.price / 100)}
+                  onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) * 100 || 0 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                  placeholder="50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Süre (Gün) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={formData.durationDays}
+                  onChange={(e) => setFormData({ ...formData, durationDays: parseInt(e.target.value) || 1 })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                  placeholder="30"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Status and Sort Order */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Features */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Özellikler
+              </label>
+              <div className="space-y-2">
+                {featuresArray.map((feature, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => updateFeature(index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                      placeholder="Örn: top_listing, highlighted, badge"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFeature(index)}
+                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addFeature}
+                  className="text-[#EC7830] hover:text-[#d6691a] text-sm font-medium"
+                >
+                  + Özellik Ekle
+                </button>
+              </div>
+            </div>
+
+            {/* Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Durum
               </label>
-              <div 
-                onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                className="flex items-center gap-3 cursor-pointer"
-              >
-                {formData.isActive ? (
-                  <ToggleRight className="w-8 h-8 text-green-500" />
-                ) : (
-                  <ToggleLeft className="w-8 h-8 text-gray-400" />
-                )}
-                <span className={`text-sm font-medium ${formData.isActive ? 'text-green-700' : 'text-gray-500'}`}>
+              <div className="hs-form-check hs-form-switch">
+                <input
+                  type="checkbox"
+                  id="hs-form-switch-with-label"
+                  className="hs-form-switch-input relative shrink-0 w-11 h-6 bg-gray-100 checked:bg-none checked:bg-[#EC7830] border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 ring-transparent disabled:opacity-50 disabled:pointer-events-none checked:focus:bg-[#EC7830] focus:checked:border-[#EC7830] focus:ring-offset-white before:inline-block before:w-5 before:h-5 before:bg-white checked:before:bg-white before:translate-x-0 checked:before:translate-x-full before:shadow before:rounded-full before:transform before:ring-0 before:transition before:ease-in-out before:duration-200"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                />
+                <label htmlFor="hs-form-switch-with-label" className="text-sm text-gray-500 ms-3">
                   {formData.isActive ? 'Aktif' : 'Pasif'}
-                </span>
+                </label>
               </div>
             </div>
 
+            {/* Sort Order */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sıralama
@@ -242,14 +235,14 @@ export default function DopingPackageForm({
                 min="0"
                 value={formData.sortOrder}
                 onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
                 placeholder="0"
               />
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <div className="flex gap-3 pt-4 border-t border-gray-200 mt-6">
             <button
               type="button"
               onClick={onClose}
@@ -260,7 +253,7 @@ export default function DopingPackageForm({
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-[#EC7830] text-white rounded-lg hover:bg-[#d6691a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Kaydediliyor..." : (dopingPackage ? "Güncelle" : "Oluştur")}
             </button>
