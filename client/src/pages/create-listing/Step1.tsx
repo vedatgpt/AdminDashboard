@@ -11,6 +11,7 @@ import { useStep1Prefetch } from '@/hooks/useStep1Prefetch';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
+import { useClassifiedId } from '@/hooks/useClassifiedId';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
@@ -46,10 +47,8 @@ export default function CreateListingStep1() {
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
   
-  // URL parameter support for classified ID
-  const urlParams = new URLSearchParams(window.location.search);
-  const classifiedIdParam = urlParams.get('classifiedId');
-  const classifiedId = classifiedIdParam ? parseInt(classifiedIdParam) : undefined;
+  // URL parameter support for classified ID - Custom hook kullanımı
+  const classifiedId = useClassifiedId();
   
   // Draft listing hooks - only enabled when authenticated
   const { data: draftData } = useDraftListing(classifiedId);

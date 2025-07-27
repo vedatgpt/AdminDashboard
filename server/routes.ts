@@ -64,10 +64,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Performance middleware
   app.use(express.json({ limit: '10mb' })); // Increase JSON payload limit
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-  
+
   // Session middleware with PostgreSQL store (production-ready)
   const PgSession = connectPgSimple(session);
-  
+
   app.use(session({
     store: new PgSession({
       pool: pool,
@@ -91,72 +91,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const stepRouteGuard = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const path = req.path;
     const classifiedId = req.query.classifiedId as string;
-    
+
     // Only apply to step routes
     const stepMatch = path.match(/\/create-listing\/step-(\d+)/);
     if (!stepMatch) {
       return next();
     }
-    
+
     const currentStep = parseInt(stepMatch[1]);
-    
+
     // Skip validation for Step1
     if (currentStep === 1) {
       console.log(`✅ SERVER GUARD: Step1 access allowed (creates new draft)`);
       return next();
     }
-    
+
     // Require authentication for all steps
     if (!req.session?.user?.id) {
       console.log(`🚨 SERVER GUARD: Unauthenticated user blocked from Step ${currentStep}`);
       return res.redirect('/auth/login');
     }
-    
+
     // Require classifiedId for steps 2+
     if (!classifiedId) {
       console.log(`🚨 SERVER GUARD: No classifiedId for Step ${currentStep}, redirecting to Step1`);
       return res.redirect('/create-listing/step-1');
     }
-    
+
     try {
       const draft = await storage.getDraftListing(parseInt(classifiedId), req.session.user.id);
-      
+
       if (!draft) {
         console.log(`🚨 SERVER GUARD: Draft ${classifiedId} not found for user ${req.session.user.id}`);
         return res.redirect('/create-listing/step-1');
       }
-      
+
       // Step validation logic
       let shouldRedirect = false;
       let redirectStep = 1;
-      
+
       if (currentStep >= 2 && !draft.step1Completed) {
         console.log(`🚨 SERVER GUARD: Step1 not completed for Step ${currentStep} access`);
         shouldRedirect = true;
         redirectStep = 1;
       }
-      
+
       if (currentStep >= 3 && !draft.step2Completed) {
         console.log(`🚨 SERVER GUARD: Step2 not completed for Step ${currentStep} access`);
         shouldRedirect = true;
         redirectStep = 2;
       }
-      
+
       if (currentStep >= 4 && !draft.step3Completed) {
         console.log(`🚨 SERVER GUARD: Step3 not completed for Step ${currentStep} access`);
         shouldRedirect = true;
         redirectStep = 3;
       }
-      
+
       if (shouldRedirect) {
         const redirectPath = `/create-listing/step-${redirectStep}?classifiedId=${classifiedId}`;
         console.log(`🚨 SERVER GUARD: SECURITY VIOLATION - Redirecting from Step ${currentStep} to ${redirectPath}`);
         return res.redirect(redirectPath);
       }
-      
+
       console.log(`✅ SERVER GUARD: Step ${currentStep} access allowed - all validations passed`);
       next();
-      
+
     } catch (error) {
       console.error('🚨 SERVER GUARD ERROR:', error);
       return res.redirect('/create-listing/step-1');
@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-  
+
   // Serve category icons
   app.use('/uploads/category-icons', express.static(path.join(process.cwd(), 'uploads', 'category-icons')));
 
@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { identifier, password, emailOrUsername } = req.body;
       const loginIdentifier = identifier || emailOrUsername;
-      
+
       // Basic validation
       if (!loginIdentifier || !password) {
         return res.status(400).json({ error: "E-posta/kullanıcı adı ve şifre gerekli" });
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const loginData = { emailOrUsername: loginIdentifier, password };
         const user = await storage.authenticateUser(loginData);
-        
+
         if (user) {
           if (!user.isActive) {
             return res.status(401).json({ error: "Hesabınız devre dışı bırakılmış" });
@@ -196,10 +196,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Store user in session
           req.session.user = user;
           req.session.userType = "user";
-          
+
           console.log('LOGIN SUCCESS - User stored in session:', { id: user.id, username: user.username });
           console.log('LOGIN SUCCESS - Session ID:', req.sessionID);
-          
+
           // Return user without password
           const { password: _, ...userWithoutPassword } = user;
           return res.json({ user: userWithoutPassword });
@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (loginIdentifier && typeof loginIdentifier === 'string' && loginIdentifier.includes("@")) {
         try {
           const personnelAuth = await storage.authenticateAuthorizedPersonnel(loginIdentifier, password);
-          
+
           if (personnelAuth) {
 
             // Store personnel info in session
@@ -258,10 +258,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const registerData = registerSchema.parse(req.body);
       const user = await storage.registerUser(registerData);
-      
+
       // Store user in session
       req.session.user = user;
-      
+
       // Return user without password
       const { password, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
@@ -297,18 +297,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('AUTH/ME - Session user:', sessionUser ? { id: sessionUser.id, username: sessionUser.username } : 'none');
     console.log('AUTH/ME - Session ID:', req.sessionID);
     console.log('AUTH/ME - Session store:', req.session ? 'exists' : 'none');
-    
+
     if (!sessionUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    
+
     try {
       // If this is an authorized personnel session, return the session data directly
       if (req.session?.userType === "personnel") {
         const { password, ...userWithoutPassword } = sessionUser;
         return res.json(userWithoutPassword);
       }
-      
+
       // For regular users, get fresh user data from database
       const freshUser = await storage.getUserById(sessionUser.id);
       if (freshUser) {
@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username } = req.params;
       const user = await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(404).json({ error: "Kullanıcı bulunamadı" });
       }
@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update session with fresh user data
       req.session.user = updatedUser;
-      
+
       res.json(updatedUser);
     } catch (error) {
       res.status(500).json({ error: "İletişim bilgileri güncellenirken hata oluştu" });
@@ -437,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/authorized-personnel", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const userId = req.session.user!.id;
-      
+
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
       if (!currentUser || currentUser.role !== "corporate") {
@@ -456,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.user!.id;
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
-      
+
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
       if (!currentUser || currentUser.role !== "corporate") {
@@ -471,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if email already exists (both in users and authorized personnel)
       const existingUser = await storage.getUserByEmail(email);
       const existingPersonnel = await storage.getAuthorizedPersonnelByEmail(email);
-      
+
       if (existingUser || existingPersonnel) {
         return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
       }
@@ -500,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
       const { firstName, lastName, email, password, mobilePhone, whatsappNumber } = req.body;
-      
+
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
       if (!currentUser || currentUser.role !== "corporate") {
@@ -517,7 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (email && email !== personnel.email) {
         const existingUser = await storage.getUserByEmail(email);
         const existingPersonnel = await storage.getAuthorizedPersonnelByEmail(email);
-        
+
         if (existingUser || (existingPersonnel && existingPersonnel.id !== personnelId)) {
           return res.status(400).json({ error: "Bu e-posta adresi zaten kullanılıyor" });
         }
@@ -546,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
       const { isActive } = req.body;
-      
+
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
       if (!currentUser || currentUser.role !== "corporate") {
@@ -576,7 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session.user!.id;
       const personnelId = parseInt(req.params.id);
-      
+
       // Verify user is corporate
       const currentUser = await storage.getUserById(userId);
       if (!currentUser || currentUser.role !== "corporate") {
@@ -652,10 +652,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.updateUser(userId, { email });
-      
+
       // Update session with fresh user data
       req.session.user = updatedUser;
-      
+
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -760,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/categories', categoriesRouter);
 
   // Locations API routes
-  
+
   // Get all locations in tree structure
   app.get("/api/locations", async (req, res) => {
     try {
@@ -787,11 +787,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const location = await storage.getLocationById(id);
-      
+
       if (!location) {
         return res.status(404).json({ error: "Lokasyon bulunamadı" });
       }
-      
+
       res.json(location);
     } catch (error) {
       res.status(500).json({ error: "Lokasyon alınırken hata oluştu" });
@@ -813,7 +813,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/locations", requireAdmin, async (req, res) => {
     try {
       const { name, type, parentId, sortOrder } = req.body;
-      
+
       if (!name || !type) {
         return res.status(400).json({ error: "Lokasyon adı ve tipi gereklidir" });
       }
@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
-      
+
       const location = await storage.updateLocation(id, updates);
       res.json(location);
     } catch (error) {
@@ -849,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/locations/:id", requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       await storage.deleteLocation(id);
       res.json({ message: "Lokasyon silindi" });
     } catch (error) {
@@ -861,19 +861,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/locations-reorder", requireAdmin, async (req, res) => {
     try {
       const { parentId, locationIds } = req.body;
-      
+
       if (!Array.isArray(locationIds)) {
         return res.status(400).json({ error: "locationIds array gerekli" });
       }
-      
+
       // Convert string IDs to numbers if needed
       const numericLocationIds = locationIds.map(id => parseInt(String(id), 10));
-      
+
       // Validate all IDs are valid numbers
       if (numericLocationIds.some(id => isNaN(id) || id <= 0)) {
         return res.status(400).json({ error: "Geçersiz lokasyon ID'leri" });
       }
-      
+
       await storage.reorderLocations(parentId, numericLocationIds);
       res.json({ message: "Lokasyon sıralaması güncellendi" });
     } catch (error) {
@@ -883,7 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Location Settings API routes
-  
+
   // Get location settings
   app.get("/api/location-settings", requireAdmin, async (req, res) => {
     try {
@@ -919,28 +919,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Draft Listings API routes
-  
+
   // Get draft listing by ID (Authentication required + ownership check)
   app.get("/api/draft-listings/:id", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       const draft = await storage.getDraftListing(id);
-      
+
       if (!draft) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       // Verify ownership - user can only access their own drafts
       if (draft.userId !== userId) {
         return res.status(403).json({ error: "Bu ilan taslağına erişim yetkiniz yok" });
       }
-      
+
       res.json(draft);
     } catch (error) {
       res.status(500).json({ error: "İlan taslağı alınırken hata oluştu" });
@@ -954,9 +954,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      
+
       if (categoryId) {
         // Get draft for specific category
         const draft = await storage.getUserDraftForCategory(userId, categoryId);
@@ -978,11 +978,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       // CRITICAL FIX: Delete existing drafts before creating new one
       const existingDrafts = await storage.getUserDraftListings(userId);
       console.log(`📊 Kullanıcı ${userId} için ${existingDrafts.length} adet mevcut draft bulundu`);
-      
+
       if (existingDrafts.length > 0) {
         for (const existingDraft of existingDrafts) {
           await storage.deleteDraftListing(existingDraft.id);
@@ -990,12 +990,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         console.log(`✅ Toplam ${existingDrafts.length} adet eski draft silme işlemi tamamlandı`);
       }
-      
+
       const draft = await storage.createDraftListing({
         userId,
         status: "draft"
       });
-      
+
       console.log(`✅ Yeni draft oluşturuldu: ID ${draft.id} (User ${userId})`);
       res.status(201).json(draft);
     } catch (error) {
@@ -1009,17 +1009,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       const updates = req.body;
       const draft = await storage.updateDraftListing(id, updates);
       res.json(draft);
@@ -1033,17 +1033,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       await storage.deleteDraftListing(id);
       res.json({ message: "İlan taslağı silindi" });
     } catch (error) {
@@ -1056,17 +1056,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       const publishedListing = await storage.publishDraftListing(id);
       res.json(publishedListing);
     } catch (error) {
@@ -1075,31 +1075,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Step completion tracking endpoints
-  
+
   // Mark step as completed
   app.post("/api/draft-listings/:id/step/:step/complete", async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const step = parseInt(req.params.step);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       if (step < 1 || step > 4) {
         return res.status(400).json({ error: "Geçersiz step numarası (1-4 arası olmalı)" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       // SERVER-SIDE VALIDATION REMOVED
       // Client-side validation handles all form validation
-      
+
       const updatedDraft = await storage.markStepCompleted(id, step);
       res.json(updatedDraft);
     } catch (error) {
@@ -1114,21 +1114,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const step = parseInt(req.params.step);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       if (step < 1 || step > 4) {
         return res.status(400).json({ error: "Geçersiz step numarası (1-4 arası olmalı)" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       const updatedDraft = await storage.markStepIncomplete(id, step);
       res.json(updatedDraft);
     } catch (error) {
@@ -1141,17 +1141,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.session?.user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
       }
-      
+
       // Verify ownership
       const existingDraft = await storage.getDraftListing(id);
       if (!existingDraft || existingDraft.userId !== userId) {
         return res.status(404).json({ error: "İlan taslağı bulunamadı" });
       }
-      
+
       const stepStatus = await storage.getStepCompletionStatus(id);
       res.json(stepStatus);
     } catch (error) {
@@ -1164,22 +1164,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = 1; // Temporary fixed user ID for development
       const files = req.files as Express.Multer.File[];
-      
+
       if (!files || files.length === 0) {
         return res.status(400).json({ error: "Hiç dosya yüklenmedi" });
       }
 
       const uploadedImages = [];
-      
+
       for (const file of files) {
         const imageId = uuidv4();
         const extension = path.extname(file.originalname);
         const filename = `${imageId}${extension}`;
-        
+
         // Create user directory structure
         const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
         const imagePath = path.join(userDir, filename);
-        
+
         try {
           const processedImage = await imageProcessor.processImage(
             file.buffer,
@@ -1225,38 +1225,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { imageId } = req.params;
       const userId = 1; // Temporary fixed user ID for development
-      
+
       // Find image file
       const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
       const files = fs.readdirSync(userDir).filter(file => file.startsWith(imageId));
-      
+
       if (files.length === 0) {
         return res.status(404).json({ error: "Resim bulunamadı" });
       }
-      
+
       const imageFile = files[0];
       const imagePath = path.join(userDir, imageFile);
       const thumbnailPath = path.join(userDir, `thumb_${imageFile}`);
-      
+
       // Rotate main image
       await sharp(imagePath)
         .rotate(90)
         .jpeg({ quality: 90 })
         .toFile(imagePath + '_temp');
-      
+
       // Replace original with rotated
       fs.renameSync(imagePath + '_temp', imagePath);
-      
+
       // Rotate thumbnail if exists
       if (fs.existsSync(thumbnailPath)) {
         await sharp(thumbnailPath)
           .rotate(90)
           .jpeg({ quality: 90 })
           .toFile(thumbnailPath + '_temp');
-        
+
         fs.renameSync(thumbnailPath + '_temp', thumbnailPath);
       }
-      
+
       res.json({
         id: imageId,
         url: `/uploads/users/${userId}/temp-listings/${imageFile}`,
@@ -1273,11 +1273,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = 1; // Temporary fixed user ID for development
       const imageId = req.params.imageId;
-      
+
       // Find and delete the image file
       const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
       const files = await fs.promises.readdir(userDir).catch(() => []);
-      
+
       const imageFile = files.find(file => file.startsWith(imageId));
       if (imageFile) {
         const imagePath = path.join(userDir, imageFile);
