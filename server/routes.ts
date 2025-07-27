@@ -1351,6 +1351,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== LISTING PACKAGES ENDPOINTS =====
+  app.get("/api/listing-packages", requireAdmin, async (req, res) => {
+    try {
+      const packages = await storage.getListingPackages();
+      res.json(packages);
+    } catch (error: any) {
+      console.error("Error fetching listing packages:", error);
+      res.status(500).json({ error: "İlan paketleri alınırken hata oluştu" });
+    }
+  });
+
+  app.get("/api/listing-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const listingPackage = await storage.getListingPackageById(id);
+      if (!listingPackage) {
+        return res.status(404).json({ error: "İlan paketi bulunamadı" });
+      }
+
+      res.json(listingPackage);
+    } catch (error: any) {
+      console.error("Error fetching listing package:", error);
+      res.status(500).json({ error: "İlan paketi alınırken hata oluştu" });
+    }
+  });
+
+  app.get("/api/listing-packages/:id/with-pricing", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const listingPackage = await storage.getListingPackageWithPricing(id);
+      if (!listingPackage) {
+        return res.status(404).json({ error: "İlan paketi bulunamadı" });
+      }
+
+      res.json(listingPackage);
+    } catch (error: any) {
+      console.error("Error fetching listing package with pricing:", error);
+      res.status(500).json({ error: "İlan paketi fiyat bilgileri alınırken hata oluştu" });
+    }
+  });
+
+  app.post("/api/listing-packages", requireAdmin, async (req, res) => {
+    try {
+      const listingPackage = await storage.createListingPackage(req.body);
+      res.status(201).json(listingPackage);
+    } catch (error: any) {
+      console.error("Error creating listing package:", error);
+      if (error.message?.includes("unique")) {
+        res.status(400).json({ error: "Bu isimde bir paket zaten mevcut" });
+      } else {
+        res.status(400).json({ error: "İlan paketi oluşturulurken hata oluştu" });
+      }
+    }
+  });
+
+  app.patch("/api/listing-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const listingPackage = await storage.updateListingPackage(id, req.body);
+      res.json(listingPackage);
+    } catch (error: any) {
+      console.error("Error updating listing package:", error);
+      if (error.message?.includes("unique")) {
+        res.status(400).json({ error: "Bu isimde bir paket zaten mevcut" });
+      } else {
+        res.status(400).json({ error: "İlan paketi güncellenirken hata oluştu" });
+      }
+    }
+  });
+
+  app.delete("/api/listing-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      await storage.deleteListingPackage(id);
+      res.json({ message: "İlan paketi başarıyla silindi" });
+    } catch (error: any) {
+      console.error("Error deleting listing package:", error);
+      res.status(500).json({ error: "İlan paketi silinirken hata oluştu" });
+    }
+  });
+
+  app.patch("/api/listing-packages/reorder", requireAdmin, async (req, res) => {
+    try {
+      const { packageIds } = req.body;
+      if (!Array.isArray(packageIds)) {
+        return res.status(400).json({ error: "packageIds array gerekli" });
+      }
+
+      await storage.reorderListingPackages(packageIds);
+      res.json({ message: "İlan paketleri başarıyla yeniden sıralandı" });
+    } catch (error: any) {
+      console.error("Error reordering listing packages:", error);
+      res.status(500).json({ error: "İlan paketleri sıralanırken hata oluştu" });
+    }
+  });
+
+  // ===== LISTING PACKAGE CATEGORY PRICING ENDPOINTS =====
+  app.get("/api/listing-packages/:packageId/category-pricing", requireAdmin, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.packageId);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const pricing = await storage.getPackageCategoryPricing(packageId);
+      res.json(pricing);
+    } catch (error: any) {
+      console.error("Error fetching package category pricing:", error);
+      res.status(500).json({ error: "Paket kategori fiyatları alınırken hata oluştu" });
+    }
+  });
+
+  app.post("/api/listing-package-category-pricing", requireAdmin, async (req, res) => {
+    try {
+      const pricing = await storage.createPackageCategoryPricing(req.body);
+      res.status(201).json(pricing);
+    } catch (error: any) {
+      console.error("Error creating package category pricing:", error);
+      if (error.message?.includes("unique")) {
+        res.status(400).json({ error: "Bu paket için kategori fiyatı zaten mevcut" });
+      } else {
+        res.status(400).json({ error: "Kategori fiyatı oluşturulurken hata oluştu" });
+      }
+    }
+  });
+
+  app.patch("/api/listing-package-category-pricing/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz fiyatlandırma ID" });
+      }
+
+      const pricing = await storage.updatePackageCategoryPricing(id, req.body);
+      res.json(pricing);
+    } catch (error: any) {
+      console.error("Error updating package category pricing:", error);
+      res.status(500).json({ error: "Kategori fiyatı güncellenirken hata oluştu" });
+    }
+  });
+
+  app.delete("/api/listing-package-category-pricing/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz fiyatlandırma ID" });
+      }
+
+      await storage.deletePackageCategoryPricing(id);
+      res.json({ message: "Kategori fiyatı başarıyla silindi" });
+    } catch (error: any) {
+      console.error("Error deleting package category pricing:", error);
+      res.status(500).json({ error: "Kategori fiyatı silinirken hata oluştu" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

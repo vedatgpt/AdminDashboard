@@ -8,6 +8,7 @@ import Categories from "@/pages/admin/Categories";
 import Locations from "@/pages/admin/Locations";
 import LocationSettings from "@/pages/admin/LocationSettings";
 import DopingPackages from "@/pages/admin/DopingPackages";
+import ListingPackages from "@/pages/admin/ListingPackages";
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -64,6 +65,7 @@ function Router() {
             <Route path="/admin/locations/settings" component={LocationSettings} />
             <Route path="/admin/locations/:parentId" component={Locations} />
             <Route path="/admin/doping-packages" component={DopingPackages} />
+            <Route path="/admin/listing-packages" component={ListingPackages} />
 
             <Route component={NotFound} />
           </Switch>
