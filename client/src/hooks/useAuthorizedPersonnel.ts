@@ -12,8 +12,10 @@ export function useAuthorizedPersonnel() {
 
   const createPersonnelMutation = useMutation({
     mutationFn: async (personnelData: InsertAuthorizedPersonnel) => {
-      const response = await apiRequest("POST", "/api/authorized-personnel", personnelData);
-      return response.json();
+      return await apiRequest("/api/authorized-personnel", {
+        method: "POST",
+        body: JSON.stringify(personnelData),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/authorized-personnel"] });
@@ -22,8 +24,10 @@ export function useAuthorizedPersonnel() {
 
   const updatePersonnelMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<InsertAuthorizedPersonnel> }) => {
-      const response = await apiRequest("PATCH", `/api/authorized-personnel/${id}`, data);
-      return response.json();
+      return await apiRequest(`/api/authorized-personnel/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/authorized-personnel"] });
@@ -32,7 +36,9 @@ export function useAuthorizedPersonnel() {
 
   const deletePersonnelMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/authorized-personnel/${id}`);
+      return await apiRequest(`/api/authorized-personnel/${id}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/authorized-personnel"] });

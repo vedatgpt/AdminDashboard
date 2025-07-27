@@ -31,7 +31,7 @@ export default function LocationForm({
 }: LocationFormProps) {
   const [formData, setFormData] = useState<InsertLocation>({
     name: "",
-    type: nextType || "country",
+    type: (nextType as "country" | "city" | "district" | "neighborhood") || "country",
     parentId: parentLocation?.id || null,
     sortOrder: 0,
     isActive: true,
@@ -41,7 +41,7 @@ export default function LocationForm({
     if (editingLocation) {
       setFormData({
         name: editingLocation.name,
-        type: editingLocation.type,
+        type: editingLocation.type as "country" | "city" | "district" | "neighborhood",
         parentId: editingLocation.parentId,
         sortOrder: editingLocation.sortOrder,
         isActive: editingLocation.isActive,
@@ -49,7 +49,7 @@ export default function LocationForm({
     } else {
       setFormData({
         name: "",
-        type: nextType || "country",
+        type: (nextType as "country" | "city" | "district" | "neighborhood") || "country",
         parentId: parentLocation?.id || null,
         sortOrder: 0,
         isActive: true,
@@ -67,7 +67,7 @@ export default function LocationForm({
     // Reset form
     setFormData({
       name: "",
-      type: nextType || "country",
+      type: (nextType as "country" | "city" | "district" | "neighborhood") || "country",
       parentId: parentLocation?.id || null,
       sortOrder: 0,
       isActive: true,
