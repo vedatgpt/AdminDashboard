@@ -8,6 +8,7 @@ import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
 import { useClassifiedId } from '@/hooks/useClassifiedId';
+import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { LISTING_CONFIG, ERROR_MESSAGES } from '@shared/constants';
 
 import Sortable from "sortablejs";
@@ -37,8 +38,8 @@ export default function Step3() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateDraftMutation = useUpdateDraftListing();
   
-  // DOUBLE-CLICK PROTECTION: Loading state for next step button
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // DOUBLE-CLICK PROTECTION: Using custom hook
+  const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
   // URL parameter support - Custom hook kullanımı
   const currentClassifiedId = useClassifiedId();
@@ -602,16 +603,7 @@ export default function Step3() {
   };
 
   const handleNextStep = async () => {
-    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
-    if (isSubmitting) {
-      console.log('🚫 Double-click prevented - already submitting');
-      return;
-    }
-    
-    // Set loading state immediately
-    setIsSubmitting(true);
-    
-    try {
+    await executeWithProtection(async () => {
       // Clear any pending save timeout and execute immediately
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -634,7 +626,6 @@ export default function Step3() {
           description: "İlan ID bulunamadı. Lütfen sayfayı yenileyin.",
           variant: "destructive"
         });
-        setIsSubmitting(false);
         return;
       }
 
@@ -683,17 +674,12 @@ export default function Step3() {
           description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
           variant: "destructive"
         });
-        setIsSubmitting(false);
         return;
       }
       } else {
         navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
       }
-    
-    } catch (error) {
-      console.error('Step-3 navigation error:', error);
-      setIsSubmitting(false);
-    }
+    });
   };
 
   return (

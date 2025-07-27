@@ -10,6 +10,7 @@ import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import { useClassifiedId } from '@/hooks/useClassifiedId';
+import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { ERROR_MESSAGES } from '@shared/constants';
 
 import CreateListingLayout from '@/components/CreateListingLayout';
@@ -36,8 +37,8 @@ export default function Step4() {
   const thumbnailsPerPage = 10;
   const queryClient = useQueryClient();
   
-  // DOUBLE-CLICK PROTECTION: Loading state for next step button
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // DOUBLE-CLICK PROTECTION: Using custom hook
+  const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -923,23 +924,9 @@ export default function Step4() {
           </button>
 
           <button
-            onClick={async () => {
-              // DOUBLE-CLICK PROTECTION: Early exit if already submitting
-              if (isSubmitting) {
-                console.log('🚫 Double-click prevented - already submitting');
-                return;
-              }
-              
-              // Set loading state immediately
-              setIsSubmitting(true);
-              
-              try {
-                navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
-              } catch (error) {
-                console.error('Step-4 navigation error:', error);
-                setIsSubmitting(false);
-              }
-            }}
+            onClick={() => executeWithProtection(async () => {
+              navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+            })}
             className={`px-6 py-3 rounded-lg transition-colors font-medium ${
               isSubmitting 
                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 

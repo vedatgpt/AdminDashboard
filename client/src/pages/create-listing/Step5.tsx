@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
+import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 
 interface CategoryPackage {
@@ -55,8 +56,8 @@ export default function Step5() {
   const [selectedCategoryPackage, setSelectedCategoryPackage] = useState<number | null>(null);
   const [selectedDopingPackages, setSelectedDopingPackages] = useState<number[]>([]);
   
-  // DOUBLE-CLICK PROTECTION: Loading state for publish button
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // DOUBLE-CLICK PROTECTION: Using custom hook
+  const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -143,16 +144,7 @@ export default function Step5() {
   }, [navigate, currentClassifiedId]);
 
   const handleContinue = useCallback(async () => {
-    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
-    if (isSubmitting) {
-      console.log('🚫 Double-click prevented - already submitting');
-      return;
-    }
-    
-    // Set loading state immediately
-    setIsSubmitting(true);
-    
-    try {
+    await executeWithProtection(async () => {
       // Package selection completed - ready for payment integration
       const selectedPackages = {
         categoryPackage: selectedCategoryPackage,
@@ -165,13 +157,8 @@ export default function Step5() {
       
       // Simulate some processing time
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-    } catch (error) {
-      console.error('Step-5 submission error:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [selectedCategoryPackage, selectedDopingPackages, totalPrice, isSubmitting]);
+    });
+  }, [selectedCategoryPackage, selectedDopingPackages, totalPrice, executeWithProtection]);
 
   // Fetch all categories in flat structure to check for inheritance
   const { data: allCategories = [] } = useQuery<Category[]>({

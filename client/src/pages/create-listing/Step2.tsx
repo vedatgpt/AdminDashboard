@@ -15,6 +15,7 @@ import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoriesTree } from '@/hooks/useCategories';
 import { useState, useMemo, useEffect } from 'react';
 import type { Location, Category } from '@shared/schema';
+import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 
 // Import new components
 import CategoryInfo from '@/components/listing/CategoryInfo';
@@ -34,8 +35,8 @@ export default function Step2() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [showValidation, setShowValidation] = useState(false);
   
-  // DOUBLE-CLICK PROTECTION: Loading state for next step button
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // DOUBLE-CLICK PROTECTION: Using custom hook
+  const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -397,16 +398,7 @@ export default function Step2() {
 
 
   const nextStep = async () => {
-    // DOUBLE-CLICK PROTECTION: Early exit if already submitting
-    if (isSubmitting) {
-      console.log('🚫 Double-click prevented - already submitting');
-      return;
-    }
-    
-    // Set loading state immediately
-    setIsSubmitting(true);
-    
-    try {
+    await executeWithProtection(async () => {
       // ENHANCED VALIDATION: Check both context formData AND draft data as fallback
       const errors: { [key: string]: string } = {};
       
@@ -467,7 +459,6 @@ export default function Step2() {
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
         setShowValidation(true);
-        setIsSubmitting(false); // Reset loading state on validation error
         return;
       }
     
@@ -532,7 +523,6 @@ export default function Step2() {
             setShowValidation(true);
           }
           
-          setIsSubmitting(false);
           return;
         }
         
@@ -542,7 +532,6 @@ export default function Step2() {
         }
       } catch (error) {
         console.error('Draft güncellenemedi:', error);
-        setIsSubmitting(false); // Reset loading state on error
         return;
       }
     }
@@ -552,11 +541,7 @@ export default function Step2() {
         `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
         '/create-listing/step-3';
       navigate(url);
-      
-    } catch (error) {
-      console.error('NextStep error:', error);
-      setIsSubmitting(false); // Reset loading state on any error
-    }
+    });
   };
   // Get categoryId from draft or selected category for custom fields
   const categoryIdForFields = draftData?.categoryId || selectedCategory?.id || 0;
