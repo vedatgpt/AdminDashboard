@@ -172,7 +172,7 @@ export default function Step5() {
 
       <div className="space-y-8">
         {/* Category Packages - Only show if packages exist or free listing available */}
-        {(categoryPackages.length > 0 || hasFreeListing) && (
+        {(categoryPackages.length > 0 || hasFreeListing) ? (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Kategori Paketleri</h2>
             
@@ -249,7 +249,7 @@ export default function Step5() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Doping Packages */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
