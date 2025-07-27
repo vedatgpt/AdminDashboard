@@ -140,12 +140,14 @@ export default function Step5() {
   }, [navigate, currentClassifiedId]);
 
   const handleContinue = useCallback(() => {
-    // TODO: Handle package selection submission
-    console.log('Selected packages:', {
+    // Package selection completed - ready for payment integration
+    const selectedPackages = {
       categoryPackage: selectedCategoryPackage,
       dopingPackages: selectedDopingPackages,
       totalPrice
-    });
+    };
+    
+    // Future: Integrate with Stripe payment system
     alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice]);
 
