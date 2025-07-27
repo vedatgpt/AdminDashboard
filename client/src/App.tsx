@@ -8,9 +8,8 @@ import Categories from "@/pages/admin/Categories";
 import Locations from "@/pages/admin/Locations";
 import LocationSettings from "@/pages/admin/LocationSettings";
 import DopingPackages from "@/pages/admin/DopingPackages";
-import ListingPackages from "@/pages/admin/ListingPackages";
-import IndividualListingPackages from "@/pages/admin/IndividualListingPackages";
-import CorporateListingPackages from "@/pages/admin/CorporateListingPackages";
+
+
 
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
@@ -24,7 +23,6 @@ import AuthorizedPersonnel from "./pages/account/AuthorizedPersonnel";
 import PasswordChange from "@/pages/account/PasswordChange";
 import ChangeEmail from "@/pages/account/ChangeEmail";
 import NotFound from "@/pages/public/not-found";
-import CategoryListingPackages from "./pages/admin/CategoryListingPackages";
 
 import CreateListingStep1 from "@/pages/create-listing/Step1";
 import CreateListingStep2 from "@/pages/create-listing/Step2";
@@ -68,10 +66,7 @@ function Router() {
             <Route path="/admin/locations/settings" component={LocationSettings} />
             <Route path="/admin/locations/:parentId" component={Locations} />
             <Route path="/admin/doping-packages" component={DopingPackages} />
-            <Route path="/admin/listing-packages" component={ListingPackages} />
-            <Route path="/admin/listing-packages/individual" component={IndividualListingPackages} />
-            <Route path="/admin/listing-packages/corporate" component={CorporateListingPackages} />
-            <Route path="/admin/categories/:categoryId/packages" component={CategoryListingPackages} />
+
 
             <Route component={NotFound} />
           </Switch>

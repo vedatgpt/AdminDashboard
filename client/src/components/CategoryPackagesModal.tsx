@@ -1,41 +1,34 @@
 import { useState, useMemo, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Plus, Search, ArrowLeft, Edit, Trash2, AlertTriangle, CheckCircle, Info, GripVertical } from "lucide-react";
+import { X, Plus, Search, Edit, Trash2, GripVertical, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import Sortable from "sortablejs";
-import PageHeader from "@/components/PageHeader";
-import ListingPackageForm from "@/components/ListingPackageForm";
+import ListingPackageForm from "./ListingPackageForm";
 import { useListingPackages, useCreateListingPackage, useUpdateListingPackage, useDeleteListingPackage, useReorderListingPackages } from "@/hooks/useListingPackages";
-import { useCategory } from "@/hooks/useCategories";
-import type { ListingPackage } from "@shared/schema";
+import type { Category, ListingPackage } from "@shared/schema";
 
-export default function CategoryListingPackages() {
-  const [location, setLocation] = useLocation();
+interface CategoryPackagesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  category: Category;
+}
+
+export default function CategoryPackagesModal({ isOpen, onClose, category }: CategoryPackagesModalProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<ListingPackage | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
-  // Extract category ID from URL
-  const categoryId = useMemo(() => {
-    const match = location.match(/\/admin\/categories\/(\d+)\/packages/);
-    return match ? parseInt(match[1]) : null;
-  }, [location]);
-
-  // Fetch category info and packages
-  const { data: category } = useCategory(categoryId!);
-  const { data: packages = [], isLoading, error } = useListingPackages();
+  // Fetch packages
+  const { data: allPackages = [], isLoading } = useListingPackages();
   const createMutation = useCreateListingPackage();
   const updateMutation = useUpdateListingPackage();
   const deleteMutation = useDeleteListingPackage();
   const reorderMutation = useReorderListingPackages();
 
-  // Filter packages for this category only
+  // Filter packages for this category only (for now show all, will implement category filtering later)
   const categoryPackages = useMemo(() => {
-    if (!categoryId) return [];
-    // Filter packages that are associated with this category
-    // This would need to be implemented via category pricing relationships
-    return packages as ListingPackage[];
-  }, [packages, categoryId]);
+    // TODO: Implement proper category-package relationship filtering
+    return allPackages as ListingPackage[];
+  }, [allPackages]);
 
   // Apply search filter
   const filteredPackages = useMemo(() => {
@@ -62,7 +55,7 @@ export default function CategoryListingPackages() {
         // Add category ID to the package data
         const packageData = {
           ...data,
-          selectedCategories: [categoryId], // Automatically associate with current category
+          selectedCategories: [category.id], // Automatically associate with current category
         };
         await createMutation.mutateAsync(packageData);
         showAlertMessage('success', 'İlan paketi başarıyla oluşturuldu');
@@ -95,14 +88,12 @@ export default function CategoryListingPackages() {
     setIsFormOpen(true);
   };
 
-  const handleBack = () => {
-    setLocation('/admin/categories');
-  };
-
   // Initialize sortable for drag & drop reordering
   useEffect(() => {
+    if (!isOpen) return;
+
     const timer = setTimeout(() => {
-      const sortableElement = document.querySelector("#hs-package-sortable");
+      const sortableElement = document.querySelector("#category-packages-sortable");
       if (sortableElement && filteredPackages.length > 0) {
         // Clear existing sortable instance
         const existingSortable = (sortableElement as any).sortableInstance;
@@ -133,7 +124,7 @@ export default function CategoryListingPackages() {
 
     return () => {
       clearTimeout(timer);
-      const sortableElement = document.querySelector("#hs-package-sortable");
+      const sortableElement = document.querySelector("#category-packages-sortable");
       if (sortableElement) {
         const existingSortable = (sortableElement as any).sortableInstance;
         if (existingSortable) {
@@ -142,71 +133,72 @@ export default function CategoryListingPackages() {
         }
       }
     };
-  }, [filteredPackages, reorderMutation]);
+  }, [isOpen, filteredPackages, reorderMutation]);
 
-  if (!categoryId) {
-    return <div>Geçersiz kategori ID</div>;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Alert */}
-      {showAlert && (
-        <div className={`mb-4 p-4 rounded-lg flex items-center ${
-          showAlert.type === 'success' ? 'bg-green-50 text-green-800' :
-          showAlert.type === 'error' ? 'bg-red-50 text-red-800' :
-          'bg-blue-50 text-blue-800'
-        }`}>
-          {showAlert.type === 'success' && <CheckCircle className="w-5 h-5 mr-2" />}
-          {showAlert.type === 'error' && <AlertTriangle className="w-5 h-5 mr-2" />}
-          {showAlert.type === 'info' && <Info className="w-5 h-5 mr-2" />}
-          {showAlert.message}
-        </div>
-      )}
-
-      {/* Page Header */}
-      <PageHeader
-        title={`İlan Paketleri - ${category?.name || 'Yükleniyor...'}`}
-        subtitle={`"${category?.name}" kategorisi için özel ilan paketleri`}
-      />
-
-      <div className="flex-1 flex flex-col">
-        {/* Package List */}
-        <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
-            {/* Back Button */}
-            <button
-              onClick={handleBack}
-              className="inline-flex items-center text-sm text-gray-600 hover:text-[#EC7830] transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Kategorilere Dön
-            </button>
-            
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              {/* Search */}
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Paket ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
-                />
-              </div>
-
-              {/* Add Package Button */}
-              <button 
-                onClick={handleAddNew}
-                disabled={isAnyMutationLoading}
-                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
-              >
-                <Plus className="w-4 h-4" />
-                Yeni Paket
-              </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                İlan Paketleri - {category.name}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                "{category.name}" kategorisi için özel ilan paketleri
+              </p>
             </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Alert */}
+        {showAlert && (
+          <div className={`mx-6 mt-4 p-4 rounded-lg flex items-center ${
+            showAlert.type === 'success' ? 'bg-green-50 text-green-800' :
+            showAlert.type === 'error' ? 'bg-red-50 text-red-800' :
+            'bg-blue-50 text-blue-800'
+          }`}>
+            {showAlert.type === 'success' && <CheckCircle className="w-5 h-5 mr-2" />}
+            {showAlert.type === 'error' && <AlertTriangle className="w-5 h-5 mr-2" />}
+            {showAlert.type === 'info' && <Info className="w-5 h-5 mr-2" />}
+            {showAlert.message}
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+            {/* Search */}
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Paket ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+              />
+            </div>
+
+            {/* Add Package Button */}
+            <button 
+              onClick={handleAddNew}
+              disabled={isAnyMutationLoading}
+              className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
+            >
+              <Plus className="w-4 h-4" />
+              Yeni Paket
+            </button>
           </div>
 
           {/* Package List */}
@@ -230,7 +222,7 @@ export default function CategoryListingPackages() {
               )}
             </div>
           ) : (
-            <div id="hs-package-sortable" className="space-y-3">
+            <div id="category-packages-sortable" className="space-y-3">
               {filteredPackages.map((pkg) => (
                 <div
                   key={pkg.id}
@@ -254,6 +246,13 @@ export default function CategoryListingPackages() {
                               : 'bg-gray-100 text-gray-800'
                           }`}>
                             {pkg.isActive ? 'Aktif' : 'Pasif'}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            pkg.membershipType === 'individual' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-purple-100 text-purple-800'
+                          }`}>
+                            {pkg.membershipType === 'individual' ? 'Bireysel' : 'Kurumsal'}
                           </span>
                         </div>
                         {pkg.description && (
