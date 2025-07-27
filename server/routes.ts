@@ -1220,53 +1220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rotate image endpoint
-  app.post("/api/upload/images/:imageId/rotate", async (req, res) => {
-    try {
-      const { imageId } = req.params;
-      const userId = 1; // Temporary fixed user ID for development
 
-      // Find image file
-      const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
-      const files = fs.readdirSync(userDir).filter(file => file.startsWith(imageId));
-
-      if (files.length === 0) {
-        return res.status(404).json({ error: "Resim bulunamadı" });
-      }
-
-      const imageFile = files[0];
-      const imagePath = path.join(userDir, imageFile);
-      const thumbnailPath = path.join(userDir, `thumb_${imageFile}`);
-
-      // Rotate main image
-      await sharp(imagePath)
-        .rotate(90)
-        .jpeg({ quality: 90 })
-        .toFile(imagePath + '_temp');
-
-      // Replace original with rotated
-      fs.renameSync(imagePath + '_temp', imagePath);
-
-      // Rotate thumbnail if exists
-      if (fs.existsSync(thumbnailPath)) {
-        await sharp(thumbnailPath)
-          .rotate(90)
-          .jpeg({ quality: 90 })
-          .toFile(thumbnailPath + '_temp');
-
-        fs.renameSync(thumbnailPath + '_temp', thumbnailPath);
-      }
-
-      res.json({
-        id: imageId,
-        url: `/uploads/users/${userId}/temp-listings/${imageFile}`,
-        thumbnail: `/uploads/users/${userId}/temp-listings/thumb_${imageFile}`
-      });
-    } catch (error) {
-
-      res.status(500).json({ error: "Resim döndürme hatası" });
-    }
-  });
 
   // Delete uploaded image (temporarily removed auth for development)
   app.delete("/api/upload/images/:imageId", async (req, res) => {
