@@ -2,7 +2,9 @@
 export const LISTING_CONFIG = {
   MAX_IMAGES: 10,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
-  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'] as const,
+  ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.webp'] as const,
+  BLOCKED_EXTENSIONS: ['.heic', '.heif', '.tiff', '.tif', '.bmp', '.gif', '.svg', '.raw', '.cr2', '.nef', '.arw'] as const,
   MIN_TITLE_LENGTH: 3,
   MAX_TITLE_LENGTH: 100,
   MIN_DESCRIPTION_LENGTH: 10,
@@ -19,6 +21,7 @@ export const ERROR_MESSAGES = {
   INVALID_FILE_TYPE: 'Geçersiz dosya formatı',
   HEIC_NOT_SUPPORTED: 'HEIC dosya formatı desteklenmemektedir. Lütfen JPG, PNG veya WebP formatında fotoğraf yükleyiniz.',
   UNSUPPORTED_IMAGE_FORMAT: 'Bu dosya formatı desteklenmemektedir. Lütfen JPG, PNG veya WebP formatında fotoğraf yükleyiniz.',
+  UNSUPPORTED_FILE_EXTENSION: 'Desteklenmeyen dosya uzantısı. Sadece JPG, PNG ve WebP formatlarına izin verilmektedir.',
   UPLOAD_FAILED: 'Yükleme başarısız',
   SAVE_FAILED: 'Kaydetme başarısız',
   DELETE_FAILED: 'Silme işlemi başarısız',

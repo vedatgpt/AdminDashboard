@@ -524,37 +524,58 @@ export default function Step3() {
     if (!files) return;
 
     const validFiles = Array.from(files).filter(file => {
-      // Check if file extension is HEIC/HEIF (case insensitive)
       const fileName = file.name.toLowerCase();
-      if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+
+      // 1. Check if file extension is blocked (comprehensive list)
+      if (LISTING_CONFIG.BLOCKED_EXTENSIONS.includes(fileExtension as any)) {
+        if (fileExtension === '.heic' || fileExtension === '.heif') {
+          toast({
+            title: "HEIC Formatı Desteklenmiyor",
+            description: ERROR_MESSAGES.HEIC_NOT_SUPPORTED,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Desteklenmeyen Dosya Formatı",
+            description: `${fileExtension.toUpperCase()} formatı desteklenmemektedir. ${ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION}`,
+            variant: "destructive"
+          });
+        }
+        return false;
+      }
+
+      // 2. Check if file extension is allowed (positive validation)
+      if (!LISTING_CONFIG.ALLOWED_EXTENSIONS.includes(fileExtension as any)) {
         toast({
-          title: "Desteklenmeyen Dosya Formatı",
-          description: ERROR_MESSAGES.HEIC_NOT_SUPPORTED,
+          title: "Desteklenmeyen Dosya Uzantısı",
+          description: ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION,
           variant: "destructive"
         });
         return false;
       }
 
-      // Check if file type is image
+      // 3. Check if file type is image (browser MIME type validation)
       if (!file.type.startsWith('image/')) {
         toast({
-          title: "Geçersiz Dosya",
+          title: "Geçersiz Dosya Türü",
           description: 'Sadece resim dosyaları yüklenebilir',
           variant: "destructive"
         });
         return false;
       }
 
-      // Check if file type is supported (additional validation for MIME types)
-      if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      // 4. Check if MIME type is supported (additional validation)
+      if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
         toast({
-          title: "Desteklenmeyen Dosya Formatı",
+          title: "Desteklenmeyen MIME Türü",
           description: ERROR_MESSAGES.UNSUPPORTED_IMAGE_FORMAT,
           variant: "destructive"
         });
         return false;
       }
 
+      // 5. Check file size
       if (file.size > LISTING_CONFIG.MAX_FILE_SIZE) {
         toast({
           title: "Dosya Çok Büyük",
@@ -564,7 +585,7 @@ export default function Step3() {
         return false;
       }
 
-      // Remove duplicate check - allow same images to be uploaded
+      // All validations passed
       return true;
     });
 
