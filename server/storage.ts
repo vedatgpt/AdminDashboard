@@ -1,4 +1,4 @@
-import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing } from "@shared/schema";
+import { users, authorizedPersonnel, categories, categoryCustomFields, locations, locationSettings, draftListings, dopingPackages, type User, type InsertUser, type LoginData, type RegisterData, type AuthorizedPersonnel, type InsertAuthorizedPersonnel, type Category, type InsertCategory, type UpdateCategory, type CategoryCustomField, type InsertCustomField, type Location, type InsertLocation, type UpdateLocation, type LocationSettings, type InsertLocationSettings, type UpdateLocationSettings, type DraftListing, type InsertDraftListing, type UpdateDraftListing, type DopingPackage, type InsertDopingPackage, type UpdateDopingPackage } from "@shared/schema";
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -74,6 +74,14 @@ export interface IStorage {
   deleteDraftListing(id: number): Promise<void>;
   publishDraftListing(id: number): Promise<DraftListing>;
   markStepCompleted(id: number, step: number): Promise<DraftListing>;
+
+  // Doping Packages methods
+  getDopingPackages(): Promise<DopingPackage[]>;
+  getDopingPackageById(id: number): Promise<DopingPackage | undefined>;
+  createDopingPackage(data: InsertDopingPackage): Promise<DopingPackage>;
+  updateDopingPackage(id: number, updates: UpdateDopingPackage): Promise<DopingPackage>;
+  deleteDopingPackage(id: number): Promise<void>;
+  reorderDopingPackages(packageIds: number[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -686,6 +694,48 @@ export class DatabaseStorage implements IStorage {
       step3: draft.step3Completed || false,
       step4: draft.step4Completed || false,
     };
+  }
+
+  // Doping Packages Implementation
+  async getDopingPackages(): Promise<DopingPackage[]> {
+    const packages = await db.select()
+      .from(dopingPackages)
+      .orderBy(asc(dopingPackages.sortOrder), asc(dopingPackages.name));
+    return packages;
+  }
+
+  async getDopingPackageById(id: number): Promise<DopingPackage | undefined> {
+    const [dopingPackage] = await db.select()
+      .from(dopingPackages)
+      .where(eq(dopingPackages.id, id));
+    return dopingPackage;
+  }
+
+  async createDopingPackage(data: InsertDopingPackage): Promise<DopingPackage> {
+    const [dopingPackage] = await db.insert(dopingPackages)
+      .values(data)
+      .returning();
+    return dopingPackage;
+  }
+
+  async updateDopingPackage(id: number, updates: UpdateDopingPackage): Promise<DopingPackage> {
+    const [dopingPackage] = await db.update(dopingPackages)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(dopingPackages.id, id))
+      .returning();
+    return dopingPackage;
+  }
+
+  async deleteDopingPackage(id: number): Promise<void> {
+    await db.delete(dopingPackages).where(eq(dopingPackages.id, id));
+  }
+
+  async reorderDopingPackages(packageIds: number[]): Promise<void> {
+    for (let i = 0; i < packageIds.length; i++) {
+      await db.update(dopingPackages)
+        .set({ sortOrder: i + 1 })
+        .where(eq(dopingPackages.id, packageIds[i]));
+    }
   }
 }
 

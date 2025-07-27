@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Users, Megaphone, Tags, MapPin, LogOut, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Home, Users, Megaphone, Tags, MapPin, Package, LogOut, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/use-sidebar";
 import logoPath from "@assets/logo_1752808818099.png";
@@ -11,6 +11,7 @@ const navigation = [
   { name: "İlanlar", href: "/admin/listings", icon: Megaphone },
   { name: "Kategoriler", href: "/admin/categories", icon: Tags },
   { name: "Lokasyonlar", href: "/admin/locations", icon: MapPin },
+  { name: "Doping Paketleri", href: "/admin/doping-packages", icon: Package },
 ];
 
 export default function Sidebar() {
@@ -100,7 +101,8 @@ export default function Sidebar() {
                   const isActive = location === item.href || 
                                    (location === "/" && item.href === "/admin") ||
                                    (item.href === "/admin/categories" && location.startsWith("/admin/categories")) ||
-                                   (item.href === "/admin/locations" && location.startsWith("/admin/locations"));
+                                   (item.href === "/admin/locations" && location.startsWith("/admin/locations")) ||
+                                   (item.href === "/admin/doping-packages" && location.startsWith("/admin/doping-packages"));
 
                   return (
                     <li key={item.name}>

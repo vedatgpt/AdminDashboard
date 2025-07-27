@@ -1258,6 +1258,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Doping Packages routes
+  app.get("/api/doping-packages", requireAdmin, async (req, res) => {
+    try {
+      const packages = await storage.getDopingPackages();
+      res.json(packages);
+    } catch (error: any) {
+      console.error("Error fetching doping packages:", error);
+      res.status(500).json({ error: "Doping paketleri alınırken hata oluştu" });
+    }
+  });
+
+  app.get("/api/doping-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const dopingPackage = await storage.getDopingPackageById(id);
+      if (!dopingPackage) {
+        return res.status(404).json({ error: "Doping paketi bulunamadı" });
+      }
+
+      res.json(dopingPackage);
+    } catch (error: any) {
+      console.error("Error fetching doping package:", error);
+      res.status(500).json({ error: "Doping paketi alınırken hata oluştu" });
+    }
+  });
+
+  app.post("/api/doping-packages", requireAdmin, async (req, res) => {
+    try {
+      const dopingPackage = await storage.createDopingPackage(req.body);
+      res.status(201).json(dopingPackage);
+    } catch (error: any) {
+      console.error("Error creating doping package:", error);
+      if (error.message?.includes("unique")) {
+        res.status(400).json({ error: "Bu isimde bir paket zaten mevcut" });
+      } else {
+        res.status(400).json({ error: "Doping paketi oluşturulurken hata oluştu" });
+      }
+    }
+  });
+
+  app.patch("/api/doping-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      const dopingPackage = await storage.updateDopingPackage(id, req.body);
+      res.json(dopingPackage);
+    } catch (error: any) {
+      console.error("Error updating doping package:", error);
+      if (error.message?.includes("unique")) {
+        res.status(400).json({ error: "Bu isimde bir paket zaten mevcut" });
+      } else {
+        res.status(400).json({ error: "Doping paketi güncellenirken hata oluştu" });
+      }
+    }
+  });
+
+  app.delete("/api/doping-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Geçersiz paket ID" });
+      }
+
+      await storage.deleteDopingPackage(id);
+      res.json({ message: "Doping paketi başarıyla silindi" });
+    } catch (error: any) {
+      console.error("Error deleting doping package:", error);
+      res.status(500).json({ error: "Doping paketi silinirken hata oluştu" });
+    }
+  });
+
+  app.patch("/api/doping-packages/reorder", requireAdmin, async (req, res) => {
+    try {
+      const { packageIds } = req.body;
+      if (!Array.isArray(packageIds)) {
+        return res.status(400).json({ error: "packageIds array gerekli" });
+      }
+
+      await storage.reorderDopingPackages(packageIds);
+      res.json({ message: "Doping paketleri başarıyla yeniden sıralandı" });
+    } catch (error: any) {
+      console.error("Error reordering doping packages:", error);
+      res.status(500).json({ error: "Doping paketleri sıralanırken hata oluştu" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

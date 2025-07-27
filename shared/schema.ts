@@ -268,3 +268,31 @@ export const sessions = pgTable("sessions", {
 });
 
 export type Session = typeof sessions.$inferSelect;
+
+// Doping packages table for listing promotion system
+export const dopingPackages = pgTable("doping_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  price: integer("price").notNull().default(0), // Price in TL cents (e.g., 5000 = 50.00 TL)
+  durationDays: integer("duration_days").notNull().default(30), // Duration in days
+  features: text("features"), // JSON array of features like ["top_listing", "highlighted", "badge"]
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating doping packages
+export const insertDopingPackageSchema = createInsertSchema(dopingPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Schema for updating doping packages
+export const updateDopingPackageSchema = insertDopingPackageSchema.partial();
+
+export type DopingPackage = typeof dopingPackages.$inferSelect;
+export type InsertDopingPackage = z.infer<typeof insertDopingPackageSchema>;
+export type UpdateDopingPackage = z.infer<typeof updateDopingPackageSchema>;
