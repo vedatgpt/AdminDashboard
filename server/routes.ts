@@ -1402,7 +1402,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/listing-packages", requireAdmin, async (req, res) => {
     try {
-      const listingPackage = await storage.createListingPackage(req.body);
+      const { selectedCategories, selectedMembershipTypes, ...packageData } = req.body;
+      
+      console.log("📦 Creating listing package with categories:", selectedCategories);
+      console.log("👥 Membership types:", selectedMembershipTypes);
+      
+      // First create the listing package
+      const listingPackage = await storage.createListingPackage(packageData);
+      
+      // Then create category pricing entries for selected categories
+      if (selectedCategories && Array.isArray(selectedCategories) && selectedCategories.length > 0) {
+        const membershipTypes = selectedMembershipTypes || ['individual', 'corporate'];
+        
+        for (const categoryId of selectedCategories) {
+          const pricingData = {
+            packageId: listingPackage.id,
+            categoryId: parseInt(categoryId),
+            individualPrice: membershipTypes.includes('individual') ? packageData.basePrice : 0,
+            corporatePrice: membershipTypes.includes('corporate') ? packageData.basePrice : 0,
+            isFreeForIndividual: membershipTypes.includes('individual') && packageData.basePrice === 0,
+            isFreeForCorporate: membershipTypes.includes('corporate') && packageData.basePrice === 0,
+            isActive: true
+          };
+          
+          console.log(`💰 Creating pricing for category ${categoryId}:`, pricingData);
+          await storage.createPackageCategoryPricing(pricingData);
+        }
+      }
+      
       res.status(201).json(listingPackage);
     } catch (error: any) {
       console.error("Error creating listing package:", error);
@@ -1421,7 +1448,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Geçersiz paket ID" });
       }
 
-      const listingPackage = await storage.updateListingPackage(id, req.body);
+      const { selectedCategories, selectedMembershipTypes, ...packageData } = req.body;
+      
+      console.log("📦 Updating listing package ID:", id);
+      console.log("🔄 New categories:", selectedCategories);
+      console.log("👥 New membership types:", selectedMembershipTypes);
+
+      // Update the listing package
+      const listingPackage = await storage.updateListingPackage(id, packageData);
+
+      // If categories or membership types are being updated, handle pricing
+      if (selectedCategories && Array.isArray(selectedCategories)) {
+        // Delete existing category pricing for this package
+        await storage.deletePackageCategoryPricingByPackage(id);
+        
+        // Create new category pricing entries
+        if (selectedCategories.length > 0) {
+          const membershipTypes = selectedMembershipTypes || ['individual', 'corporate'];
+          
+          for (const categoryId of selectedCategories) {
+            const pricingData = {
+              packageId: id,
+              categoryId: parseInt(categoryId),
+              individualPrice: membershipTypes.includes('individual') ? packageData.basePrice : 0,
+              corporatePrice: membershipTypes.includes('corporate') ? packageData.basePrice : 0,
+              isFreeForIndividual: membershipTypes.includes('individual') && packageData.basePrice === 0,
+              isFreeForCorporate: membershipTypes.includes('corporate') && packageData.basePrice === 0,
+              isActive: true
+            };
+            
+            console.log(`💰 Creating new pricing for category ${categoryId}:`, pricingData);
+            await storage.createPackageCategoryPricing(pricingData);
+          }
+        }
+      }
+
       res.json(listingPackage);
     } catch (error: any) {
       console.error("Error updating listing package:", error);

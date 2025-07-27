@@ -57,6 +57,11 @@ export default function ListingPackageForm({
         } catch {
           setFeaturesArray([]);
         }
+
+        // TODO: Load existing category and membership type selections from database
+        // For now, keep empty arrays as placeholders
+        setSelectedCategories([]);
+        setSelectedMembershipTypes([]);
       } else {
         setFormData({
           name: "",
@@ -76,9 +81,22 @@ export default function ListingPackageForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validation checks
+    if (selectedCategories.length === 0) {
+      alert('En az bir kategori seçmelisiniz');
+      return;
+    }
+
+    if (selectedMembershipTypes.length === 0) {
+      alert('En az bir üyelik tipi seçmelisiniz');
+      return;
+    }
+    
     const submitData = {
       ...formData,
       features: JSON.stringify(featuresArray),
+      selectedCategories,
+      selectedMembershipTypes,
     };
     
     onSubmit(submitData);
