@@ -25,38 +25,68 @@ export default function ListingPackages() {
     setTimeout(() => setShowAlert(null), duration);
   };
 
-  // Initialize sortable
-  useEffect(() => {
-    const packageList = document.getElementById('hs-package-sortable');
-    if (packageList && packages.length > 0) {
-      const sortable = Sortable.create(packageList, {
-        animation: 150,
-        handle: '.drag-handle',
-        onUpdate: function(evt) {
-          if (evt.oldIndex !== undefined && evt.newIndex !== undefined) {
-            const packageIds = Array.from(packageList.children).map(child => 
-              parseInt(child.getAttribute('data-package-id') || '0')
-            );
-            reorderMutation.mutate(packageIds);
-          }
-        }
-      });
-
-      return () => {
-        sortable.destroy();
-      };
-    }
-  }, [packages, reorderMutation]);
-
-  // Filter packages based on search term
+  // Filter packages based on search
   const filteredPackages = useMemo(() => {
-    if (!searchTerm.trim()) return packages;
-    
-    return packages.filter(pkg =>
+    if (!searchTerm) return packages;
+    return packages.filter(pkg => 
       pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pkg.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      (pkg.description && pkg.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [packages, searchTerm]);
+
+  // Initialize sortable for drag & drop reordering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const sortableElement = document.querySelector("#hs-package-sortable");
+      if (sortableElement && filteredPackages.length > 1) {
+        // Destroy existing sortable instance if it exists
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
+
+        const sortableInstance = new Sortable(sortableElement as HTMLElement, {
+          animation: 150,
+          dragClass: 'rounded-none!',
+          handle: '.drag-handle',
+          onEnd: function (evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+              // Create new array with reordered packages
+              const reorderedPackages = [...filteredPackages];
+              const [draggedPackage] = reorderedPackages.splice(oldIndex, 1);
+              reorderedPackages.splice(newIndex, 0, draggedPackage);
+              
+              // Extract package IDs in new order
+              const packageIds = reorderedPackages.map(pkg => pkg.id);
+              
+              // Send reorder request to backend
+              reorderMutation.mutate(packageIds);
+            }
+          }
+        });
+
+        // Store instance for cleanup
+        (sortableElement as any).sortableInstance = sortableInstance;
+      }
+    }, 100);
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+      const sortableElement = document.querySelector("#hs-package-sortable");
+      if (sortableElement) {
+        const existingSortable = (sortableElement as any).sortableInstance;
+        if (existingSortable) {
+          existingSortable.destroy();
+          (sortableElement as any).sortableInstance = null;
+        }
+      }
+    };
+  }, [filteredPackages, reorderMutation]);
 
   // Helper function to parse features JSON
   const parseFeatures = (features: string | null): string[] => {
@@ -69,49 +99,38 @@ export default function ListingPackages() {
     }
   };
 
+  // Handle add new package
+  const handleAddNew = () => {
+    setEditingPackage(null);
+    setIsFormOpen(true);
+  };
+
   // Handle form submission
-  const handleFormSubmit = (data: InsertListingPackage | UpdateListingPackage) => {
-    if (editingPackage) {
-      updateMutation.mutate(
-        { id: editingPackage.id, data: data as UpdateListingPackage },
-        {
-          onSuccess: () => {
-            showAlertMessage('success', 'İlan paketi başarıyla güncellendi');
-            setIsFormOpen(false);
-            setEditingPackage(null);
-          },
-          onError: (error) => {
-            showAlertMessage('error', error.message);
-          }
-        }
-      );
-    } else {
-      createMutation.mutate(
-        data as InsertListingPackage,
-        {
-          onSuccess: () => {
-            showAlertMessage('success', 'İlan paketi başarıyla oluşturuldu');
-            setIsFormOpen(false);
-          },
-          onError: (error) => {
-            showAlertMessage('error', error.message);
-          }
-        }
-      );
+  const handleFormSubmit = async (data: InsertListingPackage | UpdateListingPackage) => {
+    try {
+      if (editingPackage) {
+        await updateMutation.mutateAsync({ id: editingPackage.id, data: data as UpdateListingPackage });
+        showAlertMessage('success', 'İlan paketi başarıyla güncellendi');
+      } else {
+        await createMutation.mutateAsync(data as InsertListingPackage);
+        showAlertMessage('success', 'İlan paketi başarıyla oluşturuldu');
+      }
+      setIsFormOpen(false);
+      setEditingPackage(null);
+    } catch (error: any) {
+      showAlertMessage('error', error.message || 'İşlem başarısız');
     }
   };
 
   // Handle delete
-  const handleDelete = (listingPackage: ListingPackage) => {
-    if (window.confirm(`"${listingPackage.name}" paketini silmek istediğinizden emin misiniz?`)) {
-      deleteMutation.mutate(listingPackage.id, {
-        onSuccess: () => {
-          showAlertMessage('success', 'İlan paketi başarıyla silindi');
-        },
-        onError: (error) => {
-          showAlertMessage('error', error.message);
-        }
-      });
+  const handleDelete = async (listingPackage: ListingPackage) => {
+    if (confirm(`"${listingPackage.name}" paketini silmek istediğinize emin misiniz?`)) {
+      try {
+        await deleteMutation.mutateAsync(listingPackage.id);
+        showAlertMessage('success', 'İlan paketi başarıyla silindi');
+      } catch (error: any) {
+        showAlertMessage('error', error.message || 'Silme işlemi başarısız');
+      }
     }
   };
 
@@ -121,27 +140,11 @@ export default function ListingPackages() {
     setIsFormOpen(true);
   };
 
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          <span className="text-red-800">İlan paketleri yüklenirken hata oluştu</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <PageHeader 
-        title="İlan Paketleri" 
-        subtitle="Kategori bazlı ilan paketlerini yönetin"
-      />
-
+    <div className="flex-1 flex flex-col">
       {/* Alert */}
       {showAlert && (
-        <div className={`p-4 rounded-lg border flex items-center space-x-3 ${
+        <div className={`rounded-lg border p-4 mb-4 flex items-center space-x-3 ${
           showAlert.type === 'success' ? 'bg-green-50 border-green-200' :
           showAlert.type === 'error' ? 'bg-red-50 border-red-200' :
           'bg-blue-50 border-blue-200'
@@ -159,143 +162,153 @@ export default function ListingPackages() {
         </div>
       )}
 
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="İlan paketi ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-          />
-        </div>
+      <PageHeader
+        title="İlan Paketleri"
+        subtitle={`${filteredPackages.length} paket`}
+      />
 
-        {/* Add Button */}
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#EC7830] border border-transparent rounded-lg hover:bg-[#d96b2a] focus:ring-2 focus:ring-[#EC7830] focus:ring-offset-2 transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Yeni İlan Paketi
-        </button>
-      </div>
+      <div className="flex-1 flex flex-col">
+        {/* Package List */}
+        <div className="w-full bg-white rounded-lg border border-gray-200 p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+            {/* Title */}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-[#EC7830] font-medium">İlan Paketleri</span>
+            </div>
+            
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {/* Search */}
+              <div className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Paket ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="py-2 px-4 pl-10 pr-4 w-full sm:w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent text-sm"
+                />
+              </div>
 
-      {/* Content */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EC7830]"></div>
+              {/* Add Package Button */}
+              <button 
+                onClick={handleAddNew}
+                disabled={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+                className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-[#EC7830] text-white hover:bg-[#d6691a] focus:outline-hidden focus:bg-[#d6691a] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
+              >
+                <Plus className="w-4 h-4" />
+                Yeni Paket
+              </button>
             </div>
-          ) : filteredPackages.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm ? "Aradığınız kriterlere uygun paket bulunamadı" : "Henüz hiç ilan paketi yok"}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {searchTerm ? "Farklı anahtar kelimeler deneyebilirsiniz." : "İlk ilan paketinizi oluşturmak için butona tıklayın."}
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={() => setIsFormOpen(true)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#EC7830] border border-transparent rounded-lg hover:bg-[#d96b2a] focus:ring-2 focus:ring-[#EC7830] focus:ring-offset-2 transition-colors"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  İlk İlan Paketinizi Oluşturun
-                </button>
-              )}
-            </div>
-          ) : (
-            <ul id="hs-package-sortable" className="flex flex-col">
-              {filteredPackages.map((listingPackage) => {
-                const features = parseFeatures(listingPackage.features);
-                const priceInTL = Math.floor(listingPackage.basePrice / 100);
-                
-                return (
-                  <li
-                    key={listingPackage.id}
-                    data-package-id={listingPackage.id}
-                    className="group bg-white border border-gray-200 rounded-lg p-4 hover:border-[#EC7830] hover:shadow-sm transition-all duration-200 mb-3 last:mb-0"
+          </div>
+
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-[#EC7830] border-t-transparent rounded-full animate-spin"></div>
+                <span className="ml-2 text-gray-600">İlan paketleri yükleniyor...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-600">
+                <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
+                <p>İlan paketleri yüklenirken bir hata oluştu</p>
+              </div>
+            ) : filteredPackages.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>{searchTerm ? 'Paket bulunamadı' : 'Henüz ilan paketi oluşturulmamış'}</p>
+                <p className="text-sm mt-1">
+                  {searchTerm 
+                    ? 'Arama kriterlerinize uygun paket bulunamadı.' 
+                    : 'Başlamak için "Yeni Paket" butonunu kullanın'
+                  }
+                </p>
+                {!searchTerm && (
+                  <button
+                    onClick={handleAddNew}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#EC7830] hover:bg-[#d6691a] mt-4"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 flex-1">
-                        {/* Drag Handle */}
-                        <div className="drag-handle cursor-move opacity-30 group-hover:opacity-100 transition-opacity">
-                          <GripVertical className="w-5 h-5 text-gray-400" />
-                        </div>
-
-                        {/* Package Info */}
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-1">
-                            <h3 className="font-medium text-gray-900">{listingPackage.name}</h3>
-                            <div className="flex items-center space-x-2">
-                              {/* Status Badge */}
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                listingPackage.isActive 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {listingPackage.isActive ? 'Aktif' : 'Pasif'}
-                              </span>
-
-                              {/* Price Badge */}
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {priceInTL === 0 ? 'Ücretsiz' : `${priceInTL} TL`}
-                              </span>
-
-                              {/* Duration Badge */}
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {listingPackage.durationDays} gün
-                              </span>
-
-                              {/* Max Photos Badge */}
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                {listingPackage.maxPhotos} fotoğraf
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Description */}
-                          {listingPackage.description && (
-                            <p className="text-sm text-gray-600 mb-2">{listingPackage.description}</p>
-                          )}
-
-                          {/* Features */}
-                          {features.length > 0 && (
-                            <div className="text-sm text-gray-500">
-                              <span className="font-medium">Özellikler:</span> {features.join(', ')}
-                            </div>
-                          )}
+                    <Plus className="h-4 w-4 mr-2" />
+                    İlk Paketi Oluştur
+                  </button>
+                )}
+              </div>
+            ) : (
+              <ul id="hs-package-sortable" className="flex flex-col">
+                {filteredPackages.map((listingPackage) => {
+                  const features = parseFeatures(listingPackage.features);
+                  const priceInTL = Math.floor(listingPackage.basePrice / 100);
+                  
+                  return (
+                    <li
+                      key={listingPackage.id}
+                      data-package-id={listingPackage.id}
+                      className="inline-flex items-center gap-x-3 py-3 px-4 text-sm font-medium bg-white border border-gray-200 text-gray-800 -mt-px first:rounded-t-lg first:mt-0 last:rounded-b-lg hover:bg-gray-50 transition-all duration-150 group relative sortable-item"
+                    >
+                      {/* Package Icon */}
+                      <Package className="shrink-0 w-4 h-4 text-gray-400" />
+                      
+                      {/* Package Name and Details */}
+                      <div className="flex-1 text-left">
+                        <div className="font-medium">{listingPackage.name}</div>
+                        {listingPackage.description && (
+                          <div className="text-xs text-gray-500 mt-1">{listingPackage.description}</div>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                          <span>{priceInTL} TL</span>
+                          <span>{listingPackage.durationDays} gün</span>
+                          <span>{listingPackage.maxPhotos} fotoğraf</span>
+                          {features.length > 0 && <span>{features.length} özellik</span>}
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      
+                      {/* Status Badge */}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        listingPackage.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {listingPackage.isActive ? 'Aktif' : 'Pasif'}
+                      </span>
+                      
+                      {/* Sort Order */}
+                      <span className="text-gray-500 text-xs min-w-[2rem] text-center">
+                        #{listingPackage.sortOrder}
+                      </span>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => handleEdit(listingPackage)}
-                          className="p-2 text-gray-400 hover:text-[#EC7830] hover:bg-orange-50 rounded-lg transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(listingPackage);
+                          }}
+                          className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
                           title="Düzenle"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(listingPackage)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(listingPackage);
+                          }}
+                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
                           title="Sil"
+                          disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                      
+                      {/* Drag Handle */}
+                      <GripVertical className="shrink-0 w-4 h-4 text-gray-400 drag-handle cursor-grab hover:cursor-grabbing" />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
