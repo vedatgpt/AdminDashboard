@@ -70,26 +70,17 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     }
 
     if (editingPackage) {
-      updatePackage(
-        { id: editingPackage.id, ...formData },
-        {
-          onSuccess: () => resetForm(),
-          onError: () => alert("Paket güncellenirken hata oluştu"),
-        }
-      );
+      updatePackage({ id: editingPackage.id, ...formData });
+      resetForm();
     } else {
-      createPackage(formData, {
-        onSuccess: () => resetForm(),
-        onError: () => alert("Paket oluşturulurken hata oluştu"),
-      });
+      createPackage(formData);
+      resetForm();
     }
   };
 
   const handleDelete = (packageToDelete: CategoryPackage) => {
     if (confirm(`"${packageToDelete.name}" paketini silmek istediğinizden emin misiniz?`)) {
-      deletePackage(packageToDelete.id, {
-        onError: () => alert("Paket silinirken hata oluştu"),
-      });
+      deletePackage(packageToDelete.id);
     }
   };
 
@@ -352,6 +343,60 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                             className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
                           />
                           <span className="ml-2 text-sm text-gray-700">Kurumsal</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Paket Özellikleri
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={parseFeatures(formData.features).includes("top_listing")}
+                            onChange={(e) => {
+                              const current = parseFeatures(formData.features);
+                              const updated = e.target.checked 
+                                ? [...current.filter(f => f !== "top_listing"), "top_listing"]
+                                : current.filter(f => f !== "top_listing");
+                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
+                            }}
+                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Üst Sırada Gösterim</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={parseFeatures(formData.features).includes("highlighted")}
+                            onChange={(e) => {
+                              const current = parseFeatures(formData.features);
+                              const updated = e.target.checked 
+                                ? [...current.filter(f => f !== "highlighted"), "highlighted"]
+                                : current.filter(f => f !== "highlighted");
+                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
+                            }}
+                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Vurgulu Gösterim</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={parseFeatures(formData.features).includes("badge")}
+                            onChange={(e) => {
+                              const current = parseFeatures(formData.features);
+                              const updated = e.target.checked 
+                                ? [...current.filter(f => f !== "badge"), "badge"]
+                                : current.filter(f => f !== "badge");
+                              setFormData(prev => ({ ...prev, features: JSON.stringify(updated) }));
+                            }}
+                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Özel Rozet</span>
                         </label>
                       </div>
                     </div>

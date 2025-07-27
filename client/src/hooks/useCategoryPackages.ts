@@ -29,6 +29,9 @@ export function useCategoryPackages(categoryId: number) {
         queryKey: ["/api/categories", categoryId, "packages"],
       });
     },
+    onError: (error) => {
+      console.error("Create package error:", error);
+    },
   });
 
   // Update package mutation
@@ -44,6 +47,9 @@ export function useCategoryPackages(categoryId: number) {
         queryKey: ["/api/categories", categoryId, "packages"],
       });
     },
+    onError: (error) => {
+      console.error("Update package error:", error);
+    },
   });
 
   // Delete package mutation
@@ -57,6 +63,9 @@ export function useCategoryPackages(categoryId: number) {
       queryClient.invalidateQueries({
         queryKey: ["/api/categories", categoryId, "packages"],
       });
+    },
+    onError: (error) => {
+      console.error("Delete package error:", error);
     },
   });
 
