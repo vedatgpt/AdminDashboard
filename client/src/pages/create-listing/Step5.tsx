@@ -38,6 +38,7 @@ interface DraftListing {
 interface Category {
   id: number;
   name: string;
+  parentId?: number;
   freeListingLimitIndividual?: number;
   freeListingLimitCorporate?: number;
 }
@@ -148,13 +149,42 @@ export default function Step5() {
     alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice]);
 
-  // Check if free listing is available for this category
+  // Fetch all categories in hierarchy to check for inheritance
+  const { data: allCategories = [] } = useQuery<Category[]>({
+    queryKey: ['/api/categories'],
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Check if free listing is available for this category with inheritance
   const hasFreeListing = useMemo(() => {
-    if (!category) return false;
-    // Check if either individual or corporate users have free listing limit > 0
-    return (category.freeListingLimitIndividual && category.freeListingLimitIndividual > 0) ||
-           (category.freeListingLimitCorporate && category.freeListingLimitCorporate > 0);
-  }, [category]);
+    if (!category || !allCategories.length) return false;
+    
+    // Build hierarchy path from current category to root
+    const getHierarchyPath = (categoryId: number): Category[] => {
+      const path: Category[] = [];
+      let currentCat = allCategories.find(c => c.id === categoryId);
+      
+      while (currentCat) {
+        path.push(currentCat);
+        if (!currentCat.parentId) break;
+        currentCat = allCategories.find(c => c.id === currentCat!.parentId);
+      }
+      
+      return path;
+    };
+    
+    const hierarchyPath = getHierarchyPath(category.id);
+    
+    // Check each category in hierarchy for free listing limits
+    for (const cat of hierarchyPath) {
+      if ((cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) ||
+          (cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }, [category, allCategories]);
 
   if (authLoading || isDraftLoading) {
     return (
@@ -206,7 +236,7 @@ export default function Step5() {
                 )}
 
                 {/* Category packages */}
-                {categoryPackages.map((pkg: CategoryPackage) => {
+                {categoryPackages.length > 0 && categoryPackages.map((pkg: CategoryPackage) => {
                   const features = parseFeatures(pkg.features);
                   return (
                     <div
