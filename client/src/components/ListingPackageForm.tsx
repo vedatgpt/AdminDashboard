@@ -114,6 +114,58 @@ export default function ListingPackageForm({
     setFeaturesArray(featuresArray.filter((_, i) => i !== index));
   };
 
+  // Build category tree with all levels
+  const buildCategoryTree = (parentId: number | null = null, level: number = 0): any[] => {
+    return categories
+      .filter(cat => cat.parentId === parentId)
+      .map(category => ({
+        ...category,
+        level,
+        children: buildCategoryTree(category.id, level + 1)
+      }));
+  };
+
+  // Render category tree recursively
+  const renderCategoryTree = () => {
+    const categoryTree = buildCategoryTree();
+    
+    const renderCategoryLevel = (categoryList: any[], level: number = 0) => {
+      return categoryList.map((category) => (
+        <div key={category.id} className="space-y-1">
+          <label className="flex items-center" style={{ paddingLeft: `${level * 20}px` }}>
+            <input
+              type="checkbox"
+              checked={selectedCategories.includes(category.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedCategories([...selectedCategories, category.id]);
+                } else {
+                  setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                }
+              }}
+              className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
+            />
+            <span className={`ml-2 text-sm ${level === 0 ? 'font-semibold text-gray-900' : level === 1 ? 'font-medium text-gray-800' : 'text-gray-700'}`}>
+              {category.name}
+              {category.categoryType && (
+                <span className="ml-1 text-xs text-gray-500">({category.categoryType})</span>
+              )}
+            </span>
+          </label>
+          
+          {/* Render children */}
+          {category.children && category.children.length > 0 && (
+            <div className="space-y-1">
+              {renderCategoryLevel(category.children, level + 1)}
+            </div>
+          )}
+        </div>
+      ));
+    };
+
+    return renderCategoryLevel(categoryTree);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -217,52 +269,13 @@ export default function ListingPackageForm({
             {/* Categories */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Geçerli Kategoriler
+                Geçerli Kategoriler *
               </label>
-              <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
-                {categories.filter(cat => !cat.parentId).map((mainCategory) => (
-                  <div key={mainCategory.id}>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(mainCategory.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCategories([...selectedCategories, mainCategory.id]);
-                          } else {
-                            setSelectedCategories(selectedCategories.filter(id => id !== mainCategory.id));
-                          }
-                        }}
-                        className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-900">{mainCategory.name}</span>
-                    </label>
-                    
-                    {/* Sub-categories */}
-                    <div className="ml-6 mt-1 space-y-1">
-                      {categories.filter(cat => cat.parentId === mainCategory.id).map((subCategory) => (
-                        <label key={subCategory.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategories.includes(subCategory.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCategories([...selectedCategories, subCategory.id]);
-                              } else {
-                                setSelectedCategories(selectedCategories.filter(id => id !== subCategory.id));
-                              }
-                            }}
-                            className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">{subCategory.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+              <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-1">
+                {renderCategoryTree()}
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Bu paket hangi kategorilerde kullanılabilir olacak?
+                Bu paket hangi kategorilerde kullanılabilir olacak? Alt kategorilere özel paketler tanımlayabilirsiniz.
               </p>
             </div>
 
