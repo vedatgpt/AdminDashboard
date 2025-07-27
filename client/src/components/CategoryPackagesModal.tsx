@@ -71,16 +71,27 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
 
   // Initialize free listing data when category changes
   useEffect(() => {
-    if (category) {
-      setFreeListingData({
-        freeListingLimitIndividual: (category as any).freeListingLimitIndividual || 0,
-        freeResetPeriodIndividual: ((category as any).freeResetPeriodIndividual as "monthly" | "yearly" | "once") || "monthly",
-        freeListingLimitCorporate: (category as any).freeListingLimitCorporate || 0,
-        freeResetPeriodCorporate: ((category as any).freeResetPeriodCorporate as "monthly" | "yearly" | "once") || "monthly",
-        applyToSubcategories: (category as any).applyToSubcategories || true,
-      });
+    if (category && isOpen) {
+      // Fetch the full category data to get the latest free listing settings
+      fetch(`/api/categories`)
+        .then(response => response.json())
+        .then(categories => {
+          const fullCategory = categories.find((cat: any) => cat.id === category.id);
+          if (fullCategory) {
+            setFreeListingData({
+              freeListingLimitIndividual: fullCategory.freeListingLimitIndividual || 0,
+              freeResetPeriodIndividual: fullCategory.freeResetPeriodIndividual || "monthly",
+              freeListingLimitCorporate: fullCategory.freeListingLimitCorporate || 0,
+              freeResetPeriodCorporate: fullCategory.freeResetPeriodCorporate || "monthly",
+              applyToSubcategories: fullCategory.applyToSubcategories !== false,
+            });
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching category data:", error);
+        });
     }
-  }, [category]);
+  }, [category, isOpen]);
 
   const resetForm = () => {
     setFormData({
@@ -114,10 +125,40 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         throw new Error(errorData.error || "Failed to save settings");
       }
 
-      alert("✅ Ücretsiz ilan ayarları başarıyla kaydedildi!");
+      const updatedCategory = await response.json();
+      
+      // Update the local freeListingData state with the saved values
+      setFreeListingData({
+        freeListingLimitIndividual: updatedCategory.freeListingLimitIndividual || 0,
+        freeResetPeriodIndividual: updatedCategory.freeResetPeriodIndividual || "monthly",
+        freeListingLimitCorporate: updatedCategory.freeListingLimitCorporate || 0,
+        freeResetPeriodCorporate: updatedCategory.freeResetPeriodCorporate || "monthly",
+        applyToSubcategories: updatedCategory.applyToSubcategories || true,
+      });
+
+      // Show a temporary success notification in the UI
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      notification.textContent = '✅ Ücretsiz ilan ayarları başarıyla kaydedildi';
+      document.body.appendChild(notification);
+      
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 3000);
+      
     } catch (error) {
       console.error("Error saving free listing settings:", error);
-      alert("❌ Ayarlar kaydedilirken hata oluştu: " + (error as Error).message);
+      
+      // Show error notification
+      const errorNotification = document.createElement('div');
+      errorNotification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg z-50';
+      errorNotification.textContent = '❌ Ayarlar kaydedilirken hata oluştu';
+      document.body.appendChild(errorNotification);
+      
+      setTimeout(() => {
+        document.body.removeChild(errorNotification);
+      }, 3000);
     }
   };
 
