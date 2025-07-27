@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings } from "lucide-react";
+import { Plus, Search, FolderTree, AlertTriangle, CheckCircle, Info, ArrowLeft, ChevronRight, Edit, Trash2, GripVertical, Settings, Package } from "lucide-react";
 import { useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Sortable from "sortablejs";
 import PageHeader from "@/components/PageHeader";
 import CategoryForm from "@/components/CategoryForm";
 import CustomFieldsModal from "@/components/CustomFieldsModal";
+import CategoryPackagesModal from "@/components/CategoryPackagesModal";
 import { useCategoriesTree, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/useCategories";
 import type { Category, InsertCategory, UpdateCategory } from "@shared/schema";
 
@@ -18,6 +19,8 @@ export default function Categories() {
   const [showAlert, setShowAlert] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
   const [customFieldsCategory, setCustomFieldsCategory] = useState<Category | null>(null);
+  const [isPackagesModalOpen, setIsPackagesModalOpen] = useState(false);
+  const [packagesCategory, setPackagesCategory] = useState<Category | null>(null);
   
   const queryClient = useQueryClient();
 
@@ -209,6 +212,11 @@ export default function Categories() {
   const handleCustomFields = (category: Category) => {
     setCustomFieldsCategory(category);
     setIsCustomFieldsOpen(true);
+  };
+
+  const handlePackages = (category: Category) => {
+    setPackagesCategory(category);
+    setIsPackagesModalOpen(true);
   };
 
   const isAnyMutationLoading = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
@@ -413,7 +421,16 @@ export default function Categories() {
                       
                       {/* Action Buttons */}
                       <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePackages(category);
+                          }}
+                          className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                          title="Kategori Paketleri"
+                        >
+                          <Package className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -486,6 +503,16 @@ export default function Categories() {
           category={customFieldsCategory}
         />
       )}
+
+      {/* Category Packages Modal */}
+      <CategoryPackagesModal
+        isOpen={isPackagesModalOpen}
+        onClose={() => {
+          setIsPackagesModalOpen(false);
+          setPackagesCategory(null);
+        }}
+        category={packagesCategory ? { id: packagesCategory.id, name: packagesCategory.name } : null}
+      />
     </div>
   );
 }

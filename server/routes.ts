@@ -1258,7 +1258,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Doping Packages routes
+  // Category Packages routes
+app.get("/api/categories/:categoryId/packages", requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.categoryId);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    const categoryPackages = await storage.getCategoryPackages(categoryId);
+    res.json(categoryPackages);
+  } catch (error: any) {
+    console.error("Error getting category packages:", error);
+    res.status(500).json({ error: "Kategori paketleri alınamadı" });
+  }
+});
+
+app.post("/api/categories/:categoryId/packages", requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.categoryId);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    const insertData = { ...req.body, categoryId };
+    const { insertCategoryPackageSchema } = await import("@shared/schema");
+    const validatedData = insertCategoryPackageSchema.parse(insertData);
+    const categoryPackage = await storage.createCategoryPackage(validatedData);
+    res.status(201).json(categoryPackage);
+  } catch (error: any) {
+    console.error("Error creating category package:", error);
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "Geçersiz veri", details: error.errors });
+    }
+    res.status(500).json({ error: "Kategori paketi oluşturulamadı" });
+  }
+});
+
+app.patch("/api/category-packages/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Geçersiz paket ID" });
+    }
+
+    const { updateCategoryPackageSchema } = await import("@shared/schema");
+    const validatedData = updateCategoryPackageSchema.parse(req.body);
+    const categoryPackage = await storage.updateCategoryPackage(id, validatedData);
+    res.json(categoryPackage);
+  } catch (error: any) {
+    console.error("Error updating category package:", error);
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "Geçersiz veri", details: error.errors });
+    }
+    res.status(500).json({ error: "Kategori paketi güncellenemedi" });
+  }
+});
+
+app.delete("/api/category-packages/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "Geçersiz paket ID" });
+    }
+
+    await storage.deleteCategoryPackage(id);
+    res.status(204).send();
+  } catch (error: any) {
+    console.error("Error deleting category package:", error);
+    res.status(500).json({ error: "Kategori paketi silinemedi" });
+  }
+});
+
+app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.categoryId);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Geçersiz kategori ID" });
+    }
+
+    const { packageIds } = req.body;
+    if (!Array.isArray(packageIds) || packageIds.some(id => typeof id !== 'number')) {
+      return res.status(400).json({ error: "Geçersiz paket ID'leri" });
+    }
+
+    await storage.reorderCategoryPackages(categoryId, packageIds);
+    res.status(204).send();
+  } catch (error: any) {
+    console.error("Error reordering category packages:", error);
+    res.status(500).json({ error: "Kategori paketleri sıralanamadı" });
+  }
+});
+
+// Doping Packages routes
   app.get("/api/doping-packages", requireAdmin, async (req, res) => {
     try {
       const packages = await storage.getDopingPackages();

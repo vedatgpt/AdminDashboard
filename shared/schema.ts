@@ -296,3 +296,39 @@ export const updateDopingPackageSchema = insertDopingPackageSchema.partial();
 export type DopingPackage = typeof dopingPackages.$inferSelect;
 export type InsertDopingPackage = z.infer<typeof insertDopingPackageSchema>;
 export type UpdateDopingPackage = z.infer<typeof updateDopingPackageSchema>;
+
+// Category packages table for category-specific listing packages
+export const categoryPackages = pgTable("category_packages", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: integer("price").notNull().default(0), // Price in kuruş (cents)
+  durationDays: integer("duration_days").notNull().default(30),
+  features: text("features").notNull().default("[]"), // JSON array of features
+  membershipTypes: text("membership_types").notNull().default('["individual","corporate"]'), // JSON array
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Schema for creating category packages
+export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Paket adı gereklidir"),
+  price: z.number().min(0, "Fiyat 0 veya pozitif olmalıdır"),
+  durationDays: z.number().min(1, "Süre en az 1 gün olmalıdır"),
+  features: z.string().default("[]"),
+  membershipTypes: z.string().default('["individual","corporate"]'),
+});
+
+// Schema for updating category packages
+export const updateCategoryPackageSchema = insertCategoryPackageSchema.partial();
+
+export type CategoryPackage = typeof categoryPackages.$inferSelect;
+export type InsertCategoryPackage = z.infer<typeof insertCategoryPackageSchema>;
+export type UpdateCategoryPackage = z.infer<typeof updateCategoryPackageSchema>;
