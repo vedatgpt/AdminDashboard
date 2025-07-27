@@ -1471,9 +1471,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("📦 Updating listing package ID:", id);
       console.log("🔄 New categories:", selectedCategories);
       console.log("👥 New membership types:", selectedMembershipTypes);
+      
+      // Add membershipType to package data (use first from selectedMembershipTypes array)
+      const membershipType = selectedMembershipTypes && selectedMembershipTypes.length > 0 
+        ? selectedMembershipTypes[0] 
+        : 'individual';
+        
+      const packageWithType = {
+        ...packageData,
+        membershipType
+      };
 
-      // Update the listing package
-      const listingPackage = await storage.updateListingPackage(id, packageData);
+      // Update the listing package with membership type
+      const listingPackage = await storage.updateListingPackage(id, packageWithType);
 
       // If categories or membership types are being updated, handle pricing
       if (selectedCategories && Array.isArray(selectedCategories)) {

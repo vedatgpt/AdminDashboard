@@ -36,6 +36,20 @@ export default function ListingPackageForm({
 
   // Fetch categories for selection
   const { data: categories = [] } = useCategories();
+  
+  // Function to load existing categories for editing
+  const loadExistingCategories = async (packageId: number) => {
+    try {
+      const response = await fetch(`/api/listing-packages/${packageId}/category-pricing`);
+      if (response.ok) {
+        const pricing = await response.json();
+        const categoryIds = pricing.map((p: any) => p.categoryId);
+        setSelectedCategories(categoryIds);
+      }
+    } catch (error) {
+      console.error('Error loading existing categories:', error);
+    }
+  };
 
   // Reset form when modal opens/closes or listingPackage changes
   useEffect(() => {
@@ -217,53 +231,91 @@ export default function ListingPackageForm({
             {/* Categories */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Geçerli Kategoriler
+                Geçerli Kategoriler *
               </label>
-              <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
-                {categories.filter(cat => !cat.parentId).map((mainCategory) => (
-                  <div key={mainCategory.id}>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(mainCategory.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCategories([...selectedCategories, mainCategory.id]);
-                          } else {
-                            setSelectedCategories(selectedCategories.filter(id => id !== mainCategory.id));
-                          }
-                        }}
-                        className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-900">{mainCategory.name}</span>
-                    </label>
-                    
-                    {/* Sub-categories */}
-                    <div className="ml-6 mt-1 space-y-1">
-                      {categories.filter(cat => cat.parentId === mainCategory.id).map((subCategory) => (
-                        <label key={subCategory.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategories.includes(subCategory.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCategories([...selectedCategories, subCategory.id]);
-                              } else {
-                                setSelectedCategories(selectedCategories.filter(id => id !== subCategory.id));
-                              }
-                            }}
-                            className="w-4 h-4 text-[#EC7830] bg-gray-100 border-gray-300 rounded focus:ring-[#EC7830] focus:ring-2"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">{subCategory.name}</span>
-                        </label>
+              <select
+                multiple
+                size={8}
+                value={selectedCategories.map(String)}
+                onChange={(e) => {
+                  const selectedValues = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                  setSelectedCategories(selectedValues);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                required
+              >
+                <optgroup label="Ana Kategoriler">
+                  {categories.filter(cat => !cat.parentId).map((mainCategory) => (
+                    <option key={mainCategory.id} value={mainCategory.id}>
+                      {mainCategory.name} {mainCategory.categoryType ? `(${mainCategory.categoryType})` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+                
+                {categories.filter(cat => !cat.parentId).map((mainCategory) => {
+                  const subCategories = categories.filter(cat => cat.parentId === mainCategory.id);
+                  if (subCategories.length === 0) return null;
+                  
+                  return (
+                    <optgroup key={`sub-${mainCategory.id}`} label={`${mainCategory.name} - Alt Kategoriler`}>
+                      {subCategories.map((subCategory) => (
+                        <option key={subCategory.id} value={subCategory.id}>
+                          {subCategory.name} {subCategory.categoryType ? `(${subCategory.categoryType})` : ''}
+                        </option>
                       ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </optgroup>
+                  );
+                })}
+                
+                {/* Third level categories (like BMW > M Serisi > M3 Competition) */}
+                {categories.filter(cat => cat.parentId && categories.find(parent => parent.id === cat.parentId)?.parentId).map((thirdLevel) => {
+                  const parent = categories.find(c => c.id === thirdLevel.parentId);
+                  const grandParent = parent ? categories.find(c => c.id === parent.parentId) : null;
+                  
+                  if (!parent || !grandParent) return null;
+                  
+                  return (
+                    <optgroup key={`third-${grandParent.id}-${parent.id}`} label={`${grandParent.name} → ${parent.name}`}>
+                      <option key={thirdLevel.id} value={thirdLevel.id}>
+                        {thirdLevel.name} {thirdLevel.categoryType ? `(${thirdLevel.categoryType})` : ''}
+                      </option>
+                    </optgroup>
+                  );
+                })}
+              </select>
               <p className="text-xs text-gray-500 mt-1">
-                Bu paket hangi kategorilerde kullanılabilir olacak?
+                Bu paket hangi kategorilerde kullanılabilir olacak? Ctrl/Cmd tuşu ile çoklu seçim yapabilirsiniz.
+                <br />Örn: Vasıta &gt; Otomobil &gt; BMW seçebilir veya sadece Vasıta seçebilirsiniz.
               </p>
+              
+              {/* Selected Categories Display */}
+              {selectedCategories.length > 0 && (
+                <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Seçilen Kategoriler:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedCategories.map(categoryId => {
+                      const category = categories.find(c => c.id === categoryId);
+                      if (!category) return null;
+                      
+                      return (
+                        <span
+                          key={categoryId}
+                          className="inline-flex items-center px-2 py-1 text-xs bg-[#EC7830] text-white rounded"
+                        >
+                          {category.name}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCategories(prev => prev.filter(id => id !== categoryId))}
+                            className="ml-1 hover:text-gray-200"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
 
