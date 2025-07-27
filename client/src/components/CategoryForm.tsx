@@ -180,7 +180,7 @@ export default function CategoryForm({
       submitData.icon = null;
     } else if (!formData.icon && !iconFile) {
       // No icon at all (new category without icon)
-      delete (submitData as any).icon;
+      delete submitData.icon;
     }
     
     onSubmit(submitData);

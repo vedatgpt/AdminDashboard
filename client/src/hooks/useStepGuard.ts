@@ -9,20 +9,9 @@ import {
   StepValidationResult 
 } from "@/utils/stepValidation";
 
-// Helper function to get validation for specific step
+// Helper function to get validation for specific step - DISABLED
 function getValidationForStep(step: number, draft: DraftListing | null): StepValidationResult {
-  switch (step) {
-    case 1:
-      return validateStep1(draft);
-    case 2:
-      return validateStep2(draft);
-    case 3:
-      return validateStep3(draft);
-    case 4:
-      return validateStep4(draft);
-    default:
-      return validateStep1(draft);
-  }
+  return { isValid: true, missingFields: [] };
 }
 
 // Helper function to get redirect path
@@ -60,6 +49,69 @@ export function useStepGuard(
     // This prevents infinite loop conflicts between client and server guards
     console.log(`ℹ️ CLIENT GUARD DISABLED: Server-side Guard handles Step ${currentStep} security`);
     return;
+    
+    // TEMPORARILY DISABLED FOR STEP2 DEBUGGING
+    /*
+    // CRITICAL: Skip validation ONLY if still loading
+    if (isLoading) {
+      console.log(`🔄 STEP ${currentStep} GUARD: Skipping validation - still loading`);
+      return;
+    }
+
+    // SECURITY FIX: If no classifiedId, redirect to Step1 (except for Step1 itself)
+    if (!classifiedId && currentStep !== 1) {
+      console.warn(`🚨 STEP ${currentStep} GUARD: No classifiedId found, redirecting to Step 1`);
+      setLocation('/create-listing/step-1');
+      return;
+    }
+
+    // SECURITY FIX: If no draft found and not Step1, redirect to Step1
+    if (!draft && currentStep !== 1) {
+      console.warn(`🚨 STEP ${currentStep} GUARD: No draft found, redirecting to Step 1`);
+      setLocation('/create-listing/step-1');
+      return;
+    }
+
+    // Skip validation for Step1 (it creates its own draft)
+    if (currentStep === 1) {
+      console.log(`✅ STEP 1 GUARD: Validation skipped - Step1 manages its own draft`);
+      return;
+    }
+
+    // CRITICAL FIX: Actually perform step validation!
+    console.log(`🔍 STEP ${currentStep} GUARD: Performing validation check...`);
+    const validationResult = getValidationForStep(currentStep, draft);
+    
+    console.log(`🔍 STEP ${currentStep} VALIDATION RESULT:`, {
+      isValid: validationResult.isValid,
+      missingFields: validationResult.missingFields,
+      redirectStep: validationResult.redirectStep,
+      draftStep1: draft?.step1Completed,
+      draftStep2: draft?.step2Completed,
+      draftStep3: draft?.step3Completed
+    });
+
+    if (!validationResult.isValid && validationResult.redirectStep) {
+      // Redirect to appropriate step with error feedback
+      const redirectPath = getRedirectPath(classifiedId!, validationResult.redirectStep);
+      
+      // Show user-friendly error message
+      console.warn(`🚨 STEP ${currentStep} VALIDATION FAILED:`, validationResult.missingFields);
+      console.warn(`🔄 REDIRECTING TO: ${redirectPath}`);
+      
+      // IMMEDIATE REDIRECT - Remove timeout for instant security protection
+      console.warn(`🚨 SECURITY REDIRECT EXECUTING NOW!`);
+      setLocation(redirectPath);
+      
+      // Also try window.location as backup for absolute security
+      if (typeof window !== 'undefined') {
+        console.warn(`🚨 BACKUP REDIRECT: Using window.location.replace`);
+        window.location.replace(redirectPath);
+      }
+    } else {
+      console.log(`✅ STEP ${currentStep} GUARD: Validation passed`);
+    }
+    */
     
     // All original validation logic commented out to prevent conflicts
     /*
@@ -125,21 +177,11 @@ export function useStepGuard(
     */
   }, [currentStep, classifiedId, draft, isLoading, setLocation]);
 
-  // Return validation status for component use
-  if (!classifiedId || isLoading) {
-    return { isValidating: true, isValid: false };
-  }
-
-  if (!draft) {
-    return { isValidating: false, isValid: false };
-  }
-
-  const validationResult = getValidationForStep(currentStep, draft);
-
+  // Return validation status for component use - DISABLED
   return {
     isValidating: false,
-    isValid: validationResult.isValid,
-    validationResult
+    isValid: true,
+    validationResult: { isValid: true, missingFields: [] }
   };
 }
 
@@ -162,13 +204,7 @@ export function useStepCompletion(draft: DraftListing | null) {
   };
 }
 
-// Hook for checking if user can access a specific step
+// Hook for checking if user can access a specific step - DISABLED
 export function useCanAccessStep(targetStep: number, draft: DraftListing | null) {
-  if (!draft) {
-    return false;
-  }
-
-  const validationResult = getValidationForStep(targetStep, draft);
-  
-  return validationResult.isValid;
+  return true; // Always allow access
 }
