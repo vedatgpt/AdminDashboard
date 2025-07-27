@@ -688,8 +688,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                     <button
                       type="button"
                       onClick={handleFreeListingSettingsSave}
-                      disabled={freeListingData.freeListingUserTypes.length === 0}
-                      className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] rounded-md hover:bg-[#d96b2a] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] rounded-md hover:bg-[#d96b2a]"
                     >
                       Ayarları Kaydet
                     </button>
