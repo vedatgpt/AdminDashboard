@@ -1266,7 +1266,8 @@ app.get("/api/categories/:categoryId/packages", async (req, res) => {
       return res.status(400).json({ error: "Geçersiz kategori ID" });
     }
 
-    const categoryPackages = await storage.getCategoryPackages(categoryId);
+    // Get packages for this category and inherited packages from parent categories
+    const categoryPackages = await storage.getCategoryPackagesWithInheritance(categoryId);
     res.json(categoryPackages);
   } catch (error: any) {
     console.error("Error getting category packages:", error);

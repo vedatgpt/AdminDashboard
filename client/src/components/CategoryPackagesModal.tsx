@@ -19,6 +19,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     durationDays: 30,
     features: [] as string[],
     membershipTypes: ["individual", "corporate"] as string[],
+    applyToSubcategories: false,
     isActive: true,
   });
 
@@ -63,6 +64,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         durationDays: editingPackage.durationDays,
         features: parseFeatures(editingPackage.features),
         membershipTypes: parseMembershipTypes(editingPackage.membershipTypes),
+        applyToSubcategories: (editingPackage as any).applyToSubcategories || false,
         isActive: editingPackage.isActive,
       });
       setShowForm(true);
@@ -101,6 +103,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       durationDays: 30,
       features: [],
       membershipTypes: ["individual", "corporate"],
+      applyToSubcategories: false,
       isActive: true,
     });
     setNewFeature("");
@@ -509,6 +512,22 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                           <span className="ml-2 text-sm text-gray-700">Kurumsal</span>
                         </label>
                       </div>
+                    </div>
+
+                    {/* Apply to Subcategories */}
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.applyToSubcategories}
+                          onChange={(e) => setFormData(prev => ({ ...prev, applyToSubcategories: e.target.checked }))}
+                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1 ml-6">
+                        Bu paket alt kategoriler için de kullanılabilir olur
+                      </p>
                     </div>
 
                     {/* Features */}

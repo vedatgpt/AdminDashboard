@@ -85,6 +85,7 @@ export interface IStorage {
 
   // Category Packages methods
   getCategoryPackages(categoryId: number): Promise<CategoryPackage[]>;
+  getCategoryPackagesWithInheritance(categoryId: number): Promise<CategoryPackage[]>;
   getCategoryPackageById(id: number): Promise<CategoryPackage | undefined>;
   createCategoryPackage(data: InsertCategoryPackage): Promise<CategoryPackage>;
   updateCategoryPackage(id: number, updates: UpdateCategoryPackage): Promise<CategoryPackage>;
@@ -757,6 +758,35 @@ export class DatabaseStorage implements IStorage {
       .from(categoryPackages)
       .where(eq(categoryPackages.categoryId, categoryId))
       .orderBy(asc(categoryPackages.sortOrder), asc(categoryPackages.name));
+  }
+
+  async getCategoryPackagesWithInheritance(categoryId: number): Promise<CategoryPackage[]> {
+    // Get the full category hierarchy path to root
+    const breadcrumbs = await this.getCategoryBreadcrumbs(categoryId);
+    
+    // Get all category IDs in the hierarchy (including current category)
+    const categoryIds = [...breadcrumbs.map(c => c.id), categoryId];
+    
+    // Get packages from all parent categories that have applyToSubcategories=true
+    // Plus packages directly assigned to this category
+    const allPackages = await db.select()
+      .from(categoryPackages)
+      .where(
+        or(
+          and(
+            inArray(categoryPackages.categoryId, categoryIds.slice(0, -1)), // Parent categories only
+            eq(categoryPackages.applyToSubcategories, true),
+            eq(categoryPackages.isActive, true)
+          ),
+          and(
+            eq(categoryPackages.categoryId, categoryId), // Direct packages for this category
+            eq(categoryPackages.isActive, true)
+          )
+        )
+      )
+      .orderBy(asc(categoryPackages.sortOrder), asc(categoryPackages.name));
+
+    return allPackages;
   }
 
   async getCategoryPackageById(id: number): Promise<CategoryPackage | undefined> {

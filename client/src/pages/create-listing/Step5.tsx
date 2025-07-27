@@ -10,7 +10,7 @@ interface CategoryPackage {
   name: string;
   description?: string;
   price: number;
-  duration: number;
+  durationDays: number;
 }
 
 interface DopingPackage {
@@ -18,7 +18,7 @@ interface DopingPackage {
   name: string;
   description?: string;
   price: number;
-  duration: number;
+  durationDays: number;
 }
 
 interface DraftListing {
@@ -172,7 +172,7 @@ export default function Step5() {
                   </div>
                 </div>
 
-                {/* Paid Packages */}
+                {/* Paid Category Packages */}
                 {categoryPackages.map((pkg: CategoryPackage) => (
                   <div
                     key={pkg.id}
@@ -189,10 +189,10 @@ export default function Step5() {
                         {pkg.description && (
                           <p className="text-gray-600 text-sm">{pkg.description}</p>
                         )}
-                        <p className="text-gray-500 text-sm">Süre: {pkg.duration} gün</p>
+                        <p className="text-gray-500 text-sm">Süre: {pkg.durationDays} gün</p>
                       </div>
                       <div>
-                        <p className="font-bold text-[#EC7830]">{pkg.price.toLocaleString('tr-TR')} TL</p>
+                        <p className="font-bold text-[#EC7830]">{(pkg.price / 100).toLocaleString('tr-TR')} TL</p>
                       </div>
                     </div>
                   </div>
@@ -234,10 +234,10 @@ export default function Step5() {
                         {pkg.description && (
                           <p className="text-gray-600 text-sm">{pkg.description}</p>
                         )}
-                        <p className="text-gray-500 text-sm">Süre: {pkg.duration} gün</p>
+                        <p className="text-gray-500 text-sm">Süre: {pkg.durationDays} gün</p>
                       </div>
                       <div>
-                        <p className="font-bold text-[#EC7830]">{pkg.price.toLocaleString('tr-TR')} TL</p>
+                        <p className="font-bold text-[#EC7830]">{(pkg.price / 100).toLocaleString('tr-TR')} TL</p>
                       </div>
                     </div>
                   </div>
@@ -257,7 +257,7 @@ export default function Step5() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">Toplam Tutar</h3>
-                <p className="text-2xl font-bold text-[#EC7830]">{totalPrice.toLocaleString('tr-TR')} TL</p>
+                <p className="text-2xl font-bold text-[#EC7830]">{(totalPrice / 100).toLocaleString('tr-TR')} TL</p>
               </div>
             </div>
           )}

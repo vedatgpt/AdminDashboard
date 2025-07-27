@@ -327,6 +327,7 @@ export const categoryPackages = pgTable("category_packages", {
   durationDays: integer("duration_days").notNull().default(30),
   features: text("features").notNull().default("[]"), // JSON array of features
   membershipTypes: text("membership_types").notNull().default('["individual","corporate"]'), // JSON array
+  applyToSubcategories: boolean("apply_to_subcategories").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
