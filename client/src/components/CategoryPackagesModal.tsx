@@ -86,11 +86,14 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
   useEffect(() => {
     if (category && isOpen) {
       // Fetch the full category data to get the latest free listing settings
-      fetch(`/api/categories`)
+      fetch(`/api/categories/flat`)
         .then(response => response.json())
         .then(categories => {
-          const fullCategory = categories.find((cat: any) => cat.id === category.id);
           console.log(`🔧 CHECKING INHERITANCE for ${category.name} (ID: ${category.id})`);
+          console.log(`🔄 Flat categories count: ${categories.length}`);
+          
+          const fullCategory = categories.find((cat: any) => cat.id === category.id);
+          console.log(`📊 Full category data:`, fullCategory);
           if (fullCategory?.parentId) {
             console.log(`⬆️ Has parent: ${fullCategory.parentId}`);
           }
