@@ -18,13 +18,22 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
   // Generate dynamic title based on step number
   const getStepTitle = () => {
     if (!stepNumber) return "İlan Ver";
-    return `İlan Ver - ${stepNumber}`;
+
+    const stepTitles: { [key: number]: string } = {
+      1: "İlan Ver",
+      2: "Temel Bilgiler", 
+      3: "Fotoğraf",
+      4: "Önizleme",
+      5: "Paket Seçimi"
+    };
+
+    return stepTitles[stepNumber] || `İlan Ver - ${stepNumber}`;
   };
 
   // Determine if back button should be shown
   const shouldShowBackButton = () => {
     if (!stepNumber) return false;
-    
+
     if (stepNumber === 1) {
       // Step 1: Show back button when any category is selected (including first main category)
       return categoryPath && categoryPath.length > 0;
@@ -37,7 +46,7 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
   // Handle back button click
   const handleBackClick = () => {
     if (!stepNumber) return;
-    
+
     if (customBackHandler) {
       // Use custom back handler if provided (for Step1 category navigation)
       customBackHandler();
@@ -59,12 +68,12 @@ export default function CreateListingLayout({ children, stepNumber, customBackHa
           onBackClick={handleBackClick}
         />
       </div>
-      
+
       {/* Desktop Navbar */}
       <div className="hidden lg:block">
         <ModernNavbar />
       </div>
-      
+
       {/* Main Content - No extra wrapper needed, children handle their own layout */}
       {children}
     </div>

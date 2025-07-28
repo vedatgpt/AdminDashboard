@@ -37,10 +37,10 @@ export default function Step4() {
   const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
   const thumbnailsPerPage = 10;
   const queryClient = useQueryClient();
-  
+
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
-  
+
   // PREFETCH SYSTEM: Step5 prefetch
   const { smartPrefetchStep5 } = useStep5Prefetch();
 
@@ -137,7 +137,7 @@ export default function Step4() {
       let titleValue = null;
       let descriptionValue = null;
       let priceValue = null;
-      
+
       // Title kontrolü - önce draftData'dan, sonra customFields'den
       if (draftData?.title?.trim()) {
         titleValue = draftData.title.trim();
@@ -146,7 +146,7 @@ export default function Step4() {
         titleValue = customFields.title.trim();
         console.log('🔍 Step-4 Validasyon: title from customFields:', titleValue);
       }
-      
+
       // Description kontrolü - önce draftData'dan, sonra customFields'den
       if (draftData?.description?.trim()) {
         descriptionValue = draftData.description.trim();
@@ -155,7 +155,7 @@ export default function Step4() {
         descriptionValue = customFields.description.trim();
         console.log('🔍 Step-4 Validasyon: description from customFields:', descriptionValue);
       }
-      
+
       // Price kontrolü - önce draftData.price'dan, sonra customFields.price'dan
       if (draftData?.price) {
         try {
@@ -176,14 +176,14 @@ export default function Step4() {
           console.log('🔍 Step-4 Validasyon: price from customFields (string):', priceValue);
         }
       }
-      
+
       console.log('🔍 Step-4 Validasyon: titleValue:', titleValue);
       console.log('🔍 Step-4 Validasyon: descriptionValue:', descriptionValue);
       console.log('🔍 Step-4 Validasyon: priceValue:', priceValue);
-      
+
       // Geçici olarak validasyonu devre dışı bırakıyoruz
       console.log('✅ Step-4 Validasyon: Geçici olarak devre dışı');
-      
+
       // if (!titleValue || 
       //     !descriptionValue || 
       //     !priceValue) {
@@ -199,7 +199,7 @@ export default function Step4() {
       //   navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
       //   return;
       // }
-      
+
       console.log('✅ Step-4 Validasyon: Tüm alanlar tamam!');
 
       // Step3 kontrolleri: en az 1 fotoğraf yüklenmiş olmalı
@@ -226,7 +226,7 @@ export default function Step4() {
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
       console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-      
+
       // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
       if (draftError.message?.includes('erişim yetkiniz yok')) {
         console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
@@ -437,6 +437,7 @@ export default function Step4() {
                   allowTouchMove={true}
                   simulateTouch={true}
                   speed={250}
+                  loop={true}
                   onSlideChange={(swiper) => {
                     const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
                     setMainSlideIndex(index);
@@ -660,13 +661,13 @@ export default function Step4() {
                           let displayValue = '';
                           if (typeof value === 'object' && value !== null) {
                             if (value.value !== undefined) {
-                              displayValue = `${formatNumber(value.value, field.useThousandSeparator)} ${value.unit || ''}`.trim();
+                              displayValue = `${formatNumber(value.value, Boolean(field.useThousandSeparator))} ${value.unit || ''}`.trim();
                             } else {
                               // Skip complex objects that don't have value/unit structure
                               return null;
                             }
                           } else {
-                            displayValue = formatNumber(String(value), field.useThousandSeparator);
+                            displayValue = formatNumber(String(value), Boolean(field.useThousandSeparator));
                           }
 
                           return (
@@ -783,13 +784,13 @@ export default function Step4() {
                       let displayValue = '';
                       if (typeof value === 'object' && value !== null) {
                         if ((value as any).value !== undefined) {
-                          displayValue = `${formatNumber((value as any).value, field.useThousandSeparator)} ${(value as any).unit || ''}`.trim();
+                          displayValue = `${formatNumber((value as any).value, Boolean(field.useThousandSeparator))} ${(value as any).unit || ''}`.trim();
                         } else {
                           // Skip complex objects that don't have value/unit structure
                           return null;
                         }
                       } else {
-                        displayValue = formatNumber(String(value), field.useThousandSeparator);
+                        displayValue = formatNumber(String(value), Boolean(field.useThousandSeparator));
                       }
 
                       return (
@@ -925,8 +926,8 @@ export default function Step4() {
 
         {/* Açıklama */}
         <div className="hidden lg:block mb-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Açıklama</h3>
+          <div className="bg-white border border-gray-200 p-6">
+            <h3 className="text-base font-medium text-gray-900 mb-4 bg-gradient-to-b from-white to-gray-100 py-2 px-4 -mx-6 -mt-6 rounded-t">Açıklama</h3>
             {customFields.description ? (
               <div 
                 className="text-gray-700 prose max-w-none"

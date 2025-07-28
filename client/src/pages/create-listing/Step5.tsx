@@ -49,14 +49,14 @@ export default function Step5() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   // Get classified ID from URL
   const params = new URLSearchParams(search);
   const currentClassifiedId = params.get('classifiedId');
-  
+
   const [selectedCategoryPackage, setSelectedCategoryPackage] = useState<number | null>(null);
   const [selectedDopingPackages, setSelectedDopingPackages] = useState<number[]>([]);
-  
+
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
@@ -125,7 +125,7 @@ export default function Step5() {
   // Filter packages for current user membership type
   const availablePackages = useMemo(() => {
     if (!authUser) return [];
-    
+
     return categoryPackages.filter(pkg => {
       const membershipTypes = parseMembershipTypes(pkg.membershipTypes);
       return membershipTypes.includes(authUser.role);
@@ -135,7 +135,7 @@ export default function Step5() {
   // Check if user has free listing quota for selected package
   const getPackageDisplayPrice = useCallback((pkg: any) => {
     if (!authUser) return { price: pkg.price, isFree: false };
-    
+
     const userRole = authUser.role;
     const hasFreeQuota = userRole === 'individual' 
       ? (pkg.freeListingLimitIndividual || 0) > 0
@@ -152,7 +152,7 @@ export default function Step5() {
   // Calculate total price with useMemo for performance
   const totalPrice = useMemo(() => {
     let total = 0;
-    
+
     if (selectedCategoryPackage) {
       const pkg = availablePackages.find((p: any) => p.id === selectedCategoryPackage);
       if (pkg) {
@@ -193,10 +193,10 @@ export default function Step5() {
         dopingPackages: selectedDopingPackages,
         totalPrice
       };
-      
+
       // Future: Integrate with Stripe payment system
       alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
-      
+
       // Simulate some processing time
       await new Promise(resolve => setTimeout(resolve, 1000));
     });
@@ -217,34 +217,34 @@ export default function Step5() {
       console.log(`🚫 hasFreeListing: Missing data - category: ${!!category}, allCategories: ${allCategories.length}, authUser: ${!!authUser}`);
       return false;
     }
-    
+
     console.log(`🔍 FREE LISTING CHECK for category: ${category.name} (ID: ${category.id}), user: ${authUser.role} (${authUser.email})`);
-    
+
     // Build hierarchy path from current category to root
     const getHierarchyPath = (categoryId: number): Category[] => {
       const path: Category[] = [];
       let currentCat = allCategories.find(c => c.id === categoryId);
-      
+
       while (currentCat) {
         path.push(currentCat);
         if (!currentCat.parentId) break;
         currentCat = allCategories.find(c => c.id === currentCat!.parentId);
       }
-      
+
       return path;
     };
-    
+
     const hierarchyPath = getHierarchyPath(category.id);
     const isIndividual = authUser.role === 'individual';
     const isCorporate = authUser.role === 'corporate';
-    
+
     console.log(`📊 Category hierarchy (${hierarchyPath.length} levels):`, hierarchyPath.map(c => `${c.name} (${c.id}): ind=${c.freeListingLimitIndividual}, corp=${c.freeListingLimitCorporate}`));
     console.log(`🎯 USER ROLE CHECK: Looking for ${isIndividual ? 'INDIVIDUAL' : 'CORPORATE'} limits`);
-    
+
     // Check each category in hierarchy for free listing limits based on user role
     for (const cat of hierarchyPath) {
       console.log(`🔎 Checking ${cat.name}: individual=${cat.freeListingLimitIndividual}, corporate=${cat.freeListingLimitCorporate}`);
-      
+
       if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
         console.log(`✅ FREE LISTING FOUND: ${cat.name} has individual limit: ${cat.freeListingLimitIndividual}`);
         return true;
@@ -253,10 +253,10 @@ export default function Step5() {
         console.log(`✅ FREE LISTING FOUND: ${cat.name} has corporate limit: ${cat.freeListingLimitCorporate}`);
         return true;
       }
-      
+
       console.log(`❌ No ${isIndividual ? 'individual' : 'corporate'} limit in ${cat.name}`);
     }
-    
+
     console.log(`❌ NO FREE LISTING: No category in hierarchy has limits for ${authUser.role} users`);
     console.log(`🎯 FINAL RESULT: hasFreeListing = FALSE (System working correctly)`);
     return false;
@@ -266,7 +266,7 @@ export default function Step5() {
   useEffect(() => {
     console.log(`🔄 Step5 mounted - forcing categories refetch`);
     refetchCategories();
-    
+
     // Also clear any cached categories data on mount
     if (typeof window !== 'undefined' && (window as any).queryClient) {
       const queryClient = (window as any).queryClient;
@@ -290,18 +290,18 @@ export default function Step5() {
     const getHierarchyPath = (categoryId: number): Category[] => {
       const path: Category[] = [];
       let currentCat = allCategories.find(c => c.id === categoryId);
-      
+
       while (currentCat) {
         path.push(currentCat);
         if (!currentCat.parentId) break;
         currentCat = allCategories.find(c => c.id === currentCat!.parentId);
       }
-      
+
       return path;
     };
-    
+
     const hierarchyPath = getHierarchyPath(category.id);
-    
+
     // Find the first category in hierarchy that has NON-DEFAULT text content defined
     for (const cat of hierarchyPath) {
       const catAny = cat as any;
@@ -310,12 +310,12 @@ export default function Step5() {
         description: catAny.freeListingDescription,
         priceText: catAny.freeListingPriceText
       });
-      
+
       // Only use if text content is different from defaults (inheritance-based)
       const hasCustomTitle = catAny.freeListingTitle && catAny.freeListingTitle !== "Ücretsiz İlan";
       const hasCustomDescription = catAny.freeListingDescription && catAny.freeListingDescription !== "Standart ilan özelliklerini kullanın";
       const hasCustomPriceText = catAny.freeListingPriceText && catAny.freeListingPriceText !== "Ücretsiz";
-      
+
       if (hasCustomTitle || hasCustomDescription || hasCustomPriceText) {
         const content = {
           title: catAny.freeListingTitle || "Ücretsiz İlan",
@@ -326,7 +326,7 @@ export default function Step5() {
         return content;
       }
     }
-    
+
     // Fallback to defaults
     return {
       title: "Ücretsiz İlan",
@@ -344,26 +344,26 @@ export default function Step5() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8 lg:mt-0 mt-[56px]">
 
       <div className="space-y-8">
         {/* Category Packages - New System */}
         {availablePackages.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">İlan Paketleri</h2>
-            
+
             {isCategoryPackagesLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#EC7830] mx-auto mb-2"></div>
                 <p className="text-gray-600">Paketler yükleniyor...</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {availablePackages.map((pkg: any) => {
                   const features = parseFeatures(pkg.features);
                   const isSelected = selectedCategoryPackage === pkg.id;
                   const displayPrice = getPackageDisplayPrice(pkg);
-                  
+
                   return (
                     <div
                       key={pkg.id}
@@ -425,7 +425,7 @@ export default function Step5() {
         {/* Doping Packages */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Doping Paketleri</h2>
-          
+
           {isDopingPackagesLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#EC7830] mx-auto mb-2"></div>
