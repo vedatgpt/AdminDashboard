@@ -237,7 +237,11 @@ router.patch("/:id/free-listing-settings", requireAuth, requireAdmin, async (req
       freeResetPeriodIndividual,
       freeListingLimitCorporate,
       freeResetPeriodCorporate,
-      applyToSubcategories
+      applyToSubcategories,
+      // Text content fields
+      freeListingTitle,
+      freeListingDescription,
+      freeListingPriceText
     } = req.body;
 
     // Validate the input
@@ -258,7 +262,11 @@ router.patch("/:id/free-listing-settings", requireAuth, requireAdmin, async (req
       freeResetPeriodIndividual,
       freeListingLimitCorporate,
       freeResetPeriodCorporate,
-      applyToSubcategories
+      applyToSubcategories,
+      // Text content fields
+      freeListingTitle: freeListingTitle || "Ücretsiz İlan",
+      freeListingDescription: freeListingDescription || "Standart ilan özelliklerini kullanın",
+      freeListingPriceText: freeListingPriceText || "Ücretsiz"
     });
 
     console.log(`Free listing settings updated for category ${categoryId}:`, {

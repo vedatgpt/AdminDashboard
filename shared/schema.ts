@@ -98,6 +98,10 @@ export const categories = pgTable("categories", {
   freeListingLimitCorporate: integer("free_listing_limit_corporate").notNull().default(0), 
   freeResetPeriodCorporate: text("free_reset_period_corporate").notNull().default("monthly"),
   applyToSubcategories: boolean("apply_to_subcategories").notNull().default(true),
+  // Free listing text content fields
+  freeListingTitle: text("free_listing_title").default("Ücretsiz İlan"),
+  freeListingDescription: text("free_listing_description").default("Standart ilan özelliklerini kullanın"),
+  freeListingPriceText: text("free_listing_price_text").default("Ücretsiz"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
@@ -200,6 +204,9 @@ export type User = typeof users.$inferSelect;
 export type AuthorizedPersonnel = typeof authorizedPersonnel.$inferSelect;
 export type Category = typeof categories.$inferSelect & {
   children?: Category[];
+  freeListingTitle?: string | null;
+  freeListingDescription?: string | null;
+  freeListingPriceText?: string | null;
 };
 export type Location = typeof locations.$inferSelect & {
   children?: Location[];

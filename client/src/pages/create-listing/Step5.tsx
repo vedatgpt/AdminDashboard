@@ -219,6 +219,51 @@ export default function Step5() {
     return false;
   }, [category, allCategories, authUser]);
 
+  // Get free listing text content from category hierarchy
+  const freeListingContent = useMemo(() => {
+    if (!category || !allCategories.length) {
+      return {
+        title: "Ücretsiz İlan",
+        description: "Standart ilan özelliklerini kullanın",
+        priceText: "Ücretsiz"
+      };
+    }
+
+    // Build hierarchy path from current category to root
+    const getHierarchyPath = (categoryId: number): Category[] => {
+      const path: Category[] = [];
+      let currentCat = allCategories.find(c => c.id === categoryId);
+      
+      while (currentCat) {
+        path.push(currentCat);
+        if (!currentCat.parentId) break;
+        currentCat = allCategories.find(c => c.id === currentCat!.parentId);
+      }
+      
+      return path;
+    };
+    
+    const hierarchyPath = getHierarchyPath(category.id);
+    
+    // Find the first category in hierarchy that has text content defined
+    for (const cat of hierarchyPath) {
+      if (cat.freeListingTitle || cat.freeListingDescription || cat.freeListingPriceText) {
+        return {
+          title: cat.freeListingTitle || "Ücretsiz İlan",
+          description: cat.freeListingDescription || "Standart ilan özelliklerini kullanın",
+          priceText: cat.freeListingPriceText || "Ücretsiz"
+        };
+      }
+    }
+    
+    // Fallback to defaults
+    return {
+      title: "Ücretsiz İlan",
+      description: "Standart ilan özelliklerini kullanın",
+      priceText: "Ücretsiz"
+    };
+  }, [category, allCategories]);
+
   if (authLoading || isDraftLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -258,11 +303,11 @@ export default function Step5() {
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
-                        <p className="text-gray-600 text-sm">Standart ilan özelliklerini kullanın</p>
+                        <h3 className="font-semibold text-gray-900">{freeListingContent.title}</h3>
+                        <p className="text-gray-600 text-sm">{freeListingContent.description}</p>
                       </div>
                       <div>
-                        <p className="font-bold text-green-600">Ücretsiz</p>
+                        <p className="font-bold text-green-600">{freeListingContent.priceText}</p>
                       </div>
                     </div>
                   </div>

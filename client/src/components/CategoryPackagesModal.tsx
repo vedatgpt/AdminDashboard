@@ -29,6 +29,10 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     freeListingLimitCorporate: 0,
     freeResetPeriodCorporate: "monthly" as "monthly" | "yearly" | "once",
     applyToSubcategories: true,
+    // Text content fields
+    freeListingTitle: "Ücretsiz İlan",
+    freeListingDescription: "Standart ilan özelliklerini kullanın",
+    freeListingPriceText: "Ücretsiz",
   });
 
   const [inheritedSettings, setInheritedSettings] = useState<{
@@ -150,6 +154,10 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
               freeListingLimitCorporate: fullCategory.freeListingLimitCorporate || 0,
               freeResetPeriodCorporate: fullCategory.freeResetPeriodCorporate || "monthly",
               applyToSubcategories: fullCategory.applyToSubcategories !== false,
+              // Text content fields
+              freeListingTitle: fullCategory.freeListingTitle || "Ücretsiz İlan",
+              freeListingDescription: fullCategory.freeListingDescription || "Standart ilan özelliklerini kullanın",
+              freeListingPriceText: fullCategory.freeListingPriceText || "Ücretsiz",
             });
           }
         })
@@ -201,6 +209,10 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         freeListingLimitCorporate: updatedCategory.freeListingLimitCorporate || 0,
         freeResetPeriodCorporate: updatedCategory.freeResetPeriodCorporate || "monthly",
         applyToSubcategories: updatedCategory.applyToSubcategories || true,
+        // Text content fields
+        freeListingTitle: updatedCategory.freeListingTitle || "Ücretsiz İlan",
+        freeListingDescription: updatedCategory.freeListingDescription || "Standart ilan özelliklerini kullanın",
+        freeListingPriceText: updatedCategory.freeListingPriceText || "Ücretsiz",
       });
 
       // CRITICAL: Invalidate all category caches to force fresh data
@@ -759,6 +771,58 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                 )}
 
                 <form className="space-y-6">
+                  {/* Free Listing Text Content Section */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Ücretsiz İlan Metin İçerikleri</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Step-5 sayfasında gösterilen ücretsiz ilan kutusundaki metinleri düzenleyin.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Free Listing Title */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Başlık *
+                        </label>
+                        <input
+                          type="text"
+                          value={freeListingData.freeListingTitle}
+                          onChange={(e) => setFreeListingData(prev => ({ ...prev, freeListingTitle: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          placeholder="Ücretsiz İlan"
+                        />
+                      </div>
+
+                      {/* Free Listing Description */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Açıklama *
+                        </label>
+                        <input
+                          type="text"
+                          value={freeListingData.freeListingDescription}
+                          onChange={(e) => setFreeListingData(prev => ({ ...prev, freeListingDescription: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          placeholder="Standart ilan özelliklerini kullanın"
+                        />
+                      </div>
+
+                      {/* Free Listing Price Text */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Fiyat Metni *
+                        </label>
+                        <input
+                          type="text"
+                          value={freeListingData.freeListingPriceText}
+                          onChange={(e) => setFreeListingData(prev => ({ ...prev, freeListingPriceText: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          placeholder="Ücretsiz"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Bireysel Kullanıcılar Ayarları */}
                   <div className={`${inheritedSettings.hasInheritance ? 'bg-gray-100' : 'bg-gray-50'} p-4 rounded-lg`}>
                     <h4 className={`text-md font-medium ${inheritedSettings.hasInheritance ? 'text-gray-600' : 'text-gray-900'} mb-3`}>
