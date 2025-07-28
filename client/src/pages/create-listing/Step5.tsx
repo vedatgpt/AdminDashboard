@@ -360,7 +360,7 @@ export default function Step5() {
                 <p className="text-gray-600">Paketler yükleniyor...</p>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-4">
                 {availablePackages.map((pkg: any) => {
                   const features = parseFeatures(pkg.features);
                   const isSelected = selectedCategoryPackage === pkg.id;
@@ -369,76 +369,52 @@ export default function Step5() {
                   return (
                     <div
                       key={pkg.id}
-                      className={`relative rounded-lg border-2 p-6 cursor-pointer transition-all ${
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
                         isSelected
                           ? 'border-[#EC7830] bg-orange-50'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => handleCategoryPackageSelect(pkg.id)}
                     >
-                      {/* Selection indicator */}
-                      {isSelected && (
-                        <div className="absolute top-4 right-4">
-                          <div className="w-6 h-6 bg-[#EC7830] rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {displayPrice.isFree ? (pkg.freeListingTitle || pkg.name) : pkg.name}
+                          </h3>
+                          <p className="text-gray-600 text-sm mt-1">
+                            {displayPrice.isFree ? (pkg.freeListingDescription || pkg.description) : pkg.description}
+                          </p>
+                          <p className="text-gray-500 text-sm mt-1">Süre: {pkg.durationDays} gün</p>
+                          {features.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium text-gray-700 mb-1">Özellikler:</p>
+                              <ul className="text-sm text-gray-600 space-y-1">
+                                {features.map((feature, index) => (
+                                  <li key={index} className="flex items-center">
+                                    <span className="w-1.5 h-1.5 bg-[#EC7830] rounded-full mr-2"></span>
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                      )}
-
-                      {/* Package content */}
-                      <div className="space-y-4">
-                        {/* Package name */}
-                        <h3 className="text-lg font-semibold text-gray-900">{pkg.name}</h3>
-
-                        {/* Package description */}
-                        {pkg.description && (
-                          <p className="text-sm text-gray-600">{pkg.description}</p>
-                        )}
-
-                        {/* Price section */}
-                        <div className="space-y-2">
+                        <div className="ml-4">
                           {displayPrice.isFree ? (
-                            <div className="space-y-1">
-                              {/* Free price display */}
-                              <div className="text-2xl font-bold text-green-600">
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-green-600">
                                 {displayPrice.freeText}
                               </div>
-                              {/* Original price crossed out */}
                               <div className="text-sm text-gray-500 line-through">
                                 {displayPrice.originalPrice} TL
                               </div>
-
                             </div>
                           ) : (
-                            <div className="text-2xl font-bold text-gray-900">
+                            <p className="font-bold text-[#EC7830]">
                               {pkg.price === 0 ? 'Ücretsiz' : `${pkg.price} TL`}
-                            </div>
+                            </p>
                           )}
-                          
-                          {/* Duration */}
-                          <div className="text-sm text-gray-600">
-                            {pkg.durationDays} gün süreyle aktif
-                          </div>
                         </div>
-
-                        {/* Features */}
-                        {features.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-gray-900">Paket Özellikleri:</h4>
-                            <ul className="space-y-1">
-                              {features.map((feature, index) => (
-                                <li key={index} className="text-sm text-gray-600 flex items-center">
-                                  <svg className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
