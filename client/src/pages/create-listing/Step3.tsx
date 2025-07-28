@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Camera, Upload, X, Image as ImageIcon, GripVertical } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/contexts/ToastContext';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing';
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
@@ -33,7 +33,7 @@ export default function Step3() {
   const sortableRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { smartPrefetchStep4 } = useStep4Prefetch();
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateDraftMutation = useUpdateDraftListing();
@@ -136,11 +136,7 @@ export default function Step3() {
       } catch (error) {
         console.error('🔍 Step-3 Validasyon: customFields parse hatası:', error);
         // Invalid JSON, redirect to Step2
-        toast({
-          title: "Form Hatası",
-          description: "Step-2'deki form bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
+        showToast('error', 'Step-2\'deki form bilgilerini tamamlayınız');
         navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
         return;
       }
@@ -214,7 +210,7 @@ export default function Step3() {
       
       console.log('✅ Step-3 Validasyon: Tüm alanlar tamam!');
     }
-  }, [draftData, currentClassifiedId, isDraftLoading, navigate, toast]);
+  }, [draftData, currentClassifiedId, isDraftLoading, navigate, showToast]);
 
   // Memoized filtered images for Sortable.js
   const nonUploadingImages = useMemo(() => 
@@ -380,11 +376,7 @@ export default function Step3() {
         }
         return newImages;
       });
-      toast({
-        title: "Yükleme Hatası",
-        description: error instanceof Error ? error.message : 'Bilinmeyen hata',
-        variant: "destructive"
-      });
+      showToast('error', error instanceof Error ? error.message : 'Fotoğraf yükleme hatası');
     }
   };
 
@@ -417,11 +409,7 @@ export default function Step3() {
       }
     },
     onError: (error) => {
-      toast({
-        title: "Silme Hatası",
-        description: error.message,
-        variant: "destructive"
-      });
+      showToast('error', error.message || 'Fotoğraf silme hatası');
     }
   });
 
@@ -489,58 +477,34 @@ export default function Step3() {
       // 1. Check if file extension is blocked (comprehensive list)
       if (LISTING_CONFIG.BLOCKED_EXTENSIONS.includes(fileExtension as any)) {
         if (fileExtension === '.heic' || fileExtension === '.heif') {
-          toast({
-            title: "HEIC Formatı Desteklenmiyor",
-            description: ERROR_MESSAGES.HEIC_NOT_SUPPORTED,
-            variant: "destructive"
-          });
+          showToast('error', ERROR_MESSAGES.HEIC_NOT_SUPPORTED);
         } else {
-          toast({
-            title: "Desteklenmeyen Dosya Formatı",
-            description: `${fileExtension.toUpperCase()} formatı desteklenmemektedir. ${ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION}`,
-            variant: "destructive"
-          });
+          showToast('error', `${fileExtension.toUpperCase()} formatı desteklenmemektedir. ${ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION}`);
         }
         return false;
       }
 
       // 2. Check if file extension is allowed (positive validation)
       if (!LISTING_CONFIG.ALLOWED_EXTENSIONS.includes(fileExtension as any)) {
-        toast({
-          title: "Desteklenmeyen Dosya Uzantısı",
-          description: ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION,
-          variant: "destructive"
-        });
+        showToast('error', ERROR_MESSAGES.UNSUPPORTED_FILE_EXTENSION);
         return false;
       }
 
       // 3. Check if file type is image (browser MIME type validation)
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Geçersiz Dosya Türü",
-          description: 'Sadece resim dosyaları yüklenebilir',
-          variant: "destructive"
-        });
+        showToast('error', 'Sadece resim dosyaları yüklenebilir');
         return false;
       }
 
       // 4. Check if MIME type is supported (additional validation)
       if (!LISTING_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
-        toast({
-          title: "Desteklenmeyen MIME Türü",
-          description: ERROR_MESSAGES.UNSUPPORTED_IMAGE_FORMAT,
-          variant: "destructive"
-        });
+        showToast('error', ERROR_MESSAGES.UNSUPPORTED_IMAGE_FORMAT);
         return false;
       }
 
       // 5. Check file size
       if (file.size > LISTING_CONFIG.MAX_FILE_SIZE) {
-        toast({
-          title: "Dosya Çok Büyük",
-          description: `Dosya boyutu ${Math.round(LISTING_CONFIG.MAX_FILE_SIZE / 1024 / 1024)}MB'dan küçük olmalıdır`,
-          variant: "destructive"
-        });
+        showToast('error', `Dosya boyutu ${Math.round(LISTING_CONFIG.MAX_FILE_SIZE / 1024 / 1024)}MB'dan küçük olmalıdır`);
         return false;
       }
 
@@ -549,11 +513,7 @@ export default function Step3() {
     });
 
     if (images.length + validFiles.length > LISTING_CONFIG.MAX_IMAGES) {
-      toast({
-        title: "Çok Fazla Fotoğraf",
-        description: `En fazla ${LISTING_CONFIG.MAX_IMAGES} fotoğraf yükleyebilirsiniz`,
-        variant: "destructive"
-      });
+      showToast('error', `En fazla ${LISTING_CONFIG.MAX_IMAGES} fotoğraf yükleyebilirsiniz`);
       return;
     }
 
@@ -606,11 +566,7 @@ export default function Step3() {
     await executeWithProtection(async () => {
       // PHOTO VALIDATION: Check if at least one photo is uploaded
       if (images.length === 0) {
-        toast({
-          title: "Fotoğraf Gerekli",
-          description: "Devam etmek için en az bir fotoğraf yüklemeniz gerekir.",
-          variant: "destructive"
-        });
+        showToast('error', 'Devam etmek için en az bir fotoğraf yüklemeniz gerekir.');
         return;
       }
       // Clear any pending save timeout and execute immediately
@@ -630,11 +586,7 @@ export default function Step3() {
       }
 
       if (!currentClassifiedId) {
-        toast({
-          title: "Hata",
-          description: "İlan ID bulunamadı. Lütfen sayfayı yenileyin.",
-          variant: "destructive"
-        });
+        showToast('error', 'İlan ID bulunamadı. Lütfen sayfayı yenileyin.');
         return;
       }
 
@@ -671,11 +623,7 @@ export default function Step3() {
         // Navigate to Step-4
         navigate(`/create-listing/step-4?classifiedId=${currentClassifiedId}&t=${Date.now()}`);
       } catch (error) {
-        toast({
-          title: "Kaydetme Hatası",
-          description: "Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.",
-          variant: "destructive"
-        });
+        showToast('error', 'Fotoğraflar kaydedilemedi. Lütfen tekrar deneyin.');
         return;
       }
       } else {

@@ -8,7 +8,7 @@ import { useCategoriesTree } from '@/hooks/useCategories';
 import { useLocationsTree } from '@/hooks/useLocations';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 import { useCategoryCustomFields } from '@/hooks/useCustomFields';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/contexts/ToastContext';
 import { useClassifiedId } from '@/hooks/useClassifiedId';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { useStep5Prefetch } from '@/hooks/useStep5Prefetch';
@@ -29,7 +29,7 @@ export default function Step4() {
   const { state } = useListing();
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
   const [currentThumbnailPage, setCurrentThumbnailPage] = useState(0);
@@ -96,7 +96,7 @@ export default function Step4() {
   // STEP5 PREFETCH: Auto-prefetch when Step4 loads
   useEffect(() => {
     if (!authLoading && isAuthenticated && draftData?.categoryId && currentClassifiedId && userForPrefetch?.id) {
-      smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 page load');
+      smartPrefetchStep5(draftData.categoryId.toString(), currentClassifiedId, 'Step4 page load');
     }
   }, [authLoading, isAuthenticated, draftData?.categoryId, currentClassifiedId, userForPrefetch?.id, smartPrefetchStep5]);
 
@@ -105,7 +105,7 @@ export default function Step4() {
   // Step completion marking mutation
   const markStepCompletedMutation = useMutation({
     mutationFn: async ({ classifiedId, step }: { classifiedId: string; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
+      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step.toString()}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -124,11 +124,7 @@ export default function Step4() {
           : draftData.customFields;
       } catch {
         // Invalid JSON, redirect to Step2
-        toast({
-          title: "Form Hatası",
-          description: "Step-2'deki form bilgilerini tamamlayınız",
-          variant: "destructive"
-        });
+        showToast('error', 'Step-2\'deki form bilgilerini tamamlayınız');
         navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
         return;
       }
@@ -211,16 +207,12 @@ export default function Step4() {
       }
 
       if (!Array.isArray(photos) || photos.length === 0) {
-        toast({
-          title: "Fotoğraf Eksik",
-          description: "En az 1 fotoğraf yüklemeniz gerekiyor",
-          variant: "destructive"
-        });
+        showToast('error', 'En az 1 fotoğraf yüklemeniz gerekiyor');
         navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`);
         return;
       }
     }
-  }, [draftData, currentClassifiedId, navigate, toast]);
+  }, [draftData, currentClassifiedId, navigate, showToast]);
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic  
   useEffect(() => {
@@ -230,11 +222,7 @@ export default function Step4() {
       // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
       if (draftError.message?.includes('erişim yetkiniz yok')) {
         console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
-        toast({
-          title: "Güvenlik Hatası", 
-          description: "İlgili ilan için yetkiniz bulunmamaktadır.",
-          variant: "destructive"
-        });
+        showToast('error', 'İlgili ilan için yetkiniz bulunmamaktadır.');
         navigate('/create-listing/step-1');
       } 
       // 404 Not Found: Hiç var olmayan draft ID - Normal akış
@@ -249,7 +237,7 @@ export default function Step4() {
         navigate('/create-listing/step-1');
       }
     }
-  }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
+  }, [isDraftError, draftError, currentClassifiedId, navigate, showToast]);
   const { data: categories } = useCategoriesTree();
   const { data: locations } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
@@ -951,7 +939,7 @@ export default function Step4() {
             onClick={() => executeWithProtection(async () => {
               // Step5 prefetch before navigation
               if (draftData?.categoryId && userForPrefetch?.id) {
-                smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 navigation');
+                smartPrefetchStep5(draftData.categoryId.toString(), currentClassifiedId, 'Step4 navigation');
               }
               navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
             })}

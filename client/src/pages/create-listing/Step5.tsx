@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/contexts/ToastContext';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
-import TestToastButton from '@/components/ui/TestToastButton';
 
 interface CategoryPackage {
   id: number;
@@ -350,10 +349,6 @@ export default function Step5() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Test Button - Remove in production */}
-      <div className="mb-4">
-        <TestToastButton />
-      </div>
 
       <div className="space-y-8">
         {/* Category Packages - New System */}
