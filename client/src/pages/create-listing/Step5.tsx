@@ -3,6 +3,7 @@ import { useLocation, useSearch } from 'wouter';
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
+import { useStepAuthentication } from '@/hooks/useStepAuthentication';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
 
@@ -60,12 +61,8 @@ export default function Step5() {
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated, navigate]);
+  // COMMON AUTHENTICATION: Using shared hook
+  const { isAuthenticated: stepAuth, authLoading: stepAuthLoading } = useStepAuthentication();
 
   // Redirect if no classified ID
   useEffect(() => {

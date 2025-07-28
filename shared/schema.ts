@@ -2,6 +2,44 @@ import { pgTable, text, serial, integer, boolean, timestamp, unique } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// SECURITY: Input sanitization helpers
+const sanitizeString = (str: string) => str.trim().replace(/[<>]/g, '');
+const sanitizeHtml = (html: string) => html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+// SECURITY: Enhanced validation schemas
+export const secureStringSchema = z.string()
+  .min(1, "Bu alan gereklidir")
+  .max(255, "Maksimum 255 karakter olabilir")
+  .transform(sanitizeString);
+
+export const secureHtmlSchema = z.string()
+  .min(1, "Bu alan gereklidir")
+  .max(10000, "Maksimum 10000 karakter olabilir")
+  .transform(sanitizeHtml);
+
+// SECURITY: Pre-transform schemas for validation
+export const preTransformStringSchema = z.string()
+  .min(1, "Bu alan gereklidir")
+  .max(255, "Maksimum 255 karakter olabilir");
+
+export const preTransformHtmlSchema = z.string()
+  .min(1, "Bu alan gereklidir")
+  .max(10000, "Maksimum 10000 karakter olabilir");
+
+export const secureEmailSchema = z.string()
+  .email("Geçerli bir email adresi giriniz")
+  .max(255, "Email adresi çok uzun")
+  .transform(str => str.toLowerCase().trim());
+
+export const securePasswordSchema = z.string()
+  .min(6, "Şifre en az 6 karakter olmalıdır")
+  .max(128, "Şifre çok uzun")
+  .regex(/^(?=.*[a-zA-Z])/, "Şifre en az bir harf içermelidir");
+
+export const securePhoneSchema = z.string()
+  .regex(/^[\+]?[0-9\s\-\(\)]{10,15}$/, "Geçerli bir telefon numarası giriniz")
+  .optional();
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -31,17 +69,19 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
+// SECURITY: Enhanced login schema with sanitization
 export const loginSchema = z.object({
-  emailOrUsername: z.string().min(1, "E-posta adresi veya kullanıcı adı gereklidir"),
-  password: z.string().min(1, "Şifre gereklidir"),
+  emailOrUsername: z.string().min(1, "E-posta adresi veya kullanıcı adı gereklidir").transform(sanitizeString),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır").max(128, "Şifre çok uzun"),
 });
 
+// SECURITY: Enhanced register schema with sanitization
 export const registerSchema = z.object({
-  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
-  email: z.string().email("Geçerli bir email adresi giriniz"),
-  firstName: z.string().min(2, "Ad en az 2 karakter olmalıdır"),
-  lastName: z.string().min(2, "Soyad en az 2 karakter olmalıdır"),
-  companyName: z.string().optional(),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır").max(128, "Şifre çok uzun"),
+  email: z.string().email("Geçerli bir email adresi giriniz").transform(str => str.toLowerCase().trim()),
+  firstName: z.string().min(2, "Ad en az 2 karakter olmalıdır").max(255, "Ad çok uzun").transform(sanitizeString),
+  lastName: z.string().min(2, "Soyad en az 2 karakter olmalıdır").max(255, "Soyad çok uzun").transform(sanitizeString),
+  companyName: z.string().optional().transform(val => val ? sanitizeString(val) : val),
   role: z.enum(["admin", "editor", "corporate", "individual"]).default("individual"),
 }).refine((data) => {
   // If role is corporate, companyName is required
@@ -54,7 +94,48 @@ export const registerSchema = z.object({
   path: ["companyName"]
 });
 
+// SECURITY: Profile update schema with sanitization
+export const profileUpdateSchema = z.object({
+  firstName: z.string().min(2, "Ad en az 2 karakter olmalıdır").max(255, "Ad çok uzun").transform(sanitizeString),
+  lastName: z.string().min(2, "Soyad en az 2 karakter olmalıdır").max(255, "Soyad çok uzun").transform(sanitizeString),
+  companyName: z.string().optional().transform(val => val ? sanitizeString(val) : val),
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır").max(255, "Kullanıcı adı çok uzun").transform(sanitizeString),
+  mobilePhone: securePhoneSchema,
+  whatsappNumber: securePhoneSchema,
+  businessPhone: securePhoneSchema,
+});
+
+// SECURITY: Password change schema
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  newPassword: z.string().min(6, "Şifre en az 6 karakter olmalıdır").max(128, "Şifre çok uzun"),
+}).refine((data) => data.currentPassword !== data.newPassword, {
+  message: "Yeni şifre mevcut şifre ile aynı olamaz",
+  path: ["newPassword"]
+});
+
+// SECURITY: Email change schema
+export const emailChangeSchema = z.object({
+  newEmail: z.string().email("Geçerli bir email adresi giriniz").transform(str => str.toLowerCase().trim()),
+});
+
+// SECURITY: Draft listing schema with sanitization
+export const draftListingSchema = z.object({
+  title: z.string().min(10, "Başlık en az 10 karakter olmalıdır").max(200, "Başlık çok uzun").transform(sanitizeString),
+  description: z.string().min(50, "Açıklama en az 50 karakter olmalıdır").max(10000, "Açıklama çok uzun").transform(sanitizeHtml),
+  price: z.object({
+    value: z.string().regex(/^\d+$/, "Fiyat sadece sayı olmalıdır"),
+    unit: z.string().min(1, "Birim gereklidir")
+  }),
+  customFields: z.record(z.any()).optional(),
+  locationData: z.record(z.any()).optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type ProfileUpdateData = z.infer<typeof profileUpdateSchema>;
+export type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
+export type EmailChangeData = z.infer<typeof emailChangeSchema>;
+export type DraftListingData = z.infer<typeof draftListingSchema>;
 // Authorized Personnel table for corporate users
 export const authorizedPersonnel = pgTable("authorized_personnel", {
   id: serial("id").primaryKey(),

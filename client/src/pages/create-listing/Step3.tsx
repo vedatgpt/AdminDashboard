@@ -9,6 +9,9 @@ import { useDraftListing, useUpdateDraftListing } from '@/hooks/useDraftListing'
 import { useStep4Prefetch } from '@/hooks/useStep4Prefetch';
 import { useClassifiedId } from '@/hooks/useClassifiedId';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
+import { useStepAuthentication } from '@/hooks/useStepAuthentication';
+import { useStepCompletion } from '@/hooks/useStepValidation';
+import { useStepErrorHandling } from '@/hooks/useStepErrorHandling';
 import { LISTING_CONFIG, ERROR_MESSAGES } from '@shared/constants';
 
 import Sortable from "sortablejs";
@@ -40,6 +43,12 @@ export default function Step3() {
 
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
+
+  // COMMON AUTHENTICATION: Using shared hook
+  const { isAuthenticated: stepAuth, authLoading: stepAuthLoading } = useStepAuthentication();
+
+  // COMMON STEP COMPLETION: Using shared hook
+  const { markStepCompletedMutation } = useStepCompletion();
 
   // URL parameter support - Custom hook kullanımı
   const currentClassifiedId = useClassifiedId();
@@ -77,46 +86,14 @@ export default function Step3() {
 
   // DEBUG: Log step guard results - REMOVED
 
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
+
+
+  // COMMON ERROR HANDLING: Using shared hook
+  useStepErrorHandling({
+    isDraftError,
+    draftError,
+    currentClassifiedId: currentClassifiedId || null
   });
-
-  // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
-  useEffect(() => {
-    if (isDraftError && draftError && currentClassifiedId) {
-      console.error('🚨 SECURITY: Unauthorized draft access attempt:', currentClassifiedId);
-
-      // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
-      if (draftError.message?.includes('erişim yetkiniz yok')) {
-        console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
-        toast({
-          title: "Güvenlik Hatası",
-          description: "İlgili ilan için yetkiniz bulunmamaktadır.",
-          variant: "destructive"
-        });
-        navigate('/create-listing/step-1');
-      } 
-      // 404 Not Found: Hiç var olmayan draft ID - Normal akış
-      else if (draftError.message?.includes('bulunamadı')) {
-        console.log('ℹ️ Non-existent draft ID, redirecting to Step1 for new listing');
-        // Toast gösterme, sadece Step1'e yönlendir
-        navigate('/create-listing/step-1');
-      }
-      // Diğer hatalar
-      else {
-        console.error('🚨 Unknown draft error:', draftError.message);
-        navigate('/create-listing/step-1');
-      }
-    }
-  }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
 
   // SECURITY CHECK: Step2 verilerinin tamamlanmış olması gerekiyor
   useEffect(() => {

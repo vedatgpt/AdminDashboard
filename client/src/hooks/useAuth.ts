@@ -31,10 +31,17 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
-      // Selective cache clearing - only user-specific data
+      // CRITICAL FIX: Comprehensive cache clearing for draft modal
       queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
       queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/draft-listings"] });
+      
+      // Force refetch after brief delay to ensure new user session
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
+        queryClient.refetchQueries({ queryKey: ["/api/draft-listings"] });
+      }, 100);
     },
   });
 
@@ -53,10 +60,17 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
-      // Selective cache clearing - only user-specific data
+      // CRITICAL FIX: Comprehensive cache clearing for draft modal
       queryClient.removeQueries({ queryKey: ["/api/draft-listings"] });
       queryClient.removeQueries({ queryKey: ["/api/auth/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/draft-listings"] });
+      
+      // Force refetch after brief delay to ensure new user session
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/auth/me"] });
+        queryClient.refetchQueries({ queryKey: ["/api/draft-listings"] });
+      }, 100);
     },
   });
 

@@ -46,12 +46,12 @@ export function useDraftListing(id?: number) {
 
 // Hook for fetching user's draft listings (authentication required) - DEPLOY FIX VERSION
 export function useUserDraftListings() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   return useQuery({
     queryKey: ['/api/draft-listings'],
     queryFn: async () => {
-  
+      console.log('🔄 Draft Listings API Call: User ID', user?.id);
       
       const response = await fetch('/api/draft-listings', {
         credentials: 'include', // Deploy fix: ensure session cookies
@@ -62,19 +62,21 @@ export function useUserDraftListings() {
       
       if (!response.ok) {
         if (response.status === 401) {
-
+          console.log('❌ Draft Listings: Authentication failed');
           throw new Error('Giriş yapmamış kullanıcılar ilan taslağına erişemez');
         }
-
+        console.log('❌ Draft Listings: API error', response.status);
         throw new Error('İlan taslakları alınamadı');
       }
       
       const drafts = await response.json() as DraftListing[];
+      console.log('✅ Draft Listings: Loaded', drafts.length, 'drafts for user', user?.id);
       return drafts;
     },
-    enabled: isAuthenticated, // Only run when authenticated
-    staleTime: 30 * 1000, // DEPLOY FIX: Reduced to 30 seconds for modal system
+    enabled: isAuthenticated && !!user?.id, // CRITICAL: Wait for both auth and user data
+    staleTime: 10 * 1000, // CRITICAL FIX: Reduced to 10 seconds for faster account switch detection
     refetchOnWindowFocus: true, // DEPLOY FIX: Refresh when window gains focus
+    refetchOnMount: true, // CRITICAL: Refetch on mount for account switches
   });
 }
 

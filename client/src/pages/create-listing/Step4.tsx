@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useClassifiedId } from '@/hooks/useClassifiedId';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { useStep5Prefetch } from '@/hooks/useStep5Prefetch';
+import { useStepAuthentication } from '@/hooks/useStepAuthentication';
+import { useStepCompletion } from '@/hooks/useStepValidation';
+import { useStepErrorHandling } from '@/hooks/useStepErrorHandling';
 import { ERROR_MESSAGES } from '@shared/constants';
 
 import CreateListingLayout from '@/components/CreateListingLayout';
@@ -44,12 +47,11 @@ export default function Step4() {
   // PREFETCH SYSTEM: Step5 prefetch
   const { smartPrefetchStep5 } = useStep5Prefetch();
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
+  // COMMON AUTHENTICATION: Using shared hook
+  const { isAuthenticated: stepAuth, authLoading: stepAuthLoading } = useStepAuthentication();
+
+  // COMMON STEP COMPLETION: Using shared hook
+  const { markStepCompletedMutation } = useStepCompletion();
 
   // Get user data for prefetch (separate from useAuth to avoid conflicts)
   const { data: userForPrefetch } = useQuery({
@@ -102,17 +104,7 @@ export default function Step4() {
 
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 4 validation - REMOVED
 
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: string; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
-  });
+
 
   // SECURITY CHECK: Step2 ve Step3 verilerinin tamamlanmış olması gerekiyor
   useEffect(() => {

@@ -14,6 +14,7 @@ import connectPgSimple from "connect-pg-simple";
 import categoriesRouter from "./routes/categories";
 import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
 import { pool } from "./db";
+import rateLimit from 'express-rate-limit';
 
 import { requireAuth, requireAdmin, requireCorporate, type AuthenticatedRequest } from "./middleware/auth";
 
@@ -29,22 +30,55 @@ declare module 'express-session' {
   }
 }
 
-// Configure multer for file uploads
+// SECURITY: Rate limiting for API endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// SECURITY: Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 auth requests per windowMs
+  message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// SECURITY: File upload rate limiting
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 upload requests per windowMs
+  message: 'Too many file uploads, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// SECURITY: Enhanced multer configuration with validation
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: FILE_LIMITS.PROFILE_IMAGE,
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+    // SECURITY: Enhanced file type validation
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png'];
+    
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedMimes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only JPG and PNG files are allowed'));
+      cb(new Error('Sadece JPG ve PNG dosyaları kabul edilir'));
     }
   },
 });
 
-// Configure multer for listing images (10MB limit)
+// SECURITY: Enhanced multer for listing images
 const uploadListingImages = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -52,15 +86,62 @@ const uploadListingImages = multer({
     files: FILE_LIMITS.MAX_LISTING_IMAGES
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.match(/^image\/(jpeg|jpg|png)$/)) {
+    // SECURITY: Enhanced file type validation
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedMimes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only JPG and PNG files are allowed'));
+      cb(new Error('Sadece JPG, PNG ve WebP dosyaları kabul edilir'));
     }
   },
 });
 
+// SECURITY: Input validation middleware
+const validateInput = (schema: any) => {
+  return (req: Request, res: Response, next: any) => {
+    try {
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: result.error.errors
+        });
+      }
+      req.body = result.data; // Use sanitized data
+      next();
+    } catch (error) {
+      return res.status(400).json({
+        error: 'Input validation failed'
+      });
+    }
+  };
+};
+
+// SECURITY: Sanitize query parameters
+const sanitizeQuery = (req: Request, res: Response, next: any) => {
+  if (req.query) {
+    Object.keys(req.query).forEach(key => {
+      if (typeof req.query[key] === 'string') {
+        req.query[key] = (req.query[key] as string).replace(/[<>]/g, '');
+      }
+    });
+  }
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // SECURITY: Apply rate limiting
+  app.use('/api/', apiLimiter);
+  app.use('/api/auth/', authLimiter);
+  app.use('/api/upload/', uploadLimiter);
+
+  // SECURITY: Input sanitization
+  app.use(sanitizeQuery);
+
   // Performance middleware
   app.use(express.json({ limit: '10mb' })); // Increase JSON payload limit
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -80,14 +161,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     rolling: true, // Extend session on activity
     name: 'sessionid', // Custom session name
     cookie: {
-      secure: false, // HTTPS olsa bile false - Replit deployment için
+      secure: process.env.NODE_ENV === 'production', // Secure in production
       httpOnly: true,
       maxAge: SESSION_CONFIG.MAX_AGE,
-      sameSite: 'lax' // Cross-site request'ler için
+      sameSite: 'strict' // Stricter same-site policy
     }
   }));
 
-  // SERVER-SIDE ROUTER GUARD: Step validation middleware (CRITICAL SECURITY)
+  // SECURITY: Enhanced step route guard with better validation
   const stepRouteGuard = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const path = req.path;
     const classifiedId = req.query.classifiedId as string;
@@ -99,6 +180,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const currentStep = parseInt(stepMatch[1]);
+
+    // SECURITY: Validate step number
+    if (isNaN(currentStep) || currentStep < 1 || currentStep > 5) {
+      console.log(`🚨 SERVER GUARD: Invalid step number ${currentStep}`);
+      return res.redirect('/create-listing/step-1');
+    }
 
     // Skip validation for Step1
     if (currentStep === 1) {
@@ -112,9 +199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.redirect('/auth/login');
     }
 
-    // Require classifiedId for steps 2+
-    if (!classifiedId) {
-      console.log(`🚨 SERVER GUARD: No classifiedId for Step ${currentStep}, redirecting to Step1`);
+    // SECURITY: Validate classifiedId format
+    if (!classifiedId || !/^\d+$/.test(classifiedId)) {
+      console.log(`🚨 SERVER GUARD: Invalid classifiedId format: ${classifiedId}`);
       return res.redirect('/create-listing/step-1');
     }
 
@@ -123,7 +210,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!draft) {
         console.log(`🚨 SERVER GUARD: Draft ${classifiedId} not found for user ${req.session.user.id}`);
-        console.log(`🚨 SERVER GUARD: Available drafts for user:`, await storage.getUserDraftListings(req.session.user.id));
+        return res.redirect('/create-listing/step-1');
+      }
+
+      // SECURITY: Additional ownership validation
+      if (draft.userId !== req.session.user.id) {
+        console.log(`🚨 SERVER GUARD: Unauthorized access attempt - User ${req.session.user.id} tried to access draft ${classifiedId} owned by ${draft.userId}`);
         return res.redirect('/create-listing/step-1');
       }
 
@@ -133,14 +225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (currentStep >= 2 && !draft.step1Completed) {
         console.log(`🚨 SERVER GUARD: Step1 not completed for Step ${currentStep} access`);
-        console.log(`🚨 SERVER GUARD: Draft details:`, {
-          id: draft.id,
-          userId: draft.userId,
-          categoryId: draft.categoryId,
-          step1Completed: draft.step1Completed,
-          step2Completed: draft.step2Completed,
-          status: draft.status
-        });
         shouldRedirect = true;
         redirectStep = 1;
       }

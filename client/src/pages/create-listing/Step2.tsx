@@ -16,6 +16,9 @@ import { useCategoriesTree } from '@/hooks/useCategories';
 import { useState, useMemo, useEffect } from 'react';
 import type { Location, Category } from '@shared/schema';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
+import { useStepAuthentication } from '@/hooks/useStepAuthentication';
+import { useStepCompletion } from '@/hooks/useStepValidation';
+import { useClassifiedId } from '@/hooks/useClassifiedId';
 
 // Import new components
 import CategoryInfo from '@/components/listing/CategoryInfo';
@@ -30,13 +33,19 @@ export default function Step2() {
   const [, navigate] = useLocation();
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { prefetchStep3Data } = useStep3Prefetch();
-  
+
   // Validation state
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [showValidation, setShowValidation] = useState(false);
-  
+
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
+
+  // COMMON AUTHENTICATION: Using shared hook
+  const { isAuthenticated: stepAuth, authLoading: stepAuthLoading } = useStepAuthentication();
+
+  // COMMON STEP COMPLETION: Using shared hook
+  const { markStepCompletedMutation } = useStepCompletion();
 
   // Input handler 
   const handleInputChange = (fieldName: string, value: any) => {
@@ -48,7 +57,7 @@ export default function Step2() {
         return newErrors;
       });
     }
-    
+
     updateFormData({ [fieldName]: value });
   };
 
@@ -62,7 +71,7 @@ export default function Step2() {
         return newErrors;
       });
     }
-    
+
     // Draft'a kaydet
     dispatch({
       type: 'SET_CUSTOM_FIELDS',
@@ -71,32 +80,22 @@ export default function Step2() {
         description: value
       }
     });
-    
+
     // Database'e kaydet
     handleInputChange('description', value);
   };
 
+  // URL parameter support - Using shared hook
+  const classifiedIdFromUrl = useClassifiedId();
+  const currentClassifiedId = state.classifiedId || classifiedId || classifiedIdFromUrl;
 
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
-  
-  // URL parameter support
-  const urlParams = new URLSearchParams(window.location.search);
-  const classifiedIdParam = urlParams.get('classifiedId');
-  const currentClassifiedId = state.classifiedId || classifiedId || (classifiedIdParam ? parseInt(classifiedIdParam) : undefined);
-  
   // Draft listing hooks - GÜVENLİK KONTROLÜ EKLENDİ + LOADING STATE
   const { data: draftData, error: draftError, isError: isDraftError, isLoading: isDraftLoading } = useDraftListing(currentClassifiedId);
   const updateDraftMutation = useUpdateDraftListing();
 
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 2 validation  
   const stepGuardResult = useStepGuard(2, currentClassifiedId?.toString() || null, draftData as any || null, isDraftLoading);
-  
+
   // DEBUG: Log step guard results
   console.log('STEP2 DEBUG - StepGuard Result:', {
     currentStep: 2,
@@ -106,23 +105,13 @@ export default function Step2() {
     stepGuardResult: stepGuardResult
   });
 
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
-  });
+
 
   // SECURITY FIX: URL manipülasyonu koruması - İyileştirilmiş Logic
   useEffect(() => {
     if (isDraftError && draftError && currentClassifiedId) {
 
-      
+
       // 403 Forbidden: Başka kullanıcının draft'ına erişim
       if (draftError.message?.includes('erişim yetkiniz yok')) {
 
@@ -142,18 +131,18 @@ export default function Step2() {
       }
     }
   }, [isDraftError, draftError, currentClassifiedId, navigate]);
-  
+
   // Location selection state
   const [selectedCountry, setSelectedCountry] = useState<Location | null>(null);
   const [selectedCity, setSelectedCity] = useState<Location | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<Location | null>(null);
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<Location | null>(null);
-  
+
   // Fetch data
   const { data: locations = [] } = useLocationsTree();
   const { data: locationSettings } = useLocationSettings();
   const { data: allCategories = [] } = useCategoriesTree();
-  
+
   // Build flat categories array for path building
   const flatCategories = useMemo(() => {
     const flatten = (categories: Category[]): Category[] => {
@@ -168,7 +157,7 @@ export default function Step2() {
     };
     return flatten(allCategories);
   }, [allCategories]);
-  
+
   // Initialize classifiedId from URL on component mount
   useEffect(() => {
     if (currentClassifiedId && !state.classifiedId) {
@@ -188,12 +177,12 @@ export default function Step2() {
           draft: draftData 
         } 
       });
-      
+
       // Load form data from draft with proper field handling
       if (draftData.customFields) {
         try {
           const customFields = JSON.parse(draftData.customFields);
-          
+
           // CRITICAL FIX: Handle price parsing from database - ALWAYS OVERRIDE
           if (draftData.price) {
             try {
@@ -208,29 +197,29 @@ export default function Step2() {
               customFields.price = { value: draftData.price, unit: 'TL' };
             }
           }
-          
+
           // CRITICAL FIX: Handle description from separate field
           if (draftData.description && !customFields.description) {
             customFields.description = draftData.description;
           }
-          
+
           // CRITICAL FIX: Handle title from separate field
           if (draftData.title && !customFields.title) {
             customFields.title = draftData.title;
           }
-          
+
           dispatch({ type: 'SET_CUSTOM_FIELDS', payload: customFields });
         } catch (error) {
           console.error('Custom fields parse error:', error);
         }
       }
-      
+
       // Rebuild category path from draft categoryId
       if (draftData.categoryId) {
         const buildCategoryPath = (categoryId: number): Category[] => {
           const path: Category[] = [];
           let currentId = categoryId;
-          
+
           while (currentId) {
             const category = flatCategories.find(c => c.id === currentId);
             if (category) {
@@ -242,10 +231,10 @@ export default function Step2() {
           }
           return path;
         };
-        
+
         const category = flatCategories.find(c => c.id === draftData.categoryId);
         const path = buildCategoryPath(draftData.categoryId);
-        
+
         if (category && path.length > 0) {
           dispatch({ 
             type: 'SET_CATEGORY', 
@@ -253,7 +242,7 @@ export default function Step2() {
           });
         }
       }
-      
+
       // Load location data from draft
       if (draftData.locationData) {
         try {
@@ -268,12 +257,12 @@ export default function Step2() {
       }
     }
   }, [draftData, state.classifiedId, allCategories, flatCategories, dispatch]);
-  
+
   // Get available locations based on selection
   const availableCountries = useMemo(() => {
     return locations.filter(loc => loc.type === 'country');
   }, [locations]);
-  
+
   const availableCities = useMemo(() => {
     if (!selectedCountry) return [];
     const findChildren = (locs: any[], parentId: number): any[] => {
@@ -290,7 +279,7 @@ export default function Step2() {
     };
     return findChildren(locations, selectedCountry.id).filter((loc: any) => loc.type === 'city');
   }, [locations, selectedCountry]);
-  
+
   const availableDistricts = useMemo(() => {
     if (!selectedCity) return [];
     const findChildren = (locs: any[], parentId: number): any[] => {
@@ -324,7 +313,7 @@ export default function Step2() {
     };
     return findChildren(locations, selectedDistrict.id).filter((loc: any) => loc.type === 'neighborhood');
   }, [locations, selectedDistrict]);
-  
+
 
 
   // Ülke görünürlüğü kapalıyken otomatik ilk ülkeyi seç
@@ -341,11 +330,11 @@ export default function Step2() {
       });
     }
   }, [locationSettings, availableCountries, selectedCountry]);
-  
+
   const updateFormData = (newData: any) => {
     dispatch({ type: 'SET_CUSTOM_FIELDS', payload: { ...formData.customFields, ...newData } });
   };
-  
+
   // Test verilerini doldur fonksiyonu
   const fillTestData = () => {
     const testData = {
@@ -353,7 +342,7 @@ export default function Step2() {
       title: 'Test BMW 3.20d Sedan - Galeriden Temiz',
       description: '<p><strong>Temiz ve bakımlı araç!</strong></p><p>• Motor hacmi: 2000cc</p><p>• Yakıt türü: Dizel</p><p>• Vites: Manuel</p><p>• Renk: Beyaz</p><p>• Kilometre: 125.000km</p><p>• Hasar durumu: Boyasız</p>',
       price: { value: '485000', unit: 'TL' },
-      
+
       // Custom fields with exact API field names
       'Yıl': '2023',
       'Yakıt Tipi': 'Dizel',
@@ -382,7 +371,7 @@ export default function Step2() {
     if (availableCountries.length > 0) {
       const testCountry = availableCountries[0];
       setSelectedCountry(testCountry);
-      
+
       // İlk şehri seç
       setTimeout(() => {
         const testCity = availableCities.length > 0 ? availableCities[0] : null;
@@ -401,22 +390,22 @@ export default function Step2() {
     await executeWithProtection(async () => {
       // ENHANCED VALIDATION: Check both context formData AND draft data as fallback
       const errors: { [key: string]: string } = {};
-      
+
       // Parse draft data for validation fallback
       const draftCustomFields = draftData?.customFields ? JSON.parse(draftData.customFields) : {};
-      
+
       // Title validation - check context first, then draft data
       const titleValue = formData.customFields.title?.trim() || draftCustomFields.title?.trim() || draftData?.title?.trim();
       if (!titleValue) {
         errors.title = 'İlan başlığı zorunludur';
       }
-      
+
       // Description validation - check context first, then draft data  
       const descriptionValue = formData.customFields.description?.trim() || draftCustomFields.description?.trim() || draftData?.description?.trim();
       if (!descriptionValue) {
         errors.description = 'Açıklama zorunludur';
       }
-      
+
       // Price validation - check context first, then draft data
       const priceValue = formData.customFields.price?.value?.trim() || 
                         (draftCustomFields.price?.value?.trim()) ||
@@ -425,23 +414,23 @@ export default function Step2() {
       if (!priceValue) {
         errors.price = 'Fiyat zorunludur';
       }
-    
+
       // Custom fields validation - check context first, then draft data
       customFields?.forEach(field => {
         const contextValue = formData.customFields[field.fieldName];
         const draftValue = draftCustomFields[field.fieldName];
-        
+
         // Check both sources for field value
         const fieldValue = contextValue || draftValue;
-        
+
         if (!fieldValue || (typeof fieldValue === 'string' && !fieldValue.trim())) {
           errors[field.fieldName] = `${field.label} alanı zorunludur`;
         }
       });
-    
+
       // Location validation - check current selections and draft data
       const draftLocationData = draftData?.locationData ? JSON.parse(draftData.locationData) : {};
-      
+
       if (locationSettings?.showCountry && !selectedCountry && !draftLocationData.country) {
         errors.country = 'Ülke seçimi zorunludur';
       }
@@ -454,14 +443,14 @@ export default function Step2() {
       if (locationSettings?.showNeighborhood && !selectedNeighborhood && !draftLocationData.neighborhood) {
         errors.neighborhood = 'Mahalle seçimi zorunludur';
       }
-    
+
       // Show validation errors if any exist
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
         setShowValidation(true);
         return;
       }
-    
+
     // Clear validation state if all fields are valid
     setValidationErrors({});
     setShowValidation(false);
@@ -486,21 +475,21 @@ export default function Step2() {
           }
         })
       };
-      
+
       // Data saved successfully
-      
+
       try {
         await updateDraftMutation.mutateAsync({
           id: currentClassifiedId,
           data: draftData
         });
-        
+
         // PROGRESSIVE DISCLOSURE: Mark Step 2 as completed with server-side validation
         try {
           await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 2 });
         } catch (serverError: any) {
           console.error('Server validation error:', serverError);
-          
+
           // Handle server-side validation errors
           if (serverError.response?.data?.validationErrors) {
             const serverErrors: { [key: string]: string } = {};
@@ -515,17 +504,17 @@ export default function Step2() {
               else if (error.includes('mahalle')) serverErrors.neighborhood = error;
               else serverErrors.general = error;
             });
-            
+
             setValidationErrors(serverErrors);
             setShowValidation(true);
           } else {
             setValidationErrors({ general: 'Form doğrulama hatası oluştu' });
             setShowValidation(true);
           }
-          
+
           return;
         }
-        
+
         // Step3 verilerini prefetch et - Step3'e geçmeden önce
         if (user?.id) {
           prefetchStep3Data(currentClassifiedId, user.id);
@@ -535,7 +524,7 @@ export default function Step2() {
         return;
       }
     }
-    
+
       dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
       const url = currentClassifiedId ? 
         `/create-listing/step-3?classifiedId=${currentClassifiedId}` : 
@@ -565,13 +554,13 @@ export default function Step2() {
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className="lg:pt-6 pt-[64px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
-          
-         
+
+
 
           {/* Kategori Bilgi Kutusu */}
           <CategoryInfo categoryPath={categoryPath} />
 
-   
+
 
           {/* İlan Detayları Kutusu */}
           <div className="mb-6">
@@ -582,7 +571,7 @@ export default function Step2() {
                   İlan Detayları
                 </h3>
 
-                
+
         {/* İlan Başlığı Input - Tüm kategoriler için geçerli */}
         <div className="space-y-2 mb-6">
           <label className="block text-sm font-medium text-gray-700">
@@ -713,14 +702,14 @@ export default function Step2() {
           <div className="space-y-6">
             {customFields.map((field) => {
             const currentValue = formData.customFields[field.fieldName] || '';
-            
+
             return (
               <div key={field.id} className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   {field.label}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
-                
+
                 {field.fieldType === 'text' && (
                   field.hasUnits && field.unitOptions ? (
                     (() => {
@@ -728,7 +717,7 @@ export default function Step2() {
                       const selectedUnit = typeof currentValue === 'object' 
                         ? currentValue.unit || field.defaultUnit || unitOptions[0]
                         : field.defaultUnit || unitOptions[0];
-                      
+
                       if (unitOptions.length <= 1) {
                         return (
                           <div className="relative lg:w-[30%] w-full">
@@ -751,7 +740,7 @@ export default function Step2() {
                           </div>
                         );
                       }
-                      
+
                       return (
                         <div className="relative lg:w-[30%] w-full">
                           <input
@@ -806,7 +795,7 @@ export default function Step2() {
                       const selectedUnit = typeof currentValue === 'object' 
                         ? currentValue.unit || field.defaultUnit || unitOptions[0]
                         : field.defaultUnit || unitOptions[0];
-                      
+
                       if (unitOptions.length <= 1) {
                         return (
                           <div className="relative lg:w-[30%] w-full">
@@ -818,14 +807,14 @@ export default function Step2() {
                               })()}
                               onChange={(e) => {
                                 let processedValue = e.target.value.replace(/\D/g, '');
-                                
+
                                 if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
                                   return;
                                 }
                                 if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
                                   return;
                                 }
-                                
+
                                 handleInputChange(field.fieldName, { value: processedValue, unit: selectedUnit });
                               }}
                               placeholder={field.placeholder || ''}
@@ -842,7 +831,7 @@ export default function Step2() {
                           </div>
                         );
                       }
-                      
+
                       return (
                         <div className="relative lg:w-[30%] w-full">
                           <input
@@ -853,14 +842,14 @@ export default function Step2() {
                             })()}
                             onChange={(e) => {
                               let processedValue = e.target.value.replace(/\D/g, '');
-                              
+
                               if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
                                 return;
                               }
                               if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
                                 return;
                               }
-                              
+
                               handleInputChange(field.fieldName, { value: processedValue, unit: selectedUnit });
                             }}
                             placeholder={field.placeholder || ''}
@@ -897,14 +886,14 @@ export default function Step2() {
                       })()}
                       onChange={(e) => {
                         let processedValue = e.target.value.replace(/\D/g, '');
-                        
+
                         if (processedValue && field.maxValue !== null && parseInt(processedValue) > field.maxValue) {
                           return;
                         }
                         if (processedValue && field.minValue !== null && parseInt(processedValue) < field.minValue && processedValue.length >= field.minValue.toString().length) {
                           return;
                         }
-                        
+
                         handleInputChange(field.fieldName, processedValue);
                       }}
                       placeholder={field.placeholder || ''}
@@ -1023,15 +1012,15 @@ export default function Step2() {
                     <span className="ml-2 text-sm text-gray-700">{field.label}</span>
                   </label>
                 )}
-                
 
-                
+
+
                 {field.fieldType === 'number' && field.minValue !== null && field.maxValue !== null && (
                   <p className="text-sm text-gray-500">
                     {field.minValue} - {field.maxValue} arasında
                   </p>
                 )}
-                
+
                 {/* Validation Error Message */}
                 {showValidation && validationErrors[field.fieldName] && (
                   <p className="text-sm text-red-600 mt-2">Bu alan boş bırakılmamalıdır.</p>
@@ -1071,7 +1060,7 @@ export default function Step2() {
                         onChange={(e) => {
                           const countryId = parseInt(e.target.value);
                           const country = availableCountries.find(c => c.id === countryId);
-                          
+
                           // Clear validation error when user makes selection
                           if (validationErrors['country']) {
                             setValidationErrors(prev => {
@@ -1080,7 +1069,7 @@ export default function Step2() {
                               return newErrors;
                             });
                           }
-                          
+
                           setSelectedCountry(country || null);
                           setSelectedCity(null);
                           setSelectedDistrict(null);
@@ -1125,7 +1114,7 @@ export default function Step2() {
                         onChange={(e) => {
                           const cityId = parseInt(e.target.value);
                           const city = availableCities.find(c => c.id === cityId);
-                          
+
                           // Clear validation error when user makes selection
                           if (validationErrors['city']) {
                             setValidationErrors(prev => {
@@ -1134,7 +1123,7 @@ export default function Step2() {
                               return newErrors;
                             });
                           }
-                          
+
                           setSelectedCity(city || null);
                           setSelectedDistrict(null);
                           setSelectedNeighborhood(null);
@@ -1181,7 +1170,7 @@ export default function Step2() {
                         onChange={(e) => {
                           const districtId = parseInt(e.target.value);
                           const district = availableDistricts.find(d => d.id === districtId);
-                          
+
                           // Clear validation error when user makes selection
                           if (validationErrors['district']) {
                             setValidationErrors(prev => {
@@ -1190,7 +1179,7 @@ export default function Step2() {
                               return newErrors;
                             });
                           }
-                          
+
                           setSelectedDistrict(district || null);
                           setSelectedNeighborhood(null);
                           updateFormData({
@@ -1236,7 +1225,7 @@ export default function Step2() {
                         onChange={(e) => {
                           const neighborhoodId = parseInt(e.target.value);
                           const neighborhood = availableNeighborhoods.find(n => n.id === neighborhoodId);
-                          
+
                           // Clear validation error when user makes selection
                           if (validationErrors['neighborhood']) {
                             setValidationErrors(prev => {
@@ -1245,7 +1234,7 @@ export default function Step2() {
                               return newErrors;
                             });
                           }
-                          
+
                           setSelectedNeighborhood(neighborhood || null);
                           updateFormData({
                             location: {
@@ -1292,7 +1281,7 @@ export default function Step2() {
             >
               🧪 Tüm Verileri Doldur (Test)
             </button>
-            
+
             {/* Sonraki Adım Butonu - Double-click protection */}
             <button
               onClick={nextStep}
@@ -1307,7 +1296,7 @@ export default function Step2() {
             </button>
           </div>
         </div>
-        
+
         {/* Performance indicator */}
         <PageLoadIndicator />
       </div>

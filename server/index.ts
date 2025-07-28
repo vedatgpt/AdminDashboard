@@ -1,5 +1,9 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import session from 'express-session';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { type User } from "@shared/schema";
@@ -13,13 +17,74 @@ declare module "express-session" {
     };
     userType?: "user" | "personnel";
     userId?: number;
+    csrfToken?: string;
   }
 }
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
+// SECURITY: Basic security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// SECURITY: Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// SECURITY: Enhanced session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'strict'
+  },
+  name: 'sessionId', // Don't use default 'connect.sid'
+}));
+
+// SECURITY: CSRF Protection Middleware
+app.use((req, res, next) => {
+  // Generate CSRF token for new sessions
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+  }
+  
+  // Add CSRF token to response headers for client access
+  res.setHeader('X-CSRF-Token', req.session.csrfToken);
+  
+  // Validate CSRF token for state-changing requests
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    const token = (req.headers['x-csrf-token'] as string) || (req.headers['x-xsrf-token'] as string);
+    if (!token || token !== req.session.csrfToken) {
+      return res.status(403).json({ error: 'CSRF token validation failed' });
+    }
+  }
+  
+  next();
+});
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// SECURITY: Request logging with sanitization
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -36,7 +101,11 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        // SECURITY: Sanitize sensitive data from logs
+        const sanitizedResponse = { ...capturedJsonResponse };
+        if (sanitizedResponse.password) sanitizedResponse.password = '[REDACTED]';
+        if (sanitizedResponse.token) sanitizedResponse.token = '[REDACTED]';
+        logLine += ` :: ${JSON.stringify(sanitizedResponse)}`;
       }
 
       if (logLine.length > 80) {
@@ -53,12 +122,21 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // SECURITY: Production error handling
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    
+    // SECURITY: Don't leak internal errors in production
+    const message = process.env.NODE_ENV === 'production' 
+      ? (status === 500 ? 'Internal Server Error' : err.message || 'An error occurred')
+      : err.message || "Internal Server Error";
+
+    // SECURITY: Log errors but don't expose them
+    if (status === 500) {
+      console.error('Server Error:', err);
+    }
 
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after

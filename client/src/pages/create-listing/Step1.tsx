@@ -13,6 +13,8 @@ import { Category } from '@shared/schema';
 import DraftContinueModal from '@/components/DraftContinueModal';
 import { useClassifiedId } from '@/hooks/useClassifiedId';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
+import { useStepAuthentication } from '@/hooks/useStepAuthentication';
+import { useStepCompletion } from '@/hooks/useStepValidation';
 
 import ProgressBar from '@/components/listing/ProgressBar';
 import BreadcrumbNav from '@/components/listing/BreadcrumbNav';
@@ -30,16 +32,12 @@ export default function CreateListingStep1() {
   const { handleCategoryHover } = useSmartPrefetch();
   const { prefetchStep2Data } = useStep2Prefetch();
   const { smartPrefetchStep1 } = useStep1Prefetch();
-  
+
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
-  // Redirect to login if not authenticated - simplified
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
+  // COMMON AUTHENTICATION: Using shared hook
+  const { isAuthenticated: stepAuth, authLoading: stepAuthLoading } = useStepAuthentication();
 
   // Step1 prefetch - sayfa açılır açılmaz draft modal için veri prefetch'i
   useEffect(() => {
@@ -47,39 +45,44 @@ export default function CreateListingStep1() {
       smartPrefetchStep1(user.id, 'Step1 sayfa açılışı');
     }
   }, [authLoading, isAuthenticated, user?.id, smartPrefetchStep1]);
-  
+
   const [currentCategories, setCurrentCategories] = useState<Category[]>([]);
   const [categoryPath, setCategoryPath] = useState<Category[]>([]);
-  
+
   // URL parameter support for classified ID - Custom hook kullanımı
   const classifiedId = useClassifiedId();
-  
+
   // Draft listing hooks - only enabled when authenticated
   const { data: draftData } = useDraftListing(classifiedId);
   const createDraftMutation = useCreateDraftListing();
   const updateDraftMutation = useUpdateDraftListing();
   const deleteDraftMutation = useDeleteDraftListing();
 
-  // Step completion marking mutation
-  const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
-      const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Step completion update failed');
-      return response.json();
-    },
-  });
-  
+  // COMMON STEP COMPLETION: Using shared hook
+  const { markStepCompletedMutation } = useStepCompletion();
+
   // Modal state
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [pendingCategory, setPendingCategory] = useState<Category | null>(null);
   const [pendingPath, setPendingPath] = useState<Category[]>([]);
-  
+
   // Get all user drafts for checking main categories
   // DEPLOY FIX: Enhanced draft listing with shorter cache for modal system
-  const { data: allUserDrafts = [], refetch: refetchUserDrafts } = useUserDraftListings();
+  const { data: allUserDrafts = [], refetch: refetchUserDrafts, isLoading: isDraftListingsLoading } = useUserDraftListings();
+  
+  // CRITICAL FIX: Reset modal state when user changes
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🔄 Step1: User changed to ID', user.id, '- Resetting modal state');
+      setShowDraftModal(false);
+      setCurrentExistingDraft(null);
+      setPendingCategory(null);
+      setPendingPath([]);
+      
+      // Force refresh draft listings for new user
+      refetchUserDrafts();
+    }
+  }, [user?.id, refetchUserDrafts]);
 
   // Build flat categories array for easy lookup - optimized
   const flatCategories = React.useMemo(() => {
@@ -116,7 +119,7 @@ export default function CreateListingStep1() {
           draft: draftData 
         } 
       });
-      
+
       // If draft has category, set it up
       if (draftData.categoryId) {
         const category = flatCategories.find(cat => cat.id === draftData.categoryId);
@@ -131,7 +134,7 @@ export default function CreateListingStep1() {
             }
             return path;
           };
-          
+
           const path = buildPath(category);
           setCategoryPath(path);
           dispatch({ type: 'SET_CATEGORY', payload: { category, path } });
@@ -162,77 +165,80 @@ export default function CreateListingStep1() {
 
   // Check if there's a draft for the main category
   const checkForMainCategoryDraft = (category: Category): DraftListing | null => {
-    if (!isAuthenticated || !allUserDrafts) {
-
+    if (!isAuthenticated || !allUserDrafts || isDraftListingsLoading) {
+      console.log('🔍 checkForMainCategoryDraft: Not ready - auth:', isAuthenticated, 'drafts:', !!allUserDrafts, 'loading:', isDraftListingsLoading);
       return null;
     }
-    
 
-    
+    console.log('🔍 checkForMainCategoryDraft: Checking', category.name, 'against', allUserDrafts.length, 'drafts');
+
     // Ana kategori için draft kontrolü - ana kategorinin alt kategorilerinde herhangi bir draft var mı?
     const mainCategoryDraft = allUserDrafts.find(draft => {
       if (!draft.categoryId) {
-
+        console.log('🔍 checkForMainCategoryDraft: Draft has no categoryId:', draft.id);
         return false;
       }
-      
 
-      
       // Draft'ın kategorisini bul
       const draftCategory = flatCategories.find(cat => cat.id === draft.categoryId);
       if (!draftCategory) {
-
+        console.log('🔍 checkForMainCategoryDraft: Draft category not found:', draft.categoryId);
         return false;
       }
-      
 
-      
       // Draft'ın ana kategorisini bul (path'in en başındaki)
       let rootCategory = draftCategory;
       const pathToRoot = [rootCategory.name];
-      
+
       while (rootCategory.parentId) {
         const parent = flatCategories.find(cat => cat.id === rootCategory.parentId);
         if (parent) {
           rootCategory = parent;
           pathToRoot.unshift(parent.name);
         } else {
-
+          console.log('🔍 checkForMainCategoryDraft: Parent category not found:', rootCategory.parentId);
           break;
         }
       }
-      
 
-      
-      return rootCategory.id === category.id;
+      const isMatch = rootCategory.id === category.id;
+      console.log('🔍 checkForMainCategoryDraft:', draftCategory.name, 'root:', rootCategory.name, 'match:', isMatch);
+      return isMatch;
     });
-    
 
-    
+    if (mainCategoryDraft) {
+      console.log('✅ checkForMainCategoryDraft: Found draft', mainCategoryDraft.id, 'for category', category.name);
+    } else {
+      console.log('❌ checkForMainCategoryDraft: No draft found for category', category.name);
+    }
+
     return mainCategoryDraft || null;
   };
 
   // Handle category selection - DEPLOY FIX VERSION
   const handleCategorySelect = (category: Category) => {
 
-    
+
     // Check if this is a root level category (no parent)
     const isRootCategory = !category.parentId;
-    
+
     let newPath;
-    
+
     if (isRootCategory) {
       // Ana kategori seçildiğinde - mevcut draft kontrolü yap
+      console.log('🔍 handleCategorySelect: Root category selected:', category.name);
 
-      
-      // INSTANT FIX: Prefetch edilmiş cache data kullan - API çağrısı yapma
+      // CRITICAL FIX: Sadece draft loading tamamlandığında kontrol et
+      if (isDraftListingsLoading) {
+        console.log('🔄 handleCategorySelect: Draft listings still loading, wait...');
+        return;
+      }
 
-      
       // Ana kategori için draft var mı kontrol et
       const mainCategoryDraft = checkForMainCategoryDraft(category);
-      
-      if (mainCategoryDraft && isAuthenticated) {
 
+      if (mainCategoryDraft && isAuthenticated) {
+        console.log('✅ handleCategorySelect: Found draft, showing modal');
         // Modal'ı göster
         setPendingCategory(category);
         setPendingPath([category]);
@@ -240,7 +246,7 @@ export default function CreateListingStep1() {
         setShowDraftModal(true);
         return; // Alt kategorileri yükleme, modal'a bekle
       } else {
-
+        console.log('❌ handleCategorySelect: No draft found, proceeding normally');
         // Eğer draft yoksa normal akışı devam ettir
         const newPath = [category];
         setCategoryPath(newPath);
@@ -252,14 +258,14 @@ export default function CreateListingStep1() {
           } 
         });
       }
-      
+
       return; // Async işlem beklendiği için early return
     } else {
       // Find which level this category belongs to
       const currentLevel = getCategoryLevels().findIndex(levelCategories => 
         levelCategories.some(c => c.id === category.id)
       );
-      
+
       if (currentLevel >= 0) {
         // Replace selection at this level and remove all subsequent levels
         newPath = categoryPath.slice(0, currentLevel);
@@ -268,16 +274,16 @@ export default function CreateListingStep1() {
         // Fallback: add to end of path
         newPath = [...categoryPath, category];
       }
-      
+
       // Alt kategori seçildiğinde normal işlem
       if (!hasChildren(category)) {
         setPendingCategory(category);
         setPendingPath(newPath);
       }
     }
-    
+
     setCategoryPath(newPath);
-    
+
     // Always update the listing context with the new path - this ensures navbar back button updates
     dispatch({ 
       type: 'SET_CATEGORY_WITH_PATH', 
@@ -301,7 +307,7 @@ export default function CreateListingStep1() {
         type: 'SET_CATEGORY',
         payload: { category, path: newPath }
       });
-      
+
       // Step2 verilerini prefetch et - final kategori seçildiği anda
       prefetchStep2Data(category.id);
     }
@@ -332,7 +338,7 @@ export default function CreateListingStep1() {
 
     try {
       let draftId: number;
-      
+
       // Create new draft for this category
       const draftResult = await createDraftMutation.mutateAsync({
         categoryId: pendingCategory.id,
@@ -344,12 +350,12 @@ export default function CreateListingStep1() {
         locationData: null,
         status: 'draft' as const,
       });
-      
+
       draftId = draftResult.id;
-      
+
       // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
       await markStepCompletedMutation.mutateAsync({ classifiedId: draftId, step: 1 });
-      
+
       // Update context with new draft
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: draftId });
       dispatch({ type: 'SET_IS_DRAFT', payload: true });
@@ -360,10 +366,10 @@ export default function CreateListingStep1() {
           path: pendingPath 
         } 
       });
-      
+
       // Step2 verilerini prefetch et - yeni draft oluşturulurken
       prefetchStep2Data(pendingCategory.id);
-      
+
       // Navigate to step 2
       navigate(`/create-listing/step-2?classifiedId=${draftId}`);
     } catch (error) {
@@ -379,17 +385,17 @@ export default function CreateListingStep1() {
   // Modal handlers
   const handleContinueWithDraft = async () => {
     if (!currentExistingDraft || !pendingCategory) return;
-    
+
     try {
       // CRITICAL FIX: Mark Step 1 as completed for existing draft
       await markStepCompletedMutation.mutateAsync({ 
         classifiedId: currentExistingDraft.id, 
         step: 1 
       });
-      
+
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
-      
+
       // Set draft info in context
       dispatch({ type: 'SET_CLASSIFIED_ID', payload: currentExistingDraft.id });
       dispatch({ type: 'SET_IS_DRAFT', payload: true });
@@ -400,10 +406,10 @@ export default function CreateListingStep1() {
           path: pendingPath 
         } 
       });
-      
+
       // Step2 verilerini prefetch et - mevcut draft ile devam edilirken
       prefetchStep2Data(pendingCategory.id);
-      
+
       // Navigate to step 2
       navigate(`/create-listing/step-2?classifiedId=${currentExistingDraft.id}`);
     } catch (error) {
@@ -418,10 +424,10 @@ export default function CreateListingStep1() {
 
   const handleCreateNewListing = async () => {
     if (!currentExistingDraft || !pendingCategory) return;
-    
+
     try {
 
-      
+
       // DEPLOY FIX: Enhanced error handling for draft deletion
       const response = await fetch(`/api/draft-listings/${currentExistingDraft.id}`, {
         method: 'DELETE',
@@ -430,37 +436,37 @@ export default function CreateListingStep1() {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
         console.error('Draft silme hatası:', response.status, errorData);
         throw new Error(errorData.error || `HTTP ${response.status}: Draft silinemedi`);
       }
-      
 
-      
+
+
       // DEPLOY FIX: Force cache invalidation after successful deletion
       await refetchUserDrafts();
-      
+
       // Modal'ı kapat
       setShowDraftModal(false);
       setCurrentExistingDraft(null);
-      
 
-      
+
+
       // Tüm context'i sıfırla - eski form verilerini temizle
       dispatch({ type: 'RESET_LISTING' });
-      
+
       // URL'den classifiedId'yi temizle
       const currentUrl = window.location.pathname;
       window.history.replaceState({}, '', currentUrl);
-      
 
-      
+
+
       // Ana kategori seçimini devam ettir - alt kategorileri göster
       const newPath = [pendingCategory];
       setCategoryPath(newPath);
-      
+
       // Context'i ana kategori ile güncelle (temiz state üzerinde)
       dispatch({ 
         type: 'SET_CATEGORY_WITH_PATH', 
@@ -469,13 +475,13 @@ export default function CreateListingStep1() {
           path: newPath 
         } 
       });
-      
+
       // Pending'i temizle
       setPendingCategory(null);
       setPendingPath([]);
-      
 
-      
+
+
     } catch (error) {
 
       const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
@@ -503,13 +509,13 @@ export default function CreateListingStep1() {
   // Build category levels for horizontal boxes
   const getCategoryLevels = () => {
     const levels = [];
-    
+
     // First level: Root categories
     const rootCategories = allCategories.filter(cat => !cat.parentId);
     if (rootCategories.length > 0) {
       levels.push(rootCategories);
     }
-    
+
     // Add subsequent levels based on category path
     let currentLevelCategories = rootCategories;
     for (let i = 0; i < categoryPath.length; i++) {
@@ -520,7 +526,7 @@ export default function CreateListingStep1() {
         currentLevelCategories = nextLevelCategories;
       }
     }
-    
+
     return levels;
   };
 
@@ -535,7 +541,7 @@ export default function CreateListingStep1() {
     if (categoryPath.length > 0) {
       const newPath = categoryPath.slice(0, -1);
       setCategoryPath(newPath);
-      
+
       // Update listing state - fix null reference error
       const selectedCategory = newPath.length > 0 ? newPath[newPath.length - 1] : null;
       dispatch({ 
@@ -554,7 +560,7 @@ export default function CreateListingStep1() {
       // Return root categories for mobile when no category is selected
       return allCategories.filter(cat => !cat.parentId);
     }
-    
+
     // For mobile, show children of the last selected category
     const currentParent = categoryPath[categoryPath.length - 1];
     return currentParent.children || [];
@@ -576,11 +582,11 @@ export default function CreateListingStep1() {
           </div>
         )}
       </div>
-      
+
       {/* Main content with dynamic padding based on breadcrumb presence */}
       <div className={`${categoryPath.length > 0 ? 'lg:pt-6 pt-[108px]' : 'lg:pt-6 pt-[108px]'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-3">
-          
+
           {/* Page Title - Only show on desktop */}
           <div className="hidden lg:block mb-6 text-left">
             <h1 className="text-1xl font-medium text-gray-900">Adım Adım Kategori Seçimi</h1>
@@ -641,7 +647,7 @@ export default function CreateListingStep1() {
                         <div className="p-2 max-h-80 overflow-y-auto">
                           {levelCategories.map(category => {
                             const isCurrentLevelSelected = actualLevelIndex < categoryPath.length && categoryPath[actualLevelIndex]?.id === category.id;
-                            
+
                             return (
                               <div
                                 key={category.id}
@@ -668,7 +674,7 @@ export default function CreateListingStep1() {
                       </div>
                     );
                   })}
-                  
+
                   {/* Desktop Completion box */}
                   {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
                     <div className="flex-shrink-0 w-60 bg-green-50 border border-green-200 rounded-lg overflow-hidden">
@@ -688,9 +694,9 @@ export default function CreateListingStep1() {
                               navigate('/auth/login');
                               return;
                             }
-                            
+
                             let currentClassifiedId = state.classifiedId || classifiedId;
-                            
+
                             // Create draft only if it doesn't exist
                             if (!currentClassifiedId) {
                               try {
@@ -706,7 +712,7 @@ export default function CreateListingStep1() {
                                 return;
                               }
                             }
-                            
+
                             // Update draft with selected category
                             if (currentClassifiedId && state.selectedCategory) {
                               try {
@@ -714,14 +720,14 @@ export default function CreateListingStep1() {
                                   id: currentClassifiedId,
                                   data: { categoryId: state.selectedCategory.id }
                                 });
-                                
+
                                 // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
                                 await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                               } catch (error) {
                                 console.error('Draft güncellenemedi:', error);
                               }
                             }
-                            
+
                             dispatch({ type: 'SET_STEP', payload: 2 });
                             const url = currentClassifiedId ? 
                               `/create-listing/step-2?classifiedId=${currentClassifiedId}` : 
@@ -776,7 +782,7 @@ export default function CreateListingStep1() {
                   </div>
                 </div>
               ))}
-              
+
               {/* Mobile Completion */}
               {categoryPath.length > 0 && !hasChildren(categoryPath[categoryPath.length - 1]) && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center space-y-4">
@@ -795,10 +801,10 @@ export default function CreateListingStep1() {
                         navigate('/auth/login');
                         return;
                       }
-                      
+
                       // Eğer context'te eski bir classifiedId varsa ama o draft silinmişse temizle
                       let currentClassifiedId = state.classifiedId;
-                      
+
                       // Create new draft - her zaman yeni draft oluştur
                       try {
                         const newDraft = await createDraftMutation.mutateAsync({
@@ -814,14 +820,14 @@ export default function CreateListingStep1() {
                         currentClassifiedId = newDraft.id;
                         dispatch({ type: 'SET_CLASSIFIED_ID', payload: newDraft.id });
                         dispatch({ type: 'SET_IS_DRAFT', payload: true });
-                        
+
                         // PROGRESSIVE DISCLOSURE: Mark Step 1 as completed
                         await markStepCompletedMutation.mutateAsync({ classifiedId: currentClassifiedId, step: 1 });
                       } catch (error) {
                         console.error('Draft oluşturulamadı:', error);
                         return;
                       }
-                      
+
                       dispatch({ type: 'SET_STEP', payload: 2 });
                       const url = `/create-listing/step-2?classifiedId=${currentClassifiedId}`;
                       navigate(url);
@@ -840,11 +846,11 @@ export default function CreateListingStep1() {
             </div>
           </>
         </div>
-        
+
         {/* Performance indicator */}
         <PageLoadIndicator />
       </div>
-      
+
       {/* Draft Continue Modal */}
       {currentExistingDraft && (
         <DraftContinueModal

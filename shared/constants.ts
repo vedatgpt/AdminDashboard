@@ -1,6 +1,6 @@
 // Listing configuration constants
 export const LISTING_CONFIG = {
-  MAX_IMAGES: 10,
+  MAX_IMAGES: 20,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB in bytes
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'] as const,
   ALLOWED_EXTENSIONS: ['.jpg', '.jpeg', '.png', '.webp'] as const,
