@@ -24,7 +24,7 @@ const NavbarMobile: React.FC<NavbarMobileProps> = ({ showBackButton = true, onBa
   };
 
   return (
-    <div className="fixed top-0 w-full bg-white border-b border-gray-300 z-50">
+    <div className="fixed top-0 w-full bg-gradient-to-b from-white to-gray-100 border-b border-gray-300 z-50">
       <header className="flex items-center justify-center w-full h-[56px]">
         <div className="flex items-center justify-between w-full max-w-screen-xl px-4 sm:px-6 md:px-8 lg:px-8">
           {/* Left side - Back arrow */}

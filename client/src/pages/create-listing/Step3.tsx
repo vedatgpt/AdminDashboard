@@ -37,7 +37,7 @@ export default function Step3() {
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateDraftMutation = useUpdateDraftListing();
-  
+
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
 
@@ -72,9 +72,9 @@ export default function Step3() {
   });
 
   // EMERGENCY DEBUG ve manuel validation kodları kaldırıldı
-  
+
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 3 validation - REMOVED
-  
+
   // DEBUG: Log step guard results - REMOVED
 
   // Step completion marking mutation
@@ -126,7 +126,7 @@ export default function Step3() {
       console.log('🔍 Step-3 Validasyon: draftData.description:', draftData.description);
       console.log('🔍 Step-3 Validasyon: draftData.price:', draftData.price);
       console.log('🔍 Step-3 Validasyon: draftData.customFields:', draftData.customFields);
-      
+
       let customFields;
       try {
         customFields = typeof draftData.customFields === 'string' 
@@ -149,7 +149,7 @@ export default function Step3() {
       let titleValue = null;
       let descriptionValue = null;
       let priceValue = null;
-      
+
       // Title kontrolü - önce draftData'dan, sonra customFields'den
       if (draftData?.title?.trim()) {
         titleValue = draftData.title.trim();
@@ -158,7 +158,7 @@ export default function Step3() {
         titleValue = customFields.title.trim();
         console.log('🔍 Step-3 Validasyon: title from customFields:', titleValue);
       }
-      
+
       // Description kontrolü - önce draftData'dan, sonra customFields'den
       if (draftData?.description?.trim()) {
         descriptionValue = draftData.description.trim();
@@ -167,7 +167,7 @@ export default function Step3() {
         descriptionValue = customFields.description.trim();
         console.log('🔍 Step-3 Validasyon: description from customFields:', descriptionValue);
       }
-      
+
       // Price kontrolü - önce draftData.price'dan, sonra customFields.price'dan
       if (draftData?.price) {
         try {
@@ -188,14 +188,14 @@ export default function Step3() {
           console.log('🔍 Step-3 Validasyon: price from customFields (string):', priceValue);
         }
       }
-      
+
       console.log('🔍 Step-3 Validasyon: Final titleValue:', titleValue);
       console.log('🔍 Step-3 Validasyon: Final descriptionValue:', descriptionValue);
       console.log('🔍 Step-3 Validasyon: Final priceValue:', priceValue);
-      
+
       // Geçici olarak validasyonu devre dışı bırakıyoruz
       console.log('✅ Step-3 Validasyon: Geçici olarak devre dışı');
-      
+
       // if (!titleValue || 
       //     !descriptionValue || 
       //     !priceValue) {
@@ -211,7 +211,7 @@ export default function Step3() {
       //   navigate(`/create-listing/step-2?classifiedId=${currentClassifiedId}`);
       //   return;
       // }
-      
+
       console.log('✅ Step-3 Validasyon: Tüm alanlar tamam!');
     }
   }, [draftData, currentClassifiedId, isDraftLoading, navigate, toast]);
@@ -251,23 +251,24 @@ export default function Step3() {
   // Load existing photos from draft when component mounts
   // Note: draftData already defined above for security check
 
+  // Track if we've already loaded draft data to prevent re-loading
+  const [hasLoadedDraftData, setHasLoadedDraftData] = useState(false);
+
   // Load photos from draft data when available (only once when component mounts)
   useEffect(() => {
-    if (draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
+    if (!hasLoadedDraftData && draftData && typeof draftData === 'object' && draftData !== null && 'photos' in draftData && draftData.photos) {
       try {
         const existingPhotos = JSON.parse(draftData.photos as string);
 
         if (Array.isArray(existingPhotos) && existingPhotos.length > 0) {
-          // Only set if images array is empty to avoid overriding current state
-          setImages(prev => {
-            return prev.length === 0 ? existingPhotos : prev;
-          });
+          setImages(existingPhotos);
+          setHasLoadedDraftData(true);
         }
       } catch (error) {
         // Handle parsing error silently
       }
     }
-  }, [draftData]);
+  }, [draftData, hasLoadedDraftData]);
 
   // Debounced save function
   const debouncedSave = useCallback((updatedImages: UploadedImage[]) => {
@@ -349,6 +350,9 @@ export default function Step3() {
               return newImages;
             });
 
+            // Prevent draft data from reloading after upload
+            setHasLoadedDraftData(true);
+
             // Fotoğraf upload tamamlandıktan sonra Step4 prefetch tetikle
             if (currentClassifiedId && user?.id) {
               smartPrefetchStep4(currentClassifiedId, user.id, 'Fotoğraf yükleme');
@@ -410,6 +414,9 @@ export default function Step3() {
         }
         return prev.filter(img => img.id !== imageId);
       });
+
+      // Prevent draft data from reloading after delete
+      setHasLoadedDraftData(true);
 
       // Fotoğraf silindikten sonra Step4 prefetch tetikle
       if (currentClassifiedId && user?.id) {
