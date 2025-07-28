@@ -87,11 +87,11 @@ export default function Step5() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch category details to check free listing limits
+  // Fetch category details to check free listing limits - FRESH DATA
   const { data: category, refetch: refetchCategory } = useQuery<Category>({
     queryKey: ['/api/categories', draftListing?.categoryId],
     enabled: !!draftListing?.categoryId,
-    staleTime: 30 * 1000, // 30 seconds cache
+    staleTime: 0, // Always fresh data for admin changes
     refetchInterval: false, // Manual control
   });
 
@@ -161,10 +161,10 @@ export default function Step5() {
     });
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice, executeWithProtection]);
 
-  // Fetch all categories in flat structure to check for inheritance
+  // Fetch all categories in flat structure to check for inheritance - FRESH DATA
   const { data: allCategories = [], refetch: refetchCategories } = useQuery<Category[]>({
     queryKey: ['/api/categories/flat'],
-    staleTime: 30 * 1000, // 30 seconds cache
+    staleTime: 0, // Always fresh data for admin changes
     refetchInterval: false, // Manual control
   });
 
@@ -196,9 +196,12 @@ export default function Step5() {
     const isCorporate = authUser.role === 'corporate';
     
     console.log(`📊 Category hierarchy (${hierarchyPath.length} levels):`, hierarchyPath.map(c => `${c.name} (${c.id}): ind=${c.freeListingLimitIndividual}, corp=${c.freeListingLimitCorporate}`));
+    console.log(`🎯 USER ROLE CHECK: Looking for ${isIndividual ? 'INDIVIDUAL' : 'CORPORATE'} limits`);
     
     // Check each category in hierarchy for free listing limits based on user role
     for (const cat of hierarchyPath) {
+      console.log(`🔎 Checking ${cat.name}: individual=${cat.freeListingLimitIndividual}, corporate=${cat.freeListingLimitCorporate}`);
+      
       if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
         console.log(`✅ FREE LISTING FOUND: ${cat.name} has individual limit: ${cat.freeListingLimitIndividual}`);
         return true;
@@ -207,9 +210,12 @@ export default function Step5() {
         console.log(`✅ FREE LISTING FOUND: ${cat.name} has corporate limit: ${cat.freeListingLimitCorporate}`);
         return true;
       }
+      
+      console.log(`❌ No ${isIndividual ? 'individual' : 'corporate'} limit in ${cat.name}`);
     }
     
     console.log(`❌ NO FREE LISTING: No category in hierarchy has limits for ${authUser.role} users`);
+    console.log(`🎯 FINAL RESULT: hasFreeListing = FALSE (System working correctly)`);
     return false;
   }, [category, allCategories, authUser]);
 
