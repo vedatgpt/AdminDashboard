@@ -218,9 +218,15 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       // CRITICAL: Invalidate all category caches to force fresh data
       if (typeof window !== 'undefined' && (window as any).queryClient) {
         const queryClient = (window as any).queryClient;
+        // Clear all category-related caches
         await queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
         await queryClient.invalidateQueries({ queryKey: ['/api/categories/flat'] });
-        console.log('🚀 CACHE INVALIDATED: All category caches cleared after admin update');
+        await queryClient.invalidateQueries({ queryKey: ['/api/categories', 'tree'] });
+        // Also clear specific category cache for the updated category
+        await queryClient.invalidateQueries({ queryKey: [`/api/categories/${category.id}`] });
+        // Clear all cached data to force complete refresh
+        await queryClient.clear();
+        console.log('🚀 CACHE INVALIDATED: Complete cache clear after admin update');
       }
 
       // Show a temporary success notification in the UI

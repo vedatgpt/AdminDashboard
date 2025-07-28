@@ -166,6 +166,8 @@ export default function Step5() {
     queryKey: ['/api/categories/flat'],
     staleTime: 0, // Always fresh data for admin changes
     refetchInterval: false, // Manual control
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // Check if free listing is available for this category with inheritance
@@ -219,6 +221,20 @@ export default function Step5() {
     return false;
   }, [category, allCategories, authUser]);
 
+  // Force refetch categories when coming to Step5 to ensure fresh data
+  useEffect(() => {
+    console.log(`🔄 Step5 mounted - forcing categories refetch`);
+    refetchCategories();
+    
+    // Also clear any cached categories data on mount
+    if (typeof window !== 'undefined' && (window as any).queryClient) {
+      const queryClient = (window as any).queryClient;
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/categories/flat'] });
+      console.log('🔄 STEP5: Cleared all category caches on mount');
+    }
+  }, [refetchCategories]);
+
   // Get free listing text content from category hierarchy
   const freeListingContent = useMemo(() => {
     if (!category || !allCategories.length) {
@@ -247,12 +263,20 @@ export default function Step5() {
     
     // Find the first category in hierarchy that has text content defined
     for (const cat of hierarchyPath) {
+      console.log(`🔍 Checking category ${cat.name} (ID: ${cat.id}) for text content:`, {
+        title: cat.freeListingTitle,
+        description: cat.freeListingDescription,
+        priceText: cat.freeListingPriceText
+      });
+      
       if (cat.freeListingTitle || cat.freeListingDescription || cat.freeListingPriceText) {
-        return {
+        const content = {
           title: cat.freeListingTitle || "Ücretsiz İlan",
           description: cat.freeListingDescription || "Standart ilan özelliklerini kullanın",
           priceText: cat.freeListingPriceText || "Ücretsiz"
         };
+        console.log(`✅ Using text content from ${cat.name}:`, content);
+        return content;
       }
     }
     
