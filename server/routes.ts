@@ -1159,10 +1159,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload listing images (temporarily removed auth for development)
-  app.post("/api/upload/images", uploadListingImages.array('images'), async (req, res) => {
+  // Upload listing images (with proper authentication)
+  app.post("/api/upload/images", requireAuth, uploadListingImages.array('images'), async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = 1; // Temporary fixed user ID for development
+      const userId = req.session.user!.id; // Use real authenticated user ID
       const files = req.files as Express.Multer.File[];
 
       if (!files || files.length === 0) {
@@ -1178,6 +1178,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Create user directory structure
         const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
+        
+        // Ensure directory exists
+        if (!fs.existsSync(userDir)) {
+          fs.mkdirSync(userDir, { recursive: true });
+        }
+        
         const imagePath = path.join(userDir, filename);
 
         try {
@@ -1222,14 +1228,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Delete uploaded image (temporarily removed auth for development)
-  app.delete("/api/upload/images/:imageId", async (req, res) => {
+  // Delete uploaded image (with proper authentication)
+  app.delete("/api/upload/images/:imageId", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = 1; // Temporary fixed user ID for development
+      const userId = req.session.user!.id; // Use real authenticated user ID
       const imageId = req.params.imageId;
 
       // Find and delete the image file
       const userDir = path.join(process.cwd(), 'uploads', 'users', userId.toString(), 'temp-listings');
+      
+      // Check if directory exists
+      if (!fs.existsSync(userDir)) {
+        return res.status(404).json({ error: "Kullanıcı dizini bulunamadı" });
+      }
+      
       const files = await fs.promises.readdir(userDir).catch(() => []);
 
       const imageFile = files.find(file => file.startsWith(imageId));
