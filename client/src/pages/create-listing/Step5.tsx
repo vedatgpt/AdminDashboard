@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import { IOSSpinner } from '@/components/iOSSpinner';
 
 interface CategoryPackage {
   id: number;
@@ -336,11 +337,8 @@ export default function Step5() {
 
   if (authLoading || isDraftLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EC7830] mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <IOSSpinner />
       </div>
     );
   }
