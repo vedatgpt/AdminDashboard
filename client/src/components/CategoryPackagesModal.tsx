@@ -31,6 +31,17 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     applyToSubcategories: true,
   });
 
+  const [inheritedSettings, setInheritedSettings] = useState<{
+    hasInheritance: boolean;
+    parentCategory?: any;
+    inheritedLimits?: {
+      individual: number;
+      corporate: number;
+    };
+  }>({
+    hasInheritance: false
+  });
+
   const [activeTab, setActiveTab] = useState<"packages" | "free">("packages");
   
   const [newFeature, setNewFeature] = useState("");
@@ -71,7 +82,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     }
   }, [editingPackage]);
 
-  // Initialize free listing data when category changes
+  // Initialize free listing data and check inheritance when category changes
   useEffect(() => {
     if (category && isOpen) {
       // Fetch the full category data to get the latest free listing settings
@@ -80,6 +91,41 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         .then(categories => {
           const fullCategory = categories.find((cat: any) => cat.id === category.id);
           if (fullCategory) {
+            // Check if this category inherits from parent
+            let hasInheritance = false;
+            let parentCategory = null;
+            let inheritedLimits = null;
+
+            if (fullCategory.parentId) {
+              // Find parent category with inheritance enabled
+              const findParentWithInheritance = (catId: number): any => {
+                const parent = categories.find((cat: any) => cat.id === catId);
+                if (parent && parent.applyToSubcategories) {
+                  return parent;
+                }
+                // Check parent's parent recursively
+                if (parent && parent.parentId) {
+                  return findParentWithInheritance(parent.parentId);
+                }
+                return null;
+              };
+
+              parentCategory = findParentWithInheritance(fullCategory.parentId);
+              if (parentCategory) {
+                hasInheritance = true;
+                inheritedLimits = {
+                  individual: parentCategory.freeListingLimitIndividual || 0,
+                  corporate: parentCategory.freeListingLimitCorporate || 0
+                };
+              }
+            }
+
+            setInheritedSettings({
+              hasInheritance,
+              parentCategory,
+              inheritedLimits
+            });
+
             setFreeListingData({
               freeListingLimitIndividual: fullCategory.freeListingLimitIndividual || 0,
               freeResetPeriodIndividual: fullCategory.freeResetPeriodIndividual || "monthly",
@@ -643,10 +689,48 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   </div>
                 </div>
 
+                {/* Inheritance Warning */}
+                {inheritedSettings.hasInheritance && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">Ücretsiz İlan Ayarları (Üst Kategoriden Devralınıyor)</h3>
+                        <p className="mt-1 text-sm text-yellow-700">
+                          Bu kategori "{inheritedSettings.parentCategory?.name}" kategorisinden ayarları devralmaktadır.
+                          Değişiklik yapmak için üst kategoriyi düzenleyin.
+                        </p>
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                            onClick={() => {
+                              // Close current modal and navigate to parent category
+                              onClose();
+                              // You can add navigation logic here to open parent category modal
+                            }}
+                          >
+                            "{inheritedSettings.parentCategory?.name}" Kategorisini Düzenle
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form className="space-y-6">
                   {/* Bireysel Kullanıcılar Ayarları */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900 mb-3">Bireysel Kullanıcılar</h4>
+                  <div className={`${inheritedSettings.hasInheritance ? 'bg-gray-100' : 'bg-gray-50'} p-4 rounded-lg`}>
+                    <h4 className={`text-md font-medium ${inheritedSettings.hasInheritance ? 'text-gray-600' : 'text-gray-900'} mb-3`}>
+                      Bireysel Kullanıcılar
+                      {inheritedSettings.hasInheritance && (
+                        <span className="ml-2 text-xs text-gray-500">(Üst kategoriden: {inheritedSettings.inheritedLimits?.individual} ilan)</span>
+                      )}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -655,12 +739,16 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                         <input
                           type="number"
                           min="0"
-                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                          value={freeListingData.freeListingLimitIndividual}
-                          onChange={(e) => setFreeListingData({
+                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
+                            inheritedSettings.hasInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
+                          }`}
+                          value={inheritedSettings.hasInheritance ? inheritedSettings.inheritedLimits?.individual || 0 : freeListingData.freeListingLimitIndividual}
+                          onChange={(e) => !inheritedSettings.hasInheritance && setFreeListingData({
                             ...freeListingData,
                             freeListingLimitIndividual: parseInt(e.target.value) || 0
                           })}
+                          disabled={inheritedSettings.hasInheritance}
+                          readOnly={inheritedSettings.hasInheritance}
                         />
                       </div>
 
@@ -669,12 +757,15 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                           Yenileme Periyodu
                         </label>
                         <select
-                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
+                            inheritedSettings.hasInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
+                          }`}
                           value={freeListingData.freeResetPeriodIndividual}
-                          onChange={(e) => setFreeListingData({
+                          onChange={(e) => !inheritedSettings.hasInheritance && setFreeListingData({
                             ...freeListingData,
                             freeResetPeriodIndividual: e.target.value as "monthly" | "yearly" | "once"
                           })}
+                          disabled={inheritedSettings.hasInheritance}
                         >
                           <option value="monthly">Aylık</option>
                           <option value="yearly">Yıllık</option>
@@ -685,8 +776,13 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   </div>
 
                   {/* Kurumsal Kullanıcılar Ayarları */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900 mb-3">Kurumsal Kullanıcılar</h4>
+                  <div className={`${inheritedSettings.hasInheritance ? 'bg-gray-100' : 'bg-gray-50'} p-4 rounded-lg`}>
+                    <h4 className={`text-md font-medium ${inheritedSettings.hasInheritance ? 'text-gray-600' : 'text-gray-900'} mb-3`}>
+                      Kurumsal Kullanıcılar
+                      {inheritedSettings.hasInheritance && (
+                        <span className="ml-2 text-xs text-gray-500">(Üst kategoriden: {inheritedSettings.inheritedLimits?.corporate} ilan)</span>
+                      )}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -695,12 +791,16 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                         <input
                           type="number"
                           min="0"
-                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                          value={freeListingData.freeListingLimitCorporate}
-                          onChange={(e) => setFreeListingData({
+                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
+                            inheritedSettings.hasInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
+                          }`}
+                          value={inheritedSettings.hasInheritance ? inheritedSettings.inheritedLimits?.corporate || 0 : freeListingData.freeListingLimitCorporate}
+                          onChange={(e) => !inheritedSettings.hasInheritance && setFreeListingData({
                             ...freeListingData,
                             freeListingLimitCorporate: parseInt(e.target.value) || 0
                           })}
+                          disabled={inheritedSettings.hasInheritance}
+                          readOnly={inheritedSettings.hasInheritance}
                         />
                       </div>
 
@@ -709,12 +809,15 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                           Yenileme Periyodu
                         </label>
                         <select
-                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
+                            inheritedSettings.hasInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
+                          }`}
                           value={freeListingData.freeResetPeriodCorporate}
-                          onChange={(e) => setFreeListingData({
+                          onChange={(e) => !inheritedSettings.hasInheritance && setFreeListingData({
                             ...freeListingData,
                             freeResetPeriodCorporate: e.target.value as "monthly" | "yearly" | "once"
                           })}
+                          disabled={inheritedSettings.hasInheritance}
                         >
                           <option value="monthly">Aylık</option>
                           <option value="yearly">Yıllık</option>
@@ -724,35 +827,39 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                     </div>
                   </div>
 
-                  {/* Apply to Subcategories */}
-                  <div>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={freeListingData.applyToSubcategories}
-                        onChange={(e) => setFreeListingData(prev => ({ 
-                          ...prev, 
-                          applyToSubcategories: e.target.checked 
-                        }))}
-                        className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
-                    </label>
-                    <p className="mt-1 ml-6 text-xs text-gray-500">
-                      Bu ayarlar alt kategoriler için de geçerli olacak
-                    </p>
-                  </div>
+                  {/* Apply to Subcategories - Only visible if not inherited */}
+                  {!inheritedSettings.hasInheritance && (
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={freeListingData.applyToSubcategories}
+                          onChange={(e) => setFreeListingData(prev => ({ 
+                            ...prev, 
+                            applyToSubcategories: e.target.checked 
+                          }))}
+                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
+                      </label>
+                      <p className="mt-1 ml-6 text-xs text-gray-500">
+                        Bu ayarlar alt kategoriler için de geçerli olacak
+                      </p>
+                    </div>
+                  )}
 
-                  {/* Save Button */}
-                  <div className="flex justify-end pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={handleFreeListingSettingsSave}
-                      className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] rounded-md hover:bg-[#d96b2a]"
-                    >
-                      Ayarları Kaydet
-                    </button>
-                  </div>
+                  {/* Save Button - Only visible if not inherited */}
+                  {!inheritedSettings.hasInheritance && (
+                    <div className="flex justify-end pt-4 border-t border-gray-200">
+                      <button
+                        type="button"
+                        onClick={handleFreeListingSettingsSave}
+                        className="px-4 py-2 text-sm font-medium text-white bg-[#EC7830] rounded-md hover:bg-[#d96b2a]"
+                      >
+                        Ayarları Kaydet
+                      </button>
+                    </div>
+                  )}
                 </form>
               </div>
               )}
