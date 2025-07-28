@@ -398,6 +398,13 @@ Authentication features:
 - **CENTRALIZED MANAGEMENT**: ToastContext provides state management, ToastContainer handles UI rendering
 - **CROSS-PLATFORM COMPATIBILITY**: Toast system works seamlessly across all listing creation steps
 
+### Toast Enhancement System - Duplicate Prevention & File Validation (July 28, 2025)
+- **DUPLICATE PREVENTION**: Maximum 3 toasts displayed simultaneously, prevents button spam
+- **SMART FILE VALIDATION**: HEIC/unsupported format errors re-show after 3 seconds for user convenience
+- **TOAST LIMITING**: Automatic removal of oldest toast when limit exceeded
+- **TIMESTAMP TRACKING**: Each toast includes timestamp for intelligent duplicate detection
+- **ENHANCED UX**: Prevents UI spam while ensuring important file validation messages remain visible
+
 ### Comprehensive Unit System Implementation (July 20, 2025)
 - Added complete unit system to custom fields for all field types (text, number, select, checkbox, number_range, boolean)
 - Database schema extended with hasUnits, unitOptions (JSON array), and defaultUnit fields
