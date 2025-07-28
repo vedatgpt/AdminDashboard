@@ -36,15 +36,15 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// SECURITY: Rate limiting - RELAXED FOR DEVELOPMENT
-const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 1000, // increased from 100 to 1000 for development
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
+// SECURITY: Rate limiting - DISABLED FOR DEVELOPMENT
+// const limiter = rateLimit({
+//   windowMs: 5 * 60 * 1000, // 5 minutes
+//   max: 1000, // increased from 100 to 1000 for development
+//   message: 'Too many requests from this IP, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
+// app.use('/api/', limiter);
 
 // SECURITY: Enhanced session configuration
 app.use(session({
