@@ -2,6 +2,8 @@ import { users, authorizedPersonnel, categories, categoryCustomFields, locations
 import { db } from "./db";
 import { eq, isNull, desc, asc, and, or, sql, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import * as fs from "fs";
+import * as path from "path";
 
 // Generate unique username like "velikara4678"
 function generateUniqueUsername(firstName: string, lastName: string): string {
@@ -635,6 +637,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteDraftListing(id: number): Promise<void> {
+    // Get draft listing to access user ID for file cleanup
+    const draft = await this.getDraftListing(id);
+    
+    if (draft) {
+      // Clean up temp-listings photos for this user
+      const userTempDir = path.join(process.cwd(), 'uploads', 'users', draft.userId.toString(), 'temp-listings');
+      
+      try {
+        if (fs.existsSync(userTempDir)) {
+          // Read all files in temp-listings directory
+          const files = await fs.promises.readdir(userTempDir);
+          
+          // Delete all files in the directory
+          for (const file of files) {
+            const filePath = path.join(userTempDir, file);
+            try {
+              await fs.promises.unlink(filePath);
+              console.log(`🗑️ Deleted temp photo: ${file}`);
+            } catch (deleteError) {
+              console.error(`⚠️ Failed to delete file ${file}:`, deleteError);
+            }
+          }
+          
+          console.log(`✅ Cleaned up temp-listings for user ${draft.userId}`);
+        }
+      } catch (cleanupError) {
+        console.error('⚠️ Error cleaning up temp-listings:', cleanupError);
+        // Don't throw error - continue with database deletion even if file cleanup fails
+      }
+    }
+    
+    // Delete from database
     await db.delete(draftListings).where(eq(draftListings.id, id));
   }
 
