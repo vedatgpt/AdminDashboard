@@ -261,21 +261,27 @@ export default function Step5() {
     
     const hierarchyPath = getHierarchyPath(category.id);
     
-    // Find the first category in hierarchy that has text content defined
+    // Find the first category in hierarchy that has NON-DEFAULT text content defined
     for (const cat of hierarchyPath) {
+      const catAny = cat as any;
       console.log(`🔍 Checking category ${cat.name} (ID: ${cat.id}) for text content:`, {
-        title: cat.freeListingTitle,
-        description: cat.freeListingDescription,
-        priceText: cat.freeListingPriceText
+        title: catAny.freeListingTitle,
+        description: catAny.freeListingDescription,
+        priceText: catAny.freeListingPriceText
       });
       
-      if (cat.freeListingTitle || cat.freeListingDescription || cat.freeListingPriceText) {
+      // Only use if text content is different from defaults (inheritance-based)
+      const hasCustomTitle = catAny.freeListingTitle && catAny.freeListingTitle !== "Ücretsiz İlan";
+      const hasCustomDescription = catAny.freeListingDescription && catAny.freeListingDescription !== "Standart ilan özelliklerini kullanın";
+      const hasCustomPriceText = catAny.freeListingPriceText && catAny.freeListingPriceText !== "Ücretsiz";
+      
+      if (hasCustomTitle || hasCustomDescription || hasCustomPriceText) {
         const content = {
-          title: cat.freeListingTitle || "Ücretsiz İlan",
-          description: cat.freeListingDescription || "Standart ilan özelliklerini kullanın",
-          priceText: cat.freeListingPriceText || "Ücretsiz"
+          title: catAny.freeListingTitle || "Ücretsiz İlan",
+          description: catAny.freeListingDescription || "Standart ilan özelliklerini kullanın",
+          priceText: catAny.freeListingPriceText || "Ücretsiz"
         };
-        console.log(`✅ Using text content from ${cat.name}:`, content);
+        console.log(`✅ Using CUSTOM text content from ${cat.name}:`, content);
         return content;
       }
     }
