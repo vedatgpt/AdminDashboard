@@ -260,6 +260,14 @@ Authentication features:
 - **USER EXPERIENCE**: Prevents duplicate form submissions and navigation conflicts
 - **PRODUCTION READY**: All step transitions now protected against double-click issues with modern React patterns
 
+### Draft Listing File Structure Analysis (July 28, 2025)
+- **USER-SPECIFIC FOLDER STRUCTURE**: Each user has separate folder under `uploads/users/{user-id}/`
+- **PROFILE IMAGES**: Properly organized in `uploads/users/{user-id}/profile-images/` for corporate users
+- **DRAFT LISTING PHOTOS**: Currently stored in `uploads/users/1/temp-listings/` (development limitation)
+- **AUTHENTICATION ISSUE**: Photo upload endpoint uses fixed user ID 1 instead of session user
+- **FILE ORGANIZATION**: Profile system works correctly with user isolation, but listing photos need authentication fix
+- **PRODUCTION REQUIREMENT**: Photo upload endpoint needs to use real user authentication for proper file isolation
+
 ### Additional UX Improvements Completed (July 27, 2025)
 - **STEP-1 DOUBLE-CLICK PROTECTION**: Added protection to "Devam Et" buttons on both desktop and mobile layouts
 - **STEP-3 PHOTO VALIDATION**: Added mandatory photo upload validation - users must upload at least one photo to proceed
