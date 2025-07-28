@@ -11,6 +11,7 @@ import { useCategoryCustomFields } from '@/hooks/useCustomFields';
 import { useToast } from "@/hooks/use-toast";
 import { useClassifiedId } from '@/hooks/useClassifiedId';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
+import { useStep5Prefetch } from '@/hooks/useStep5Prefetch';
 import { ERROR_MESSAGES } from '@shared/constants';
 
 import CreateListingLayout from '@/components/CreateListingLayout';
@@ -39,6 +40,9 @@ export default function Step4() {
   
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
+  
+  // PREFETCH SYSTEM: Step5 prefetch
+  const { smartPrefetchStep5 } = useStep5Prefetch();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -46,6 +50,19 @@ export default function Step4() {
       navigate('/auth/login');
     }
   }, [authLoading, isAuthenticated]);
+
+  // Get user data for prefetch (separate from useAuth to avoid conflicts)
+  const { data: userForPrefetch } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/me');
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return response.json();
+    },
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   // URL parameter support - Custom hook kullanımı
   const classifiedIdFromUrl = useClassifiedId();
@@ -76,11 +93,18 @@ export default function Step4() {
     gcTime: 300000, // 5 minutes cache
   });
 
+  // STEP5 PREFETCH: Auto-prefetch when Step4 loads
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && draftData?.categoryId && currentClassifiedId && userForPrefetch?.id) {
+      smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 page load');
+    }
+  }, [authLoading, isAuthenticated, draftData?.categoryId, currentClassifiedId, userForPrefetch?.id, smartPrefetchStep5]);
+
   // PROGRESSIVE DISCLOSURE + ROUTER GUARD: Step 4 validation - REMOVED
 
   // Step completion marking mutation
   const markStepCompletedMutation = useMutation({
-    mutationFn: async ({ classifiedId, step }: { classifiedId: number; step: number }) => {
+    mutationFn: async ({ classifiedId, step }: { classifiedId: string; step: number }) => {
       const response = await fetch(`/api/draft-listings/${classifiedId}/step/${step}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -925,6 +949,10 @@ export default function Step4() {
 
           <button
             onClick={() => executeWithProtection(async () => {
+              // Step5 prefetch before navigation
+              if (draftData?.categoryId && userForPrefetch?.id) {
+                smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 navigation');
+              }
               navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
             })}
             className={`px-6 py-3 rounded-lg transition-colors font-medium ${
