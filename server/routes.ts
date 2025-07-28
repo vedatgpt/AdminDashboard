@@ -14,7 +14,7 @@ import connectPgSimple from "connect-pg-simple";
 import categoriesRouter from "./routes/categories";
 import { SESSION_CONFIG, FILE_LIMITS, SERVER_CONFIG } from "./config/constants";
 import { pool } from "./db";
-import rateLimit from 'express-rate-limit';
+// import rateLimit from 'express-rate-limit';
 
 import { requireAuth, requireAdmin, requireCorporate, type AuthenticatedRequest } from "./middleware/auth";
 
@@ -30,32 +30,30 @@ declare module 'express-session' {
   }
 }
 
-// SECURITY: Rate limiting for API endpoints
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// SECURITY: Rate limiting - DISABLED FOR DEVELOPMENT
+// const apiLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // limit each IP to 100 requests per windowMs
+//   message: 'Too many requests from this IP, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
-// SECURITY: Stricter rate limiting for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 auth requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // limit each IP to 5 auth requests per windowMs
+//   message: 'Too many authentication attempts, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
-// SECURITY: File upload rate limiting
-const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 upload requests per windowMs
-  message: 'Too many file uploads, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// const uploadLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 20, // limit each IP to 20 upload requests per windowMs
+//   message: 'Too many file uploads, please try again later.',
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
 // SECURITY: Enhanced multer configuration with validation
 const upload = multer({
@@ -134,10 +132,10 @@ const sanitizeQuery = (req: Request, res: Response, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // SECURITY: Apply rate limiting
-  app.use('/api/', apiLimiter);
-  app.use('/api/auth/', authLimiter);
-  app.use('/api/upload/', uploadLimiter);
+  // SECURITY: Rate limiting - DISABLED FOR DEVELOPMENT
+  // app.use('/api/', apiLimiter);
+  // app.use('/api/auth/', authLimiter);
+  // app.use('/api/upload/', uploadLimiter);
 
   // SECURITY: Input sanitization
   app.use(sanitizeQuery);
