@@ -97,11 +97,7 @@ export default function Step3() {
       // 403 Forbidden: Başka kullanıcının draft'ına erişim - Güvenlik ihlali
       if (draftError.message?.includes('erişim yetkiniz yok')) {
         console.error('🚨 SECURITY VIOLATION: User attempted to access another user\'s draft');
-        toast({
-          title: "Güvenlik Hatası",
-          description: "İlgili ilan için yetkiniz bulunmamaktadır.",
-          variant: "destructive"
-        });
+        showToast('error', 'İlgili ilan için yetkiniz bulunmamaktadır.');
         navigate('/create-listing/step-1');
       } 
       // 404 Not Found: Hiç var olmayan draft ID - Normal akış
@@ -116,7 +112,7 @@ export default function Step3() {
         navigate('/create-listing/step-1');
       }
     }
-  }, [isDraftError, draftError, currentClassifiedId, navigate, toast]);
+  }, [isDraftError, draftError, currentClassifiedId, navigate, showToast]);
 
   // SECURITY CHECK: Step2 verilerinin tamamlanmış olması gerekiyor
   useEffect(() => {
