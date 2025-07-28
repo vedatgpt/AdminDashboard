@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/contexts/ToastContext';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 
@@ -49,7 +48,6 @@ export default function Step5() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { showToast } = useToast();
   
   // Get classified ID from URL
   const params = new URLSearchParams(search);
@@ -195,8 +193,8 @@ export default function Step5() {
         totalPrice
       };
       
-      // Show success toast
-      showToast('success', 'Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.', 4000);
+      // Future: Integrate with Stripe payment system
+      alert('Paket seçimi tamamlandı! Ödeme özelliği yakında eklenecek.');
       
       // Simulate some processing time
       await new Promise(resolve => setTimeout(resolve, 1000));

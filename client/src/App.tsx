@@ -29,8 +29,6 @@ import CreateListingStep4 from "@/pages/create-listing/Step4";
 import CreateListingStep5 from "@/pages/create-listing/Step5";
 import CreateListingLayout from "@/components/CreateListingLayout";
 import { ListingProvider } from "@/contexts/ListingContext";
-import { ToastProvider } from "@/contexts/ToastContext";
-import ToastContainer from "@/components/ui/ToastContainer";
 import { useAuth } from "@/hooks/useAuth";
 import LogoLoader from "@/components/LogoLoader";
 
@@ -107,12 +105,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <ListingProvider>
-          <Router />
-          <ToastContainer />
-        </ListingProvider>
-      </ToastProvider>
+      <ListingProvider>
+        <Router />
+      </ListingProvider>
     </QueryClientProvider>
   );
 }
