@@ -1416,7 +1416,17 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
         return res.status(400).json({ error: "Invalid category ID" });
       }
 
-      const { freeListingLimitIndividual, freeResetPeriodIndividual, freeListingLimitCorporate, freeResetPeriodCorporate, applyToSubcategories } = req.body;
+      const { 
+        freeListingLimitIndividual, 
+        freeResetPeriodIndividual, 
+        freeListingLimitCorporate, 
+        freeResetPeriodCorporate, 
+        applyToSubcategories,
+        freeListingTitle,
+        freeListingDescription,
+        freeListingCurrentPrice,
+        freeListingOriginalPrice 
+      } = req.body;
 
       // Validation
       if (typeof freeListingLimitIndividual !== "number" || freeListingLimitIndividual < 0) {
@@ -1441,6 +1451,10 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
         freeListingLimitCorporate,
         freeResetPeriodCorporate,
         applyToSubcategories: applyToSubcategories || false,
+        freeListingTitle,
+        freeListingDescription,
+        freeListingCurrentPrice,
+        freeListingOriginalPrice,
       });
 
       res.json(updatedCategory);
