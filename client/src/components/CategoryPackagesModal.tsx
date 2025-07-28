@@ -21,6 +21,14 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     membershipTypes: ["individual", "corporate"] as string[],
     applyToSubcategories: false,
     isActive: true,
+    // Unified free listing fields in main form
+    freeListingLimitIndividual: 0,
+    freeListingLimitCorporate: 0,
+    freeResetPeriodIndividual: "monthly" as "monthly" | "yearly" | "once",
+    freeResetPeriodCorporate: "monthly" as "monthly" | "yearly" | "once",
+    freeListingTitle: "Ücretsiz İlan",
+    freeListingDescription: "Standart ilan özellikleri",
+    freeListingPriceText: "Ücretsiz",
   });
 
   const [freeListingData, setFreeListingData] = useState({
@@ -84,6 +92,14 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         membershipTypes: parseMembershipTypes(editingPackage.membershipTypes),
         applyToSubcategories: (editingPackage as any).applyToSubcategories || false,
         isActive: editingPackage.isActive,
+        // Load existing free listing data from package
+        freeListingLimitIndividual: (editingPackage as any).freeListingLimitIndividual || 0,
+        freeListingLimitCorporate: (editingPackage as any).freeListingLimitCorporate || 0,
+        freeResetPeriodIndividual: (editingPackage as any).freeResetPeriodIndividual || "monthly",
+        freeResetPeriodCorporate: (editingPackage as any).freeResetPeriodCorporate || "monthly",
+        freeListingTitle: (editingPackage as any).freeListingTitle || "Ücretsiz İlan",
+        freeListingDescription: (editingPackage as any).freeListingDescription || "Standart ilan özellikleri",
+        freeListingPriceText: (editingPackage as any).freeListingPriceText || "Ücretsiz",
       });
       setShowForm(true);
     }
@@ -213,6 +229,13 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       membershipTypes: ["individual", "corporate"],
       applyToSubcategories: false,
       isActive: true,
+      freeListingLimitIndividual: 0,
+      freeListingLimitCorporate: 0,
+      freeResetPeriodIndividual: "monthly",
+      freeResetPeriodCorporate: "monthly",
+      freeListingTitle: "Ücretsiz İlan",
+      freeListingDescription: "Standart ilan özellikleri",
+      freeListingPriceText: "Ücretsiz",
     });
     setNewFeature("");
     setEditingPackage(null);
@@ -310,15 +333,24 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
       return;
     }
     
-    if (formData.price <= 0) {
-      alert("⚠️ Paket fiyatı 0'dan büyük olmalıdır");
+    // Allow price 0 for free packages
+    if (formData.price < 0) {
+      alert("⚠️ Paket fiyatı negatif olamaz");
       return;
     }
 
     const submitData = {
       ...formData,
       features: JSON.stringify(formData.features),
-      membershipTypes: JSON.stringify(formData.membershipTypes)
+      membershipTypes: JSON.stringify(formData.membershipTypes),
+      // Include free listing fields in submission
+      freeListingLimitIndividual: formData.freeListingLimitIndividual,
+      freeListingLimitCorporate: formData.freeListingLimitCorporate,
+      freeResetPeriodIndividual: formData.freeResetPeriodIndividual,
+      freeResetPeriodCorporate: formData.freeResetPeriodCorporate,
+      freeListingTitle: formData.freeListingTitle,
+      freeListingDescription: formData.freeListingDescription,
+      freeListingPriceText: formData.freeListingPriceText,
     };
 
     if (editingPackage) {
@@ -713,6 +745,113 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                         )}
                       </div>
                     </div>
+
+                    {/* Free Listing Configuration - Show when price is 0 */}
+                    {formData.price === 0 && (
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="text-sm font-semibold text-gray-900">Ücretsiz İlan Konfigürasyonu</h3>
+                        
+                        {/* Free listing limits */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Bireysel Kullanıcı Limiti
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.freeListingLimitIndividual}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeListingLimitIndividual: parseInt(e.target.value) || 0 }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Kurumsal Kullanıcı Limiti
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.freeListingLimitCorporate}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeListingLimitCorporate: parseInt(e.target.value) || 0 }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Reset periods */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Bireysel Sıfırlama Periyodu
+                            </label>
+                            <select
+                              value={formData.freeResetPeriodIndividual}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeResetPeriodIndividual: e.target.value as "monthly" | "yearly" | "once" }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            >
+                              <option value="monthly">Aylık</option>
+                              <option value="yearly">Yıllık</option>
+                              <option value="once">Bir kez</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Kurumsal Sıfırlama Periyodu
+                            </label>
+                            <select
+                              value={formData.freeResetPeriodCorporate}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeResetPeriodCorporate: e.target.value as "monthly" | "yearly" | "once" }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                            >
+                              <option value="monthly">Aylık</option>
+                              <option value="yearly">Yıllık</option>
+                              <option value="once">Bir kez</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Free listing display texts */}
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Paket Başlığı
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.freeListingTitle}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeListingTitle: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                              placeholder="Ücretsiz İlan"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Paket Açıklaması
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.freeListingDescription}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeListingDescription: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                              placeholder="Standart ilan özellikleri"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Fiyat Metni
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.freeListingPriceText}
+                              onChange={(e) => setFormData(prev => ({ ...prev, freeListingPriceText: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                              placeholder="Ücretsiz"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Active/Inactive Status */}
                     <div className="flex items-center">

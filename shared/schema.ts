@@ -337,6 +337,14 @@ export const categoryPackages = pgTable("category_packages", {
   applyToSubcategories: boolean("apply_to_subcategories").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
+  // NEW: Free listing configuration for unified package system
+  freeListingLimitIndividual: integer("free_listing_limit_individual").notNull().default(0),
+  freeListingLimitCorporate: integer("free_listing_limit_corporate").notNull().default(0),
+  freeResetPeriodIndividual: text("free_reset_period_individual").default("monthly"),
+  freeResetPeriodCorporate: text("free_reset_period_corporate").default("monthly"),
+  freeListingTitle: text("free_listing_title").default("Ücretsiz İlan"),
+  freeListingDescription: text("free_listing_description").default("Standart ilan özellikleri"),
+  freeListingPriceText: text("free_listing_price_text").default("Ücretsiz"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -352,6 +360,13 @@ export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).
   durationDays: z.number().min(1, "Süre en az 1 gün olmalıdır"),
   features: z.string().default("[]"),
   membershipTypes: z.string().default('["individual","corporate"]'),
+  freeListingLimitIndividual: z.number().min(0, "Bireysel limit 0 veya pozitif olmalıdır").default(0),
+  freeListingLimitCorporate: z.number().min(0, "Kurumsal limit 0 veya pozitif olmalıdır").default(0),
+  freeResetPeriodIndividual: z.string().default("monthly"),
+  freeResetPeriodCorporate: z.string().default("monthly"),
+  freeListingTitle: z.string().default("Ücretsiz İlan"),
+  freeListingDescription: z.string().default("Standart ilan özellikleri"),
+  freeListingPriceText: z.string().default("Ücretsiz"),
 });
 
 // Schema for updating category packages
