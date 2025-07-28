@@ -3,7 +3,7 @@
 // Session Configuration
 export const SESSION_CONFIG = {
   MAX_AGE: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-  SECRET: process.env.SESSION_SECRET || 'your-secret-key',
+  SECRET: process.env.SESSION_SECRET || 'fallback-dev-secret-change-in-production-2025',
 } as const;
 
 // File Upload Limits

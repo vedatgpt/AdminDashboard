@@ -22,6 +22,11 @@ declare module "express-session" {
 
 const app = express();
 
+// PRODUCTION: Trust proxy for deployment environments
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // SECURITY: Basic security headers
 app.use(helmet({
   contentSecurityPolicy: {
@@ -45,19 +50,7 @@ app.use(helmet({
 // });
 // app.use('/api/', limiter);
 
-// SECURITY: Enhanced session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'strict'
-  },
-  name: 'sessionId', // Don't use default 'connect.sid'
-}));
+// SESSION: Moved to routes.ts for PostgreSQL store configuration
 
 // SECURITY: CSRF Protection Middleware - TEMPORARILY DISABLED FOR DEVELOPMENT
 // app.use((req, res, next) => {

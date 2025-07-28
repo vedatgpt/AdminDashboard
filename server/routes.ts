@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       secure: process.env.NODE_ENV === 'production', // Secure in production
       httpOnly: true,
       maxAge: SESSION_CONFIG.MAX_AGE,
-      sameSite: 'strict' // Stricter same-site policy
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax' // Lax for development, strict for production
     }
   }));
 
