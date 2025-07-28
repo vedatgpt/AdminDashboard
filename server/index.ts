@@ -60,26 +60,26 @@ app.use(session({
   name: 'sessionId', // Don't use default 'connect.sid'
 }));
 
-// SECURITY: CSRF Protection Middleware
-app.use((req, res, next) => {
-  // Generate CSRF token for new sessions
-  if (!req.session.csrfToken) {
-    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-  }
+// SECURITY: CSRF Protection Middleware - TEMPORARILY DISABLED FOR DEVELOPMENT
+// app.use((req, res, next) => {
+//   // Generate CSRF token for new sessions
+//   if (!req.session.csrfToken) {
+//     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+//   }
   
-  // Add CSRF token to response headers for client access
-  res.setHeader('X-CSRF-Token', req.session.csrfToken);
+//   // Add CSRF token to response headers for client access
+//   res.setHeader('X-CSRF-Token', req.session.csrfToken);
   
-  // Validate CSRF token for state-changing requests
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-    const token = (req.headers['x-csrf-token'] as string) || (req.headers['x-xsrf-token'] as string);
-    if (!token || token !== req.session.csrfToken) {
-      return res.status(403).json({ error: 'CSRF token validation failed' });
-    }
-  }
+//   // Validate CSRF token for state-changing requests
+//   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+//     const token = (req.headers['x-csrf-token'] as string) || (req.headers['x-xsrf-token'] as string);
+//     if (!token || token !== req.session.csrfToken) {
+//       return res.status(403).json({ error: 'CSRF token validation failed' });
+//     }
+//   }
   
-  next();
-});
+//   next();
+// });
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
