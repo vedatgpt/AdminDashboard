@@ -203,6 +203,14 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         applyToSubcategories: updatedCategory.applyToSubcategories || true,
       });
 
+      // CRITICAL: Invalidate all category caches to force fresh data
+      if (typeof window !== 'undefined' && (window as any).queryClient) {
+        const queryClient = (window as any).queryClient;
+        await queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/categories/flat'] });
+        console.log('🚀 CACHE INVALIDATED: All category caches cleared after admin update');
+      }
+
       // Show a temporary success notification in the UI
       const notification = document.createElement('div');
       notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50';

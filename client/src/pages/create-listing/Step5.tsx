@@ -91,8 +91,8 @@ export default function Step5() {
   const { data: category, refetch: refetchCategory } = useQuery<Category>({
     queryKey: ['/api/categories', draftListing?.categoryId],
     enabled: !!draftListing?.categoryId,
-    staleTime: 5 * 1000, // 5 seconds for real-time testing
-    refetchInterval: 10 * 1000, // Auto-refetch every 10 seconds
+    staleTime: 30 * 1000, // 30 seconds cache
+    refetchInterval: false, // Manual control
   });
 
   // Fetch doping packages
@@ -164,8 +164,8 @@ export default function Step5() {
   // Fetch all categories in flat structure to check for inheritance
   const { data: allCategories = [], refetch: refetchCategories } = useQuery<Category[]>({
     queryKey: ['/api/categories/flat'],
-    staleTime: 5 * 1000, // 5 seconds for real-time testing
-    refetchInterval: 10 * 1000, // Auto-refetch every 10 seconds
+    staleTime: 30 * 1000, // 30 seconds cache
+    refetchInterval: false, // Manual control
   });
 
   // Check if free listing is available for this category with inheritance
@@ -175,7 +175,7 @@ export default function Step5() {
       return false;
     }
     
-    console.log(`🔍 FREE LISTING CHECK for category: ${category.name} (ID: ${category.id}), user: ${authUser.role}`);
+    console.log(`🔍 FREE LISTING CHECK for category: ${category.name} (ID: ${category.id}), user: ${authUser.role} (${authUser.email})`);
     
     // Build hierarchy path from current category to root
     const getHierarchyPath = (categoryId: number): Category[] => {
