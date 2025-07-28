@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDoubleClickProtection } from '@/hooks/useDoubleClickProtection';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
 import { IOSSpinner } from '@/components/iOSSpinner';
-import CreateListingLayout from '@/components/CreateListingLayout';
 
 interface CategoryPackage {
   id: number;
@@ -345,13 +344,9 @@ export default function Step5() {
   }
 
   return (
-    <CreateListingLayout stepNumber={5}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:py-4">
-        
-        {/* Mobile/Tablet Header - Boş alan navbar için */}
-        <div className="lg:hidden mt-[56px] mb-4"></div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
 
-        <div className="space-y-8">
+      <div className="space-y-8">
         {/* Category Packages - New System */}
         {availablePackages.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -497,30 +492,29 @@ export default function Step5() {
         </div>
       </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <button
-            onClick={handleBack}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Önceki Adım
-          </button>
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+        <button
+          onClick={handleBack}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Önceki Adım
+        </button>
 
-          <button
-            onClick={handleContinue}
-            disabled={isSubmitting || !selectedCategoryPackage}
-            className={`px-6 py-3 rounded-lg transition-colors font-medium ${
-              isSubmitting || !selectedCategoryPackage
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                : 'bg-[#EC7830] text-white hover:bg-[#d96b2a]'
-            }`}
-          >
-            {isSubmitting ? 'İşleniyor...' : 'İlanı Yayınla'}
-          </button>
-        </div>
-
-        <PageLoadIndicator />
+        <button
+          onClick={handleContinue}
+          disabled={isSubmitting || !selectedCategoryPackage}
+          className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+            isSubmitting || !selectedCategoryPackage
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : 'bg-[#EC7830] text-white hover:bg-[#d96b2a]'
+          }`}
+        >
+          {isSubmitting ? 'İşleniyor...' : 'İlanı Yayınla'}
+        </button>
       </div>
-    </CreateListingLayout>
+
+      <PageLoadIndicator />
+    </div>
   );
 }
