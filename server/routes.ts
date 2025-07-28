@@ -123,6 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!draft) {
         console.log(`🚨 SERVER GUARD: Draft ${classifiedId} not found for user ${req.session.user.id}`);
+        console.log(`🚨 SERVER GUARD: Available drafts for user:`, await storage.getUserDraftListings(req.session.user.id));
         return res.redirect('/create-listing/step-1');
       }
 
@@ -132,6 +133,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (currentStep >= 2 && !draft.step1Completed) {
         console.log(`🚨 SERVER GUARD: Step1 not completed for Step ${currentStep} access`);
+        console.log(`🚨 SERVER GUARD: Draft details:`, {
+          id: draft.id,
+          userId: draft.userId,
+          categoryId: draft.categoryId,
+          step1Completed: draft.step1Completed,
+          step2Completed: draft.step2Completed,
+          status: draft.status
+        });
         shouldRedirect = true;
         redirectStep = 1;
       }
@@ -163,8 +172,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // TEMPORARY FIX: Disable server-side router guard for debugging Step-2 access issue
-  // app.use(stepRouteGuard);
+  // Apply server-side router guard BEFORE serving static files
+  app.use(stepRouteGuard);
 
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
