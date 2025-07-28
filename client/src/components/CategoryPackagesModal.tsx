@@ -90,6 +90,11 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         .then(response => response.json())
         .then(categories => {
           const fullCategory = categories.find((cat: any) => cat.id === category.id);
+          console.log(`🔧 CHECKING INHERITANCE for ${category.name} (ID: ${category.id})`);
+          if (fullCategory?.parentId) {
+            console.log(`⬆️ Has parent: ${fullCategory.parentId}`);
+          }
+          
           if (fullCategory) {
             // Check if this category inherits from parent
             let hasInheritance = false;
@@ -100,7 +105,8 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
               // Find parent category with inheritance enabled
               const findParentWithInheritance = (catId: number): any => {
                 const parent = categories.find((cat: any) => cat.id === catId);
-                if (parent && parent.applyToSubcategories) {
+                if (parent && parent.applyToSubcategories === true) {
+                  console.log(`✅ INHERITANCE FOUND: ${parent.name} -> Corporate: ${parent.freeListingLimitCorporate}, Individual: ${parent.freeListingLimitIndividual}`);
                   return parent;
                 }
                 // Check parent's parent recursively
@@ -117,7 +123,16 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   individual: parentCategory.freeListingLimitIndividual || 0,
                   corporate: parentCategory.freeListingLimitCorporate || 0
                 };
+                console.log(`Inheritance detected for ${fullCategory.name} from ${parentCategory.name}:`, inheritedLimits);
+              } else {
+                console.log(`No inheritance found for ${fullCategory.name}`);
               }
+            }
+
+            if (hasInheritance) {
+              console.log(`🎯 INHERITANCE ACTIVE: ${fullCategory.name} inherits from ${parentCategory?.name}`);
+            } else {
+              console.log(`🎯 NO INHERITANCE: ${fullCategory.name} uses own settings`);
             }
 
             setInheritedSettings({
@@ -136,7 +151,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
           }
         })
         .catch(error => {
-          console.error("Error fetching category data:", error);
+          console.error("❌ Error fetching category data:", error);
         });
     }
   }, [category, isOpen]);
@@ -709,9 +724,19 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                             type="button"
                             className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
                             onClick={() => {
+                              console.log(`🎯 Navigating to parent category: ${inheritedSettings.parentCategory?.name} (ID: ${inheritedSettings.parentCategory?.id})`);
                               // Close current modal and navigate to parent category
                               onClose();
-                              // You can add navigation logic here to open parent category modal
+                              // Trigger parent category modal opening
+                              // Note: This needs to be implemented in Categories.tsx
+                              window.dispatchEvent(new CustomEvent('openCategoryPackages', {
+                                detail: { 
+                                  category: {
+                                    id: inheritedSettings.parentCategory?.id,
+                                    name: inheritedSettings.parentCategory?.name
+                                  }
+                                }
+                              }));
                             }}
                           >
                             "{inheritedSettings.parentCategory?.name}" Kategorisini Düzenle

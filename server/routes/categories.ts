@@ -224,6 +224,57 @@ router.delete('/custom-fields/:fieldId', requireAdmin, async (req, res) => {
   }
 });
 
+// Update category free listing settings (admin only) - MUST BE BEFORE router.use middleware  
+router.patch("/:id/free-listing-settings", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "Invalid category ID" });
+    }
+
+    const {
+      freeListingLimitIndividual,
+      freeResetPeriodIndividual,
+      freeListingLimitCorporate,
+      freeResetPeriodCorporate,
+      applyToSubcategories
+    } = req.body;
+
+    // Validate the input
+    if (typeof freeListingLimitIndividual !== 'number' || 
+        typeof freeListingLimitCorporate !== 'number' || 
+        typeof applyToSubcategories !== 'boolean') {
+      return res.status(400).json({ error: "Invalid data types" });
+    }
+
+    if (!['monthly', 'yearly', 'once'].includes(freeResetPeriodIndividual) ||
+        !['monthly', 'yearly', 'once'].includes(freeResetPeriodCorporate)) {
+      return res.status(400).json({ error: "Invalid reset period values" });
+    }
+
+    // Update the category with free listing settings
+    const updatedCategory = await storage.updateCategory(categoryId, {
+      freeListingLimitIndividual,
+      freeResetPeriodIndividual,
+      freeListingLimitCorporate,
+      freeResetPeriodCorporate,
+      applyToSubcategories
+    });
+
+    console.log(`Free listing settings updated for category ${categoryId}:`, {
+      freeListingLimitIndividual,
+      freeListingLimitCorporate,
+      applyToSubcategories
+    });
+
+    res.json(updatedCategory);
+  } catch (error) {
+    console.error("Error updating free listing settings:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to update settings";
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
 // Reorder categories (admin only) - MUST BE BEFORE router.use middleware
 router.patch("/reorder", requireAuth, requireAdmin, async (req, res) => {
   try {
