@@ -330,7 +330,7 @@ export const categoryPackages = pgTable("category_packages", {
   categoryId: integer("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  price: integer("price").notNull().default(0), // Price in kuruş (cents)
+  price: integer("price").notNull().default(0), // Price in TL (Turkish Lira)
   durationDays: integer("duration_days").notNull().default(30),
   features: text("features").notNull().default("[]"), // JSON array of features
   membershipTypes: text("membership_types").notNull().default('["individual","corporate"]'), // JSON array
@@ -362,11 +362,11 @@ export const insertCategoryPackageSchema = createInsertSchema(categoryPackages).
   membershipTypes: z.string().default('["individual","corporate"]'),
   freeListingLimitIndividual: z.number().min(0, "Bireysel limit 0 veya pozitif olmalıdır").default(0),
   freeListingLimitCorporate: z.number().min(0, "Kurumsal limit 0 veya pozitif olmalıdır").default(0),
-  freeResetPeriodIndividual: z.string().default("monthly"),
-  freeResetPeriodCorporate: z.string().default("monthly"),
+  freeResetPeriodIndividual: z.enum(["monthly", "yearly", "once"]).default("monthly"),
+  freeResetPeriodCorporate: z.enum(["monthly", "yearly", "once"]).default("monthly"),
   freeListingTitle: z.string().default("Ücretsiz İlan"),
   freeListingDescription: z.string().default("Standart ilan özellikleri"),
-  freeListingPriceText: z.string().default("Ücretsiz"),
+  freeListingPriceText: z.string().default("0 TL"),
 });
 
 // Schema for updating category packages

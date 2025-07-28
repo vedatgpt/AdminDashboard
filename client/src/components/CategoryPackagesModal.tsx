@@ -27,7 +27,6 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
   const [formData, setFormData] = useState({
     name: "",
     price: 0,
-    originalPrice: 0,
     features: [] as string[],
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
@@ -38,7 +37,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     freeResetPeriodCorporate: "monthly" as "monthly" | "yearly" | "once",
     freeListingTitle: "Ücretsiz İlan",
     freeListingDescription: "Standart ilan özellikleri",
-    freeListingPriceText: "Ücretsiz",
+    freeListingPriceText: "0 TL",
   });
   
   const [newFeature, setNewFeature] = useState("");
@@ -67,7 +66,6 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     setFormData({
       name: "",
       price: 0,
-      originalPrice: 0,
       features: [],
       membershipTypes: ["individual", "corporate"],
       isActive: true,
@@ -77,7 +75,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       freeResetPeriodCorporate: "monthly",
       freeListingTitle: "Ücretsiz İlan",
       freeListingDescription: "Standart ilan özellikleri",
-      freeListingPriceText: "Ücretsiz",
+      freeListingPriceText: "0 TL",
     });
     setNewFeature("");
     setEditingPackage(null);
@@ -92,7 +90,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       categoryId: category.id,
       name: formData.name,
       price: formData.price,
-      originalPrice: formData.originalPrice,
+      durationDays: 30, // Default duration
       features: JSON.stringify(formData.features),
       membershipTypes: JSON.stringify(formData.membershipTypes),
       isActive: formData.isActive,
@@ -117,7 +115,6 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     setFormData({
       name: pkg.name,
       price: pkg.price,
-      originalPrice: pkg.originalPrice || 0,
       features: parseFeatures(pkg.features),
       membershipTypes: parseMembershipTypes(pkg.membershipTypes),
       isActive: pkg.isActive,
@@ -127,7 +124,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       freeResetPeriodCorporate: pkg.freeResetPeriodCorporate || "monthly",
       freeListingTitle: pkg.freeListingTitle || "Ücretsiz İlan",
       freeListingDescription: pkg.freeListingDescription || "Standart ilan özellikleri",
-      freeListingPriceText: pkg.freeListingPriceText || "Ücretsiz",
+      freeListingPriceText: pkg.freeListingPriceText || "0 TL",
     });
     setEditingPackage(pkg);
     setShowForm(true);
@@ -219,13 +216,8 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
                             <p className="text-2xl font-bold text-[#EC7830] mt-1">
-                              {pkg.price === 0 ? "Ücretsiz" : `${(pkg.price / 100).toFixed(2)} TL`}
+                              {pkg.price === 0 ? "Ücretsiz" : `${pkg.price} TL`}
                             </p>
-                            {pkg.originalPrice > 0 && pkg.originalPrice !== pkg.price && (
-                              <p className="text-sm text-gray-500 line-through">
-                                {(pkg.originalPrice / 100).toFixed(2)} TL
-                              </p>
-                            )}
                             
                             {/* Free listing info */}
                             {(pkg.freeListingLimitIndividual > 0 || pkg.freeListingLimitCorporate > 0) && (
@@ -429,6 +421,38 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                             onChange={(e) => setFormData(prev => ({ ...prev, freeListingLimitCorporate: parseInt(e.target.value) || 0 }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
                           />
+                        </div>
+                      </div>
+
+                      {/* Free Listing Reset Periods */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Bireysel Üye Periyodu
+                          </label>
+                          <select
+                            value={formData.freeResetPeriodIndividual}
+                            onChange={(e) => setFormData(prev => ({ ...prev, freeResetPeriodIndividual: e.target.value as "monthly" | "yearly" | "once" }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          >
+                            <option value="monthly">Aylık</option>
+                            <option value="yearly">Yıllık</option>
+                            <option value="once">Tek Seferlik</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Kurumsal Üye Periyodu
+                          </label>
+                          <select
+                            value={formData.freeResetPeriodCorporate}
+                            onChange={(e) => setFormData(prev => ({ ...prev, freeResetPeriodCorporate: e.target.value as "monthly" | "yearly" | "once" }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          >
+                            <option value="monthly">Aylık</option>
+                            <option value="yearly">Yıllık</option>
+                            <option value="once">Tek Seferlik</option>
+                          </select>
                         </div>
                       </div>
                       
