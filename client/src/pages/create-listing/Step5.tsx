@@ -91,7 +91,7 @@ export default function Step5() {
   const { data: category } = useQuery<Category>({
     queryKey: ['/api/categories', draftListing?.categoryId],
     enabled: !!draftListing?.categoryId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds for testing
   });
 
   // Fetch doping packages
@@ -163,12 +163,17 @@ export default function Step5() {
   // Fetch all categories in flat structure to check for inheritance
   const { data: allCategories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories/flat'],
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 seconds for testing
   });
 
   // Check if free listing is available for this category with inheritance
   const hasFreeListing = useMemo(() => {
-    if (!category || !allCategories.length || !authUser) return false;
+    if (!category || !allCategories.length || !authUser) {
+      console.log(`🚫 hasFreeListing: Missing data - category: ${!!category}, allCategories: ${allCategories.length}, authUser: ${!!authUser}`);
+      return false;
+    }
+    
+    console.log(`🔍 FREE LISTING CHECK for category: ${category.name} (ID: ${category.id}), user: ${authUser.role}`);
     
     // Build hierarchy path from current category to root
     const getHierarchyPath = (categoryId: number): Category[] => {
@@ -188,16 +193,21 @@ export default function Step5() {
     const isIndividual = authUser.role === 'individual';
     const isCorporate = authUser.role === 'corporate';
     
+    console.log(`📊 Category hierarchy (${hierarchyPath.length} levels):`, hierarchyPath.map(c => `${c.name} (${c.id}): ind=${c.freeListingLimitIndividual}, corp=${c.freeListingLimitCorporate}`));
+    
     // Check each category in hierarchy for free listing limits based on user role
     for (const cat of hierarchyPath) {
       if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
+        console.log(`✅ FREE LISTING FOUND: ${cat.name} has individual limit: ${cat.freeListingLimitIndividual}`);
         return true;
       }
       if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
+        console.log(`✅ FREE LISTING FOUND: ${cat.name} has corporate limit: ${cat.freeListingLimitCorporate}`);
         return true;
       }
     }
     
+    console.log(`❌ NO FREE LISTING: No category in hierarchy has limits for ${authUser.role} users`);
     return false;
   }, [category, allCategories, authUser]);
 
