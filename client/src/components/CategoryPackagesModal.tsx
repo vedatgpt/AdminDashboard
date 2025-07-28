@@ -31,6 +31,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     features: [] as string[],
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
+    applyToSubcategories: false,
     // Free listing configuration fields
     freeListingLimitIndividual: 0,
     freeListingLimitCorporate: 0,
@@ -71,6 +72,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       features: [],
       membershipTypes: ["individual", "corporate"],
       isActive: true,
+      applyToSubcategories: false,
       freeListingLimitIndividual: 0,
       freeListingLimitCorporate: 0,
       freeResetPeriodIndividual: "monthly",
@@ -96,6 +98,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       features: JSON.stringify(formData.features),
       membershipTypes: JSON.stringify(formData.membershipTypes),
       isActive: formData.isActive,
+      applyToSubcategories: formData.applyToSubcategories,
       // Free listing configuration
       freeListingLimitIndividual: formData.freeListingLimitIndividual,
       freeListingLimitCorporate: formData.freeListingLimitCorporate,
@@ -121,6 +124,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       features: parseFeatures(pkg.features),
       membershipTypes: parseMembershipTypes(pkg.membershipTypes),
       isActive: pkg.isActive,
+      applyToSubcategories: pkg.applyToSubcategories || false,
       freeListingLimitIndividual: pkg.freeListingLimitIndividual || 0,
       freeListingLimitCorporate: pkg.freeListingLimitCorporate || 0,
       freeResetPeriodIndividual: pkg.freeResetPeriodIndividual || "monthly",
@@ -174,6 +178,9 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
 
   if (!isOpen) return null;
 
+  // Check if this category has inherited packages (has parent packages applying to subcategories)
+  const hasInheritedPackages = packages && packages.some(pkg => pkg.categoryId !== category?.id);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -189,6 +196,19 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
             ×
           </button>
         </div>
+
+        {/* Inheritance Warning */}
+        {hasInheritedPackages && (
+          <div className="px-6 py-3 bg-amber-50 border-b border-amber-200">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 text-lg">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-amber-800">Bu kategoride üst kategori paketleri geçerli</p>
+                <p className="text-xs text-amber-700">Alt kategori olduğu için bazı paket ayarları üst kategoriden devralınıyor ve değiştirilemez.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6">
@@ -214,64 +234,82 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
 
                 {packages && packages.length > 0 ? (
                   <div className="space-y-3">
-                    {packages.map((pkg) => (
-                      <div key={pkg.id} className="bg-gray-50 p-4 rounded-lg border">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
-                            <p className="text-2xl font-bold text-[#EC7830] mt-1">
-                              {pkg.price === 0 ? "Ücretsiz" : `${pkg.price} TL`}
-                            </p>
-                            
-                            {/* Free listing info */}
-                            {(pkg.freeListingLimitIndividual > 0 || pkg.freeListingLimitCorporate > 0) && (
-                              <div className="mt-2 text-sm text-green-600">
-                                Ücretsiz Hak: {pkg.freeListingLimitIndividual > 0 && `Bireysel ${pkg.freeListingLimitIndividual}`}
-                                {pkg.freeListingLimitIndividual > 0 && pkg.freeListingLimitCorporate > 0 && ", "}
-                                {pkg.freeListingLimitCorporate > 0 && `Kurumsal ${pkg.freeListingLimitCorporate}`}
-                              </div>
-                            )}
-                            
-                            <div className="mt-2">
-                              <div className="flex flex-wrap gap-1">
-                                {parseFeatures(pkg.features).map((feature, index) => (
-                                  <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                    {feature}
+                    {packages.map((pkg) => {
+                      const isInherited = pkg.categoryId !== category?.id;
+                      return (
+                        <div key={pkg.id} className={`p-4 rounded-lg border ${isInherited ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
+                                {isInherited && (
+                                  <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                                    Üst Kategoriden
                                   </span>
-                                ))}
+                                )}
+                              </div>
+                              <p className="text-2xl font-bold text-[#EC7830] mt-1">
+                                {pkg.price === 0 ? "Ücretsiz" : `${pkg.price} TL`}
+                              </p>
+                              
+                              {/* Free listing info */}
+                              {(pkg.freeListingLimitIndividual > 0 || pkg.freeListingLimitCorporate > 0) && (
+                                <div className="mt-2 text-sm text-green-600">
+                                  Ücretsiz Hak: {pkg.freeListingLimitIndividual > 0 && `Bireysel ${pkg.freeListingLimitIndividual}`}
+                                  {pkg.freeListingLimitIndividual > 0 && pkg.freeListingLimitCorporate > 0 && ", "}
+                                  {pkg.freeListingLimitCorporate > 0 && `Kurumsal ${pkg.freeListingLimitCorporate}`}
+                                </div>
+                              )}
+                              
+                              <div className="mt-2">
+                                <div className="flex flex-wrap gap-1">
+                                  {parseFeatures(pkg.features).map((feature, index) => (
+                                    <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                      {feature}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="mt-2 flex items-center gap-4">
+                                <span className={`inline-block px-2 py-1 rounded text-xs ${
+                                  pkg.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                }`}>
+                                  {pkg.isActive ? "Aktif" : "Pasif"}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  Kullanıcı Tipi: {parseMembershipTypes(pkg.membershipTypes).map(type => 
+                                    type === "individual" ? "Bireysel" : "Kurumsal"
+                                  ).join(", ")}
+                                </span>
                               </div>
                             </div>
-                            <div className="mt-2 flex items-center gap-4">
-                              <span className={`inline-block px-2 py-1 rounded text-xs ${
-                                pkg.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                              }`}>
-                                {pkg.isActive ? "Aktif" : "Pasif"}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                Kullanıcı Tipi: {parseMembershipTypes(pkg.membershipTypes).map(type => 
-                                  type === "individual" ? "Bireysel" : "Kurumsal"
-                                ).join(", ")}
-                              </span>
+                            <div className="flex gap-2 ml-4">
+                              {!isInherited ? (
+                                <>
+                                  <button
+                                    onClick={() => handleEdit(pkg)}
+                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                  >
+                                    Düzenle
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(pkg.id)}
+                                    disabled={isDeleting}
+                                    className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+                                  >
+                                    Sil
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-amber-600 font-medium">
+                                  Düzenlenemez
+                                </span>
+                              )}
                             </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <button
-                              onClick={() => handleEdit(pkg)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              Düzenle
-                            </button>
-                            <button
-                              onClick={() => handleDelete(pkg.id)}
-                              disabled={isDeleting}
-                              className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
-                            >
-                              Sil
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -516,17 +554,35 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                       </div>
                     </div>
 
-                    {/* Active/Inactive Status */}
-                    <div className="flex items-center">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.isActive}
-                          onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                          className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Paket aktif</span>
-                      </label>
+                    {/* Active/Inactive Status and Apply to Subcategories */}
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Paket aktif</span>
+                        </label>
+                      </div>
+                      <div className="flex items-center">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.applyToSubcategories}
+                            onChange={(e) => setFormData(prev => ({ ...prev, applyToSubcategories: e.target.checked }))}
+                            className="rounded border-gray-300 text-[#EC7830] focus:ring-[#EC7830]"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
+                        </label>
+                      </div>
+                      {formData.applyToSubcategories && (
+                        <div className="ml-6 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                          ⚠️ Bu paket ayarları tüm alt kategorilere uygulanacak ve alt kategorilerde değiştirilemeyecek.
+                        </div>
+                      )}
                     </div>
 
                     {/* Submit Buttons */}
