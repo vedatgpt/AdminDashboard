@@ -141,7 +141,7 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
             setInheritedSettings({
               hasInheritance,
               parentCategory,
-              inheritedLimits
+              inheritedLimits: inheritedLimits || { individual: 0, corporate: 0 }
             });
 
             setFreeListingData({

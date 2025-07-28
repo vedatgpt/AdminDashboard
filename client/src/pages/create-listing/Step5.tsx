@@ -88,10 +88,11 @@ export default function Step5() {
   });
 
   // Fetch category details to check free listing limits
-  const { data: category } = useQuery<Category>({
+  const { data: category, refetch: refetchCategory } = useQuery<Category>({
     queryKey: ['/api/categories', draftListing?.categoryId],
     enabled: !!draftListing?.categoryId,
-    staleTime: 30 * 1000, // 30 seconds for testing
+    staleTime: 5 * 1000, // 5 seconds for real-time testing
+    refetchInterval: 10 * 1000, // Auto-refetch every 10 seconds
   });
 
   // Fetch doping packages
@@ -161,9 +162,10 @@ export default function Step5() {
   }, [selectedCategoryPackage, selectedDopingPackages, totalPrice, executeWithProtection]);
 
   // Fetch all categories in flat structure to check for inheritance
-  const { data: allCategories = [] } = useQuery<Category[]>({
+  const { data: allCategories = [], refetch: refetchCategories } = useQuery<Category[]>({
     queryKey: ['/api/categories/flat'],
-    staleTime: 30 * 1000, // 30 seconds for testing
+    staleTime: 5 * 1000, // 5 seconds for real-time testing
+    refetchInterval: 10 * 1000, // Auto-refetch every 10 seconds
   });
 
   // Check if free listing is available for this category with inheritance
