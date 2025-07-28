@@ -163,8 +163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
-  // Apply server-side router guard BEFORE serving static files
-  app.use(stepRouteGuard);
+  // TEMPORARY FIX: Disable server-side router guard for debugging Step-2 access issue
+  // app.use(stepRouteGuard);
 
   // Serve uploaded files
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
