@@ -1409,7 +1409,7 @@ app.patch("/api/categories/:categoryId/packages/reorder", requireAdmin, async (r
   });
 
   // Free listing settings routes
-  app.patch("/api/categories/:categoryId/free-listing-settings", requireAdmin, async (req, res) => {
+  app.patch("/api/categories/:categoryId/free-listing-settings", async (req, res) => {
     try {
       const categoryId = parseInt(req.params.categoryId);
       if (isNaN(categoryId)) {

@@ -42,6 +42,10 @@ interface Category {
   parentId?: number;
   freeListingLimitIndividual?: number;
   freeListingLimitCorporate?: number;
+  freeListingTitle?: string;
+  freeListingDescription?: string;
+  freeListingCurrentPrice?: string;
+  freeListingOriginalPrice?: string;
 }
 
 export default function Step5() {
@@ -240,11 +244,14 @@ export default function Step5() {
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
-                        <p className="text-gray-600 text-sm">Standart ilan özelliklerini kullanın</p>
+                        <h3 className="font-semibold text-gray-900">{category?.freeListingTitle || "Ücretsiz İlan"}</h3>
+                        <p className="text-gray-600 text-sm">{category?.freeListingDescription || "Standart ilan özelliklerini kullanın"}</p>
                       </div>
-                      <div>
-                        <p className="font-bold text-green-600">Ücretsiz</p>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">{category?.freeListingCurrentPrice || "0 TL"}</p>
+                        {category?.freeListingOriginalPrice && (
+                          <p className="text-sm text-gray-500 line-through">{category.freeListingOriginalPrice}</p>
+                        )}
                       </div>
                     </div>
                   </div>
