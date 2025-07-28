@@ -46,6 +46,7 @@ interface Category {
   freeListingDescription?: string;
   freeListingCurrentPrice?: string;
   freeListingOriginalPrice?: string;
+  applyToSubcategories?: boolean;
 }
 
 export default function Step5() {
@@ -193,12 +194,19 @@ export default function Step5() {
     const isCorporate = authUser.role === 'corporate';
     
     // Check each category in hierarchy for free listing limits based on user role
-    for (const cat of hierarchyPath) {
-      if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
-        return true;
-      }
-      if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
-        return true;
+    // Only consider categories that have applyToSubcategories = true or the exact category
+    for (let i = 0; i < hierarchyPath.length; i++) {
+      const cat = hierarchyPath[i];
+      
+      // For exact category match (i=0), always check limits
+      // For parent categories (i>0), only check if applyToSubcategories is true
+      if (i === 0 || cat.applyToSubcategories) {
+        if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
+          return true;
+        }
+        if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
+          return true;
+        }
       }
     }
     
