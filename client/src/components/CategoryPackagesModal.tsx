@@ -973,9 +973,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                   {!inheritedSettings.hasTextInheritance && (
                     <div className="space-y-4">
                       <h4 className="text-md font-medium text-gray-900">Metin İçeriği Ayarları</h4>
-                      <p className="text-sm text-gray-600">
-                        Step-5 sayfasında gösterilen ücretsiz ilan kutusundaki metinleri düzenleyin.
-                      </p>
 
                       <div className="grid grid-cols-1 gap-4">
                         {/* Free Listing Title */}
