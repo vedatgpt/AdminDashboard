@@ -969,124 +969,108 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                     </div>
                   </div>
 
-                  {/* Text Content Settings */}
-                  <div className="space-y-4">
-                    <h4 className="text-md font-medium text-gray-900">Metin İçeriği Ayarları</h4>
-                    
-                    {/* Text Content Inheritance Warning */}
-                    {inheritedSettings.hasTextInheritance && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <div className="flex items-start">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800">Metin İçeriği (Üst Kategoriden Devralınıyor)</h3>
-                            <p className="mt-1 text-sm text-yellow-700">
-                              Bu kategori "{inheritedSettings.textParentCategory?.name}" kategorisinden metin içeriğini devralmaktadır.
-                              Değişiklik yapmak için üst kategoriyi düzenleyin.
-                            </p>
-                            <div className="mt-2">
-                              <button
-                                type="button"
-                                className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
-                                onClick={() => {
-                                  console.log(`🎯 Navigating to text parent category: ${inheritedSettings.textParentCategory?.name} (ID: ${inheritedSettings.textParentCategory?.id})`);
-                                  onClose();
-                                  window.dispatchEvent(new CustomEvent('openCategoryPackages', {
-                                    detail: { 
-                                      category: {
-                                        id: inheritedSettings.textParentCategory?.id,
-                                        name: inheritedSettings.textParentCategory?.name
-                                      }
+                  {/* Text Content Settings - Only show if NO text inheritance */}
+                  {!inheritedSettings.hasTextInheritance && (
+                    <div className="space-y-4">
+                      <h4 className="text-md font-medium text-gray-900">Metin İçeriği Ayarları</h4>
+                      <p className="text-sm text-gray-600">
+                        Step-5 sayfasında gösterilen ücretsiz ilan kutusundaki metinleri düzenleyin.
+                      </p>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        {/* Free Listing Title */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Başlık <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                            value={freeListingData.freeListingTitle}
+                            onChange={(e) => setFreeListingData({
+                              ...freeListingData,
+                              freeListingTitle: e.target.value
+                            })}
+                            placeholder="Ücretsiz İlan"
+                          />
+                        </div>
+
+                        {/* Free Listing Description */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Açıklama <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                            value={freeListingData.freeListingDescription}
+                            onChange={(e) => setFreeListingData({
+                              ...freeListingData,
+                              freeListingDescription: e.target.value
+                            })}
+                            placeholder="Standart ilan özelliklerini kullanın"
+                          />
+                        </div>
+
+                        {/* Free Listing Price Text */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Fiyat Metni <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
+                            value={freeListingData.freeListingPriceText}
+                            onChange={(e) => setFreeListingData({
+                              ...freeListingData,
+                              freeListingPriceText: e.target.value
+                            })}
+                            placeholder="Ücretsiz"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Text Content Inheritance Warning - Only show if has text inheritance */}
+                  {inheritedSettings.hasTextInheritance && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-yellow-800">Metin İçeriği (Üst Kategoriden Devralınıyor)</h3>
+                          <p className="mt-1 text-sm text-yellow-700">
+                            Bu kategori "{inheritedSettings.textParentCategory?.name}" kategorisinden metin içeriğini devralmaktadır.
+                            Değişiklik yapmak için üst kategoriyi düzenleyin.
+                          </p>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                              onClick={() => {
+                                console.log(`🎯 Navigating to text parent category: ${inheritedSettings.textParentCategory?.name} (ID: ${inheritedSettings.textParentCategory?.id})`);
+                                onClose();
+                                window.dispatchEvent(new CustomEvent('openCategoryPackages', {
+                                  detail: { 
+                                    category: {
+                                      id: inheritedSettings.textParentCategory?.id,
+                                      name: inheritedSettings.textParentCategory?.name
                                     }
-                                  }));
-                                }}
-                              >
-                                "{inheritedSettings.textParentCategory?.name}" Kategorisini Düzenle
-                              </button>
-                            </div>
+                                  }
+                                }));
+                              }}
+                            >
+                              "{inheritedSettings.textParentCategory?.name}" Kategorisini Düzenle
+                            </button>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-1 gap-4">
-                      {/* Free Listing Title */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ücretsiz İlan Başlığı
-                        </label>
-                        <input
-                          type="text"
-                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
-                            inheritedSettings.hasTextInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
-                          }`}
-                          value={inheritedSettings.hasTextInheritance ? 
-                            (inheritedSettings.textParentCategory?.freeListingTitle || "Ücretsiz İlan") : 
-                            freeListingData.freeListingTitle
-                          }
-                          onChange={(e) => !inheritedSettings.hasTextInheritance && setFreeListingData({
-                            ...freeListingData,
-                            freeListingTitle: e.target.value
-                          })}
-                          disabled={inheritedSettings.hasTextInheritance}
-                          readOnly={inheritedSettings.hasTextInheritance}
-                          placeholder="Ücretsiz İlan"
-                        />
-                      </div>
-
-                      {/* Free Listing Description */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ücretsiz İlan Açıklaması
-                        </label>
-                        <input
-                          type="text"
-                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
-                            inheritedSettings.hasTextInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
-                          }`}
-                          value={inheritedSettings.hasTextInheritance ? 
-                            (inheritedSettings.textParentCategory?.freeListingDescription || "Standart ilan özelliklerini kullanın") : 
-                            freeListingData.freeListingDescription
-                          }
-                          onChange={(e) => !inheritedSettings.hasTextInheritance && setFreeListingData({
-                            ...freeListingData,
-                            freeListingDescription: e.target.value
-                          })}
-                          disabled={inheritedSettings.hasTextInheritance}
-                          readOnly={inheritedSettings.hasTextInheritance}
-                          placeholder="Standart ilan özelliklerini kullanın"
-                        />
-                      </div>
-
-                      {/* Free Listing Price Text */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ücretsiz İlan Fiyat Metni
-                        </label>
-                        <input
-                          type="text"
-                          className={`py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830] ${
-                            inheritedSettings.hasTextInheritance ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : ''
-                          }`}
-                          value={inheritedSettings.hasTextInheritance ? 
-                            (inheritedSettings.textParentCategory?.freeListingPriceText || "Ücretsiz") : 
-                            freeListingData.freeListingPriceText
-                          }
-                          onChange={(e) => !inheritedSettings.hasTextInheritance && setFreeListingData({
-                            ...freeListingData,
-                            freeListingPriceText: e.target.value
-                          })}
-                          disabled={inheritedSettings.hasTextInheritance}
-                          readOnly={inheritedSettings.hasTextInheritance}
-                          placeholder="Ücretsiz"
-                        />
-                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Apply to Subcategories - Only visible if not inherited */}
                   {(!inheritedSettings.hasInheritance || !inheritedSettings.hasTextInheritance) && (
