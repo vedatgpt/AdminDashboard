@@ -29,11 +29,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
     freeListingLimitCorporate: 0,
     freeResetPeriodCorporate: "monthly" as "monthly" | "yearly" | "once",
     applyToSubcategories: true,
-    // NEW DISPLAY SETTINGS
-    freeListingTitle: "Ücretsiz İlan",
-    freeListingDescription: "Bu kategoride ücretsiz ilan verebilirsiniz",
-    freeListingCurrentPrice: "0 TL",
-    freeListingOriginalPrice: null as string | null,
   });
 
   const [activeTab, setActiveTab] = useState<"packages" | "free">("packages");
@@ -91,10 +86,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
               freeListingLimitCorporate: fullCategory.freeListingLimitCorporate || 0,
               freeResetPeriodCorporate: fullCategory.freeResetPeriodCorporate || "monthly",
               applyToSubcategories: fullCategory.applyToSubcategories !== false,
-              freeListingTitle: fullCategory.freeListingTitle || "Ücretsiz İlan",
-              freeListingDescription: fullCategory.freeListingDescription || "Bu kategoride ücretsiz ilan verebilirsiniz",
-              freeListingCurrentPrice: fullCategory.freeListingCurrentPrice || "0 TL",
-              freeListingOriginalPrice: fullCategory.freeListingOriginalPrice || null,
             });
           }
         })
@@ -146,10 +137,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
         freeListingLimitCorporate: updatedCategory.freeListingLimitCorporate || 0,
         freeResetPeriodCorporate: updatedCategory.freeResetPeriodCorporate || "monthly",
         applyToSubcategories: updatedCategory.applyToSubcategories || true,
-        freeListingTitle: updatedCategory.freeListingTitle || "Ücretsiz İlan",
-        freeListingDescription: updatedCategory.freeListingDescription || "Bu kategoride ücretsiz ilan verebilirsiniz",
-        freeListingCurrentPrice: updatedCategory.freeListingCurrentPrice || "0 TL",
-        freeListingOriginalPrice: updatedCategory.freeListingOriginalPrice || null,
       });
 
       // Show a temporary success notification in the UI
@@ -754,83 +741,6 @@ export default function CategoryPackagesModal({ isOpen, onClose, category }: Cat
                     <p className="mt-1 ml-6 text-xs text-gray-500">
                       Bu ayarlar alt kategoriler için de geçerli olacak
                     </p>
-                  </div>
-
-                  {/* Display Settings Section */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-gray-900 mb-3">Görünüm Ayarları</h4>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Paket Adı
-                          </label>
-                          <input
-                            type="text"
-                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                            value={freeListingData.freeListingTitle}
-                            onChange={(e) => setFreeListingData({
-                              ...freeListingData,
-                              freeListingTitle: e.target.value
-                            })}
-                            placeholder="Ücretsiz İlan"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Açıklama
-                          </label>
-                          <input
-                            type="text"
-                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                            value={freeListingData.freeListingDescription}
-                            onChange={(e) => setFreeListingData({
-                              ...freeListingData,
-                              freeListingDescription: e.target.value
-                            })}
-                            placeholder="Bu kategoride ücretsiz ilan verebilirsiniz"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Güncel Fiyat
-                          </label>
-                          <input
-                            type="text"
-                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                            value={freeListingData.freeListingCurrentPrice}
-                            onChange={(e) => setFreeListingData({
-                              ...freeListingData,
-                              freeListingCurrentPrice: e.target.value
-                            })}
-                            placeholder="0 TL"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Eski Fiyat (Üstü Çizgili)
-                          </label>
-                          <input
-                            type="text"
-                            className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-[#EC7830] focus:ring-[#EC7830]"
-                            value={freeListingData.freeListingOriginalPrice || ''}
-                            onChange={(e) => setFreeListingData({
-                              ...freeListingData,
-                              freeListingOriginalPrice: e.target.value || null
-                            })}
-                            placeholder="249 TL"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Boş bırakırsanız eski fiyat gösterilmez
-                          </p>
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Save Button */}

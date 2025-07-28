@@ -98,12 +98,6 @@ export const categories = pgTable("categories", {
   freeListingLimitCorporate: integer("free_listing_limit_corporate").notNull().default(0), 
   freeResetPeriodCorporate: text("free_reset_period_corporate").notNull().default("monthly"),
   applyToSubcategories: boolean("apply_to_subcategories").notNull().default(true),
-  
-  // FREE LISTING DISPLAY SETTINGS
-  freeListingTitle: text("free_listing_title").default("Ücretsiz İlan"),
-  freeListingDescription: text("free_listing_description").default("Bu kategoride ücretsiz ilan verebilirsiniz"),
-  freeListingCurrentPrice: text("free_listing_current_price").default("0 TL"),
-  freeListingOriginalPrice: text("free_listing_original_price"), // nullable for strikethrough effect
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({

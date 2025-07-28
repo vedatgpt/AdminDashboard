@@ -42,11 +42,6 @@ interface Category {
   parentId?: number;
   freeListingLimitIndividual?: number;
   freeListingLimitCorporate?: number;
-  freeListingTitle?: string;
-  freeListingDescription?: string;
-  freeListingCurrentPrice?: string;
-  freeListingOriginalPrice?: string;
-  applyToSubcategories?: boolean;
 }
 
 export default function Step5() {
@@ -194,19 +189,12 @@ export default function Step5() {
     const isCorporate = authUser.role === 'corporate';
     
     // Check each category in hierarchy for free listing limits based on user role
-    // Only consider categories that have applyToSubcategories = true or the exact category
-    for (let i = 0; i < hierarchyPath.length; i++) {
-      const cat = hierarchyPath[i];
-      
-      // For exact category match (i=0), always check limits
-      // For parent categories (i>0), only check if applyToSubcategories is true
-      if (i === 0 || cat.applyToSubcategories) {
-        if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
-          return true;
-        }
-        if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
-          return true;
-        }
+    for (const cat of hierarchyPath) {
+      if (isIndividual && cat.freeListingLimitIndividual && cat.freeListingLimitIndividual > 0) {
+        return true;
+      }
+      if (isCorporate && cat.freeListingLimitCorporate && cat.freeListingLimitCorporate > 0) {
+        return true;
       }
     }
     
@@ -252,14 +240,11 @@ export default function Step5() {
                   >
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="font-semibold text-gray-900">{category?.freeListingTitle || "Ücretsiz İlan"}</h3>
-                        <p className="text-gray-600 text-sm">{category?.freeListingDescription || "Standart ilan özelliklerini kullanın"}</p>
+                        <h3 className="font-semibold text-gray-900">Ücretsiz İlan</h3>
+                        <p className="text-gray-600 text-sm">Standart ilan özelliklerini kullanın</p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-green-600">{category?.freeListingCurrentPrice || "0 TL"}</p>
-                        {category?.freeListingOriginalPrice && (
-                          <p className="text-sm text-gray-500 line-through">{category.freeListingOriginalPrice}</p>
-                        )}
+                      <div>
+                        <p className="font-bold text-green-600">Ücretsiz</p>
                       </div>
                     </div>
                   </div>
