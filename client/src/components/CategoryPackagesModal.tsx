@@ -27,6 +27,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
   const [formData, setFormData] = useState({
     name: "",
     price: 0,
+    durationDays: 30,
     features: [] as string[],
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
@@ -66,6 +67,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     setFormData({
       name: "",
       price: 0,
+      durationDays: 30,
       features: [],
       membershipTypes: ["individual", "corporate"],
       isActive: true,
@@ -90,7 +92,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       categoryId: category.id,
       name: formData.name,
       price: formData.price,
-      durationDays: 30, // Default duration
+      durationDays: formData.durationDays,
       features: JSON.stringify(formData.features),
       membershipTypes: JSON.stringify(formData.membershipTypes),
       isActive: formData.isActive,
@@ -115,6 +117,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     setFormData({
       name: pkg.name,
       price: pkg.price,
+      durationDays: pkg.durationDays || 30,
       features: parseFeatures(pkg.features),
       membershipTypes: parseMembershipTypes(pkg.membershipTypes),
       isActive: pkg.isActive,
@@ -196,17 +199,18 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
             </div>
           ) : (
             <div>
-              {/* Package List */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Mevcut Paketler</h3>
-                  <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="bg-[#EC7830] hover:bg-[#d96b2a] text-white px-4 py-2 rounded-md text-sm font-medium"
-                  >
-                    {showForm ? "İptal Et" : "Yeni Paket Ekle"}
-                  </button>
-                </div>
+              {/* Package List - Only show when not in form mode */}
+              {!showForm && (
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Mevcut Paketler</h3>
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="bg-[#EC7830] hover:bg-[#d96b2a] text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                      Yeni Paket Ekle
+                    </button>
+                  </div>
 
                 {packages && packages.length > 0 ? (
                   <div className="space-y-3">
@@ -274,7 +278,8 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                     <p>Henüz paket eklenmemiş.</p>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
 
               {/* Package Form */}
               {showForm && (
@@ -284,7 +289,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                   </h3>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Package Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Paket Adı *
@@ -300,7 +305,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Fiyat (Kuruş) *
+                          Fiyat (TL) *
                         </label>
                         <input
                           type="number"
@@ -309,7 +314,21 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                           value={formData.price}
                           onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
-                          placeholder="9900"
+                          placeholder="99"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Süre (Gün) *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          value={formData.durationDays}
+                          onChange={(e) => setFormData(prev => ({ ...prev, durationDays: parseInt(e.target.value) || 30 }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                          placeholder="30"
                         />
                       </div>
                     </div>
@@ -528,6 +547,21 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                       </button>
                     </div>
                   </form>
+                </div>
+              )}
+
+              {/* Add/Cancel buttons when in form mode */}
+              {showForm && (
+                <div className="mt-6 pt-4 border-t">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      İptal Et
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
