@@ -162,7 +162,7 @@ export default function Step5() {
 
     selectedDopingPackages.forEach(id => {
       const pkg = dopingPackages.find((p: DopingPackage) => p.id === id);
-      if (pkg) total += pkg.price;
+      if (pkg) total += (pkg.price / 100);
     });
 
     return total;
@@ -409,9 +409,7 @@ export default function Step5() {
                               <div className="text-sm text-gray-500 line-through">
                                 {displayPrice.originalPrice} TL
                               </div>
-                              <div className="text-xs text-green-600 font-medium">
-                                Ücretsiz ilan hakkınız mevcut
-                              </div>
+
                             </div>
                           ) : (
                             <div className="text-2xl font-bold text-gray-900">
@@ -495,7 +493,7 @@ export default function Step5() {
                         )}
                       </div>
                       <div className="ml-4">
-                        <p className="font-bold text-[#EC7830]">{pkg.price.toLocaleString('tr-TR')} TL</p>
+                        <p className="font-bold text-[#EC7830]">{(pkg.price / 100).toLocaleString('tr-TR')} TL</p>
                       </div>
                     </div>
                   </div>
@@ -512,14 +510,12 @@ export default function Step5() {
         </div>
 
         {/* Total Price */}
-        {totalPrice > 0 && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Toplam Tutar</h3>
-              <p className="text-2xl font-bold text-[#EC7830]">{totalPrice.toLocaleString('tr-TR')} TL</p>
-            </div>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-900">Toplam Tutar</h3>
+            <p className="text-2xl font-bold text-[#EC7830]">{totalPrice.toLocaleString('tr-TR')} TL</p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Action Buttons */}
