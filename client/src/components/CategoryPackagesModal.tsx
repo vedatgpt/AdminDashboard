@@ -28,6 +28,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
     name: "",
     price: 0,
     durationDays: 30,
+    description: "",
     features: [] as string[],
     membershipTypes: ["individual", "corporate"] as string[],
     isActive: true,
@@ -69,6 +70,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       name: "",
       price: 0,
       durationDays: 30,
+      description: "",
       features: [],
       membershipTypes: ["individual", "corporate"],
       isActive: true,
@@ -95,6 +97,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       name: formData.name,
       price: formData.price,
       durationDays: formData.durationDays,
+      description: formData.description,
       features: JSON.stringify(formData.features),
       membershipTypes: JSON.stringify(formData.membershipTypes),
       isActive: formData.isActive,
@@ -121,6 +124,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
       name: pkg.name,
       price: pkg.price,
       durationDays: pkg.durationDays || 30,
+      description: pkg.description || "",
       features: parseFeatures(pkg.features),
       membershipTypes: parseMembershipTypes(pkg.membershipTypes),
       isActive: pkg.isActive,
@@ -224,12 +228,14 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-medium text-gray-900">Mevcut Paketler</h3>
-                    <button
-                      onClick={() => setShowForm(true)}
-                      className="bg-[#EC7830] hover:bg-[#d96b2a] text-white px-4 py-2 rounded-md text-sm font-medium"
-                    >
-                      Yeni Paket Ekle
-                    </button>
+                    {!hasInheritedPackages && (
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="bg-[#EC7830] hover:bg-[#d96b2a] text-white px-4 py-2 rounded-md text-sm font-medium"
+                      >
+                        Yeni Paket Ekle
+                      </button>
+                    )}
                   </div>
 
                 {packages && packages.length > 0 ? (
@@ -321,7 +327,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
 
               {/* Package Form */}
               {showForm && (
-                <div className="border-t pt-6">
+                <div className="pt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     {editingPackage ? "Paket Düzenle" : "Yeni Paket Ekle"}
                   </h3>
@@ -369,6 +375,20 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                           placeholder="30"
                         />
                       </div>
+                    </div>
+
+                    {/* Package Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Paket Açıklaması
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.description || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#EC7830] focus:border-transparent"
+                        placeholder="Paket ile ilgili açıklama"
+                      />
                     </div>
 
                     {/* Features */}
@@ -578,11 +598,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                           <span className="ml-2 text-sm text-gray-700">Alt kategorilere de uygula</span>
                         </label>
                       </div>
-                      {formData.applyToSubcategories && (
-                        <div className="ml-6 text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                          ⚠️ Bu paket ayarları tüm alt kategorilere uygulanacak ve alt kategorilerde değiştirilemeyecek.
-                        </div>
-                      )}
+
                     </div>
 
                     {/* Submit Buttons */}
@@ -606,20 +622,7 @@ export default function CategoryPackagesModal({ category, isOpen, onClose }: Cat
                 </div>
               )}
 
-              {/* Add/Cancel buttons when in form mode */}
-              {showForm && (
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      İptal Et
-                    </button>
-                  </div>
-                </div>
-              )}
+
             </div>
           )}
         </div>
