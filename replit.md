@@ -278,6 +278,15 @@ Authentication features:
 - **SYSTEM-UI FONT MIGRATION**: Migrated from Inter to system-ui fonts for better performance and native appearance
 - **SECURITY HARDENING**: Proper production session configuration with secure cookies and session persistence
 
+### Step Guard Security Relaxation (July 29, 2025)
+- **CRITICAL FIX**: Removed overly restrictive step guard causing account switching navigation issues
+- **SERVER-SIDE SIMPLIFICATION**: Stepguard now only checks authentication and classifiedId existence
+- **API ENDPOINT RELAXATION**: Removed ownership verification from draft listing CRUD operations
+- **ACCOUNT SWITCHING FRIENDLY**: Users can now switch accounts without step navigation blocking
+- **PHOTO UPLOAD BUG FIX**: Fixed sortable.js removeEventListener error during photo upload with proper cleanup
+- **MINIMAL SECURITY**: Maintains authentication requirements while allowing smooth user experience
+- **PRODUCTION READY**: All step transitions work seamlessly after account changes
+
 ### Additional UX Improvements Completed (July 27, 2025)
 - **STEP-1 DOUBLE-CLICK PROTECTION**: Added protection to "Devam Et" buttons on both desktop and mobile layouts
 - **STEP-3 PHOTO VALIDATION**: Added mandatory photo upload validation - users must upload at least one photo to proceed

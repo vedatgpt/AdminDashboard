@@ -417,7 +417,18 @@ export default function Step3() {
 
     if (sortableRef.current && nonUploadingImages.length > 0) {
       try {
-                sortable = Sortable.create(sortableRef.current, {
+        // Destroy existing sortable instance if it exists
+        const existingSortable = (sortableRef.current as any).sortableInstance;
+        if (existingSortable) {
+          try {
+            existingSortable.destroy();
+          } catch (e) {
+            // Ignore destroy errors
+          }
+          (sortableRef.current as any).sortableInstance = null;
+        }
+
+        sortable = Sortable.create(sortableRef.current, {
           animation: 150,
           handle: '.drag-handle',
           ghostClass: 'opacity-50',
@@ -447,18 +458,25 @@ export default function Step3() {
             }
           }
         });
+
+        // Store instance for cleanup
+        (sortableRef.current as any).sortableInstance = sortable;
       } catch (error) {
         console.error('Sortable.js initialization error:', error);
       }
     }
 
     return () => {
-      if (sortable && sortable.el) {
+      if (sortable) {
         try {
           sortable.destroy();
         } catch (error) {
           // Sortable already destroyed, ignore error
         }
+      }
+      // Also cleanup stored instance
+      if (sortableRef.current) {
+        (sortableRef.current as any).sortableInstance = null;
       }
     };
   }, [nonUploadingImages.length, debouncedSave]); // Only reinitialize when non-uploading images change
