@@ -38,8 +38,20 @@ export default function Step4() {
   const [currentThumbnailPage, setCurrentThumbnailPage] = useState(0);
   const [mainSlideIndex, setMainSlideIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   const thumbnailsPerPage = 10;
   const queryClient = useQueryClient();
+
+  // Detect mobile/desktop for swiper behavior
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
@@ -426,9 +438,9 @@ export default function Step4() {
                   navigation={false}
                   pagination={false}
                   thumbs={{ swiper: thumbsSwiper }}
-                  allowTouchMove={true}
-                  simulateTouch={true}
-                  speed={250}
+                  allowTouchMove={isMobile} // Sadece mobilde touch
+                  simulateTouch={isMobile} // Sadece mobilde simulate
+                  speed={isMobile ? 250 : 0} // Masaüstü: instant, mobil: animasyon
                   loop={true}
                   onSlideChange={(swiper) => {
                     const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
@@ -450,16 +462,16 @@ export default function Step4() {
                           className="w-full h-full bg-white overflow-hidden lg:cursor-pointer"
                           onClick={() => {
                             // Sadece masaüstü cihazlarda çalışsın
-                            if (window.innerWidth >= 1024 && mainSwiper) { // lg breakpoint
+                            if (!isMobile && mainSwiper) {
                               // Loop modunda realIndex kullan
                               const currentRealIndex = mainSwiper.realIndex;
                               const nextIndex = (currentRealIndex + 1) % photosState.length;
-                              mainSwiper.slideToLoop(nextIndex, 250); // slideToLoop kullan
+                              mainSwiper.slideToLoop(nextIndex, 0); // Masaüstü: instant geçiş
                             }
                           }}
                           onTouchStart={(e) => {
                             // Mobil cihazlarda touch event'ini engelleme
-                            if (window.innerWidth < 1024) {
+                            if (isMobile) {
                               e.stopPropagation();
                             }
                           }}
@@ -514,7 +526,7 @@ export default function Step4() {
                               }`}
                               onClick={() => {
                                 if (mainSwiper) {
-                                  mainSwiper.slideToLoop(actualIndex, 250); // slideToLoop kullan
+                                  mainSwiper.slideToLoop(actualIndex, 0); // Masaüstü: instant geçiş
                                 }
                               }}
                             >
