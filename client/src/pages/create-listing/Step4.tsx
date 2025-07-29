@@ -450,12 +450,11 @@ export default function Step4() {
                           className="w-full h-full bg-white overflow-hidden lg:cursor-pointer"
                           onClick={() => {
                             // Sadece masaüstü cihazlarda çalışsın
-                            if (window.innerWidth >= 1024) { // lg breakpoint
-                              // Bir sonraki fotoğrafa geç
-                              const nextIndex = (index + 1) % photosState.length;
-                              if (mainSwiper) {
-                                mainSwiper.slideTo(nextIndex, 0, false); // false = animasyon yok
-                              }
+                            if (window.innerWidth >= 1024 && mainSwiper) { // lg breakpoint
+                              // Loop modunda realIndex kullan
+                              const currentRealIndex = mainSwiper.realIndex;
+                              const nextIndex = (currentRealIndex + 1) % photosState.length;
+                              mainSwiper.slideToLoop(nextIndex, 250); // slideToLoop kullan
                             }
                           }}
                           onTouchStart={(e) => {
@@ -515,7 +514,7 @@ export default function Step4() {
                               }`}
                               onClick={() => {
                                 if (mainSwiper) {
-                                  mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
+                                  mainSwiper.slideToLoop(actualIndex, 250); // slideToLoop kullan
                                 }
                               }}
                             >
