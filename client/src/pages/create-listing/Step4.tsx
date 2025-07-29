@@ -19,6 +19,7 @@ import { ERROR_MESSAGES } from '@shared/constants';
 
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
+import StepNavigationButtons from '@/components/StepNavigationButtons';
 import { IOSSpinner } from '@/components/iOSSpinner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
@@ -38,20 +39,8 @@ export default function Step4() {
   const [currentThumbnailPage, setCurrentThumbnailPage] = useState(0);
   const [mainSlideIndex, setMainSlideIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'details' | 'description'>('details');
-  const [isMobile, setIsMobile] = useState<boolean>(false);
   const thumbnailsPerPage = 10;
   const queryClient = useQueryClient();
-
-  // Detect mobile/desktop for swiper behavior
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // DOUBLE-CLICK PROTECTION: Using custom hook
   const { isSubmitting, executeWithProtection } = useDoubleClickProtection();
@@ -430,110 +419,69 @@ export default function Step4() {
           <div className="lg:col-span-4 -mx-4 sm:-mx-6 lg:mx-0">
             {photosState.length > 0 ? (
               <div className="overflow-hidden">
-                {/* Ana Swiper - Mobile */}
-                {isMobile && (
-                  <div className="relative">
-                    <Swiper
-                      onSwiper={setMainSwiper}
-                      modules={[Navigation, Pagination, Thumbs]}
-                      navigation={false}
-                      pagination={false}
-                      thumbs={{ swiper: thumbsSwiper }}
-                      allowTouchMove={true}
-                      simulateTouch={true}
-                      touchRatio={1}
-                      resistance={true}
-                      resistanceRatio={0.85}
-                      speed={250}
-                      loop={true}
-                      onSlideChange={(swiper) => {
-                        const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
-                        setMainSlideIndex(index);
+                {/* Ana Swiper */}
+                <div className="relative">
+                  <Swiper
+                  onSwiper={setMainSwiper}
+                  modules={[Navigation, Pagination, Thumbs]}
+                  navigation={false}
+                  pagination={false}
+                  thumbs={{ swiper: thumbsSwiper }}
+                  allowTouchMove={true}
+                  simulateTouch={true}
+                  speed={250}
+                  loop={true}
+                  onSlideChange={(swiper) => {
+                    const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
+                    setMainSlideIndex(index);
 
-                        // Thumbnails sayfa geçişi
-                        if (photosState.length > thumbnailsPerPage) {
-                          const targetPage = Math.floor(index / thumbnailsPerPage);
-                          setCurrentThumbnailPage(targetPage);
-                        }
-                      }}
-                      className="w-full aspect-[4/3] overflow-hidden"
-                    >
-                      {photosState
-                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-                        .map((photo: any, index: number) => (
-                          <SwiperSlide key={photo.id || index}>
-                            <div className="w-full h-full bg-white overflow-hidden">
-                              <img
-                                src={photo.url}
-                                alt={`Fotoğraf ${index + 1}`}
-                                className="w-full h-full object-contain pointer-events-none select-none"
-                                draggable="false"
-                              />
-                            </div>
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
+                    // Thumbnails sayfa geçişi
+                    if (photosState.length > thumbnailsPerPage) {
+                      const targetPage = Math.floor(index / thumbnailsPerPage);
+                      setCurrentThumbnailPage(targetPage);
+                    }
+                  }}
+                  className="w-full aspect-[4/3] overflow-hidden"
+                >
+                  {photosState
+                    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                    .map((photo: any, index: number) => (
+                      <SwiperSlide key={photo.id || index}>
+                        <div 
+                          className="w-full h-full bg-white overflow-hidden lg:cursor-pointer"
+                          onClick={() => {
+                            // Sadece masaüstü cihazlarda çalışsın
+                            if (window.innerWidth >= 1024) { // lg breakpoint
+                              // Bir sonraki fotoğrafa geç
+                              const nextIndex = (index + 1) % photosState.length;
+                              if (mainSwiper) {
+                                mainSwiper.slideTo(nextIndex, 0, false); // false = animasyon yok
+                              }
+                            }
+                          }}
+                          onTouchStart={(e) => {
+                            // Mobil cihazlarda touch event'ini engelleme
+                            if (window.innerWidth < 1024) {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          <img
+                            src={photo.url}
+                            alt={`Fotoğraf ${index + 1}`}
+                            className="w-full h-full object-contain pointer-events-none select-none"
+                            draggable="false"
+                          />
+                        </div>
+                      </SwiperSlide>
+                                          ))}
+                  </Swiper>
+
+                  {/* Fotoğraf Sayısı Badge */}
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-2 py-0.5 rounded-full text-xs font-normal z-20 shadow-lg">
+                    {mainSlideIndex + 1}/{photosState.length}
                   </div>
-                )}
-
-                {/* Ana Swiper - Desktop */}
-                {!isMobile && (
-                  <div className="relative">
-                    <Swiper
-                      onSwiper={setMainSwiper}
-                      modules={[Navigation, Pagination, Thumbs]}
-                      navigation={false}
-                      pagination={false}
-                      thumbs={{ swiper: thumbsSwiper }}
-                      allowTouchMove={false}
-                      simulateTouch={false}
-                      touchRatio={0}
-                      speed={0}
-                      loop={true}
-                      onSlideChange={(swiper) => {
-                        const index = swiper.params.loop ? swiper.realIndex : swiper.activeIndex;
-                        setMainSlideIndex(index);
-
-                        // Thumbnails sayfa geçişi
-                        if (photosState.length > thumbnailsPerPage) {
-                          const targetPage = Math.floor(index / thumbnailsPerPage);
-                          setCurrentThumbnailPage(targetPage);
-                        }
-                      }}
-                      className="w-full aspect-[4/3] overflow-hidden"
-                    >
-                      {photosState
-                        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-                        .map((photo: any, index: number) => (
-                          <SwiperSlide key={photo.id || index}>
-                            <div 
-                              className="w-full h-full bg-white overflow-hidden cursor-pointer"
-                              onClick={() => {
-                                if (mainSwiper) {
-                                  const currentRealIndex = mainSwiper.realIndex;
-                                  const nextIndex = (currentRealIndex + 1) % photosState.length;
-                                  mainSwiper.slideToLoop(nextIndex, 0);
-                                }
-                              }}
-                            >
-                              <img
-                                src={photo.url}
-                                alt={`Fotoğraf ${index + 1}`}
-                                className="w-full h-full object-contain pointer-events-none select-none"
-                                draggable="false"
-                              />
-                            </div>
-                          </SwiperSlide>
-                        ))}
-                    </Swiper>
-                  </div>
-                )}
-
-                {/* Fotoğraf Sayısı Badge */}
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white px-2 py-0.5 rounded-full text-xs font-normal z-20 shadow-lg">
-                  {mainSlideIndex + 1}/{photosState.length}
                 </div>
-              </div>
 
                                   {/* Büyük Fotoğraf Butonu - Masaüstü için */}
                   <div className="hidden lg:block">
@@ -568,7 +516,7 @@ export default function Step4() {
                               }`}
                               onClick={() => {
                                 if (mainSwiper) {
-                                  mainSwiper.slideToLoop(actualIndex, 0); // Masaüstü: instant geçiş
+                                  mainSwiper.slideTo(actualIndex, 0, false); // false = animasyon yok
                                 }
                               }}
                             >
@@ -985,32 +933,20 @@ export default function Step4() {
         </div>
 
         {/* Eylem Butonları */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={() => navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`)}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Önceki Adım
-          </button>
-
-          <button
-            onClick={() => executeWithProtection(async () => {
-              // Step5 prefetch before navigation
-              if (draftData?.categoryId && userForPrefetch?.id) {
-                smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 navigation');
-              }
-              navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
-            })}
-            className={`px-6 py-3 rounded-lg transition-colors font-medium ${
-              isSubmitting 
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                : 'bg-orange-500 text-white hover:bg-orange-600'
-            }`}
-            disabled={!currentClassifiedId || isSubmitting}
-          >
-            {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
-          </button>
-        </div>
+        <StepNavigationButtons
+          onPrevious={() => navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`)}
+          onNext={() => executeWithProtection(async () => {
+            // Step5 prefetch before navigation
+            if (draftData?.categoryId && userForPrefetch?.id) {
+              smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 navigation');
+            }
+            navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+          })}
+          isSubmitting={isSubmitting}
+          previousText="Önceki Adım"
+          nextText="Sonraki Adım"
+          disabled={!currentClassifiedId}
+        />
 
         {/* Performance indicator */}
         <PageLoadIndicator />
