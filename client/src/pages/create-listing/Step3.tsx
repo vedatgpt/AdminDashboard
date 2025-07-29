@@ -199,6 +199,12 @@ export default function Step3() {
     [images]
   );
 
+  // Check if any photos are currently uploading
+  const hasUploadingPhotos = useMemo(() => 
+    images.some(img => img.uploading), 
+    [images]
+  );
+
   // Memoized file size formatter
   const formatFileSize = useCallback((bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -841,14 +847,14 @@ export default function Step3() {
 
         <button
           onClick={handleNextStep}
-          disabled={isSubmitting}
+          disabled={isSubmitting || hasUploadingPhotos}
           className={`px-6 py-3 rounded-lg transition-colors font-medium ${
-            isSubmitting 
+            (isSubmitting || hasUploadingPhotos)
               ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
               : 'bg-orange-500 text-white hover:bg-orange-600'
           }`}
         >
-          {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
+          {isSubmitting ? 'İşleniyor...' : hasUploadingPhotos ? 'Fotoğraflar Yükleniyor...' : 'Sonraki Adım'}
         </button>
       </div>
 
