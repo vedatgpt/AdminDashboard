@@ -438,8 +438,11 @@ export default function Step4() {
                   navigation={false}
                   pagination={false}
                   thumbs={{ swiper: thumbsSwiper }}
-                  allowTouchMove={isMobile} // Sadece mobilde touch
-                  simulateTouch={isMobile} // Sadece mobilde simulate
+                  allowTouchMove={true} // Her zaman touch'a izin ver
+                  simulateTouch={true} // Her zaman simulate et
+                  touchRatio={isMobile ? 1 : 0} // Mobilde normal, desktop'ta devre dışı
+                  resistance={isMobile} // Mobilde resistance var, desktop'ta yok
+                  resistanceRatio={isMobile ? 0.85 : 0} // Mobilde resistance ratio
                   speed={isMobile ? 250 : 0} // Masaüstü: instant, mobil: animasyon
                   loop={true}
                   onSlideChange={(swiper) => {
@@ -470,8 +473,9 @@ export default function Step4() {
                             }
                           }}
                           onTouchStart={(e) => {
-                            // Mobil cihazlarda touch event'ini engelleme
-                            if (isMobile) {
+                            // Desktop'ta touch event'ini engelle
+                            if (!isMobile) {
+                              e.preventDefault();
                               e.stopPropagation();
                             }
                           }}
