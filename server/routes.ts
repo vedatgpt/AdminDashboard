@@ -166,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
-  // SECURITY: Enhanced step route guard with better validation
+  // SECURITY: Simplified step route guard - minimal security
   const stepRouteGuard = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const path = req.path;
     const classifiedId = req.query.classifiedId as string;
@@ -179,79 +179,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const currentStep = parseInt(stepMatch[1]);
 
-    // SECURITY: Validate step number
-    if (isNaN(currentStep) || currentStep < 1 || currentStep > 5) {
-      console.log(`🚨 SERVER GUARD: Invalid step number ${currentStep}`);
-      return res.redirect('/create-listing/step-1');
-    }
-
-    // Skip validation for Step1
+    // Skip validation for Step1 (always allow)
     if (currentStep === 1) {
-      console.log(`✅ SERVER GUARD: Step1 access allowed (creates new draft)`);
       return next();
     }
 
-    // Require authentication for all steps
+    // Basic authentication check only
     if (!req.session?.user?.id) {
-      console.log(`🚨 SERVER GUARD: Unauthenticated user blocked from Step ${currentStep}`);
+      console.log(`🚨 SIMPLE GUARD: Authentication required for Step ${currentStep}`);
       return res.redirect('/auth/login');
     }
 
-    // SECURITY: Validate classifiedId format
-    if (!classifiedId || !/^\d+$/.test(classifiedId)) {
-      console.log(`🚨 SERVER GUARD: Invalid classifiedId format: ${classifiedId}`);
+    // Only check if classifiedId exists for steps 2+
+    if (!classifiedId) {
+      console.log(`🚨 SIMPLE GUARD: No classifiedId provided for Step ${currentStep}`);
       return res.redirect('/create-listing/step-1');
     }
 
-    try {
-      const draft = await storage.getDraftListing(parseInt(classifiedId), req.session.user.id);
-
-      if (!draft) {
-        console.log(`🚨 SERVER GUARD: Draft ${classifiedId} not found for user ${req.session.user.id}`);
-        return res.redirect('/create-listing/step-1');
-      }
-
-      // SECURITY: Additional ownership validation
-      if (draft.userId !== req.session.user.id) {
-        console.log(`🚨 SERVER GUARD: Unauthorized access attempt - User ${req.session.user.id} tried to access draft ${classifiedId} owned by ${draft.userId}`);
-        return res.redirect('/create-listing/step-1');
-      }
-
-      // Step validation logic
-      let shouldRedirect = false;
-      let redirectStep = 1;
-
-      if (currentStep >= 2 && !draft.step1Completed) {
-        console.log(`🚨 SERVER GUARD: Step1 not completed for Step ${currentStep} access`);
-        shouldRedirect = true;
-        redirectStep = 1;
-      }
-
-      if (currentStep >= 3 && !draft.step2Completed) {
-        console.log(`🚨 SERVER GUARD: Step2 not completed for Step ${currentStep} access`);
-        shouldRedirect = true;
-        redirectStep = 2;
-      }
-
-      if (currentStep >= 4 && !draft.step3Completed) {
-        console.log(`🚨 SERVER GUARD: Step3 not completed for Step ${currentStep} access`);
-        shouldRedirect = true;
-        redirectStep = 3;
-      }
-
-      if (shouldRedirect) {
-        const redirectPath = `/create-listing/step-${redirectStep}?classifiedId=${classifiedId}`;
-        console.log(`🚨 SERVER GUARD: SECURITY VIOLATION - Redirecting from Step ${currentStep} to ${redirectPath}`);
-        return res.redirect(redirectPath);
-      }
-
-      console.log(`✅ SERVER GUARD: Step ${currentStep} access allowed - all validations passed`);
-      next();
-
-    } catch (error) {
-      console.error('🚨 SERVER GUARD ERROR:', error);
-      return res.redirect('/create-listing/step-1');
-    }
+    // Allow all authenticated users with classifiedId to access any step
+    console.log(`✅ SIMPLE GUARD: Step ${currentStep} access allowed for user ${req.session.user.id}`);
+    return next();
   };
 
   // Apply server-side router guard BEFORE serving static files
