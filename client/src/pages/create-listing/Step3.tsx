@@ -415,6 +415,24 @@ export default function Step3() {
     }
   });
 
+  // Handle uploading image cancellation/deletion
+  const handleCancelUpload = useCallback((imageId: string) => {
+    setImages(prev => {
+      const imageToCancel = prev.find(img => img.id === imageId);
+      if (imageToCancel?.url.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToCancel.url);
+        blobUrlsRef.current.delete(imageToCancel.url);
+      }
+      return prev.filter(img => img.id !== imageId);
+    });
+
+    toast({
+      title: "Yükleme İptal Edildi",
+      description: "Fotoğraf yükleme işlemi iptal edildi",
+      variant: "default"
+    });
+  }, [toast]);
+
 
 
   // Initialize Sortable.js for uploaded images with proper cleanup
@@ -771,20 +789,27 @@ export default function Step3() {
                         {index + 1}
                       </div>
 
-                      {/* Delete Button - Sağ üst */}
-                      {!image.uploading && (
-                        <button
-                          onClick={() => {
+                      {/* Delete Button - Sağ üst (for both uploaded and uploading images) */}
+                      <button
+                        onClick={() => {
+                          if (image.uploading) {
+                            // Cancel uploading image
+                            if (confirm('Yükleme işlemini iptal etmek istediğinize emin misiniz?')) {
+                              handleCancelUpload(image.id);
+                            }
+                          } else {
+                            // Delete uploaded image
                             if (confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) {
                               deleteImageMutation.mutate(image.id);
                             }
-                          }}
-                          className="absolute top-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
-                          disabled={deleteImageMutation.isPending}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
+                          }
+                        }}
+                        className="absolute top-1 right-1 w-6 h-6 bg-gray-800 bg-opacity-80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-900 z-10 flex items-center justify-center"
+                        disabled={!image.uploading && deleteImageMutation.isPending}
+                        title={image.uploading ? 'Yüklemeyi İptal Et' : 'Fotoğrafı Sil'}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
 
 
 
