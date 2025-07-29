@@ -19,7 +19,7 @@ import { ERROR_MESSAGES } from '@shared/constants';
 
 import CreateListingLayout from '@/components/CreateListingLayout';
 import { PageLoadIndicator } from '@/components/PageLoadIndicator';
-import StepNavigationButtons from '@/components/StepNavigationButtons';
+
 import { IOSSpinner } from '@/components/iOSSpinner';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
@@ -99,7 +99,7 @@ export default function Step4() {
   // STEP5 PREFETCH: Auto-prefetch when Step4 loads
   useEffect(() => {
     if (!authLoading && isAuthenticated && draftData?.categoryId && currentClassifiedId && userForPrefetch?.id) {
-      smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 page load');
+      smartPrefetchStep5(draftData.categoryId, String(currentClassifiedId), 'Step4 page load');
     }
   }, [authLoading, isAuthenticated, draftData?.categoryId, currentClassifiedId, userForPrefetch?.id, smartPrefetchStep5]);
 
@@ -932,21 +932,33 @@ export default function Step4() {
           </div>
         </div>
 
-        {/* Eylem Butonları */}
-        <StepNavigationButtons
-          onPrevious={() => navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`)}
-          onNext={() => executeWithProtection(async () => {
-            // Step5 prefetch before navigation
-            if (draftData?.categoryId && userForPrefetch?.id) {
-              smartPrefetchStep5(draftData.categoryId, currentClassifiedId, 'Step4 navigation');
-            }
-            navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
-          })}
-          isSubmitting={isSubmitting}
-          previousText="Önceki Adım"
-          nextText="Sonraki Adım"
-          disabled={!currentClassifiedId}
-        />
+        {/* Navigation Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <button
+            onClick={() => navigate(`/create-listing/step-3?classifiedId=${currentClassifiedId}`)}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Önceki Adım
+          </button>
+
+          <button
+            onClick={() => executeWithProtection(async () => {
+              // Step5 prefetch before navigation
+              if (draftData?.categoryId && userForPrefetch?.id) {
+                smartPrefetchStep5(draftData.categoryId, String(currentClassifiedId), 'Step4 navigation');
+              }
+              navigate(`/create-listing/step-5?classifiedId=${currentClassifiedId}`);
+            })}
+            disabled={isSubmitting || !currentClassifiedId}
+            className={`px-6 py-3 rounded-lg transition-colors font-medium ${
+              (isSubmitting || !currentClassifiedId)
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+          >
+            {isSubmitting ? 'İşleniyor...' : 'Sonraki Adım'}
+          </button>
+        </div>
 
         {/* Performance indicator */}
         <PageLoadIndicator />
